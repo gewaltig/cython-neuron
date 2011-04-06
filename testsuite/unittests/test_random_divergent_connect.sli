@@ -47,7 +47,7 @@ ResetKernel
 % Set settings for root network. These
 % settings could be changed to test different
 % aspects of simulation.
-[0] <<
+0 <<
       /local_num_threads 2
       /resolution h
     >> SetStatus

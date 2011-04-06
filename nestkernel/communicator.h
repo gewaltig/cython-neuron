@@ -41,7 +41,8 @@
 namespace nest
 {
   class Network;
-  
+  class NodeList;
+
   class Communicator
   {
     friend class Network;
@@ -49,11 +50,6 @@ namespace nest
     public:
       Communicator () {}
       ~Communicator () {}
-
-#ifdef HAVE_MUSIC
-      static MUSIC::Setup *music_setup;     //!< pointer to a MUSIC setup object
-      static MUSIC::Runtime *music_runtime; //!< pointer to a MUSIC runtime object
-#endif
 
       /**
        * Combined storage of GID and offset information for off-grid spikes.
@@ -69,10 +65,10 @@ namespace nest
 	//! We defined this type explicitly, so that the assert function below always tests the correct type.
 	typedef uint_t gid_external_type;
 
-      OffGridSpike() : 
-	gid_(0), offset_(0.0) {}
-      OffGridSpike(gid_external_type gidv, double_t offsetv) :
-	gid_(gidv), offset_(offsetv) {}
+        OffGridSpike() : 
+          gid_(0), offset_(0.0) {}
+        OffGridSpike(gid_external_type gidv, double_t offsetv) :
+          gid_(gidv), offset_(offsetv) {}
 
 	uint_t   get_gid()    const  { return static_cast<gid_external_type>(gid_   ); }
 	void     set_gid(gid_external_type gid) { gid_ = static_cast<double_t>(gid  ); }
@@ -175,6 +171,11 @@ namespace nest
 
       static void init_communication();
 
+      static MPI_Datatype MPI_OFFGRID_SPIKE;
+      //static int MPI_OFFGRID_SPIKE;
+
+      static void communicate_Allgather(std::vector<int_t>&);
+
       static void communicate_Allgather(std::vector<uint_t>& send_buffer, 
                                         std::vector<uint_t>& recv_buffer, 
                                         std::vector<int>& displacements);
@@ -208,6 +209,7 @@ namespace nest
 namespace nest
 {
   class Network;
+  class NodeList;
 
   class Communicator
   {
@@ -219,16 +221,14 @@ namespace nest
 
       class OffGridSpike {
       public:
-      OffGridSpike() : 
-	gid_(0), offset_(0.0) {}
-      OffGridSpike(uint_t gidv, double_t offsetv) :
-	gid_(gidv), offset_(offsetv) {}
+        OffGridSpike() : 
+          gid_(0), offset_(0.0) {}
+        OffGridSpike(uint_t gidv, double_t offsetv) :
+          gid_(gidv), offset_(offsetv) {}
 
 	uint_t   get_gid()    const  { return static_cast<uint_t  >(gid_   ); }
 	void     set_gid(uint_t gid) { gid_ = static_cast<double_t>(gid    ); }
 	double_t get_offset() const  { return offset_; }
-
-      private:
 
 	friend class Communicator; //void Communicator::init(int*, char**);
 
@@ -280,6 +280,7 @@ namespace nest
       static int recv_buffer_size_;  //!< size of receive buffer
       static bool initialized_;      //!< whether MPI is initialized
       static bool use_Allgather_;    //!< using Allgather communication
+      static double_t time_communicate(int, int){return 0.0;}
   };
 
   inline std::string Communicator::get_processor_name()

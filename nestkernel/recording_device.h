@@ -147,6 +147,11 @@ namespace nest {
     /scientific    - if set to true, doubles are written in scientific format, otherwise in
                      fixed format; affects file output only, not screen output (default: false)
     /precision     - number of digits to use in output of doubles to file (default: 3)
+    /binary        - if set to true, data is written in binary mode to files instead of ASCII.
+                     This setting affects file output only, not screen output (default: false)
+    /fbuffer_size  - the size of the buffer to use for writing to files. The default size is
+                     determined by the implementation of the C++ standard library. To obtain an
+                     unbuffered file stream, use a buffer size of 0.
 
     Data recorded in memory is available through the following parameter:
     /n_events      - Number of events collected or sampled. n_events can be set to 0, but
@@ -362,6 +367,12 @@ namespace nest {
  
     // ------------------------------------------------------------------
     
+    struct Buffers_ {
+      std::ofstream fs_; //!< the file to write the recorded data to
+    };
+
+    // ------------------------------------------------------------------
+    
     struct Parameters_ {  
       bool to_file_;       //!< true if recorder writes its output to a file
       bool to_screen_;     //!< true if recorder writes its output to stdout
@@ -374,8 +385,12 @@ namespace nest {
       bool withtime_;      //!< true if time of event is to be printed, default
       bool withweight_;    //!< true if weight of event is to be printed
 
-      long precision_;       //!< precision of doubles written to file
-      bool scientific_;      //!< use scientific format if true, else fixed
+      long precision_;     //!< precision of doubles written to file
+      bool scientific_;    //!< use scientific format if true, else fixed
+
+      bool binary_;            //!< true if to write files in binary mode instead of ASCII   
+      long fbuffer_size_;      //!< the buffer size to use when writing to file
+      long fbuffer_size_old_;  //!< the buffer size to use when writing to file (old)
 
       std::string label_;    //!< a user-defined label for symbolic device names.
       std::string file_ext_; //!< the file name extension to use, without .
@@ -394,7 +409,7 @@ namespace nest {
       Parameters_(const std::string&, bool, bool);
 
       void get(const RecordingDevice&, DictionaryDatum&) const;  //!< Store current values in dictionary
-      void set(const RecordingDevice&, const DictionaryDatum&);  //!< Set values from dicitonary
+      void set(const RecordingDevice&, const Buffers_&, const DictionaryDatum&);  //!< Set values from dicitonary
     };
 
     // ------------------------------------------------------------------
@@ -415,18 +430,13 @@ namespace nest {
     };
 
     // ------------------------------------------------------------------
-    
-    struct Buffers_ {
-      std::ofstream fs_;         //!< the file to write the recorded data to
-    };
-    
-    // ------------------------------------------------------------------
 
     const Node& node_;  //!< node to which device instance belongs
     const Mode  mode_;  //!< operating mode, depends on owning node
     Parameters_ P_;
     State_      S_;
     Buffers_    B_;
+    Buffers_    V_;
 };
 
 

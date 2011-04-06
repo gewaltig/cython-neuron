@@ -66,6 +66,7 @@ namespace nest{
 
     bool   empty()   const;
     size_t size()    const;
+    size_t local_size()    const;
 
     Compound& get_root() const;
     void set_root(Compound &);
@@ -85,6 +86,12 @@ namespace nest{
   size_t NodeList::size() const
   {
     return root_->size();
+  }
+
+  inline
+  size_t NodeList::local_size() const
+  {
+    return root_->local_size();
   }
 
   inline

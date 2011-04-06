@@ -33,9 +33,11 @@ nest::Compound::Compound()
    children_vp_(0),
    label_(),
    customdict_(new Dictionary),
-   homogeneous_(true)
+   homogeneous_(true),
+   next_lid_(0),
+   last_mid_(0)
 {
-  set(frozen);  // freeze compund by default
+  set(frozen);  // freeze compound by default
 }
 
 nest::Compound::Compound(const Compound &c)
@@ -45,7 +47,9 @@ nest::Compound::Compound(const Compound &c)
    children_vp_(c.children_vp_),
    label_(c.label_),
    customdict_(new Dictionary(*(c.customdict_))),
-   homogeneous_(c.homogeneous_)
+   homogeneous_(c.homogeneous_),
+   next_lid_(c.next_lid_),
+   last_mid_(c.last_mid_)
 {
 }
 
@@ -83,7 +87,7 @@ void nest::Compound::get_status(DictionaryDatum& dict) const
 
 void nest::Compound::get_dimensions(std::vector<int> & dim) const
 {
-  dim.push_back(nodes_.size());
+  dim.push_back(next_lid_);
   if(nodes_.empty())
     return;
   if(homogeneous_ && (dynamic_cast<Compound *>(nodes_.at(0)) !=NULL))

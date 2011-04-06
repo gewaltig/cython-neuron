@@ -62,7 +62,7 @@ ResetKernel
 % create n_neurons neurons
 /subnet Create dup ChangeSubnet /iaf_psc_alpha n_neurons Create ;
 GetLeaves /neurons Set   
-[0] ChangeSubnet
+0 ChangeSubnet
 
 /static_synapse /syn << /weight JE >> CopyModel
 

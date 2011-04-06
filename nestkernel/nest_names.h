@@ -189,6 +189,8 @@ namespace nest
     extern const Name file_extension;
     extern const Name precision;
     extern const Name scientific;
+    extern const Name binary;
+    extern const Name fbuffer_size;
     extern const Name flush_records;
     extern const Name close_after_simulate;
     extern const Name flush_after_simulate;

@@ -27,12 +27,15 @@
 #include "proxynode.h"
 #include "connection_manager.h"
 #include "event.h"
+#include "modelrangemanager.h"
 #include "compose.hpp"
 #include "dictdatum.h"
 #include <ostream>
 
 #include "dirent.h"
 #include "errno.h"
+
+#include "sparsetable.h"
 
 #ifdef M_ERROR
 #undef M_ERROR
@@ -201,9 +204,14 @@ SeeAlso: Simulate, Node
     int get_model_id(const char []) const;
 
     /**
-     * Return the Model for a given ID.
+     * Return the Model for a given model ID.
      */
     Model * get_model(index) const;
+
+    /**
+     * Return the Model for a given GID.
+     */
+    Model * get_model_of_gid(index);
 
     /**
      * Add a number of nodes to the network.
@@ -341,6 +349,8 @@ SeeAlso: Simulate, Node
 
     void print(TokenArray, int);
 
+    //debug modelrangemanager
+    void print_model_ranges();
     /**
      * Standard routine for sending events. This method decides if
      * the event has to be delivered locally or globally. It exists
@@ -357,7 +367,7 @@ SeeAlso: Simulate, Node
     /**
      * Send event e to all targets of node source on thread t
      */
-    void send_local(thread t, Node& source, Event& e);
+    void send_local(thread t, index sgid, Event& e);
 
     /**
      * Send event e directly to its target node. This should be
@@ -438,6 +448,11 @@ SeeAlso: Simulate, Node
     bool is_local_node(Node*) const;
 
     /**
+     * Return true, if the given gid is on the local machine
+     */
+    bool is_local_gid(index gid) const;
+
+    /**
      * Return true, if the given VP is on the local machine
      */
     bool is_local_vp(thread) const;
@@ -479,7 +494,7 @@ SeeAlso: Simulate, Node
      * @param p Pointer to the specified Node.
      * @ingroup net_access
      */
-    std::vector<size_t> get_adr(Node const *p) const;
+    std::vector<size_t> get_adr(Node const *p) ;
 
     /**
      * Return addess array of the specified Node.
@@ -487,7 +502,7 @@ SeeAlso: Simulate, Node
      *
      * @ingroup net_access
      */
-    std::vector<size_t> get_adr(index i) const;
+    std::vector<size_t> get_adr(index i) ;
 
     /**
      * Return pointer of the specified Node.
@@ -521,7 +536,7 @@ SeeAlso: Simulate, Node
      *
      * @ingroup net_access
      */
-    Node*  get_node(index, thread thr = 0) const;
+    Node*  get_node(index, thread thr = 0);
 
     /**
      * Return the Compound that contains the thread siblings.
@@ -534,11 +549,18 @@ SeeAlso: Simulate, Node
     const Compound* get_thread_siblings(index n) const;
 
     /**
+     * Return pointer to a harmless proxy Node.
+     *
+     * @ingroup net_access
+     */
+    Node*  get_spike_source_node();
+
+    /**
      * Check, if there are instances of a given model.
      * @param i index of the model to check for
      * @return true, if model is instantiated at least once.
      */
-    bool model_in_use(index i) const;
+    bool model_in_use(index i);
 
     /**
      * The prefix for files written by devices.
@@ -578,7 +600,7 @@ SeeAlso: Simulate, Node
      * Get properties of a node. The specified node must exist.
      * @throws nest::UnknownNode       Target does not exist in the network.
      */
-    DictionaryDatum get_status(index) const;
+    DictionaryDatum get_status(index);
 
     /**
      * Execute a SLI command in the neuron's namespace.
@@ -703,9 +725,12 @@ SeeAlso: Simulate, Node
 #endif
     
   private:
-    void connect(Node& s, Node& r, thread t, index syn);
-    void connect(Node& s, Node& r, thread t, double_t w, double_t d, index syn);
-    void connect(Node& s, Node& r, thread t, DictionaryDatum& d, index syn);
+    void connect(Node& s, Node& r, index sgid, thread t, index syn);
+    void connect(Node& s, Node& r, index sgid, thread t, double_t w, double_t d, index syn);
+    void connect(Node& s, Node& r, index sgid, thread t, DictionaryDatum& d, index syn);
+
+    //! Experimental, pass all targets to CM at once, for more efficient allocation
+    void bulk_divergent_connect(Node& s, const std::vector<Node*>& r, index sgid, thread t, index syn);
     
     /**
      * Initialize the network data structures.
@@ -766,8 +791,13 @@ SeeAlso: Simulate, Node
      */
     std::vector< std::pair<Model *, bool> > pristine_models_;
     std::vector<Model *> models_;  //!< The list of available models
+    vector<Node *> proxy_nodes_;   //!< Placeholders for remote nodes
 
-    std::vector<Node *> nodes_; //!< The network as flat list of nodes
+    google::sparsetable<Node *> nodes_;  //!< The network as flat list of nodes
+    //std::vector<index> node_locs_;     //!< The index of each node in the network in the nodes_ list
+
+    Modelrangemanager node_model_ids_;   //!< Records the model id of each neuron in the network
+    Node * proxy_spike_source_;          //!< Placeholder Node for spike delivery
 
     bool dict_miss_is_error_;  //!< whether to throw exception on missed dictionary entries
   };
@@ -805,25 +835,32 @@ SeeAlso: Simulate, Node
   inline
   index Network::size() const
   {
+    //return node_locs_.size();
     return nodes_.size();
   }
 
   inline
-  void Network::connect(Node& s, Node& r, thread t, index syn)
+  void Network::connect(Node& s, Node& r, index sgid, thread t, index syn)
   {
-    connection_manager_.connect(s, r, t, syn);
+    connection_manager_.connect(s, r, sgid, t, syn);
+  }
+  inline
+
+    void Network::bulk_divergent_connect(Node& s, const std::vector<Node*>& rv, index sgid, thread t, index syn)
+  {
+    connection_manager_.bulk_divergent_connect(s, rv, sgid, t, syn);
   }
 
   inline
-  void Network::connect(Node& s, Node& r, thread t, double_t w, double_t d, index syn)
+  void Network::connect(Node& s, Node& r, index sgid, thread t, double_t w, double_t d, index syn)
   {
-    connection_manager_.connect(s, r, t, w, d, syn);
+    connection_manager_.connect(s, r, sgid, t, w, d, syn);
   }
 
   inline
-  void Network::connect(Node& s, Node& r, thread t, DictionaryDatum& p, index syn)
+  void Network::connect(Node& s, Node& r, index sgid, thread t, DictionaryDatum& p, index syn)
   {
-    connection_manager_.connect(s, r, t, p, syn);
+    connection_manager_.connect(s, r, sgid, t, p, syn);
   }
 
   inline
@@ -937,7 +974,18 @@ SeeAlso: Simulate, Node
   inline
   bool Network::is_local_node(Node* n) const
   {
-    return scheduler_.is_local_node(n);
+    return !(n->is_proxy());
+  }
+
+  inline
+  bool Network::is_local_gid(index gid) const
+  {
+    /* if(gid >= node_locs_.size() || nodes_[node_locs_[gid]] == 0) */
+    /*   throw UnknownNode(gid); */
+    /* return (node_locs_[gid] != -1); */
+    if ( gid >= nodes_.size() )
+      throw UnknownNode(gid);
+    return ( nodes_.test(gid) ); // test if local
   }
 
   inline
@@ -1001,9 +1049,12 @@ SeeAlso: Simulate, Node
     e.set_stamp(get_slice_origin() + Time::step(lag + 1));
     e.set_sender(source);
     thread t = source.get_thread();
+    index gid = source.get_gid();
+
+    //std::cout << "Network::send 1 " << gid << " " << e.get_sender().get_gid() << std::endl;
 
     assert(!source.has_proxies());
-    send_local(t, source, e);
+    connection_manager_.send(t, gid, e);
   }
 
   template <>
@@ -1013,6 +1064,9 @@ SeeAlso: Simulate, Node
     e.set_stamp(get_slice_origin() + Time::step(lag + 1));
     e.set_sender(source);
     thread t = source.get_thread();
+    index gid = source.get_gid();
+
+    //std::cout << "Network::send 2 " << gid << " " << e.get_sender().get_gid() << std::endl;
 
     if (source.has_proxies())
     {
@@ -1022,7 +1076,7 @@ SeeAlso: Simulate, Node
         scheduler_.send_remote(t, e, lag);
     }
     else
-      send_local(t, source, e);
+      connection_manager_.send(t, gid, e);
   }
 
   template <>
@@ -1032,15 +1086,18 @@ SeeAlso: Simulate, Node
     e.set_stamp(get_slice_origin() + Time::step(lag + 1));
     e.set_sender(source);
     thread t = source.get_thread();
+    index gid = source.get_gid();
+
+    //std::cout << "Network::send 3 " << gid << " " << e.get_sender().get_gid() << std::endl;
 
     assert(!source.has_proxies());
-    send_local(t, source, e);
+    connection_manager_.send(t, gid, e);
   } 
 
   inline
-  void Network::send_local(thread t, Node& source, Event& e)
+  void Network::send_local(thread t, index sgid, Event& e)
   {
-    index sgid = source.get_gid();
+    //std::cout << "Network::send_local " << sgid << " " << e.get_sender().get_gid() << std::endl;
     connection_manager_.send(t, sgid, e);
   }
 
@@ -1090,6 +1147,15 @@ SeeAlso: Simulate, Node
       throw UnknownModelID(m);
 
     return 0; // this never happens
+  }
+
+  inline 
+  Model* Network::get_model_of_gid(index gid)
+  {
+    if (node_model_ids_.is_in_range(gid))
+      return models_[node_model_ids_.get_model_id(gid)];
+    else
+      throw UnknownNode(gid);
   }
 
   inline

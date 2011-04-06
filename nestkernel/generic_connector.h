@@ -18,7 +18,8 @@
 #include "event.h"
 #include "generic_connector_model.h"
 #include <algorithm>
-#include <deque>
+#include <vector>
+
 #include "spikecounter.h"
 #include "nest_names.h"
 
@@ -44,10 +45,8 @@ class GenericConnectorBase : public Connector
 
  public:
   // explicit type declaration needed by compiler
-  typedef typename std::deque< ConnectionT, std::allocator< ConnectionT > >::iterator ConnIter;
-
-  typedef typename std::deque< ConnectionT, std::allocator< ConnectionT > >::const_iterator ConnConstIter;
-
+  typedef typename std::vector< ConnectionT, std::allocator< ConnectionT > >::iterator ConnIter;
+  typedef typename std::vector< ConnectionT, std::allocator< ConnectionT > >::const_iterator ConnConstIter;
 
   /**
    * Default constructor.
@@ -77,10 +76,9 @@ class GenericConnectorBase : public Connector
    */ 
   void register_connection(Node&, Node&, DictionaryDatum&);
   
-  /**
-   * Register a new connection at the sender side.
-   */ 
-  void register_connection(Node&, Node&, ConnectionT&, port);
+
+  //! Experimental: bulk registration of targets for efficient memory handling
+  void register_connection_bulkdiv(Node&, const std::vector<Node*>&);
 
   /**
    * Return a list of ports
@@ -140,11 +138,18 @@ class GenericConnectorBase : public Connector
   void trigger_update_weight(const std::vector<spikecounter> &neuromodulator_spikes);
 
  protected:
-  std::deque<ConnectionT> connections_;
+  std::vector<ConnectionT> connections_;
   ConnectorModelT &connector_model_;
 
   // point in time of last spike transmitted
   double_t t_lastspike_;
+
+ private:
+  /**
+   * Register a new connection at the sender side.
+   */ 
+  void register_connection(Node&, Node&, ConnectionT&, port);
+  void register_connection_bulkdiv(Node&, const std::vector<Node*>&, ConnectionT&, port);
 
 };
 
@@ -153,7 +158,6 @@ template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorMo
 GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::GenericConnectorBase(ConnectorModelT &cm)
   : connector_model_(cm),
     t_lastspike_(0.0)
-
 {}
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
@@ -167,6 +171,21 @@ void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::re
 
   register_connection(s, r, cn, connector_model_.get_receptor_type());
 }
+
+template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
+void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection_bulkdiv(Node& s, const std::vector<Node*>& rv)
+{
+  // create a new instance of the default connection
+  ConnectionT cn = ConnectionT( connector_model_.get_default_connection() );
+
+  // tell the connector model, that we used the default delay
+  connector_model_.used_default_delay();
+
+  register_connection_bulkdiv(s, rv, cn, connector_model_.get_receptor_type());
+}
+
+
+  
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
 void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r, double_t w, double_t d)
@@ -219,8 +238,6 @@ template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorMo
 inline
 void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r, ConnectionT &cn, port receptor_type)
 {
-
-
   cn.check_connection(s, r, receptor_type, t_lastspike_);
   Node* n = connector_model_.get_registering_node(); //if the connection is a heterosynatpic one, it gets the node which contributes to heterosynaptic plasticity 
 
@@ -232,6 +249,7 @@ void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::re
     }
   connector_model_.increment_num_connections();
 }
+
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
 std::vector<long>* GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::find_connections(DictionaryDatum params) const
@@ -302,7 +320,7 @@ void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::se
      to keep track of the port number.
      The iterator cannot be const, since send() may modify connection properties.
    */  
-  typename std::deque<ConnectionT>::iterator conn_it; 
+  ConnIter conn_it;
   size_t i;
   for ( conn_it = connections_.begin(), i = 0; 
         conn_it != connections_.end();
@@ -311,6 +329,8 @@ void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::se
     e.set_port(i);
     conn_it->send(e, t_lastspike_, connector_model_.get_common_properties());
   }
+
+  //std::cout << "GenericConnectorBase::send " << e.get_sender().get_gid() << std::endl;
 
   t_lastspike_ = e.get_stamp().get_ms();
 }
@@ -372,7 +392,7 @@ class GenericConnector : public GenericConnectorBase< ConnectionT,
  public:
   GenericConnector(GCMT &cm) :
     GenericConnectorBase< ConnectionT, CommonPropertiesT, GCMT >(cm)
-    { }
+      {}
 };
 
 

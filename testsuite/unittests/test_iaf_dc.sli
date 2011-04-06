@@ -70,7 +70,7 @@ SeeAlso: iaf_neuron, testsuite::test_iaf_dc_aligned, testsuite::test_iaf_dc_alig
 
 ResetKernel
 
-[0] << 
+0 << 
       /local_num_threads 1 
       /resolution h
     >> SetStatus

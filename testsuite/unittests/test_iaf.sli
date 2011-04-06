@@ -60,7 +60,7 @@
 
 ResetKernel
 
-[0] << 
+0 << 
       /local_num_threads 1 
       /resolution h
     >> SetStatus

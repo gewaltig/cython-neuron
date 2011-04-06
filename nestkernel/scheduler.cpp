@@ -400,8 +400,13 @@ void nest::Scheduler::simulate(Time const & t)
   else
     to_step_ = end_sim;       // update to end of simulation time
 
+
   resume();
   simulated_ = true;
+  //debug of modelrangemanager, can be removed once stable (AM 14/2/2010)
+  if (Communicator::get_rank() == 0)
+    net_.print_model_ranges();
+
 }
 
 void nest::Scheduler::resume()
@@ -725,15 +730,16 @@ void nest::Scheduler::prepare_nodes()
   for (index t = 0; t < n_threads_; ++t)
     for(index n = 0; n < net_.size(); ++n)
     {
-      if(net_.nodes_[n]==0)
-        continue;
-      if ((net_.nodes_[n])->size() > 0)
-        prepare_node_((*net_.nodes_[n])[t]);
-      else
+      if ( net_.is_local_gid(n) && net_.nodes_[n]!=0 )
       {
-        Node* node = net_.get_node(n, t);
-        if (static_cast<uint_t>(node->get_thread()) == t)
-          prepare_node_(node);
+	if ((*net_.nodes_[n]).size() > 0)
+	  prepare_node_((*net_.nodes_[n])[t]);
+	else
+	{
+	  Node* node = net_.get_node(n, t);
+	  if (static_cast<uint_t>(node->get_thread()) == t)
+	    prepare_node_(node);
+	}
       }
     }
 
@@ -747,15 +753,16 @@ void nest::Scheduler::finalize_nodes()
   for (index t = 0; t < n_threads_; ++t)
      for(index n = 0; n < net_.size(); ++n)
      {
-       if(net_.nodes_[n]==0)
-         continue;
-       if ((net_.nodes_[n])->size() > 0)
-         (*net_.nodes_[n])[t]->finalize();
-       else
+       if ( net_.is_local_gid(n) && net_.nodes_[n]!=0 )
        {
-         Node* node = net_.get_node(n, t);
-         if (static_cast<uint_t>(node->get_thread()) == t)
-           node->finalize();
+         if ((*net_.nodes_[n]).size() > 0)
+           (*net_.nodes_[n])[t]->finalize();
+         else
+         {
+           Node* node = net_.get_node(n, t);
+           if (static_cast<uint_t>(node->get_thread()) == t)
+             node->finalize();
+         }
        }
      }  
 }
@@ -1342,7 +1349,8 @@ void nest::Scheduler::deliver_events_(thread t)
     
   size_t n_markers = 0;
   SpikeEvent se;
-  Node* sender = 0;
+  //if events are sent through here, the actual source node can contain no relevant information
+  Node* sender = net_.get_spike_source_node();
 
   std::vector<int> pos(displacements_);
  
@@ -1358,10 +1366,12 @@ void nest::Scheduler::deliver_events_(thread t)
               if (nid != comm_marker_)
 	      {
 		  // tell all local nodes about spikes on remote machines.        
-		  sender = net_.get_node(nid, t);
 		  se.set_stamp(clock_ - Time::step(lag));
 		  se.set_sender(*sender);
-		  net_.send_local(t, *sender, se);
+
+		  //std::cout << "Scheduler::deliver_events_ " << nid << " " << se.get_sender().get_gid() << std::endl;
+
+		  net_.connection_manager_.send(t, nid, se);
 	      }
 	      else
 	      {
@@ -1383,11 +1393,10 @@ void nest::Scheduler::deliver_events_(thread t)
 	      if (nid != comm_marker_)
 	      {
 		  // tell all local nodes about spikes on remote machines.        
-		  sender = net_.get_node(nid, t);
 		  se.set_stamp(clock_ - Time::step(lag));
 		  se.set_sender(*sender);
 		  se.set_offset(global_offgrid_spikes_[pos[pid]].get_offset());
-		  net_.send_local(t, *sender, se);
+		  net_.connection_manager_.send(t, nid, se);
 	      }
 	      else
 	      {

@@ -65,7 +65,6 @@ Network::Network(SLIInterpreter &i)
   synapsedict_ = new Dictionary();
   interpreter_.def("synapsedict", new DictionaryDatum(synapsedict_));
   connection_manager_.init(synapsedict_);
-
   init_();
 }
 
@@ -91,12 +90,15 @@ void Network::init_()
   assert(pristine_models_.size() > 0);
   Model* rootmodel= pristine_models_[0].first;
   assert(rootmodel != 0);
-  
-  nodes_.reserve(1000);
+  nodes_.resize(1);
+  //nodes_.reserve(1000);
+  //node_locs_.reserve(1000);
+  //node_lock_.push_back(0);
+  node_model_ids_.add_range(0,0,0);
   Compound *root_container = static_cast<Compound *>(rootmodel->allocate(0));
-  nodes_.push_back(root_container);
+  nodes_[0] = root_container;
+  //nodes_.push_back(root_container);
   root_container->reserve(get_num_threads());
-
   for(thread t = 0; t < get_num_threads(); ++t)
   {
     Node* newnode = rootmodel->allocate(t);
@@ -124,8 +126,9 @@ void Network::init_()
   */
   models_.clear();
   modeldict_->clear();
-
+  
   // Re-create the model list from the clean prototypes
+  
   for(index i = 0; i < pristine_models_.size(); ++i)
     if (pristine_models_[i].first != 0)
     {
@@ -149,6 +152,21 @@ void Network::init_()
 #ifdef HAVE_MUSIC
   music_in_portlist_.clear();
 #endif
+
+  //create proxy_node list
+  int proxy_model_id = get_model_id("proxynode");
+  assert(proxy_model_id > 0);
+  Model *proxy_model = models_[proxy_model_id];
+  proxy_model->reserve(0, pristine_models_.size() + 1);
+  for(index i = 0; i < pristine_models_.size(); ++i)
+    if (pristine_models_[i] != 0)
+    {
+      Node* newnode = proxy_model->allocate(0);
+      newnode->set_model_id(i);
+      proxy_nodes_.push_back(newnode);
+    }
+  proxy_spike_source_ = proxy_model->allocate(0);
+  proxy_spike_source_->set_model_id(proxy_model_id);
 }
 
 void Network::destruct_nodes_()
@@ -159,14 +177,20 @@ void Network::destruct_nodes_()
   // not call delete on the Node objects!
   for(size_t n = 0; n < nodes_.size(); ++n)
   {
-    assert(nodes_[n] != 0);
-    for(size_t t = 0; t < nodes_[n]->size(); ++t)
-      (*nodes_[n])[t]->~Node();
-    nodes_[n]->~Node();
+    if ( nodes_.test(n) )
+    {
+      assert(nodes_[n] != 0);
+      for(size_t t = 0; t < (*nodes_[n]).size(); ++t)
+	(*nodes_[n])[t]->~Node();
+      (*nodes_[n]).~Node();
+    }
   }
 
-  std::vector<Node * > nodes;
-  nodes_.swap(nodes);
+  //std::vector<Node * > nodes;
+  //nodes_.swap(nodes);
+  nodes_.clear();
+  //node_locs_.clear();
+  node_model_ids_.clear();
 }
 
 void Network::clear_models_()
@@ -178,6 +202,7 @@ void Network::clear_models_()
       delete *m;
 
   models_.clear();
+  proxy_nodes_.clear();
 }
 
 void Network::reset()
@@ -227,18 +252,23 @@ void Network::reset_network()
      if the Compound's replica_container flag is set. Other compounds are not
      iterated, since their nodes are registered in nodes_ directly.
    */
-  for ( vector<Node*>::iterator it = nodes_.begin();
-        it != nodes_.end() ; ++it )
+  // for ( vector<Node*>::iterator it = nodes_.begin();
+  //       it != nodes_.end() ; ++it )
+  for(size_t n = 0; n < nodes_.size(); ++n)
   {
-    Node& n = **it;
-    if ( n.size() == 0 )
-    {                     // not a compound
-      n.init_state();
-      n.unset(Node::buffers_initialized);
-    }
-    else if ( n.get_model_id() == -1 )
+    //Node& n = **it;
+    //if ( n.size() == 0 )
+    if ( (*nodes_[n]).size() == 0 )  // not a compound
     {
-      Compound* const c = dynamic_cast<Compound*>(&n);
+      // n.init_state();
+      // n.unset(Node::buffers_initialized);
+      (*nodes_[n]).init_state();
+      (*nodes_[n]).unset(Node::buffers_initialized);
+    }
+    //else if ( n.get_model_id() == -1 )
+    else if ( (*nodes_[n]).get_model_id() == -1 )
+    {
+      Compound* const c = dynamic_cast<Compound*>(&(*nodes_[n]));
       assert(c);
       for ( vector<Node*>::iterator cit = c->begin() ; cit != c->end() ; ++cit )
       {
@@ -270,8 +300,10 @@ int Network::get_model_id(const char name[]) const
 }
 
 
-index Network::add_node(long_t mod, long_t n)
+index Network::add_node(long_t mod, long_t n)   //no_p
 {
+  //std::cout << "add " << n << " nodes of type " << mod << std::endl;
+
   assert(current_ != 0);
   assert(root_ != 0);
 
@@ -284,6 +316,7 @@ index Network::add_node(long_t mod, long_t n)
   const thread n_threads = get_num_threads();
   assert(n_threads > 0);
 
+  //const index min_gid = node_locs_.size();
   const index min_gid = nodes_.size();
   const index max_gid = min_gid + n;
 
@@ -297,61 +330,74 @@ index Network::add_node(long_t mod, long_t n)
      containing the instances of the current subnet on all threads.
    */
   index subnet_gid = current_->get_gid();
-  Compound* subnet = dynamic_cast<Compound *>(nodes_[subnet_gid]);
+  assert ( nodes_.test(subnet_gid) );
+  //Compound* subnet = dynamic_cast<Compound *>(nodes_[node_locs_[subnet_gid]]);
+  Compound* subnet = dynamic_cast<Compound *>(&(*nodes_[subnet_gid]));
   assert(subnet != 0);
   assert(subnet->size() == static_cast<size_t>(n_threads));
   assert((*subnet)[0] == current_);
-  
-  if((max_gid > nodes_.max_size()) || (max_gid<min_gid))
-    {
-      message(SLIInterpreter::M_ERROR, " Network::add:node", "Requestend number of nodes will overflow the memory.");
-      message(SLIInterpreter::M_ERROR, " Network::add:node", "No nodes were created.");
-      throw KernelException("OutOfMemory");
-    } 
 
-  nodes_.reserve(max_gid);
+  //std::cout << "subnet gid: " << subnet_gid << std::endl;
+
+  //if((max_gid > node_locs_.max_size()) || (max_gid<min_gid))
+  if ((max_gid > nodes_.max_size()) || (max_gid<min_gid))
+  {
+    message(SLIInterpreter::M_ERROR, " Network::add:node", "Requested number of nodes will overflow the memory.");
+    message(SLIInterpreter::M_ERROR, " Network::add:node", "No nodes were created.");
+    throw KernelException("OutOfMemory");
+  } 
+
+  //node_locs_.reserve(max_gid);
+  node_model_ids_.add_range(mod,min_gid,max_gid-1);
 
   if (model->has_proxies())
   {
+    //std::cout << "model has proxies" << std::endl;
+
     // In this branch we create nodes for all GIDs which are on a local thread
     // and proxies for all GIDs which are on remote processes.
-    int proxy_model_id = get_model_id("proxynode");
-    assert(proxy_model_id > 0);
-    Model *proxy_model = models_[proxy_model_id];
-    assert(proxy_model != 0);
-    
     const int n_per_process = n / scheduler_.get_num_processes();
     const int n_per_thread = n_per_process / n_threads + 1;
-    const int proxies_per_thread = (n - n_per_process) / n_threads + 1;
+    //nodes_.reserve(nodes_.size() + n_per_process);
+    nodes_.resize(max_gid);
     for(thread t = 0; t < n_threads; ++t)
     {
       // Model::reserve() reserves memory for n ADDITIONAL nodes
       model->reserve(t, n_per_thread);
-      proxy_model->reserve(t, proxies_per_thread);
     }
 
     for(size_t gid = min_gid; gid < max_gid; ++gid)
     {
-      thread vp = (current_->get_children_on_same_vp()) ? current_->get_children_vp() 
+      //std::cout << "add gid: " << gid << std::endl;
+
+      thread vp = (current_->get_children_on_same_vp()) ? current_->get_children_vp()     
                                                         : suggest_vp(gid);
       thread t = vp_to_thread(vp);
 
-      Node *newnode = 0;
       if(is_local_vp(vp))
+      {
+	//node_locs_.push_back(nodes_.size());
+        Node *newnode = 0;
 	newnode = model->allocate(t);
+	newnode->set_gid_(gid);
+	newnode->set_model_id(mod);
+	newnode->set_thread(t);
+	newnode->set_vp(vp);
+	//nodes_.push_back(newnode);  // put into local nodes list
+	nodes_[gid] = newnode;        // put into local nodes list
+	current_->add_node(newnode);  // and into current subnet, thread 0.
+      }
       else
-	newnode = proxy_model->allocate(t);
-      
-      newnode->set_gid_(gid);
-      newnode->set_model_id(mod);
-      newnode->set_thread(t);
-      newnode->set_vp(vp);
-      nodes_.push_back(newnode);   // put into global list
-      current_->add_node(newnode); // and into current subnet, thread 0.
-    }
+      {
+	//node_locs_.push_back(-1);
+	current_->add_remote_node(mod);
+      }
+     }
   } 
   else if (!model->one_node_per_process())
   {
+    //std::cout << "model does not have proxies" << std::endl;
+
     // We allocate space for n containers which will hold the threads sorted.
     // We use Compounds to store the instances for each thread to exploit the
     // very efficient memory allocation for nodes. 
@@ -388,15 +434,21 @@ index Network::add_node(long_t mod, long_t n)
     // The following loop creates n nodes. For each node, a wrapper is created
     // and filled with one instance per thread, in total n * n_thread nodes in
     // n wrappers. 
+    //nodes_.reserve(max_gid);
+    nodes_.resize(max_gid);
     for(index gid = min_gid; gid < max_gid; ++gid)
     {
+      //std::cout << "add gid: " << gid << std::endl;
+
       thread thread_id = vp_to_thread(suggest_vp(gid));
 
-      // Create wrapper and register with global nodes_ array.
+      // Create wrapper and register with nodes_ array.
+      //node_locs_.push_back(nodes_.size());
       Compound *container= static_cast<Compound *>(container_model->allocate(thread_id));
       container->set_model_id(-1); // mark as pseudo-container wrapping replicas, see reset_network()
       container->reserve(n_threads); // space for one instance per thread
-      nodes_.push_back(container); 
+      //nodes_.push_back(container); 
+      nodes_[gid] = container; 
 
       // Generate one instance of desired model per thread
       for(thread t = 0; t < n_threads; ++t)
@@ -426,6 +478,8 @@ index Network::add_node(long_t mod, long_t n)
         // Register instance with per-thread instance of enclosing subnet.
         static_cast<Compound *>((*subnet)[t])->add_node(newnode); 
       }
+
+      node_model_ids_.push_back(static_cast<index>(mod));
     }
   }
   else
@@ -437,9 +491,10 @@ index Network::add_node(long_t mod, long_t n)
       newnode->set_model_id(mod);
       newnode->set_thread(0);
       newnode->set_vp(thread_to_vp(0));
-        
+
       // Register instance with wrapper
       nodes_.push_back(newnode);
+      node_model_ids_.push_back(static_cast<index>(mod));
       
       // and into current subnet, thread 0.
       current_->add_node(newnode);
@@ -450,7 +505,6 @@ index Network::add_node(long_t mod, long_t n)
   if (model->is_off_grid())
   {
     scheduler_.set_off_grid_communication(true);
-  
     message(SLIInterpreter::M_INFO, "network::add_node",
             "Precise neuron models exist: the kernel property off_grid_spiking "
             "has been set to true.");
@@ -510,7 +564,7 @@ Node* Network::get_node(TokenArray p, thread thr) const
   return get_node(adr, thr);
 }
 
-
+// TODO AM: this routine still has to be converted
 Node* Network::get_node(vector<size_t> const &p, thread thr) const
 {
   assert(root_ != NULL);
@@ -564,9 +618,12 @@ Node* Network::get_node(vector<size_t> const &p, thread thr) const
 
   assert(new_position != 0);
   index gid = new_position->get_gid();
-  if(thr > 0 && nodes_[gid]->size() > 0)
+
+  //std::cout << "gid of new position " << gid << std::endl;
+
+  if(thr > 0 && (*nodes_[gid]).size() > 0)
   {
-    assert(thr < (thread)nodes_[gid]->size());
+    assert(thr < (thread)(*nodes_[gid]).size());
     return (*nodes_[gid])[thr];
   }
 
@@ -574,19 +631,35 @@ Node* Network::get_node(vector<size_t> const &p, thread thr) const
 }
 
 
-Node* Network::get_node(index n, thread thr) const
+Node* Network::get_node(index n, thread thr)   //no_p
 {
-  if(n >= nodes_.size() || nodes_[n] == 0)
-    throw UnknownNode(n);
+  //std::cout << "get node with gid " << n << std::endl;
 
+  if (!is_local_gid(n))
+  {
+    //std::cout << "non-local" << std::endl;
+    return proxy_nodes_[node_model_ids_.get_model_id(n)];
+  }
+
+  //int_t lid = node_locs_[n];
   // non-compound node
-  if(nodes_[n]->size() == 0)
+  // if(nodes_[lid]->size() == 0)
+  //   return  nodes_[lid];
+  if ((*nodes_[n]).size() == 0)
+  {
+    //std::cout << "non-compound - return node with gid " << (*nodes_[n]).get_gid() << std::endl;
     return nodes_[n];
+  }
 
-  if (thr < 0 || thr >= (thread)nodes_[n]->size())
+  // if (thr < 0 || thr >= (thread)nodes_[lid]->size())
+  //   throw UnknownNode();
+  if (thr < 0 || thr >= (thread)(*nodes_[n]).size())
     throw UnknownNode();
 
   // compound node
+  //return (*nodes_[lid])[thr];
+
+  //std::cout << "compound - return node with gid " << (*nodes_[n])[thr]->get_gid() << std::endl;
   return (*nodes_[n])[thr];
 }
 
@@ -598,7 +671,7 @@ const Compound* Network::get_thread_siblings(index n) const
   return dynamic_cast<Compound*>(nodes_[n]);
 }
 
-vector<size_t> Network::get_adr(Node const* node) const
+vector<size_t> Network::get_adr(Node const* node)
 {
   std::vector<size_t> adr;
   while(node != 0)
@@ -613,17 +686,14 @@ vector<size_t> Network::get_adr(Node const* node) const
   return adr;
 }
 
-bool Network::model_in_use(index i) const
+Node* Network::get_spike_source_node()
 {
-  bool found = false;
+  return proxy_spike_source_;
+}
 
-  for (vector<Node *>::const_iterator it = nodes_.begin();
-       it != nodes_.end() && !found;
-       it++)
-    if ( (*it)->get_model_id() == static_cast<int>(i) )
-      found = true;
-
-  return found;
+bool Network::model_in_use(index i)
+{
+  return node_model_ids_.model_in_use(i);
 }
 
 void Network::simulate(Time const& t)
@@ -678,26 +748,37 @@ void Network::print(TokenArray p, int depth)
     throw SubnetExpected();
 }
 
+void Network::print_model_ranges()
+{
+  node_model_ids_.print();
+}
+
 void Network::set_status(index gid, const DictionaryDatum& d)
 {
-  if (gid >= size())
-    throw UnknownNode(gid);
+  // if (gid >= size())
+  //   throw UnknownNode(gid);
 
   // we first handle normal nodes, except the root (GID 0)
-  if ( gid > 0 )
+  if ( gid > 0)
   {
-    Node &target= *(nodes_[gid]);
+    if ( is_local_gid(gid) )
+    {
+      //int_t lid = node_locs_[gid];
+      //if (lid == -1) return;
+      //Node &target= *(nodes_[lid]);
+      Node &target = *(nodes_[gid]);
 
-    if ( target.size() == 0 )
-      set_status_single_node_(target, d);
-    else
-      for(size_t t=0; t < target.size(); ++t)
-      {
-        // non-root container for devices without proxies and compounds
-        // we iterate over all threads
-        assert(target[t] != 0);
-        set_status_single_node_(*target[t], d);
-      }
+      if ( target.size() == 0 )
+	set_status_single_node_(target, d);
+      else
+	for(size_t t=0; t < target.size(); ++t)
+	{
+	  // non-root container for devices without proxies and compounds
+	  // we iterate over all threads
+	  assert(target[t] != 0);
+	  set_status_single_node_(*target[t], d);
+	}
+    }
     return;
   }
   
@@ -810,7 +891,7 @@ void Network::set_data_path_prefix_(const DictionaryDatum& d)
   }
 }
 
-DictionaryDatum Network::get_status(index idx) const
+DictionaryDatum Network::get_status(index idx) 
 {
   Node *target = get_node(idx);
   assert(target != 0);
@@ -837,11 +918,10 @@ DictionaryDatum Network::get_status(index idx) const
 // gid gid
 void Network::connect(index source_id, index target_id, index syn)
 {
-  Node* target_ptr = 0;
-  target_ptr = get_node(target_id);
-  
-  if (target_ptr->is_proxy())
-    return;
+   if (!is_local_gid(target_id))
+     return;
+
+  Node* target_ptr = get_node(target_id);
   
   Node* source_ptr = 0;
   //target_thread defaults to 0 for devices
@@ -851,7 +931,7 @@ void Network::connect(index source_id, index target_id, index syn)
   //normal nodes and devices with proxies
   if (target_ptr->has_proxies())
   {
-    connect(*source_ptr, *target_ptr, target_thread, syn);
+    connect(*source_ptr, *target_ptr, source_id, target_thread, syn);
   }
   else if (target_ptr->local_receiver()) //normal devices
   {
@@ -864,7 +944,7 @@ void Network::connect(index source_id, index target_id, index syn)
       target_ptr = get_node(target_id, target_thread);
     }
 
-    connect(*source_ptr, *target_ptr, target_thread, syn);
+    connect(*source_ptr, *target_ptr, source_id, target_thread, syn);
   }
   else //globally receiving devices iterate over all target threads
   {
@@ -875,7 +955,7 @@ void Network::connect(index source_id, index target_id, index syn)
     for (thread t = 0; t < n_threads; t++)
     {
       target_ptr = get_node(target_id, t);
-      connect(*source_ptr, *target_ptr, t, syn);
+      connect(*source_ptr, *target_ptr, source_id, t, syn);
     } 
   }
 }
@@ -883,11 +963,10 @@ void Network::connect(index source_id, index target_id, index syn)
 // gid gid weight delay
 void Network::connect(index source_id, index target_id, double_t w, double_t d, index syn)
 {
-  Node* target_ptr = 0;
-  target_ptr = get_node(target_id);
-  
-  if (target_ptr->is_proxy())
-    return;
+  if (!is_local_gid(target_id))
+     return;
+
+  Node* target_ptr = get_node(target_id);
   
   Node* source_ptr = 0;
   //target_thread defaults to 0 for devices
@@ -897,7 +976,7 @@ void Network::connect(index source_id, index target_id, double_t w, double_t d, 
   //normal nodes and devices with proxies
   if (target_ptr->has_proxies())
   {
-    connect(*source_ptr, *target_ptr, target_thread, w, d, syn);
+    connect(*source_ptr, *target_ptr, source_id, target_thread, w, d, syn);
   }
   else if (target_ptr->local_receiver()) //normal devices
   {
@@ -910,7 +989,7 @@ void Network::connect(index source_id, index target_id, double_t w, double_t d, 
       target_ptr = get_node(target_id, target_thread);
     }
 
-    connect(*source_ptr, *target_ptr, target_thread, w, d, syn);
+    connect(*source_ptr, *target_ptr, source_id, target_thread, w, d, syn);
   }
   else //globally receiving devices iterate over all target threads
   {
@@ -920,7 +999,7 @@ void Network::connect(index source_id, index target_id, double_t w, double_t d, 
     for (thread t = 0; t < n_threads; t++)
     {
       target_ptr = get_node(target_id, t);
-      connect(*source_ptr, *target_ptr, t, w, d, syn);
+      connect(*source_ptr, *target_ptr, source_id, t, w, d, syn);
     } 
   }
 }
@@ -928,11 +1007,10 @@ void Network::connect(index source_id, index target_id, double_t w, double_t d, 
 // gid gid dict
 bool Network::connect(index source_id, index target_id, DictionaryDatum& params, index syn)
 {
-  Node* target_ptr = 0;
-  target_ptr = get_node(target_id);
-  
-  if (target_ptr->is_proxy())
-    return false;
+  if (!is_local_gid(target_id))
+     return false;
+
+  Node* target_ptr = get_node(target_id);
   
   Node* source_ptr = 0;
   //target_thread defaults to 0 for devices
@@ -942,7 +1020,7 @@ bool Network::connect(index source_id, index target_id, DictionaryDatum& params,
   //normal nodes and devices with proxies
   if (target_ptr->has_proxies())
   {
-    connect(*source_ptr, *target_ptr, target_thread, params, syn);
+    connect(*source_ptr, *target_ptr, source_id, target_thread, params, syn);
   }
   else if (target_ptr->local_receiver()) //normal devices
   {
@@ -955,7 +1033,7 @@ bool Network::connect(index source_id, index target_id, DictionaryDatum& params,
       target_ptr = get_node(target_id, target_thread);
     }
 
-    connect(*source_ptr, *target_ptr, target_thread, params, syn);
+    connect(*source_ptr, *target_ptr, source_id, target_thread, params, syn);
   }
   else //globally receiving devices iterate over all target threads
   {
@@ -965,7 +1043,7 @@ bool Network::connect(index source_id, index target_id, DictionaryDatum& params,
     for (thread t = 0; t < n_threads; t++)
     {
       target_ptr = get_node(target_id, t);
-      connect(*source_ptr, *target_ptr, t, params, syn);
+      connect(*source_ptr, *target_ptr, source_id, t, params, syn);
     } 
   }
   
@@ -997,24 +1075,36 @@ void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArr
     message(SLIInterpreter::M_INFO, "DivergentConnect", "Source ID is a subnet; I will iterate it.");
     
     NodeList source_nodes(*source_comp);
-    for(NodeList::iterator src=source_nodes.begin(); src!= source_nodes.end(); ++src)
-      divergent_connect((*src)->get_gid(), target_ids, weights, delays, syn);
+    vector<index> source_gids;
+    nest::Communicator::communicate(source_nodes,source_gids);
+
+    for(vector<index>::iterator src=source_gids.begin(); src!= source_gids.end(); ++src)
+      divergent_connect(*src, target_ids, weights, delays, syn);
 
     return;
   }
 
   // We retrieve pointers for all targets, this implicitly checks if they
   // exist and throws UnknownNode if not.
-  std::vector<Node*> targets(target_ids.size());
+  std::vector<Node*> targets;
+  std::vector<Node*> real_targets;
+  targets.reserve(target_ids.size());
+  real_targets.reserve(target_ids.size()); // we do not know how many drop out, but have upper limit
+
+  //only bother with local targets - is_local_gid is cheaper than get_node()
   for (index i = 0; i < target_ids.size(); ++i)
-    targets[i] = get_node(getValue<long>(target_ids[i]));
+    {
+      index gid = getValue<long>(target_ids[i]);
+      if (is_local_gid(gid))
+	  targets.push_back(get_node(gid));
+    }
 
-  for(index i = 0; i < target_ids.size(); ++i)
+  thread target_thread = 0; /// we force this in this experiment
+
+  for(index i = 0; i < targets.size(); ++i)
   {
-    if (targets[i]->is_proxy())
-      continue;
-
-    thread target_thread = targets[i]->get_thread();
+    assert(target_thread  == targets[i]->get_thread());
+    //    thread target_thread = targets[i]->get_thread();
  
     if (source->get_thread() != target_thread)
       source = get_node(source_id, target_thread);
@@ -1022,32 +1112,35 @@ void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArr
     if (!targets[i]->has_proxies() && source->is_proxy())
       continue;
 
+    real_targets.push_back(targets[i]);
+  }
+
     try
     {
       if (complete_wd_lists)
-	connect(*source, *targets[i], target_thread, weights.get(i), delays.get(i), syn);
+	assert(false); // connect(*source, *targets[i], source_id, target_thread, weights.get(i), delays.get(i), syn);
       else if (short_wd_lists)
-	connect(*source, *targets[i], target_thread, weights.get(0), delays.get(0), syn);
+	assert(false); // connect(*source, *targets[i], source_id, target_thread, weights.get(0), delays.get(0), syn);
       else 
-	connect(*source, *targets[i], target_thread, syn);
+	bulk_divergent_connect(*source, real_targets, source_id, target_thread, syn);
     }
     catch (IllegalConnection& e)
     {
-      std::string msg = String::compose("Global target ID %1: Target does not support event.", target_ids[i]);
+      std::string msg; // = String::compose("Global target ID %1: Target does not support event.", target_ids[i]);
       message(SLIInterpreter::M_WARNING, "DivergentConnect", msg.c_str());
       message(SLIInterpreter::M_WARNING, "DivergentConnect", "Connection will be ignored.");
-      continue;
+      //continue;
     }
     catch (UnknownReceptorType& e)
     {
-      std::string msg = String::compose("In Connection from global source ID %1 to target ID %2:", source_id, target_ids[i]);
+      std::string msg; // = String::compose("In Connection from global source ID %1 to target ID %2:", source_id, target_ids[i]);
       message(SLIInterpreter::M_WARNING, "Connect", msg.c_str());
       message(SLIInterpreter::M_WARNING, "Connect", "Target does not support requested receptor type.");
       message(SLIInterpreter::M_WARNING, "Connect", "Connection will be ignored.");
       interpreter_.raiseerror(e.what());
-      continue;
+      //      continue;
     }
-  }
+
 }
 
 void Network::random_divergent_connect(index source_id, TokenArray target_ids, index n, TokenArray weights, TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
@@ -1067,8 +1160,11 @@ void Network::random_divergent_connect(index source_id, TokenArray target_ids, i
     message(SLIInterpreter::M_INFO, "RandomDivergentConnect", "Source ID is a subnet; I will iterate it.");
     
     NodeList source_nodes(*source_comp);
-    for(NodeList::iterator src=source_nodes.begin(); src!= source_nodes.end(); ++src)
-      random_divergent_connect((*src)->get_gid(),target_ids, n, weights, delays, allow_multapses, allow_autapses, syn);
+    vector<index> source_gids;
+    nest::Communicator::communicate(source_nodes,source_gids);
+
+    for(vector<index>::iterator src=source_gids.begin(); src!= source_gids.end(); ++src)
+      random_divergent_connect(*src,target_ids, n, weights, delays, allow_multapses, allow_autapses, syn);
 
     return;
   }
@@ -1117,9 +1213,10 @@ void Network::convergent_connect(TokenArray source_ids, index target_id, TokenAr
     throw DimensionMismatch();
   }
 
+   if (!is_local_gid(target_id))
+     return;
+
   Node* target = get_node(target_id);
-  if (target->is_proxy())
-    return;
 
   Compound *target_comp = dynamic_cast<Compound *>(target);
   if(target_comp != 0)
@@ -1127,8 +1224,10 @@ void Network::convergent_connect(TokenArray source_ids, index target_id, TokenAr
     message(SLIInterpreter::M_INFO, "ConvergentConnect", "Target node is a subnet; I will iterate it.");
     
     NodeList target_nodes(*target_comp);
-    for(NodeList::iterator tgt = target_nodes.begin(); tgt != target_nodes.end(); ++tgt)
-      convergent_connect(source_ids, (*tgt)->get_gid(), weights, delays, syn);
+    vector<index> target_gids;
+    nest::Communicator::communicate(target_nodes,target_gids);
+    for(vector<index>::iterator tgt = target_gids.begin(); tgt != target_gids.end(); ++tgt)
+      convergent_connect(source_ids, *tgt, weights, delays, syn);
 
     return;
   }
@@ -1163,11 +1262,11 @@ void Network::convergent_connect(TokenArray source_ids, index target_id, TokenAr
     try
     {
       if (complete_wd_lists)
-        connect(*sources[i], *target, target_thread, weights.get(i), delays.get(i), syn);
+        connect(*sources[i], *target, source_ids[i], target_thread, weights.get(i), delays.get(i), syn);
       else if (short_wd_lists)
-	connect(*sources[i], *target, target_thread, weights.get(0), delays.get(0), syn);
+	connect(*sources[i], *target, source_ids[i], target_thread, weights.get(0), delays.get(0), syn);
       else 
-        connect(*sources[i], *target, target_thread, syn);
+        connect(*sources[i], *target, source_ids[i], target_thread, syn);
     }
     catch (IllegalConnection& e)
     {
@@ -1191,10 +1290,10 @@ void Network::convergent_connect(TokenArray source_ids, index target_id, TokenAr
 
 void Network::random_convergent_connect(TokenArray source_ids, index target_id, index n, TokenArray weights, TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
 {
-  Node* target = get_node(target_id);
+  if (!is_local_gid(target_id))
+     return;
 
-  if (target->is_proxy())
-    return;
+  Node* target = get_node(target_id);
 
   // check if we have consistent lists for weights and delays
   if (! (weights.size() == n || weights.size() == 0) && (weights.size() == delays.size()))
@@ -1209,8 +1308,11 @@ void Network::random_convergent_connect(TokenArray source_ids, index target_id, 
     message(SLIInterpreter::M_INFO, "RandomConvergentConnect","Target ID is a subnet; I will iterate it.");
     
     NodeList target_nodes(*target_comp);
-    for(NodeList::iterator tgt = target_nodes.begin(); tgt != target_nodes.end(); ++tgt)
-      random_convergent_connect(source_ids, (*tgt)->get_gid(), n, weights, delays, allow_multapses, allow_autapses, syn);
+    vector<index> target_gids;
+    nest::Communicator::communicate(target_nodes,target_gids);
+    
+    for(vector<index>::iterator tgt = target_gids.begin(); tgt != target_gids.end(); ++tgt)
+      random_convergent_connect(source_ids, *tgt, n, weights, delays, allow_multapses, allow_autapses, syn);
 
     return;
   }

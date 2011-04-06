@@ -106,7 +106,7 @@ namespace nest {
 
   bool Node::is_local() const
   {
-    return net_->is_local_vp(get_vp());
+    return !is_proxy();
   }
 
   DictionaryDatum Node::get_status_dict_()

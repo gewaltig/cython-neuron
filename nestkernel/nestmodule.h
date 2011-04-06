@@ -370,6 +370,13 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } memoryinfofunction;
 
+#ifdef IS_BLUEGENE_P
+     class BGPMemInfoFunction: public SLIFunction
+     {
+       void execute(SLIInterpreter *) const;
+     } bgpmeminfofunction;
+#endif
+
      class PrintNetworkFunction : public SLIFunction
      {
        void execute(SLIInterpreter *) const;
@@ -395,7 +402,7 @@ namespace nest
        void execute(SLIInterpreter *) const; 
      } timecommunication_i_i_bfunction; 
 
-     class MPIProcessorNameFunction : public SLIFunction
+     class ProcessorNameFunction : public SLIFunction
      {
        void execute(SLIInterpreter *) const;
      } mpiprocessornamefunction;

@@ -40,6 +40,13 @@
 #include "genericmodel.h"
 
 #include <set>
+#ifdef IS_BLUEGENE_P
+#include <sys/resource.h>
+#include <common/bgp_personality.h>
+#include <common/bgp_personality_inlines.h>
+#include <spi/kernel_interface.h>
+#endif
+
 
 extern int SLIsignalflag;
 
@@ -106,6 +113,7 @@ namespace nest
 
      SeeAlso: CurrentSubnet
   */
+  /*
   void NestModule::ChangeSubnet_aFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(1);
@@ -119,6 +127,11 @@ namespace nest
     
     i->OStack.pop();
     i->EStack.pop();
+    }*/
+
+  void NestModule::ChangeSubnet_aFunction::execute(SLIInterpreter *i) const
+  {
+    assert(false);
   }
 
   void NestModule::ChangeSubnet_iFunction::execute(SLIInterpreter *i) const
@@ -148,12 +161,33 @@ namespace nest
      SeeAlso: ChangeSubnet
      Author: Marc-Oliver Gewaltig
   */
+  /*
   void NestModule::CurrentSubnetFunction::execute(SLIInterpreter *i) const
   {
     assert(get_network().get_cwn() != 0);
     vector<size_t> current = get_network().get_adr(get_network().get_cwn());
 
     i->OStack.push(ArrayDatum(current));
+    i->EStack.pop();
+    }*/
+
+  /* BeginDocumentation
+     Name: CurrentSubnet - return the gid of the current network node.
+
+     Synopsis: CurrentSubnet -> gid
+     Description:
+     CurrentSubnet returns the gid of the current working subnet.
+     Availability: NEST
+     SeeAlso: ChangeSubnet
+     Author: Marc-Oliver Gewaltig
+  */
+  
+  void NestModule::CurrentSubnetFunction::execute(SLIInterpreter *i) const
+  {
+    assert(get_network().get_cwn() != 0);
+    index current = get_network().get_cwn()->get_gid();
+
+    i->OStack.push(current);
     i->EStack.pop();
   }
 
@@ -393,23 +427,23 @@ namespace nest
     i->assert_stack_load(1);
 
     DictionaryDatum dict = getValue<DictionaryDatum>(i->OStack.pick(0));
-
     dict->clear_access_flags();
     ArrayDatum array = get_network().find_connections(dict);
+
     std::string missed;
     if ( !dict->all_accessed(missed) )
-      {
-	if ( get_network().dict_miss_is_error() )
-	  throw UnaccessedDictionaryEntry(missed);
-	else
-	  get_network().message(SLIInterpreter::M_WARNING, "FindConnections", 
-				("Unread dictionary entries: " + missed).c_str());
-      }
-     
+    {
+      if ( get_network().dict_miss_is_error() )
+        throw UnaccessedDictionaryEntry(missed);
+      else
+        get_network().message(SLIInterpreter::M_WARNING, "SetConnections", 
+                              ("Unread dictionary entries: " + missed).c_str());
+    }
+    
     i->OStack.pop();
     i->OStack.push(array);
     i->EStack.pop();
-  }
+    }
 
   /* BeginDocumentation
      Name: Simulate - simulate n milliseconds
@@ -562,31 +596,38 @@ namespace nest
 
   void NestModule::GetNodes_i_bFunction::execute(SLIInterpreter *i) const
   {
-     i->assert_stack_load(2);
+    i->assert_stack_load(2);
 
-     const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
-     const index node_id        = getValue<long>(i->OStack.pick(1));
-     Compound *subnet = dynamic_cast<Compound *>(get_network().get_node(node_id));
-     
-     if (subnet==NULL)
-       throw SubnetExpected();
+    const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
+    const index node_id        = getValue<long>(i->OStack.pick(1));
+
+    Compound *subnet = dynamic_cast<Compound *>(get_network().get_node(node_id));     
+    if (subnet==NULL)
+      throw SubnetExpected();
  
-     NodeList nodes(*subnet);
+    NodeList localnodes(*subnet);
+    ArrayDatum result;
 
-     ArrayDatum result;
-     if ( include_remote )
-       result.reserve(nodes.size());
-     else
-       result.reserve(nodes.size() / get_network().get_num_processes());
+    if ( include_remote )
+    {
+      vector<index> gids;
+      nest::Communicator::communicate(localnodes, gids);
+      result.reserve(gids.size());
 
-     for(NodeList::iterator n = nodes.begin(); n != nodes.end(); ++n)
-       if ( include_remote or (*n)->is_local() )
-	 result.push_back(new IntegerDatum((*n)->get_gid()));
-     
-     i->OStack.pop(2);
-     i->OStack.push(result);
-     i->EStack.pop();
-   }
+      for(vector<index>::iterator n = gids.begin(); n != gids.end(); ++n)
+        result.push_back(new IntegerDatum(*n));
+    }
+    else
+    {
+      result.reserve(localnodes.size());
+      for(NodeList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
+        result.push_back(new IntegerDatum((*n)->get_gid()));
+    }
+          
+    i->OStack.pop(2);
+    i->OStack.push(result);
+    i->EStack.pop();
+  }
 
   void NestModule::GetChildren_i_bFunction::execute(SLIInterpreter *i) const
   {
@@ -594,20 +635,41 @@ namespace nest
 
     const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
     const index node_id        = getValue<long>(i->OStack.pick(1));
-    Compound *subnet = dynamic_cast<Compound *>(get_network().get_node(node_id));
-     
+
+    Compound *subnet = dynamic_cast<Compound *>(get_network().get_node(node_id));     
     if (subnet == NULL)
       throw SubnetExpected();
  
     ArrayDatum result;
+
     if ( include_remote )
-      result.reserve(subnet->size());
+    {
+      // TODO: Currently, there is no way in the bluegeneP branch to
+      // collect only the direct children of a subnet from local and
+      // remote machines, so this branch stays unimplemented for
+      // now. The nicest way to implement it would be to write a class
+      // ChildList in the spirit of LeafList and Node list that has a
+      // operator++(), which only iterates over the direct
+      // children. This branch would then use the communicate function
+      // as GetNodes and GetLeafs does in order to collect the gids
+      // from local and remote machines.
+      //
+      // Once this is implemented, we can think about unifying the
+      // three functions GetLeaves, GetNodes, and GetChildren, as they
+      // are essentially the same and only differ by their use of a
+      // LeafList, NodeList and ChildList, respectively.
+
+      i->message(SLIInterpreter::M_FATAL, "GetChildren_i_bFunction",
+                 "The GetChildren variant that includes local and remote nodes "
+                 "is not implemented yet for the 10kproject branch. Please see "
+                 "the comment in nestmodule.cpp for how this could be solved.");
+    }
     else
-      result.reserve(subnet->size() / get_network().get_num_processes());
-     
-    for(vector<Node *>::iterator n = subnet->begin(); n != subnet->end(); ++n)
-      if ( include_remote or (*n)->is_local() )
-	result.push_back(new IntegerDatum((*n)->get_gid()));
+    {
+      result.reserve(subnet->size());
+      for(vector<Node *>::iterator n = subnet->begin(); n != subnet->end(); ++n)
+        result.push_back(new IntegerDatum((*n)->get_gid()));
+    }
 
     i->OStack.pop(2);
     i->OStack.push(result);
@@ -620,22 +682,29 @@ namespace nest
 
     const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
     const index node_id        = getValue<long>(i->OStack.pick(1));
-    Compound *subnet = dynamic_cast<Compound *>(get_network().get_node(node_id));
-     
+
+    Compound *subnet = dynamic_cast<Compound *>(get_network().get_node(node_id));     
     if (subnet == NULL)
       throw SubnetExpected();
  
-    LeafList nodes(*subnet);
-
+    LeafList localnodes(*subnet);
     ArrayDatum result;
+
     if ( include_remote )
-      result.reserve(nodes.size());
+    {
+      vector<index> gids;
+      nest::Communicator::communicate(localnodes, gids);
+      result.reserve(gids.size());
+
+      for(vector<index>::iterator n = gids.begin(); n != gids.end(); ++n)
+        result.push_back(new IntegerDatum(*n));
+    }
     else
-      result.reserve(nodes.size() / get_network().get_num_processes());
-     
-    for(LeafList::iterator n = nodes.begin(); n != nodes.end(); ++n)
-      if ( include_remote or (*n)->is_local() )
-	result.push_back(new IntegerDatum((*n)->get_gid()));
+    {
+      result.reserve(localnodes.size());
+      for(NodeList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
+        result.push_back(new IntegerDatum((*n)->get_gid()));
+    }
      
     i->OStack.pop(2);
     i->OStack.push(result);
@@ -657,6 +726,7 @@ namespace nest
 
      SeeAlso: GetAddress
   */
+  /*
   void NestModule::GetGIDFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(1);
@@ -664,13 +734,17 @@ namespace nest
     TokenArray node_adr;
 
     node_adr = getValue<TokenArray>(i->OStack.pick(0));
-    Node* node = get_network().get_node(node_adr);
+    index gid = get_network().get_gid(node_adr);
 
     i->OStack.pop();
     i->OStack.push(node->get_gid());
     i->EStack.pop();
   }
-
+  */
+  void NestModule::GetGIDFunction::execute(SLIInterpreter *i) const
+  {
+    assert(false);
+  }
   /* BeginDocumentation      
      Name: GetLID - Return the local ID of a node
    
@@ -685,16 +759,22 @@ namespace nest
 
      SeeAlso: GetAddress, GetGID
   */
+  /*
   void NestModule::GetLIDFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(1);
 
     long gid  =  i->OStack.pick(0);
-    Node * node= get_network().get_node(gid);
+    index lid = get_network().get_lid(gid);
      
     i->OStack.pop();
-    i->OStack.push(node->get_lid()+1);
+    i->OStack.push(lid+1);
     i->EStack.pop();
+  }
+  */
+  void NestModule::GetLIDFunction::execute(SLIInterpreter *i) const
+  {
+    assert(false);
   }
 
   /* BeginDocumentation
@@ -708,6 +788,7 @@ namespace nest
      This function returns the network address which belongs to
      the specified  node gid (global id).
   */
+    /*
   void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(1);
@@ -718,6 +799,11 @@ namespace nest
     i->OStack.pop();
     i->OStack.push(node_adr);
     i->EStack.pop();
+  }
+    */
+void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
+  {
+    assert(false);
   }
 
   /* BeginDocumentation
@@ -1181,6 +1267,28 @@ namespace nest
   }
 
   /* BeginDocumentation
+     Name BGPMemInfo - Reports memory usage on Blue Gene/P system
+     Description:
+     BGPMemInfo gives the maximum memory usage of a process in kBytes.
+     This function has only been tested with the environment on the
+     FZJ Blue Gene/P, JUGENE.
+     Synopsis:
+     MemoryInfo -> -
+     Availability: NEST
+     Author: Tobias C Potjans
+   */
+#ifdef IS_BLUEGENE_P
+  void NestModule::BGPMemInfoFunction::execute(SLIInterpreter *i) const
+  {
+    struct rusage usage;
+    if (getrusage(RUSAGE_SELF, &usage) != 0)
+      return;
+    i->OStack.push(usage.ru_maxrss);
+    i->EStack.pop();
+  }
+#endif
+
+  /* BeginDocumentation
      Name: PrintNetwork - Print network tree in readable form.
      Description:
      Synopsis: 
@@ -1311,6 +1419,7 @@ namespace nest
      Availability: NEST
      Author: Marc-Oliver Gewaltig, Jochen Martin Eppler
   */
+  /*
   void NestModule::PrintNetworkFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
@@ -1322,7 +1431,11 @@ namespace nest
     i->OStack.pop(2);
     i->EStack.pop();
   }
-
+  */
+  void NestModule::PrintNetworkFunction::execute(SLIInterpreter *i) const
+  {
+    assert(false);
+  }
   /* BeginDocumentation
      Name: Rank - Return the MPI rank (MPI_Comm_rank) of the process.
      Availability: NEST 2.0
@@ -1360,33 +1473,43 @@ namespace nest
      MPI_Barrier(). Note that during simulation the processes are
      automatically synchronized without the need for user interaction.
      SeeAlso: Rank, NumProcesses, MPIProcessorName
-   */
-   void NestModule::SyncProcessesFunction::execute(SLIInterpreter *i) const
-   {
-     Communicator::synchronize();
-     i->EStack.pop();
-   }
-
-   void NestModule::TimeCommunication_i_i_bFunction::execute(SLIInterpreter *i) const 
-   { 
-     i->assert_stack_load(3); 
-     long samples = getValue<long>(i->OStack.pick(2)); 
-     long num_bytes = getValue<long>(i->OStack.pick(1)); 
-     bool offgrid = getValue<bool>(i->OStack.pick(0));
-
-     double_t time = 0.0;
-     if ( offgrid )
-       time = Communicator::time_communicate_offgrid(num_bytes,samples);
-     else
-       time = Communicator::time_communicate(num_bytes,samples);
-
-     i->OStack.pop(3); 
-     i->OStack.push(time);
-     i->EStack.pop(); 
-   } 
+  */
+  void NestModule::SyncProcessesFunction::execute(SLIInterpreter *i) const
+  {
+    Communicator::synchronize();
+    i->EStack.pop();
+  }
 
   /* BeginDocumentation
-     Name: MPIProcessorName - Return an unique specifier for the compute node (MPI_Get_processor_name).
+     Name: TimeCommunication - returns average time taken for MPI_Allgather over n calls with m bytes
+     Synopsis: 
+     n m TimeCommunication -> time
+     Availability: NEST 2.0
+     Author: Abigail Morrison
+     FirstVersion: August 2009
+     Description:
+     The function allows a user to test how much time a call the Allgather costs
+  */
+  void NestModule::TimeCommunication_i_i_bFunction::execute(SLIInterpreter *i) const 
+  { 
+    i->assert_stack_load(3); 
+    long samples = getValue<long>(i->OStack.pick(2)); 
+    long num_bytes = getValue<long>(i->OStack.pick(1)); 
+    bool offgrid = getValue<bool>(i->OStack.pick(0));
+
+    double_t time = 0.0;
+    if ( offgrid )
+      time = Communicator::time_communicate_offgrid(num_bytes,samples);
+    else
+      time = Communicator::time_communicate(num_bytes,samples);
+
+    i->OStack.pop(3); 
+    i->OStack.push(time);
+    i->EStack.pop(); 
+  } 
+
+  /* BeginDocumentation
+     Name: ProcessorName - Returns a unique specifier for the actual node (MPI_Get_processor_name).
      Availability: NEST 2.0
      Author: Alexander Hanuschkin
      FirstVersion: April 2009
@@ -1399,12 +1522,11 @@ namespace nest
      (I'm process ) =only Rank 1 add =only ( of ) =only NumProcesses =only ( on machine ) =only MPIProcessorName =
      SeeAlso: Rank, NumProcesses, SyncProcesses
   */
-  void NestModule::MPIProcessorNameFunction::execute(SLIInterpreter *i) const
+  void NestModule::ProcessorNameFunction::execute(SLIInterpreter *i) const
   {
-    i->OStack.push(Communicator::get_processor_name());
+    i->OStack.push(Communicator::name);
     i->EStack.pop();
   }
-
 
   /* BeginDocumentation
      Name: GetVpRNG - return random number generator associated to virtual process of node
@@ -1571,12 +1693,12 @@ namespace nest
     net_->calibrate_clock();
       
     // register interface functions with interpreter
-    i->createcommand("ChangeSubnet_a", &changesubnet_afunction);
-    i->createcommand("ChangeSubnet_i", &changesubnet_ifunction);
-    i->createcommand("CurrentSubnet",  &currentsubnetfunction);
-    i->createcommand("GetNodes_i_b",   &getnodes_i_bfunction);
-    i->createcommand("GetLeaves_i_b",  &getleaves_i_bfunction);
-    i->createcommand("GetChildren_i_b",&getchildren_i_bfunction);
+    i->createcommand("ChangeSubnet_a",  &changesubnet_afunction);
+    i->createcommand("ChangeSubnet_i",  &changesubnet_ifunction);
+    i->createcommand("CurrentSubnet",   &currentsubnetfunction);
+    i->createcommand("GetNodes_i_b",    &getnodes_i_bfunction);
+    i->createcommand("GetLeaves_i_b",   &getleaves_i_bfunction);
+    i->createcommand("GetChildren_i_b", &getchildren_i_bfunction);
 
     i->createcommand("GetGID",       &getgidfunction);
     i->createcommand("GetLID",       &getlidfunction);
@@ -1617,6 +1739,9 @@ namespace nest
     i->createcommand("NetworkDimensions_a",&networkdimensions_afunction);
    
     i->createcommand("MemoryInfo", &memoryinfofunction);
+#ifdef IS_BLUEGENE_P
+    i->createcommand("BGPMemInfo", &bgpmeminfofunction);
+#endif
    
     i->createcommand("PrintNetwork", &printnetworkfunction);
     
@@ -1624,7 +1749,7 @@ namespace nest
     i->createcommand("NumProcesses", &numprocessesfunction);
     i->createcommand("SyncProcesses", &syncprocessesfunction);
     i->createcommand("TimeCommunication_i_i_b", &timecommunication_i_i_bfunction); 
-    i->createcommand("MPIProcessorName", &mpiprocessornamefunction);
+    i->createcommand("ProcessorName", &processornamefunction);
    
     i->createcommand("GetVpRNG", &getvprngfunction);
     i->createcommand("GetGlobalRNG", &getglobalrngfunction);

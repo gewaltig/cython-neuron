@@ -175,6 +175,8 @@ namespace nest
     const Name file_extension("file_extension");
     const Name precision("precision");
     const Name scientific("scientific");
+    const Name binary("binary");
+    const Name fbuffer_size("fbuffer_size");
     const Name flush_records("flush_records");
     const Name close_after_simulate("close_after_simulate");
     const Name flush_after_simulate("flush_after_simulate");

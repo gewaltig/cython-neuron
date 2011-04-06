@@ -22,6 +22,8 @@
 #include "exceptions.h"
 #include "spikecounter.h"
 
+#include <vector>
+
 class Dictionary;
 
 namespace nest

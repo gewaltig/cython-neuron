@@ -25,14 +25,15 @@
 
 #include <limits>
 #include <numeric>
-#include <time.h> 
-#include <sys/time.h>  // required to fix header dependencies in OS X, HEP 
-#include <sys/times.h> 
-#include <sys/resource.h> 
+#include <time.h>
+#include <sys/time.h>  // required to fix header dependencies in OS X, HEP
+#include <sys/times.h>
+#include <sys/resource.h>
 #include "communicator.h"
 #include "network.h"
 
 #include "dictutils.h"
+#include "nodelist.h"
 
 nest::Network* nest::Communicator::net_ = 0;
 int nest::Communicator::rank_ = 0;
@@ -302,6 +303,26 @@ void nest::Communicator::communicate_Allgather (std::vector<uint_t>& send_buffer
       send_buffer_size_ = max_recv_count;
       recv_buffer_size_ = send_buffer_size_ * num_processes_;
     }
+}
+
+nest::double_t nest::Communicator::time_communicate(int num_bytes, int samples)
+{
+  if (num_processes == 1)
+    return 0.0;
+  int num_elements = num_bytes/sizeof(uint_t);
+  std::vector<uint_t> test_send_buffer(num_elements);
+  std::vector<uint_t> test_recv_buffer(num_elements*num_processes);
+  //start time measurement here
+  struct tms foo;
+  const clock_t starttime = times(&foo);
+  for (int i = 0; i < samples; ++i)
+    MPI_Allgather(&test_send_buffer[0], num_elements, MPI_UNSIGNED,
+		  &test_recv_buffer[0], num_elements, MPI_UNSIGNED, MPI_COMM_WORLD);
+  //finish time measurement here
+  const clock_t finishtime = times(&foo);
+  double_t total_duration = (double)(finishtime-starttime);
+  return total_duration/(samples * sysconf(_SC_CLK_TCK));
+  return 0.0;
 }
   
 void nest::Communicator::communicate_CPEX (std::vector<uint_t>& send_buffer, 
@@ -673,7 +694,7 @@ void nest::Communicator::communicate_Allgather(std::vector<int_t>& buffer)
 {
   // avoid aliasing, see http://www.mpi-forum.org/docs/mpi-11-html/node10.html
   int_t my_val = buffer[rank_];
-  MPI_Allgather(&my_val, 1, MPI_INT, &buffer[0], 1, MPI_INT, comm);
+  MPI_Allgather(&my_val, 1, MPI_INT, &buffer[0], 1, MPI_INT, MPI_COMM_WORLD);
 }
 
 void nest::Communicator::communicate_CPEX(std::vector<int_t>& buffer)
@@ -874,6 +895,51 @@ void nest::Communicator::communicate_connector_properties(DictionaryDatum& dict)
     }
 }
 
+void nest::Communicator::communicate(const NodeList& local_nodes, vector<index>& gids)
+{
+  size_t np = Communicator::num_processes;
+  if (np > 1)
+  {
+    size_t n_locals = local_nodes.local_size();
+    vector<long_t> localgids;
+    localgids.reserve(n_locals);
+  
+    for ( NodeList::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+      localgids.push_back((*n)->get_gid());
+
+    //get size of buffers
+    std::vector<nest::int_t> n_gids(np);
+    n_gids[Communicator::rank] = n_locals;
+    communicate(n_gids);
+      
+    // Set up displacements vector.
+    std::vector<int> displacements(np,0); 
+    
+    for ( size_t i = 1; i < np; ++i )
+      displacements.at(i) = displacements.at(i-1)+n_gids.at(i-1);
+    
+    // Calculate sum of global connections.
+    nest::int_t n_globals = 
+      std::accumulate(n_gids.begin(),n_gids.end(), 0);
+    vector<long_t> globalgids;
+    if (n_globals != 0)
+    {
+      globalgids.resize(n_globals,0L);
+      communicate_Allgatherv<nest::long_t>(localgids, globalgids, displacements, n_gids);
+    }
+    //get rid of any multiple entries
+    std::insert_iterator<vector<index> > ins(gids, gids.begin());
+    std::sort(globalgids.begin(),globalgids.end());
+    std::unique_copy(globalgids.begin(),globalgids.end(),ins);
+  }
+  else
+  {
+    for ( NodeList::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+      gids.push_back((*n)->get_gid());
+    std::sort(gids.begin(),gids.end());
+  }
+}
+
 #ifdef HAVE_MUSIC // functions for interaction with MUSIC library
 MUSIC::Setup* nest::Communicator::get_music_setup()
 {
@@ -902,7 +968,7 @@ void nest::Communicator::advance_music_time(long_t num_steps)
 }
 #endif
 
-#else // #ifdef HAVE_MPI
+#else  /* #ifdef HAVE_MPI */
 
 /**
  * communicate (on-grid) if compiled without MPI
@@ -935,6 +1001,20 @@ void nest::Communicator::communicate (std::vector<OffGridSpike>& send_buffer,
       recv_buffer.resize(recv_buffer_size_);
     }
   recv_buffer.swap(send_buffer);
+}
+
+
+void nest::Communicator::communicate(const NodeList& local_nodes, std::vector<index>& gids)
+{
+  size_t n_locals = local_nodes.size();
+  std::vector<index> localgids;
+  localgids.reserve(n_locals);
+  for(NodeList::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n)
+    localgids.push_back((*n)->get_gid());
+    
+  std::sort(localgids.begin(),localgids.end());
+  gids.resize(localgids.size(),0);
+  gids.swap(localgids);
 }
 
 

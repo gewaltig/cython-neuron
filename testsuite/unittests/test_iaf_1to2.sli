@@ -71,7 +71,7 @@ SeeAlso: testsuite::test_iaf, testsuite::test_iaf_psp, testsuite::test_iaf_dc_al
 
 
 
-      [0] << 
+      0 << 
       /local_num_threads 1   
       /resolution h
       >> SetStatus

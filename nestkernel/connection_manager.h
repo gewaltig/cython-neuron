@@ -21,12 +21,15 @@
 #include <limits>
 
 #include "nest.h"
+#include "model.h"
 #include "dictutils.h"
 #include "connector.h"
 #include "nest_time.h"
 #include "nest_timeconverter.h"
 #include "compound.h"
 #include "arraydatum.h"
+
+#include "sparsetable.h"
 
 namespace nest
 {
@@ -40,8 +43,15 @@ class ConnectorModel;
  */
 class ConnectionManager
 {
-  typedef std::vector< Connector* > tVConnector;
-  typedef std::vector< tVConnector > tVVConnector;
+  struct syn_id_connector
+  {
+    index syn_id;
+    Connector* connector;
+  };
+
+  typedef std::vector< syn_id_connector > tVConnector;
+  //typedef std::vector< tVConnector > tVVConnector;
+  typedef google::sparsetable< tVConnector > tVVConnector;
   typedef std::vector< tVVConnector > tVVVConnector;
 
 public:
@@ -113,9 +123,12 @@ public:
    * \param syn The synapse model to use.
    * \returns The receiver port number for the new connection
    */ 
-  void connect(Node& s, Node& r, thread tid, index syn);
-  void connect(Node& s, Node& r, thread tid, double_t w, double_t d, index syn);
-  void connect(Node& s, Node& r, thread tid, DictionaryDatum& p, index syn);
+  void connect(Node& s, Node& r, index s_gid, thread tid, index syn);
+  void connect(Node& s, Node& r, index s_gid, thread tid, double_t w, double_t d, index syn);
+  void connect(Node& s, Node& r, index s_gid, thread tid, DictionaryDatum& p, index syn);
+
+  //! Experimental: connect all targets at once, hopefully better memory efficiency
+  void bulk_divergent_connect(Node& s, const std::vector<Node*>& rv, index s_gid, thread tid, index syn);
   
   void send(thread t, index sgid, Event& e);
 
@@ -131,17 +144,17 @@ public:
 
 private:
 
-  std::vector<ConnectorModel*> pristine_prototypes_;   //!< The list of clean synapse prototypes
-  std::vector<ConnectorModel*> prototypes_;            //!< The list of available synapse prototypes
+  std::vector<ConnectorModel*> pristine_prototypes_; //!< The list of clean synapse prototypes
+  std::vector<ConnectorModel*> prototypes_;          //!< The list of available synapse prototypes
 
-  Network& net_;                               //!< The reference to the network
-  Dictionary* synapsedict_;                    //!< The synapsedict (owned by the network)
+  Network& net_;            //!< The reference to the network
+  Dictionary* synapsedict_; //!< The synapsedict (owned by the network)
 
   /**
    * A 3-dim structure to hold the Connector objects which in turn hold the connection
    * information.
    * - First dim: A std::vector for each local thread
-   * - Second dim: A std::vectoir for each node on each thread
+   * - Second dim: A std::vector for each node on each thread
    * - Third dim: A std::vector for each synapse prototype, holding the Connector objects
    */
   tVVVConnector connections_;
@@ -150,7 +163,7 @@ private:
   void delete_connections_();
   void clear_prototypes_();
   
-  void validate_connector(thread tid, index gid, index syn_id);
+  index validate_connector(thread tid, index gid, index syn_id);
 
   /**
    * Return pointer to protoype for given synapse id.
@@ -163,6 +176,17 @@ private:
    * @throws UnknownSynapseType
    */
   void assert_valid_syn_id(index syn_id) const;
+
+  /**
+   * For a given thread, source gid and synapse id, return the correct
+   * index (syn_vec_index) into the connection store, so that one can
+   * access the corresponding connector using
+   * \code
+       connections_[tid][gid][syn_vec_index].
+     \endcode
+   * @returns the index of the Connector or -1 if it does not exist.
+   */  
+  int get_syn_vec_index(thread tid, index gid, index syn_id) const;
 };
 
 inline
@@ -183,6 +207,22 @@ inline
 bool ConnectionManager::has_user_prototypes() const
 {
   return prototypes_.size() > pristine_prototypes_.size();
+}
+
+inline
+int ConnectionManager::get_syn_vec_index(thread tid, index gid, index syn_id) const
+{
+  if (tid >= connections_.size() || gid >= connections_[tid].size() || connections_[tid][gid].size() == 0)
+    return -1;
+
+  index syn_vec_index = 0;
+  while ( syn_vec_index < connections_[tid][gid].size() && connections_[tid][gid][syn_vec_index].syn_id != syn_id )
+    syn_vec_index++;
+
+  if (syn_vec_index == connections_[tid][gid].size())
+    return -1;
+  
+  return syn_vec_index;  
 }
 
 } // namespace

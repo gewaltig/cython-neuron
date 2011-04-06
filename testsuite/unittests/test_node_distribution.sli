@@ -43,7 +43,7 @@
 
 ResetKernel
 
-[0] << 
+0 << 
     /local_num_threads 1   
     /resolution h
 >> SetStatus
@@ -59,7 +59,7 @@ ResetKernel
   sn2 << /children_on_same_vp true >> SetStatus
   sn2 ChangeSubnet
   /iaf_neuron 3 Create ;
-  
+
 sn1 GetLeaves
 { sn2 GetLeaves DivergentConnect }
 forall

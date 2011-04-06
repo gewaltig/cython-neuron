@@ -139,7 +139,7 @@ assert_or_die
 
   ResetKernel
 
-  [0] << 
+  0 << 
          /local_num_threads 1
          /resolution h
 	 /off_grid_spiking true

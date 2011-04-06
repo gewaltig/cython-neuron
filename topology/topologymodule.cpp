@@ -1010,7 +1010,7 @@ namespace nest
     
     SeeAlso: topology::DumpLayerNodes
   */
-
+  /*
   void TopologyModule::
   DumpLayerConnections_os_i_lFunction::execute(SLIInterpreter *i) const
   {
@@ -1079,6 +1079,12 @@ namespace nest
 
     i->OStack.pop(2);  // leave ostream on stack
     i->EStack.pop();
+  }
+  */
+  void TopologyModule::
+  PrintLayerConnections_os_i_lFunction::execute(SLIInterpreter *i) const
+  {
+    assert(false);
   }
 
   /*

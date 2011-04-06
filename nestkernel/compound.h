@@ -86,17 +86,24 @@ namespace nest{
     Node * operator[](index) const;
 
     size_t size() const;
+    size_t local_size() const;
     bool   empty() const;
     void   reserve(size_t);
 
     void push_back(Node*);
     
     /**
-     * Add a node to the compound.
+     * Add a local node to the compound.
      * This function adds a node to the compound and returns its local id.
      * The node is appended to the compound child-list. 
      */ 
     index add_node(Node *);
+
+    /**
+     * Add a remote node to the compound.
+     * This function increments the next local id to be assigned.
+     */ 
+    index add_remote_node(index mid);
 
     /**
      * Return iterator to the first child node.
@@ -207,28 +214,50 @@ namespace nest{
     DictionaryDatum customdict_; //!< user-defined dictionary for this node.
     // note that DictionaryDatum is a pointer and must be initialized in the constructor.
     bool homogeneous_;           //!< flag which indicates if the compound contains different kinds of models.
+    index next_lid_;             //!< local index of next child
+    index last_mid_;             //!< model index of last child
   };
 
   /**
-   * Add a node to the compound.
+   * Add a local node to the compound.
    */
   inline
   index Compound::add_node(Node *n)
   {
-    const index lid=nodes_.size();
+    const index lid = next_lid_;
+    const index mid = n->get_model_id();
     if ((homogeneous_) && (lid > 0))
-      if (n->get_model_id() != (nodes_.at(lid - 1))->get_model_id())
+      if (mid != last_mid_)
 	homogeneous_ = false;
-    n->set_lid_(lid);
+    n->set_lid_(next_lid_);
     nodes_.push_back(n);
     n->set_parent_(this);
+    next_lid_++;
+    last_mid_ = mid;
     return lid;
   }
+  /**
+   * Add a remote node to the compound.
+   */
+  inline
+  index Compound::add_remote_node(index mid)
+  {
+    const index lid = next_lid_;
+    if((homogeneous_) && (lid > 0))
+      if (mid != last_mid_)
+	homogeneous_ = false;
+    last_mid_ = mid;
+    next_lid_++;
+    return lid;
+  }
+
 
   inline
   void Compound::push_back(Node *n)
   {
     nodes_.push_back(n);
+    last_mid_ = n->get_model_id();
+    next_lid_++;
   }
   
   
@@ -281,6 +310,12 @@ namespace nest{
 
   inline
   size_t Compound::size() const
+  {
+    return next_lid_;
+  }
+
+  inline
+  size_t Compound::local_size() const
   {
     return nodes_.size();
   }
