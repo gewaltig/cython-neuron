@@ -1,0 +1,14 @@
+/* 
+ * Initialization file for MyModule.
+ * Run automatically when MyModule is loaded.
+ */
+
+M_DEBUG (mymodule.sli) (Initializing SLI support for MyModule.) message
+
+/mymodule /SLI ($Revision$) provide-component
+/mymodule /C++ (7165) require-component
+
+/StepPatternConnect [ /arraytype /integertype /arraytype /integertype /literaltype ]
+{ 
+  StepPatternConnect_Vi_i_Vi_i_l
+} def

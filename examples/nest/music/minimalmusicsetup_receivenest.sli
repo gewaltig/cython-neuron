@@ -1,0 +1,15 @@
+M_ERROR setverbosity
+
+/music_event_in_proxy Create /meip Set
+meip << /port_name (spikes_in) /music_channel 0 >> SetStatus
+
+/iaf_neuron Create /n Set
+
+meip n << /weight 750.0 >> Connect
+
+/voltmeter Create /vm Set
+vm << /to_memory false /to_screen true >> SetStatus
+
+vm n Connect
+
+10 Simulate

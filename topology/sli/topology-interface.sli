@@ -1,0 +1,69 @@
+/topology-interface /SLI ($Revision: 6714 $) provide-component
+
+% topology-interface is a temporary file during the mirgration of
+% topology functionality from SLI to C++ migration. Thus, functions
+% in topology-interface are also included in the topology namespace.
+%
+% See topology.sli for legacy code.
+
+/topology namespace
+
+% ------------------------------------------------------------------------------
+
+/ConnectLayers [/integertype /integertype /dictionarytype]
+  /ConnectLayers_i_i_dict load 
+def
+
+/CreateLayer [/dictionarytype]
+  /CreateLayer_dict load 
+def
+
+/GetElement [/integertype /arraytype]
+  /GetElement_i_ia load
+def
+
+/GetPosition [/integertype]
+  /GetPosition_i load
+def
+
+/GetLayer [/integertype]
+  /GetLayer_i load
+def
+
+/Displacement [/integertype /integertype]
+  /Displacement_i_i load
+def
+
+/Displacement [/arraytype /integertype]
+  /Displacement_a_i load
+def
+
+/Displacement [/doublevectortype /integertype]
+  { exch cva exch
+    Displacement_a_i } bind
+def
+
+/Distance [/integertype /integertype]
+  /Distance_i_i load
+def
+
+/Distance [/arraytype /integertype]
+  /Distance_a_i load
+def
+
+/Distance [/doublevectortype /integertype]
+  { exch cva exch
+    Distance_a_i } bind
+def
+
+/DumpLayerNodes [/ostreamtype /integertype]
+  /DumpLayerNodes_os_i load
+def
+
+/DumpLayerConnections [/ostreamtype /integertype /literaltype]
+  /DumpLayerConnections_os_i_l load
+def
+
+% ------------------------------------------------------------------------------
+
+end % namespace nest

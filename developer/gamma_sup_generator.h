@@ -1,0 +1,219 @@
+/*
+ *  gamma_sup_generator.h
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2004-2008 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ */
+
+#ifndef GAMMA_SUP_GENERATOR_H
+#define GAMMA_SUP_GENERATOR_H
+
+#include <vector>
+#include "nest.h"
+#include "event.h"
+#include "node.h"
+#include "stimulating_device.h"
+#include "scheduler.h"
+//#include "binomial_randomdev.h"
+#include "poisson_randomdev.h"
+#include "connection.h"
+#include "ppd_sup_generator.h"
+
+/*BeginDocumentation
+Name: gamma_sup_generator - simulate the spiking of population of Poisson processes with dead time.
+Description:
+
+  The gamma_sup_generator generator simulates a population of neurons firing 
+  independently with gamma process statistics. 
+  The generator does not initialize to equilibrium in general, initial transients might occur.
+
+Parameters:
+   The following parameters appear in the element's status dictionary:
+
+   rate - mean firing rate of the component processes. (double, var)
+   gamma_shape - shape paramter of component gamma processes. (long, var)
+   n_proc - number of superimposed independent component processes. (long, var)
+
+Note:
+   This generator has only been validated in a very basic manner.
+
+Author:
+   Jan 2011, Deger
+
+SeeAlso: poisson_deadtime_sup_generator, poisson_generator_ps, spike_generator, 
+         Device, StimulatingDevice
+*/
+
+namespace nest{
+
+  /** 
+   * Generator of the spike output of a population of gamma processes with 
+   * integer shape parameter.
+   * 
+   * This gamma process superposition generator sends different spike 
+   * trains to all its targets. 
+   *
+   * @ingroup Devices
+   */
+  class gamma_sup_generator: public Node
+  {
+    
+  public:        
+    
+    typedef Node base;
+    
+    gamma_sup_generator();
+    gamma_sup_generator(const gamma_sup_generator&);
+
+    bool has_proxies() const {return false;}
+    bool is_off_grid() const {return false;}  // does not use off_grid events
+
+    using Node::event_hook;
+
+    port check_connection(Connection&, port);
+
+    void get_status(DictionaryDatum &) const;
+    void set_status(const DictionaryDatum &);
+
+  private:
+    void init_node_(const Node&);
+    void init_state_(const Node&);
+    void init_buffers_();
+    void calibrate();
+
+    /**
+     * Update state.
+     * Update cannot send spikes directly, since we need to identify each
+     * target to know the age distribution of the component processes. 
+     * Since target information is in the Connectors, we send a DSSpikeEvent
+     * to all targets, which is reflected to this->event_hook() with target 
+     * information.
+     * @see event_hook, DSSpikeEvent
+     */
+    void update(Time const &, const long_t, const long_t);
+    
+    /**
+     * Send out spikes.
+     * Called once per target to dispatch actual output spikes.
+     * @param contains target information.
+     */
+    void event_hook(DSSpikeEvent&);
+
+    // ------------------------------------------------------------
+
+    /**
+     * Store independent parameters of the model.
+     */
+    struct Parameters_ {
+      double_t                rate_;        //!< rate of component gamma process [Hz]
+      ulong_t                 gamma_shape_;       //!< gamma shape parameter [1] 
+      ulong_t                 n_proc_;      //!< number of component processes      
+
+      /**
+       * Number of targets.
+       * This is a hidden parameter; must be placed in parameters,
+       * even though it is an implementation detail, since it 
+       * concerns the connections and must not be affected by resets.
+       */
+      size_t num_targets_;
+
+      Parameters_();  //!< Sets default parameter values
+
+      void get(DictionaryDatum&) const;  //!< Store current values in dictionary
+      void set(const DictionaryDatum&);  //!< Set values from dicitonary
+    };
+
+    // ------------------------------------------------------------
+    
+    class Internal_states_ {
+    
+//      librandom::BinomialRandomDev bino_dev_;       //!< random deviate generator
+      ppd_sup_generator::FastBinomialRandomDev_ *bino_dev_;   //!< random deviate generator
+      librandom::PoissonRandomDev poisson_dev_;   //!< random deviate generator
+      std::vector<ulong_t> occ_;                    //!< occupation numbers of internal states
+      
+      public:
+      Internal_states_(size_t num_bins, ulong_t ini_occ_ref, ulong_t ini_occ_act);  //!< initialize occupation numbers
+      ulong_t update(double_t transition_prob, librandom::RngPtr rng);    //!< update age dist and generate spikes
+    
+    };
+    
+
+    struct Buffers_ {
+      /**
+       * Occupation numbers of the internal states of the generator
+       */
+
+      std::vector<Internal_states_> internal_states_;
+      
+    };
+
+    // ------------------------------------------------------------
+
+    struct Variables_ {
+      double_t                transition_prob_;  //!< transition probabililty to go to next internal state
+
+      /** 
+       * @name update-hook communication.
+       * The following variables are used for direct communication from 
+       * update() to event_hook(). They rely on the fact that event_hook()
+       * is called instantaneuously from update().
+       * Spikes are sent at times t that fulfill
+       *
+       *   t_min_active_ < t <= t_max_active_
+       */
+      //@{
+      double_t t_min_active_;  //!< start of generator activity in slice 
+      double_t t_max_active_;  //!< end of generator activity in slice 
+      //@}
+    };
+
+    // ------------------------------------------------------------
+
+    StimulatingDevice<CurrentEvent> device_;
+    Parameters_ P_;
+    Variables_  V_;
+    Buffers_    B_;
+  };
+
+inline  
+port gamma_sup_generator::check_connection(Connection& c, port receptor_type)
+{
+  DSSpikeEvent e;
+  e.set_sender(*this);
+  c.check_event(e);
+  port receptor = c.get_target()->connect_sender(e, receptor_type);
+  ++P_.num_targets_;     // count number of targets
+  return receptor;
+}
+
+inline
+void gamma_sup_generator::get_status(DictionaryDatum &d) const
+{
+  P_.get(d);
+  device_.get_status(d);
+}
+
+inline
+void gamma_sup_generator::set_status(const DictionaryDatum &d)
+{
+  Parameters_ ptmp = P_;  // temporary copy in case of errors
+  ptmp.set(d);               // throws if BadProperty
+
+  // We now know that ptmp is consistent. We do not write it back
+  // to P_ before we are also sure that the properties to be set
+  // in the parent class are internally consistent.
+  device_.set_status(d);
+
+  // if we get here, temporaries contain consistent set of properties
+  P_ = ptmp;
+}
+
+} // namespace
+
+#endif 

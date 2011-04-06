@@ -1,0 +1,29 @@
+/*
+ * Regression test for Ticket #414
+ *
+ * Frozen nodes fire assertion when receiving spike.
+ * 
+ * This test asserts that neurons can receive spikes even when frozen.  
+ *
+ * Hans E Plesser, 2010-04-21
+ *
+ * Copyright (C) 2010 The NEST Initiative.
+ */
+
+/unittest (8418) require
+/unittest using
+
+<< >> begin
+
+{
+ResetKernel
+/spike_generator << /precise_times false /spike_times [1.0] >> Create
+/iaf_neuron Create dup << /frozen true >> SetStatus
+Connect
+10 Simulate
+} 
+pass_or_die
+
+end
+
+endusing

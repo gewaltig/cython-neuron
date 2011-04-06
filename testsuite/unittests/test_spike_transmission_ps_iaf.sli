@@ -1,0 +1,45 @@
+/* Testscript 
+  
+checks for consistent calculation of time stamps in 
+poisson_generator_ps. 
+This test exhibited the problem described in ticket #157
+
+*/
+
+/unittest (6688) require
+/unittest using
+
+
+/T 3.0 def   
+
+
+/Transmission
+{
+ /h Set
+
+ResetKernel
+
+[0] << 
+      /resolution h
+     >> SetStatus
+
+/iaf_neuron Create /n Set
+ 
+/poisson_generator_ps Create /p Set
+p << /rate  10000. >> SetStatus
+
+p n Connect
+
+T Simulate 
+
+} def
+
+
+[0.1 0.01 0.001]
+{
+ Transmission
+} forall
+
+
+
+

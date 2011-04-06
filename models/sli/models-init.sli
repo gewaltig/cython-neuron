@@ -1,0 +1,58 @@
+/*
+ *  models-init.sli
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2008-2010 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ *  Permission is granted to compile and modify
+ *  this file for non-commercial use.
+ *  See the file LICENSE for details.
+ *
+ */
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% SLI wrappers for functions defined in modelsmodule
+%
+% Author: Jochen Martin Eppler, Hans Ekkehard Plesser
+% Date: September 2008, October 2010
+%
+
+/models-init /SLI ($Revision: 9031 $) provide-component
+/models-init /C++ ($Revision: 9031 $) require-component
+
+%% Code for the sli_neuron
+
+modeldict /sli_neuron known
+{
+/calibrate_node
+{
+ { calibrate }  stopped 
+ {
+   handleerror 
+   errordict clonedict /error Set ;
+ } if
+} def
+
+/update_node
+{
+ { update }  stopped 
+ { 
+   handleerror
+   errordict clonedict /error Set ;
+ } if
+} def
+
+/empty_sli_neuron
+<<
+ /calibrate {}
+ /update {}
+>> def
+
+/sli_neuron empty_sli_neuron SetDefaults
+}
+if

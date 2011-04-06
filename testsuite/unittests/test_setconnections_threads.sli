@@ -1,0 +1,47 @@
+/*
+ *  test_iaf_psp.sli
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2009 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ *  Permission is granted to compile and modify
+ *  this file for non-commercial use.
+ *  See the file LICENSE for details.
+ *
+ */
+
+
+% test SetStatus for connections
+%
+% we interpret GID as the gid of the source (pre-synaptic) neuron
+%
+% 090406, Morrison Diesmann
+
+
+/unittest (7488) require
+/unittest using
+
+
+ResetKernel
+
+0 << /local_num_threads 2 >> SetStatus
+
+/iaf_neuron Create /source Set
+/iaf_neuron Create /target Set
+
+source target /stdp_synapse Connect
+
+<< /source source /synapse_type /stdp_synapse >> FindConnections 0 get /conn Set
+
+{ conn /weight get 1.0 eq} assert_or_die
+
+conn << /weight 2.0 >> SetStatus
+
+{ conn /weight get 2.0 eq} assert_or_die
+
+
+

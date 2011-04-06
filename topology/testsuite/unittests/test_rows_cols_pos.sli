@@ -1,0 +1,32 @@
+% this test ensures that one can specify either rows&cols or positions,
+% but not both
+
+/unittest (8831) require
+unittest using
+
+% correct, rows & columns
+{
+  << /rows 1 /columns 1 /elements /iaf_neuron >> topology/CreateLayer ::
+} pass_or_die
+
+% correct, positions
+{
+  << /positions [[0. 0.]] /elements /iaf_neuron >> topology/CreateLayer ::
+} pass_or_die
+
+% incorrect, rows, columns, and positions
+{
+  << /rows 1 /columns 1 /positions [[0. 0.]] /elements /iaf_neuron >> topology/CreateLayer ::
+} fail_or_die
+
+% incorrect, only rows
+{
+  << /rows 1 /elements /iaf_neuron >> topology/CreateLayer ::
+} fail_or_die
+
+% incorrect, only columns
+{
+  << /columns 1 /elements /iaf_neuron >> topology/CreateLayer ::
+} fail_or_die
+
+endusing

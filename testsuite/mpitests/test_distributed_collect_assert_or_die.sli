@@ -1,0 +1,43 @@
+/*
+ *  test_distributed_collect_assert_or_die.sli
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2010 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ *  Permission is granted to compile and modify
+ *  this file for non-commercial use.
+ *  See the file LICENSE for details.
+ *
+ */
+
+ /* BeginDocumentation
+Name: testsuite::test_distributed_collect_assert_or_die - self test of distributed_collect_assert_or_die
+
+Synopsis: nest_indirect distributed_collect_assert_or_die.sli -> -
+
+
+Description:
+
+ This is a self test of
+ distributed_collect_assert_or_die. The function needs to be
+ able to collect the results of an arbitrary number of jobs and
+ checks whether all jobs return true for all runs.
+
+Author:  September 2010, Diesmann
+SeeAlso: testsuite::distributed_collect_assert_or_die
+*/
+
+
+/unittest (8831) require
+/unittest using
+
+
+[1 2 4]
+{
+ true  % different number of "true" objects for different number of jobs
+}
+distributed_collect_assert_or_die

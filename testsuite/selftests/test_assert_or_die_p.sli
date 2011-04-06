@@ -1,0 +1,20 @@
+/* BeginDocumentation
+   Name: testsuite::test_assert_or_die_p - sli script to test the assert_or_die function (proceure variant)
+
+   Synopsis: (test_assert_or_die_p) run
+
+   FirstVersion: 07-jul-2008
+
+   Author: R Kupper
+ */
+
+/unittest (7403) require
+/unittest using
+
+% the following call shall pass without error:
+{true} assert_or_die
+
+% the following call shall make NEST exit with exit code 3:
+{false} assert_or_die
+
+endusing

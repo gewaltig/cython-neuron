@@ -1,0 +1,63 @@
+/*
+ *  test_copymodel.sli
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2008 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ *  Permission is granted to compile and modify
+ *  this file for non-commercial use.
+ *  See the file LICENSE for details.
+ *
+ */
+
+/* BeginDocumentation
+   Name: testsuite::test_copymodel - sli script to test if CopyModel works as expected
+
+   Synopsis: (test_copymodel) run
+
+   Description:
+   This test generates several copies of node and synapse models, sets
+   their parameters and compares the results for consistency.
+
+   SeeAlso: CopyModel, GetDefaults, SetDefaults
+
+   FirstVersion: September 2008
+   Author: Jochen Martin Eppler
+ */
+
+/unittest (7488) require
+/unittest using
+
+% Checks for consistent operation for node models 
+/iaf_neuron /my_iaf_neuron1 CopyModel
+/neuron_params << /V_m -66.6 >> def
+/iaf_neuron /my_iaf_neuron2 neuron_params CopyModel
+
+/iaf_neuron     GetDefaults /V_m get
+/my_iaf_neuron1 GetDefaults /V_m get
+eq assert_or_die
+
+/iaf_neuron neuron_params SetDefaults
+/iaf_neuron     GetDefaults /V_m get
+/my_iaf_neuron2 GetDefaults /V_m get
+eq assert_or_die
+
+% Checks for consistent operation for synapse models
+/static_synapse /my_static_synapse1 CopyModel
+/synapse_params << /weight 66.6 >> def
+/static_synapse /my_static_synapse2 synapse_params CopyModel
+
+/static_synapse     GetDefaults /weight get
+/my_static_synapse1 GetDefaults /weight get
+eq assert_or_die
+
+/static_synapse synapse_params SetDefaults
+/static_synapse     GetDefaults /weight get
+/my_static_synapse2 GetDefaults /weight get
+eq assert_or_die
+
+endusing

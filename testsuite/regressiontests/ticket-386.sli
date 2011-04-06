@@ -1,0 +1,65 @@
+/*
+ *  ticket-386.sli
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2010 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ *  Permission is granted to compile and modify
+ *  this file for non-commercial use.
+ *  See the file LICENSE for details.
+ *
+ */
+
+
+/* BeginDocumentation
+Name: testsuite::ticket-386 - ensure all models supporting multimeter work at minimal interval
+
+Synopsis: (ticket-386.sli) run -> dies if test code crashes
+
+Description:
+Due to wrong use of calibrate(), recording from ht_neuron with multimeter
+with interval equal to resolution crashed. This test briefly simulates
+nets with each model supporting multimeter recorded at interval equal to
+resolution.
+Author: Plesser
+FirstVersion: 2010-10-03
+*/
+
+/unittest (8831) require
+/unittest using
+
+M_ERROR setverbosity
+
+/resolution 0.1 def
+
+% Execute test for one model
+% Argument: model name
+% Result: -
+/run_test
+{
+  ResetKernel
+  0 << /resolution resolution >> SetStatus
+  /model Set
+  model GetDefaults dup
+  /recordables known
+  {
+     /recordables get /recs Set
+     /n model Create def
+     /mm /multimeter << /record_from recs /withtime false 
+                        /interval resolution >> Create def
+     mm n Connect
+     10.0 Simulate
+  }
+  if
+} 
+def
+
+{
+  modeldict keys { run_test } forall
+}
+pass_or_die
+

@@ -1,0 +1,107 @@
+/*
+ *  test_multimeter.sli
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2010 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ *  Permission is granted to compile and modify
+ *  this file for non-commercial use.
+ *  See the file LICENSE for details.
+ *
+ */
+
+/* BeginDocumentation
+Name: testsuite::test_multimeter - Minimal test for correct multimeter setup
+ 
+Synopsis: (test_multimeter) run -> NEST exits if test fails
+
+Description:
+  This test provides a minimal check for correct multimeter setup.
+ 
+  For each model with a "recordables" property, it creates an instance,
+  connects a multimeter to them requestin all properties, simulates briefly
+  and checks that the correct number of data items is collected for each
+  recordable.
+ 
+  This test mainly ensures that init_buffers_() initializes the data logger.
+  If a developer has forgotten to add recordables to get_status(), this test
+  will ignore the pertaining neuron.  	
+ 
+Author: Hans Ekkehard Plesser, 2010-05-05 
+ */
+
+/unittest (8045) require
+/unittest using
+
+% use power-of-two resolution to avoid roundof problems
+/res -3 dexp def
+
+% simulation time
+/simtime 100. def
+
+% recording interval --- different from default to check setting works
+/recint 2. def
+
+% number of data points expected
+/n_data simtime recint div cvi 1 sub def
+
+{
+  modeldict keys
+  {
+    /model Set
+
+    % some logging information to make failure localization easier
+    (Testing model: ) model cvs join ==
+
+    ResetKernel
+    0 << /resolution res >> SetStatus
+
+    % get recordables, if none, return true
+    model GetDefaults dup /recordables known
+    {
+      % set up for simulation and simulate
+      /recordables get /recs Set
+      /n model Create def
+      /mm /multimeter << /interval recint /record_from recs >> Create def
+      mm n Connect
+      simtime Simulate
+
+      % check results
+      /result mm /events get def
+      true
+      recs % for each recordable, see if we have correct number of data points
+      {	   
+        result exch get cva
+        length n_data eq 
+	and
+      }     
+      Fold
+    }   
+    { ; true }
+    ifelse
+  }
+  Map
+
+  % see if all entries are true
+  true exch { and } Fold
+
+}
+assert_or_die
+
+% make sure multimeter cannot be frozen
+{
+  ResetKernel
+  /multimeter Create << /frozen true >> SetStatus
+} fail_or_die
+
+% but this should pass
+{
+  ResetKernel
+  /multimeter Create << /frozen false >> SetStatus
+} pass_or_die
+
+endusing

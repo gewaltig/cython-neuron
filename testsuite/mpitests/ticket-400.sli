@@ -1,0 +1,30 @@
+
+
+/*
+ * Regression test for Ticket #400
+ *
+ * Verify whether access check of dictionary works if more 
+ * than one MPI process is used.
+ *
+ * Diesmann, 100918
+ *
+ * Copyright (C) 2010 The NEST Initiative.
+ */
+
+
+/unittest (8831) require
+/unittest using
+
+
+[1 2 4]                                          
+{                                                 
+ ResetKernel
+
+ /n /iaf_neuron Create def
+ n n << /weight 1.0 >> Connect
+
+}
+distributed_exec
+
+
+
