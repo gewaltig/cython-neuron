@@ -212,7 +212,7 @@ bool ConnectionManager::has_user_prototypes() const
 inline
 int ConnectionManager::get_syn_vec_index(thread tid, index gid, index syn_id) const
 {
-  if (tid >= connections_.size() || gid >= connections_[tid].size() || connections_[tid][gid].size() == 0)
+  if (static_cast<size_t>(tid) >= connections_.size() || gid >= connections_[tid].size() || connections_[tid][gid].size() == 0)
     return -1;
 
   index syn_vec_index = 0;

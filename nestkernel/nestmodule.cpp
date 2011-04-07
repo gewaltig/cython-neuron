@@ -1441,7 +1441,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      Availability: NEST 2.0
      Author: Jochen Martin Eppler
      FirstVersion: January 2006
-     SeeAlso: NumProcesses, SyncProcesses, MPIProcessorName 
+     SeeAlso: NumProcesses, SyncProcesses, ProcessorName 
   */
   void NestModule::RankFunction::execute(SLIInterpreter *i) const
   {
@@ -1454,7 +1454,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      Availability: NEST 2.0
      Author: Jochen Martin Eppler
      FirstVersion: January 2006
-     SeeAlso: Rank, SyncProcesses, MPIProcessorName
+     SeeAlso: Rank, SyncProcesses, ProcessorName
   */
   void NestModule::NumProcessesFunction::execute(SLIInterpreter *i) const
   {
@@ -1472,7 +1472,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      point in a simulation script. Internally, the function uses
      MPI_Barrier(). Note that during simulation the processes are
      automatically synchronized without the need for user interaction.
-     SeeAlso: Rank, NumProcesses, MPIProcessorName
+     SeeAlso: Rank, NumProcesses, ProcessorName
   */
   void NestModule::SyncProcessesFunction::execute(SLIInterpreter *i) const
   {
@@ -1519,12 +1519,12 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      compiled with MPI support, this function returns the hostname of
      the machine as returned by the POSIX function gethostname().
      Examples:
-     (I'm process ) =only Rank 1 add =only ( of ) =only NumProcesses =only ( on machine ) =only MPIProcessorName =
+     (I'm process ) =only Rank 1 add =only ( of ) =only NumProcesses =only ( on machine ) =only ProcessorName =
      SeeAlso: Rank, NumProcesses, SyncProcesses
   */
   void NestModule::ProcessorNameFunction::execute(SLIInterpreter *i) const
   {
-    i->OStack.push(Communicator::name);
+    i->OStack.push(Communicator::get_processor_name());
     i->EStack.pop();
   }
 

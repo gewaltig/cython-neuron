@@ -405,7 +405,7 @@ namespace nest
      class ProcessorNameFunction : public SLIFunction
      {
        void execute(SLIInterpreter *) const;
-     } mpiprocessornamefunction;
+     } processornamefunction;
 
      class GetVpRngFunction : public SLIFunction
      {

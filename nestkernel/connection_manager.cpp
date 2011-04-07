@@ -334,12 +334,6 @@ void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, index
   connections_[tid].get(s_gid)[syn_vec_index].connector->register_connection(s, r);
 }
 
-void ConnectionManager::bulk_divergent_connect(Node& s, const std::vector<Node*>& rv, index s_gid, thread tid, index syn)
-{
-  index syn_vec_index = validate_connector(tid, s_gid, syn);
-  connections_[tid].get(s_gid)[syn_vec_index].connector->register_connection_bulkdiv(s, rv);
-}
-
 void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, double_t w, double_t d, index syn)
 {
   index syn_vec_index = validate_connector(tid, s_gid, syn);

@@ -130,6 +130,7 @@ namespace nest
                               std::vector<OffGridSpike>& recv_buffer, 
                               std::vector<int>& displacements);
       static void communicate(std::vector<int_t>&);
+      static void communicate(const NodeList& local_nodes, std::vector<index>& gids);
       static void communicate_connector_properties(DictionaryDatum& dict);
       
       static void synchronize();
@@ -242,7 +243,7 @@ namespace nest
                               std::vector<OffGridSpike>& recv_buffer, 
                               std::vector<int>& displacements);
       static void communicate(std::vector<int_t>&) {}
-      
+      static void communicate(const NodeList& local_nodes, std::vector<index>& gids);      
       static void communicate_connector_properties(DictionaryDatum&) {}
       
       static void synchronize() {}
@@ -280,7 +281,6 @@ namespace nest
       static int recv_buffer_size_;  //!< size of receive buffer
       static bool initialized_;      //!< whether MPI is initialized
       static bool use_Allgather_;    //!< using Allgather communication
-      static double_t time_communicate(int, int){return 0.0;}
   };
 
   inline std::string Communicator::get_processor_name()

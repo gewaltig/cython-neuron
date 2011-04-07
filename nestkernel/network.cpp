@@ -128,7 +128,6 @@ void Network::init_()
   modeldict_->clear();
   
   // Re-create the model list from the clean prototypes
-  
   for(index i = 0; i < pristine_models_.size(); ++i)
     if (pristine_models_[i].first != 0)
     {
@@ -159,7 +158,7 @@ void Network::init_()
   Model *proxy_model = models_[proxy_model_id];
   proxy_model->reserve(0, pristine_models_.size() + 1);
   for(index i = 0; i < pristine_models_.size(); ++i)
-    if (pristine_models_[i] != 0)
+    if (pristine_models_[i].first != 0)
     {
       Node* newnode = proxy_model->allocate(0);
       newnode->set_model_id(i);
@@ -383,7 +382,7 @@ index Network::add_node(long_t mod, long_t n)   //no_p
 	newnode->set_model_id(mod);
 	newnode->set_thread(t);
 	newnode->set_vp(vp);
-	//nodes_.push_back(newnode);  // put into local nodes list
+
 	nodes_[gid] = newnode;        // put into local nodes list
 	current_->add_node(newnode);  // and into current subnet, thread 0.
       }
@@ -447,7 +446,6 @@ index Network::add_node(long_t mod, long_t n)   //no_p
       Compound *container= static_cast<Compound *>(container_model->allocate(thread_id));
       container->set_model_id(-1); // mark as pseudo-container wrapping replicas, see reset_network()
       container->reserve(n_threads); // space for one instance per thread
-      //nodes_.push_back(container); 
       nodes_[gid] = container; 
 
       // Generate one instance of desired model per thread
@@ -478,8 +476,6 @@ index Network::add_node(long_t mod, long_t n)   //no_p
         // Register instance with per-thread instance of enclosing subnet.
         static_cast<Compound *>((*subnet)[t])->add_node(newnode); 
       }
-
-      node_model_ids_.push_back(static_cast<index>(mod));
     }
   }
   else
@@ -493,8 +489,7 @@ index Network::add_node(long_t mod, long_t n)   //no_p
       newnode->set_vp(thread_to_vp(0));
 
       // Register instance with wrapper
-      nodes_.push_back(newnode);
-      node_model_ids_.push_back(static_cast<index>(mod));
+      nodes_[gid] = newnode;
       
       // and into current subnet, thread 0.
       current_->add_node(newnode);
@@ -631,7 +626,7 @@ Node* Network::get_node(vector<size_t> const &p, thread thr) const
 }
 
 
-Node* Network::get_node(index n, thread thr)   //no_p
+Node* Network::get_node(index n, thread thr) //no_p
 {
   //std::cout << "get node with gid " << n << std::endl;
 
@@ -671,7 +666,7 @@ const Compound* Network::get_thread_siblings(index n) const
   return dynamic_cast<Compound*>(nodes_[n]);
 }
 
-vector<size_t> Network::get_adr(Node const* node)
+vector<size_t> Network::get_adr(Node const* node) const
 {
   std::vector<size_t> adr;
   while(node != 0)
@@ -1122,7 +1117,7 @@ void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArr
       else if (short_wd_lists)
 	assert(false); // connect(*source, *targets[i], source_id, target_thread, weights.get(0), delays.get(0), syn);
       else 
-	bulk_divergent_connect(*source, real_targets, source_id, target_thread, syn);
+	assert(false); // bulk_divergent_connect(*source, real_targets, source_id, target_thread, syn);
     }
     catch (IllegalConnection& e)
     {

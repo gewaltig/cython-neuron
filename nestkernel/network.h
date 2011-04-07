@@ -494,7 +494,7 @@ SeeAlso: Simulate, Node
      * @param p Pointer to the specified Node.
      * @ingroup net_access
      */
-    std::vector<size_t> get_adr(Node const *p) ;
+    std::vector<size_t> get_adr(Node const *p) const;
 
     /**
      * Return addess array of the specified Node.
@@ -502,7 +502,7 @@ SeeAlso: Simulate, Node
      *
      * @ingroup net_access
      */
-    std::vector<size_t> get_adr(index i) ;
+    std::vector<size_t> get_adr(index i);
 
     /**
      * Return pointer of the specified Node.
@@ -827,7 +827,7 @@ SeeAlso: Simulate, Node
   }
 
   inline
-  std::vector<size_t> Network::get_adr(index n) const
+  std::vector<size_t> Network::get_adr(index n)
   {
     return get_adr(get_node(n));
   }
