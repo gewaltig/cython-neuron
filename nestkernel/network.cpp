@@ -1057,7 +1057,7 @@ void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArr
   // check if we have consistent lists for weights and delays
   if (! (complete_wd_lists || short_wd_lists || no_wd_lists))
   {
-    message(SLIInterpreter::M_ERROR, "DivergentConnect", "weights and delays must be either doubles or lists of equal size. "
+    message(SLIInterpreter::M_ERROR, "DivergentConnect", "If explicitly specified, weights and delays must be either doubles or lists of equal size. "
             "If given as lists, their size must be 1 or the same size as targets.");
     throw DimensionMismatch();
   }
@@ -1107,17 +1107,14 @@ void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArr
     if (!targets[i]->has_proxies() && source->is_proxy())
       continue;
 
-    real_targets.push_back(targets[i]);
-  }
-
     try
     {
       if (complete_wd_lists)
-	assert(false); // connect(*source, *targets[i], source_id, target_thread, weights.get(i), delays.get(i), syn);
+	connect(*source, *targets[i], source_id, target_thread, weights.get(i), delays.get(i), syn);
       else if (short_wd_lists)
-	assert(false); // connect(*source, *targets[i], source_id, target_thread, weights.get(0), delays.get(0), syn);
+	connect(*source, *targets[i], source_id, target_thread, weights.get(0), delays.get(0), syn);
       else 
-	assert(false); // bulk_divergent_connect(*source, real_targets, source_id, target_thread, syn);
+	connect(*source, *targets[i], source_id, target_thread, syn);
     }
     catch (IllegalConnection& e)
     {
@@ -1135,7 +1132,7 @@ void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArr
       interpreter_.raiseerror(e.what());
       //      continue;
     }
-
+  }
 }
 
 void Network::random_divergent_connect(index source_id, TokenArray target_ids, index n, TokenArray weights, TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
