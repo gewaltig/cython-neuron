@@ -30,9 +30,11 @@ Description:
 Author: Hans Ekkehard Plesser, 2010-06-28 
  */
 
+% This test should only run if we have GSL
+statusdict/have_gsl :: not {statusdict/exitcodes/success :: quit_i} if
+
 /unittest (8045) require
 /unittest using
-
 
 M_INFO setverbosity
 

@@ -347,7 +347,7 @@ SeeAlso: Simulate, Node
 
     void memory_info();
 
-    void print(TokenArray, int);
+    void print(index, int);
 
     //debug modelrangemanager
     void print_model_ranges();
@@ -547,13 +547,6 @@ SeeAlso: Simulate, Node
      * @ingroup net_access
      */
     const Compound* get_thread_siblings(index n) const;
-
-    /**
-     * Return pointer to a harmless proxy Node.
-     *
-     * @ingroup net_access
-     */
-    Node*  get_spike_source_node();
 
     /**
      * Check, if there are instances of a given model.
@@ -790,14 +783,13 @@ SeeAlso: Simulate, Node
      * modeldict.
      */
     std::vector< std::pair<Model *, bool> > pristine_models_;
-    std::vector<Model *> models_;  //!< The list of available models
-    vector<Node *> proxy_nodes_;   //!< Placeholders for remote nodes
+
+    std::vector<Model *> models_;            //!< The list of available models
+    std::vector<Node*> proxy_nodes_;         //!< Placeholders for remote nodes
+    std::vector<Node*> dummy_spike_sources_; //!< Placeholders for spiking remote nodes
 
     google::sparsetable<Node *> nodes_;  //!< The network as flat list of nodes
-    //std::vector<index> node_locs_;     //!< The index of each node in the network in the nodes_ list
-
     Modelrangemanager node_model_ids_;   //!< Records the model id of each neuron in the network
-    Node * proxy_spike_source_;          //!< Placeholder Node for spike delivery
 
     bool dict_miss_is_error_;  //!< whether to throw exception on missed dictionary entries
   };

@@ -1214,131 +1214,122 @@ void nest::Scheduler::collocate_buffers_()
 
   num_spikes = num_grid_spikes + num_offgrid_spikes;
   if (!off_grid_spiking_)  //on grid spiking
-    {
-      // make sure buffers are correctly sized and empty
-      std::vector<uint_t> tmp(global_grid_spikes_.size(), 0);
-      global_grid_spikes_.swap(tmp);
+  {
+    // make sure buffers are correctly sized and empty
+    std::vector<uint_t> tmp(global_grid_spikes_.size(), 0);
+    global_grid_spikes_.swap(tmp);
 
-      if (global_grid_spikes_.size() != 
-	  static_cast<uint_t>(Communicator::get_recv_buffer_size()))
-	global_grid_spikes_.resize(Communicator::get_recv_buffer_size(), 0);
+    if (global_grid_spikes_.size() != static_cast<uint_t>(Communicator::get_recv_buffer_size()))
+      global_grid_spikes_.resize(Communicator::get_recv_buffer_size(), 0);
 
-      std::vector<uint_t> tmp2(local_grid_spikes_.size(), 0);
-      local_grid_spikes_.swap(tmp2);
+    std::vector<uint_t> tmp2(local_grid_spikes_.size(), 0);
+    local_grid_spikes_.swap(tmp2);
 
-      if (num_spikes + (n_threads_ * min_delay_) > 
-	  static_cast<uint_t>(Communicator::get_send_buffer_size()))
-	local_grid_spikes_.resize((num_spikes + (min_delay_ * n_threads_)),0);
-      else if (local_grid_spikes_.size() < 
-	       static_cast<uint_t>(Communicator::get_send_buffer_size()))
-	local_grid_spikes_.resize(Communicator::get_send_buffer_size(), 0);
+    if (num_spikes + (n_threads_ * min_delay_) > static_cast<uint_t>(Communicator::get_send_buffer_size()))
+      local_grid_spikes_.resize((num_spikes + (min_delay_ * n_threads_)),0);
+    else if (local_grid_spikes_.size() < static_cast<uint_t>(Communicator::get_send_buffer_size()))
+      local_grid_spikes_.resize(Communicator::get_send_buffer_size(), 0);
 
 
-      // collocate the entries of spike_registers into local_grid_spikes__
-      std::vector<uint_t>::iterator pos = local_grid_spikes_.begin();
-      if (num_offgrid_spikes == 0)
-	{
-	  for (i = spike_register_.begin(); i != spike_register_.end(); ++i)
-	    {
-	      for (j = i->begin(); j != i->end(); ++j)
-		{
-		  pos = std::copy(j->begin(), j->end(), pos);
-		  *pos = comm_marker_;
-		  ++pos;
-		}
-	    }
-	} else {
-	  std::vector<OffGridSpike>::iterator n;
-	  it = offgrid_spike_register_.begin();
-	  for (i = spike_register_.begin(); i != spike_register_.end(); ++i)
-	    {
-	      jt = it->begin();
-	      for (j = i->begin(); j != i->end(); ++j)
-		{
-		  pos = std::copy(j->begin(), j->end(), pos);
-		  for (n = jt->begin() ; n != jt->end() ; ++n )
-		    {
-		      *pos = n->get_gid();
-		      ++pos;
-		    }
-		  *pos = comm_marker_;
-		  ++pos;
-		  ++jt;
-		}
-	      ++it;
-	    }
-	  for (it = offgrid_spike_register_.begin(); it != offgrid_spike_register_.end(); ++it)
-	    for (jt = it->begin(); jt != it->end(); ++jt)
-	      jt->clear();
-	}
-	  
-      // remove old spikes from the spike_register_
+    // collocate the entries of spike_registers into local_grid_spikes__
+    std::vector<uint_t>::iterator pos = local_grid_spikes_.begin();
+    if (num_offgrid_spikes == 0)
       for (i = spike_register_.begin(); i != spike_register_.end(); ++i)
-	for (j = i->begin(); j != i->end(); ++j)
-	  j->clear();
-   
-    } else {  //off_grid_spiking
-      // make sure buffers are correctly sized and empty
-      std::vector<OffGridSpike> tmp(global_offgrid_spikes_.size(), OffGridSpike(0,0.0));
-      global_offgrid_spikes_.swap(tmp);
-
-      if (global_offgrid_spikes_.size() != 
-	  static_cast<uint_t>(Communicator::get_recv_buffer_size()))
-	global_offgrid_spikes_.resize(Communicator::get_recv_buffer_size(), OffGridSpike(0,0.0));
-
-      std::vector<OffGridSpike> tmp2(local_offgrid_spikes_.size(),  OffGridSpike(0,0.0));
-      local_offgrid_spikes_.swap(tmp2);
-
-      if (num_spikes + (n_threads_ * min_delay_) > 
-	  static_cast<uint_t>(Communicator::get_send_buffer_size()))
-	local_offgrid_spikes_.resize((num_spikes + (min_delay_ * n_threads_)), OffGridSpike(0,0.0));
-      else if (local_offgrid_spikes_.size() < 
-	       static_cast<uint_t>(Communicator::get_send_buffer_size()))
-	local_offgrid_spikes_.resize(Communicator::get_send_buffer_size(),  OffGridSpike(0,0.0));
-
-      // collocate the entries of spike_registers into local_offgrid_spikes__
-      std::vector<OffGridSpike>::iterator pos = local_offgrid_spikes_.begin();
-      if (num_grid_spikes == 0)
-	{
-	  for (it = offgrid_spike_register_.begin(); it != offgrid_spike_register_.end(); ++it)
-	    {
-	      for (jt = it->begin(); jt != it->end(); ++jt)
-		{
-		  pos = std::copy(jt->begin(), jt->end(), pos);
-		  pos->set_gid(comm_marker_);
-		  ++pos;
-		}
-	    }
-	} else {
-	  std::vector<uint_t>::iterator n;
-	  i = spike_register_.begin();
-	  for (it = offgrid_spike_register_.begin(); it != offgrid_spike_register_.end(); ++it)
-	    {
-	      j = i->begin();
-	      for (jt = it->begin(); jt != it->end(); ++jt)
-		{
-		  pos = std::copy(jt->begin(), jt->end(), pos);
-		  for (n = j->begin() ; n != j->end() ; ++n )
-		    {
-		      *pos = OffGridSpike(*n,0);
-		      ++pos;
-		    }
-		  pos->set_gid(comm_marker_);
-		  ++pos;
-		  ++j;
-		}
-	      ++i;
-	    }
-	  for (i = spike_register_.begin(); i != spike_register_.end(); ++i)
-	    for (j = i->begin(); j != i->end(); ++j)
-	      j->clear();
-	}
-
-      //empty offgrid_spike_register_
+        for (j = i->begin(); j != i->end(); ++j)
+        {
+          pos = std::copy(j->begin(), j->end(), pos);
+          *pos = comm_marker_;
+          ++pos;
+        }
+    else
+    {
+      std::vector<OffGridSpike>::iterator n;
+      it = offgrid_spike_register_.begin();
+      for (i = spike_register_.begin(); i != spike_register_.end(); ++i)
+      {
+        jt = it->begin();
+        for (j = i->begin(); j != i->end(); ++j)
+        {
+          pos = std::copy(j->begin(), j->end(), pos);
+          for (n = jt->begin() ; n != jt->end() ; ++n )
+          {
+            *pos = n->get_gid();
+            ++pos;
+          }
+          *pos = comm_marker_;
+          ++pos;
+          ++jt;
+        }
+        ++it;
+      }
       for (it = offgrid_spike_register_.begin(); it != offgrid_spike_register_.end(); ++it)
-	    for (jt = it->begin(); jt != it->end(); ++jt)
-	      jt->clear();
+        for (jt = it->begin(); jt != it->end(); ++jt)
+	  jt->clear();
     }
+	  
+    // remove old spikes from the spike_register_
+    for (i = spike_register_.begin(); i != spike_register_.end(); ++i)
+      for (j = i->begin(); j != i->end(); ++j)
+        j->clear();
+  }
+  else  //off_grid_spiking
+  {
+    // make sure buffers are correctly sized and empty
+    std::vector<OffGridSpike> tmp(global_offgrid_spikes_.size(), OffGridSpike(0,0.0));
+    global_offgrid_spikes_.swap(tmp);
+    
+    if (global_offgrid_spikes_.size() != static_cast<uint_t>(Communicator::get_recv_buffer_size()))
+      global_offgrid_spikes_.resize(Communicator::get_recv_buffer_size(), OffGridSpike(0,0.0));
+
+    std::vector<OffGridSpike> tmp2(local_offgrid_spikes_.size(),  OffGridSpike(0,0.0));
+    local_offgrid_spikes_.swap(tmp2);
+
+    if (num_spikes + (n_threads_ * min_delay_) > static_cast<uint_t>(Communicator::get_send_buffer_size()))
+      local_offgrid_spikes_.resize((num_spikes + (min_delay_ * n_threads_)), OffGridSpike(0,0.0));
+    else if (local_offgrid_spikes_.size() < static_cast<uint_t>(Communicator::get_send_buffer_size()))
+      local_offgrid_spikes_.resize(Communicator::get_send_buffer_size(),  OffGridSpike(0,0.0));
+
+    // collocate the entries of spike_registers into local_offgrid_spikes__
+    std::vector<OffGridSpike>::iterator pos = local_offgrid_spikes_.begin();
+    if (num_grid_spikes == 0)
+      for (it = offgrid_spike_register_.begin(); it != offgrid_spike_register_.end(); ++it)
+        for (jt = it->begin(); jt != it->end(); ++jt)
+        {
+          pos = std::copy(jt->begin(), jt->end(), pos);
+          pos->set_gid(comm_marker_);
+          ++pos;
+        }
+    else
+    {
+      std::vector<uint_t>::iterator n;
+      i = spike_register_.begin();
+      for (it = offgrid_spike_register_.begin(); it != offgrid_spike_register_.end(); ++it)
+      {
+        j = i->begin();
+        for (jt = it->begin(); jt != it->end(); ++jt)
+        {
+          pos = std::copy(jt->begin(), jt->end(), pos);
+          for (n = j->begin() ; n != j->end() ; ++n )
+          {
+            *pos = OffGridSpike(*n,0);
+            ++pos;
+          }
+          pos->set_gid(comm_marker_);
+          ++pos;
+          ++j;
+        }
+        ++i;
+      }
+      for (i = spike_register_.begin(); i != spike_register_.end(); ++i)
+        for (j = i->begin(); j != i->end(); ++j)
+          j->clear();
+    }
+
+    //empty offgrid_spike_register_
+    for (it = offgrid_spike_register_.begin(); it != offgrid_spike_register_.end(); ++it)
+      for (jt = it->begin(); jt != it->end(); ++jt)
+        jt->clear();
+  }
 }
 
 void nest::Scheduler::deliver_events_(thread t)
@@ -1349,64 +1340,68 @@ void nest::Scheduler::deliver_events_(thread t)
     
   size_t n_markers = 0;
   SpikeEvent se;
-  //if events are sent through here, the actual source node can contain no relevant information
-  Node* sender = net_.get_spike_source_node();
+  Node* sender = net_.dummy_spike_sources_[t]; // we need a dummy sender for sending the event
 
   std::vector<int> pos(displacements_);
  
   if (!off_grid_spiking_) //on_grid_spiking
   {
-      for (size_t vp = 0; vp < (size_t)Communicator::get_num_virtual_processes(); ++vp)
+    for (size_t vp = 0; vp < (size_t)Communicator::get_num_virtual_processes(); ++vp)
+    {
+      size_t pid = get_process_id(vp);
+      int lag = min_delay_ - 1;
+      while(n_markers < min_delay_)
       {
-	  size_t pid = get_process_id(vp);
-	  int lag = min_delay_ - 1;
-	  while(n_markers < min_delay_)
-	  {
-	      index nid = global_grid_spikes_[pos[pid]];
-              if (nid != comm_marker_)
-	      {
-		  // tell all local nodes about spikes on remote machines.        
-		  se.set_stamp(clock_ - Time::step(lag));
-		  se.set_sender(*sender);
-
-		  //std::cout << "Scheduler::deliver_events_ " << nid << " " << se.get_sender().get_gid() << std::endl;
-
-		  net_.connection_manager_.send(t, nid, se);
-	      }
-	      else
-	      {
-		  ++n_markers;
-		  --lag;
-	      }
-	      ++pos[pid];
-	  }
-	  n_markers = 0;
+        index nid = global_grid_spikes_[pos[pid]];
+        if (nid != comm_marker_)
+        {
+          // recording devices need a valid gid
+          sender->set_gid_(nid);
+          // tell all local nodes about spikes on remote machines.        
+          se.set_stamp(clock_ - Time::step(lag));
+          se.set_sender(*sender);
+          net_.connection_manager_.send(t, nid, se);
+        }
+        else
+        {
+          ++n_markers;
+          --lag;
+        }
+        ++pos[pid];
       }
-  } else { //off grid spiking
-      for (size_t vp = 0; vp < (size_t)Communicator::get_num_virtual_processes(); ++vp)
+      n_markers = 0;
+    }
+  }
+  else //off grid spiking
+  {
+    for (size_t vp = 0; vp < (size_t)Communicator::get_num_virtual_processes(); ++vp)
+    {
+      size_t pid = get_process_id(vp);
+      int lag = min_delay_ - 1;
+      while(n_markers < min_delay_)
       {
-	  size_t pid = get_process_id(vp);
-	  int lag = min_delay_ - 1;
-	  while(n_markers < min_delay_)
-	  {
-	    index nid = global_offgrid_spikes_[pos[pid]].get_gid();
-	      if (nid != comm_marker_)
-	      {
-		  // tell all local nodes about spikes on remote machines.        
-		  se.set_stamp(clock_ - Time::step(lag));
-		  se.set_sender(*sender);
-		  se.set_offset(global_offgrid_spikes_[pos[pid]].get_offset());
-		  net_.connection_manager_.send(t, nid, se);
-	      }
-	      else
-	      {
-		  ++n_markers;
-		  --lag;
-	      }
-	      ++pos[pid];
-	  }
-	  n_markers = 0;
+        index nid = global_offgrid_spikes_[pos[pid]].get_gid();
+        if (nid != comm_marker_)
+        {
+          // recording devices need a valid gid
+          sender->set_gid_(nid);
+
+          // tell all local nodes about spikes on remote machines.        
+          se.set_stamp(clock_ - Time::step(lag));
+          
+          se.set_sender(*sender);
+          se.set_offset(global_offgrid_spikes_[pos[pid]].get_offset());
+          net_.connection_manager_.send(t, nid, se);
+        }
+        else
+        {
+          ++n_markers;
+          --lag;
+        }
+        ++pos[pid];
       }
+      n_markers = 0;
+    }
   }
 }
 
@@ -1431,7 +1426,6 @@ void nest::Scheduler::advance_time_()
    * flag.
    */
   update_ref_= !update_ref_;
-
 
   // time now advanced time by the duration of the previous step
   to_do_ -= to_step_ - from_step_;

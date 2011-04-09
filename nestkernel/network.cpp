@@ -90,15 +90,14 @@ void Network::init_()
   assert(pristine_models_.size() > 0);
   Model* rootmodel= pristine_models_[0].first;
   assert(rootmodel != 0);
+
   nodes_.resize(1);
-  //nodes_.reserve(1000);
-  //node_locs_.reserve(1000);
-  //node_lock_.push_back(0);
   node_model_ids_.add_range(0,0,0);
+
   Compound *root_container = static_cast<Compound *>(rootmodel->allocate(0));
   nodes_[0] = root_container;
-  //nodes_.push_back(root_container);
   root_container->reserve(get_num_threads());
+
   for(thread t = 0; t < get_num_threads(); ++t)
   {
     Node* newnode = rootmodel->allocate(t);
@@ -134,8 +133,30 @@ void Network::init_()
       std::string name = pristine_models_[i].first->get_name();
       models_.push_back(pristine_models_[i].first->clone(name));
       if (!pristine_models_[i].second)
-        modeldict_->insert(name, models_.size() - 1);
+        modeldict_->insert(name, i);
     }
+
+  int proxy_model_id = get_model_id("proxynode");
+  assert(proxy_model_id > 0);
+  Model *proxy_model = models_[proxy_model_id];
+  assert(proxy_model != 0);
+
+  // create proxy nodes, one for each model
+  for(index i = 0; i < pristine_models_.size(); ++i)
+    if (pristine_models_[i].first != 0)
+    {
+      Node* newnode = proxy_model->allocate(0);
+      newnode->set_model_id(i);
+      proxy_nodes_.push_back(newnode);
+    }
+
+  // create dummy spike sources, one for each thread
+  for(thread t = 0; t < get_num_threads(); ++t)
+  {
+    Node* newnode = proxy_model->allocate(t);
+    newnode->set_model_id(proxy_model_id);
+    dummy_spike_sources_.push_back(newnode);
+  }
 
   // data_path and data_prefix can be set via environment variables
   DictionaryDatum dict(new Dictionary);
@@ -151,31 +172,15 @@ void Network::init_()
 #ifdef HAVE_MUSIC
   music_in_portlist_.clear();
 #endif
-
-  //create proxy_node list
-  int proxy_model_id = get_model_id("proxynode");
-  assert(proxy_model_id > 0);
-  Model *proxy_model = models_[proxy_model_id];
-  proxy_model->reserve(0, pristine_models_.size() + 1);
-  for(index i = 0; i < pristine_models_.size(); ++i)
-    if (pristine_models_[i].first != 0)
-    {
-      Node* newnode = proxy_model->allocate(0);
-      newnode->set_model_id(i);
-      proxy_nodes_.push_back(newnode);
-    }
-  proxy_spike_source_ = proxy_model->allocate(0);
-  proxy_spike_source_->set_model_id(proxy_model_id);
 }
 
 void Network::destruct_nodes_()
 {
-  // We call the destructor for each node excplicitly.
-  // This destroys the objects without releasing their memory.
-  // since the Memory is owned by the Model objects, we must
-  // not call delete on the Node objects!
+  // We call the destructor for each node excplicitly.  This destroys
+  // the objects without releasing their memory.  since the Memory is
+  // owned by the Model objects, we must not call delete on the Node
+  // objects!
   for(size_t n = 0; n < nodes_.size(); ++n)
-  {
     if ( nodes_.test(n) )
     {
       assert(nodes_[n] != 0);
@@ -183,25 +188,24 @@ void Network::destruct_nodes_()
 	(*nodes_[n])[t]->~Node();
       (*nodes_[n]).~Node();
     }
-  }
 
-  //std::vector<Node * > nodes;
-  //nodes_.swap(nodes);
   nodes_.clear();
-  //node_locs_.clear();
   node_model_ids_.clear();
+
+  proxy_nodes_.clear();
+  dummy_spike_sources_.clear();
 }
 
 void Network::clear_models_()
 {
-  // We delete all models, which will also delete all nodes. The built-in models
-  // will be recovered from the pristine_models_ list in init_()
+  // We delete all models, which will also delete all nodes. The
+  // built-in models will be recovered from the pristine_models_ in
+  // init_()
   for (vector<Model*>::iterator m = models_.begin(); m != models_.end(); ++m)
     if (*m != 0)
       delete *m;
 
   models_.clear();
-  proxy_nodes_.clear();
 }
 
 void Network::reset()
@@ -251,20 +255,13 @@ void Network::reset_network()
      if the Compound's replica_container flag is set. Other compounds are not
      iterated, since their nodes are registered in nodes_ directly.
    */
-  // for ( vector<Node*>::iterator it = nodes_.begin();
-  //       it != nodes_.end() ; ++it )
   for(size_t n = 0; n < nodes_.size(); ++n)
   {
-    //Node& n = **it;
-    //if ( n.size() == 0 )
     if ( (*nodes_[n]).size() == 0 )  // not a compound
     {
-      // n.init_state();
-      // n.unset(Node::buffers_initialized);
       (*nodes_[n]).init_state();
       (*nodes_[n]).unset(Node::buffers_initialized);
     }
-    //else if ( n.get_model_id() == -1 )
     else if ( (*nodes_[n]).get_model_id() == -1 )
     {
       Compound* const c = dynamic_cast<Compound*>(&(*nodes_[n]));
@@ -301,8 +298,6 @@ int Network::get_model_id(const char name[]) const
 
 index Network::add_node(long_t mod, long_t n)   //no_p
 {
-  //std::cout << "add " << n << " nodes of type " << mod << std::endl;
-
   assert(current_ != 0);
   assert(root_ != 0);
 
@@ -315,13 +310,12 @@ index Network::add_node(long_t mod, long_t n)   //no_p
   const thread n_threads = get_num_threads();
   assert(n_threads > 0);
 
-  //const index min_gid = node_locs_.size();
   const index min_gid = nodes_.size();
   const index max_gid = min_gid + n;
 
   Model* model = models_[mod];
-  Model* container_model = models_[0];
   assert(model != 0);
+  Model* container_model = models_[0];
   assert(container_model != 0);
   
   /* current_ points to the instance of the current subnet on thread 0.
@@ -330,52 +324,39 @@ index Network::add_node(long_t mod, long_t n)   //no_p
    */
   index subnet_gid = current_->get_gid();
   assert ( nodes_.test(subnet_gid) );
-  //Compound* subnet = dynamic_cast<Compound *>(nodes_[node_locs_[subnet_gid]]);
+
   Compound* subnet = dynamic_cast<Compound *>(&(*nodes_[subnet_gid]));
   assert(subnet != 0);
   assert(subnet->size() == static_cast<size_t>(n_threads));
   assert((*subnet)[0] == current_);
 
-  //std::cout << "subnet gid: " << subnet_gid << std::endl;
-
-  //if((max_gid > node_locs_.max_size()) || (max_gid<min_gid))
   if ((max_gid > nodes_.max_size()) || (max_gid<min_gid))
   {
     message(SLIInterpreter::M_ERROR, " Network::add:node", "Requested number of nodes will overflow the memory.");
     message(SLIInterpreter::M_ERROR, " Network::add:node", "No nodes were created.");
     throw KernelException("OutOfMemory");
-  } 
+  }
 
-  //node_locs_.reserve(max_gid);
   node_model_ids_.add_range(mod,min_gid,max_gid-1);
 
   if (model->has_proxies())
   {
-    //std::cout << "model has proxies" << std::endl;
-
     // In this branch we create nodes for all GIDs which are on a local thread
     // and proxies for all GIDs which are on remote processes.
     const int n_per_process = n / scheduler_.get_num_processes();
     const int n_per_thread = n_per_process / n_threads + 1;
-    //nodes_.reserve(nodes_.size() + n_per_process);
+
     nodes_.resize(max_gid);
     for(thread t = 0; t < n_threads; ++t)
-    {
-      // Model::reserve() reserves memory for n ADDITIONAL nodes
-      model->reserve(t, n_per_thread);
-    }
+      model->reserve(t, n_per_thread); // Model::reserve() reserves memory for n ADDITIONAL nodes on thread t
 
     for(size_t gid = min_gid; gid < max_gid; ++gid)
     {
-      //std::cout << "add gid: " << gid << std::endl;
-
-      thread vp = (current_->get_children_on_same_vp()) ? current_->get_children_vp()     
-                                                        : suggest_vp(gid);
+      thread vp = (current_->get_children_on_same_vp()) ? current_->get_children_vp() : suggest_vp(gid);
       thread t = vp_to_thread(vp);
 
       if(is_local_vp(vp))
       {
-	//node_locs_.push_back(nodes_.size());
         Node *newnode = 0;
 	newnode = model->allocate(t);
 	newnode->set_gid_(gid);
@@ -387,16 +368,11 @@ index Network::add_node(long_t mod, long_t n)   //no_p
 	current_->add_node(newnode);  // and into current subnet, thread 0.
       }
       else
-      {
-	//node_locs_.push_back(-1);
 	current_->add_remote_node(mod);
-      }
      }
   } 
   else if (!model->one_node_per_process())
   {
-    //std::cout << "model does not have proxies" << std::endl;
-
     // We allocate space for n containers which will hold the threads sorted.
     // We use Compounds to store the instances for each thread to exploit the
     // very efficient memory allocation for nodes. 
@@ -424,7 +400,6 @@ index Network::add_node(long_t mod, long_t n)   //no_p
     // since we create the n nodes on each thread, we reserve the full load.
     for(thread t = 0; t < n_threads; ++t)
     {
-      // Model::reserve() reserves memory for n ADDITIONAL nodes
       model->reserve(t,n);
       container_model->reserve(t, container_per_thread);
       static_cast<Compound *>((*subnet)[t])->reserve(n);
@@ -433,16 +408,12 @@ index Network::add_node(long_t mod, long_t n)   //no_p
     // The following loop creates n nodes. For each node, a wrapper is created
     // and filled with one instance per thread, in total n * n_thread nodes in
     // n wrappers. 
-    //nodes_.reserve(max_gid);
     nodes_.resize(max_gid);
     for(index gid = min_gid; gid < max_gid; ++gid)
     {
-      //std::cout << "add gid: " << gid << std::endl;
-
       thread thread_id = vp_to_thread(suggest_vp(gid));
 
       // Create wrapper and register with nodes_ array.
-      //node_locs_.push_back(nodes_.size());
       Compound *container= static_cast<Compound *>(container_model->allocate(thread_id));
       container->set_model_id(-1); // mark as pseudo-container wrapping replicas, see reset_network()
       container->reserve(n_threads); // space for one instance per thread
@@ -535,126 +506,108 @@ void Network::go_to(index n)
 }
 
 
-void Network::go_to(TokenArray p)
-{
-  std::vector<size_t> adr;
-  p.toVector(adr);
-  go_to(adr);
-}
+//  void Network::go_to(TokenArray p)
+//  {
+//    std::vector<size_t> adr;
+//    p.toVector(adr);
+//    go_to(adr);
+//  }
+//  
+//  
+//  void Network::go_to(vector<size_t> const &p)
+//  {
+//    if(Compound *target=dynamic_cast<Compound*>(get_node(p)))
+//      current_ = target;
+//    else
+//      throw SubnetExpected();
+//  }
 
 
-void Network::go_to(vector<size_t> const &p)
-{
-  if(Compound *target=dynamic_cast<Compound*>(get_node(p)))
-    current_ = target;
-  else
-    throw SubnetExpected();
-}
-
-
-Node* Network::get_node(TokenArray p, thread thr) const
-{
-  std::vector<size_t> adr;
-  p.toVector(adr);
-  return get_node(adr, thr);
-}
-
-// TODO AM: this routine still has to be converted
-Node* Network::get_node(vector<size_t> const &p, thread thr) const
-{
-  assert(root_ != NULL);
-  Compound *position = current_;
-
-  Node *new_position = position;
-  
-  // First, we determine the global ID of the node. Then, we use the
-  // thread to determine the correct pointer.
-
-  for(size_t i=0; i< p.size(); ++i)
-  {
-    // Any entry in an address will jump to the root node.
-    if(p[i]==0)
-    {
-      new_position = root_;
-      position = dynamic_cast<Compound*>(new_position);
-      // move directly to next vector element 
-      continue;
-    }
-
-    /* Range checking:
-       Since indices in address arrays start with one, 
-       we have to use an offset of 1 with respect to
-       the standard c/c++ indices.
-       Accordingly, the correct range for SLI indices is
-       1...size().
-       If the range is violated, we throw an UnknownNode 
-       exception.
-    */
-   
-    if(p[i]<1 || p[i]>(*position).size())
-      throw UnknownNode();
-    
-    // The following access is safe, since the range has been
-    // checked above.
-    new_position=(*position)[p[i] -1];
-
-    // If the following happens, there is a "hole" in the Network tree, 
-    // however, this case can occur if a Node has been deleted.
-    // Thus, we must handle this case gracefully and just throw an 
-    // UnknownNode exception.
-    if(new_position == 0)
-      throw UnknownNode();
-      
-    if(Compound *pos=dynamic_cast<Compound*>(new_position))
-      position=pos;
-    else if(i < p.size() - 1)
-      throw UnknownNode();
-  }
-
-  assert(new_position != 0);
-  index gid = new_position->get_gid();
-
-  //std::cout << "gid of new position " << gid << std::endl;
-
-  if(thr > 0 && (*nodes_[gid]).size() > 0)
-  {
-    assert(thr < (thread)(*nodes_[gid]).size());
-    return (*nodes_[gid])[thr];
-  }
-
-  return new_position;
-}
+//  Node* Network::get_node(TokenArray p, thread thr) const
+//  {
+//    std::vector<size_t> adr;
+//    p.toVector(adr);
+//    return get_node(adr, thr);
+//  }
+//  
+//  // TODO AM: this routine still has to be converted
+//  Node* Network::get_node(vector<size_t> const &p, thread thr) const
+//  {
+//    assert(root_ != NULL);
+//    Compound *position = current_;
+//  
+//    Node *new_position = position;
+//    
+//    // First, we determine the global ID of the node. Then, we use the
+//    // thread to determine the correct pointer.
+//  
+//    for(size_t i=0; i< p.size(); ++i)
+//    {
+//      // Any entry in an address will jump to the root node.
+//      if(p[i]==0)
+//      {
+//        new_position = root_;
+//        position = dynamic_cast<Compound*>(new_position);
+//        // move directly to next vector element 
+//        continue;
+//      }
+//  
+//      /* Range checking:
+//         Since indices in address arrays start with one, 
+//         we have to use an offset of 1 with respect to
+//         the standard c/c++ indices.
+//         Accordingly, the correct range for SLI indices is
+//         1...size().
+//         If the range is violated, we throw an UnknownNode 
+//         exception.
+//      */
+//     
+//      if(p[i]<1 || p[i]>(*position).size())
+//        throw UnknownNode();
+//      
+//      // The following access is safe, since the range has been
+//      // checked above.
+//      new_position=(*position)[p[i] -1];
+//  
+//      // If the following happens, there is a "hole" in the Network tree, 
+//      // however, this case can occur if a Node has been deleted.
+//      // Thus, we must handle this case gracefully and just throw an 
+//      // UnknownNode exception.
+//      if(new_position == 0)
+//        throw UnknownNode();
+//        
+//      if(Compound *pos=dynamic_cast<Compound*>(new_position))
+//        position=pos;
+//      else if(i < p.size() - 1)
+//        throw UnknownNode();
+//    }
+//  
+//    assert(new_position != 0);
+//    index gid = new_position->get_gid();
+//  
+//    //std::cout << "gid of new position " << gid << std::endl;
+//  
+//    if(thr > 0 && (*nodes_[gid]).size() > 0)
+//    {
+//      assert(thr < (thread)(*nodes_[gid]).size());
+//      return (*nodes_[gid])[thr];
+//    }
+//  
+//    return new_position;
+//  }
 
 
 Node* Network::get_node(index n, thread thr) //no_p
 {
-  //std::cout << "get node with gid " << n << std::endl;
-
   if (!is_local_gid(n))
-  {
-    //std::cout << "non-local" << std::endl;
     return proxy_nodes_[node_model_ids_.get_model_id(n)];
-  }
 
-  //int_t lid = node_locs_[n];
-  // non-compound node
-  // if(nodes_[lid]->size() == 0)
-  //   return  nodes_[lid];
   if ((*nodes_[n]).size() == 0)
-  {
-    //std::cout << "non-compound - return node with gid " << (*nodes_[n]).get_gid() << std::endl;
     return nodes_[n];
-  }
 
-  // if (thr < 0 || thr >= (thread)nodes_[lid]->size())
-  //   throw UnknownNode();
   if (thr < 0 || thr >= (thread)(*nodes_[n]).size())
     throw UnknownNode();
 
-  // compound node
-  //return (*nodes_[lid])[thr];
-
-  //std::cout << "compound - return node with gid " << (*nodes_[n])[thr]->get_gid() << std::endl;
   return (*nodes_[n])[thr];
 }
 
@@ -679,11 +632,6 @@ vector<size_t> Network::get_adr(Node const* node) const
   }
   std::reverse(adr.begin(),adr.end());
   return adr;
-}
-
-Node* Network::get_spike_source_node()
-{
-  return proxy_spike_source_;
 }
 
 bool Network::model_in_use(index i)
@@ -734,7 +682,7 @@ void Network::memory_info()
   std::cout.unsetf(std::ios::left);
 }
 
-void Network::print(TokenArray p, int depth)
+void Network::print(index p, int depth)
 {
   Compound *target = dynamic_cast<Compound*>(get_node(p));
   if(target != NULL)
@@ -1082,24 +1030,19 @@ void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArr
   // We retrieve pointers for all targets, this implicitly checks if they
   // exist and throws UnknownNode if not.
   std::vector<Node*> targets;
-  std::vector<Node*> real_targets;
   targets.reserve(target_ids.size());
-  real_targets.reserve(target_ids.size()); // we do not know how many drop out, but have upper limit
 
   //only bother with local targets - is_local_gid is cheaper than get_node()
   for (index i = 0; i < target_ids.size(); ++i)
-    {
-      index gid = getValue<long>(target_ids[i]);
-      if (is_local_gid(gid))
-	  targets.push_back(get_node(gid));
-    }
-
-  thread target_thread = 0; /// we force this in this experiment
+  {
+    index gid = getValue<long>(target_ids[i]);
+    if (is_local_gid(gid))
+      targets.push_back(get_node(gid));
+  }
 
   for(index i = 0; i < targets.size(); ++i)
   {
-    assert(target_thread  == targets[i]->get_thread());
-    //    thread target_thread = targets[i]->get_thread();
+    thread target_thread = targets[i]->get_thread();
  
     if (source->get_thread() != target_thread)
       source = get_node(source_id, target_thread);
@@ -1121,7 +1064,7 @@ void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArr
       std::string msg; // = String::compose("Global target ID %1: Target does not support event.", target_ids[i]);
       message(SLIInterpreter::M_WARNING, "DivergentConnect", msg.c_str());
       message(SLIInterpreter::M_WARNING, "DivergentConnect", "Connection will be ignored.");
-      //continue;
+      continue;
     }
     catch (UnknownReceptorType& e)
     {
@@ -1130,7 +1073,7 @@ void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArr
       message(SLIInterpreter::M_WARNING, "Connect", "Target does not support requested receptor type.");
       message(SLIInterpreter::M_WARNING, "Connect", "Connection will be ignored.");
       interpreter_.raiseerror(e.what());
-      //      continue;
+      continue;
     }
   }
 }

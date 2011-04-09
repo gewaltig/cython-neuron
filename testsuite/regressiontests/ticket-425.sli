@@ -34,6 +34,9 @@ M_ERROR setverbosity
 % failbutnocrash forks, not compatible with mpi
 statusdict/is_mpi :: {statusdict/exitcodes/success :: quit_i} if
 
+% we don't have aeif_cond_alpha if compiled without GSL
+statusdict/have_gsl :: not {statusdict/exitcodes/success :: quit_i} if
+
 % replicating code, since failbutnocrash needs explicit code
 
 % ensure no crash with tolerance 1e-8

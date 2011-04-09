@@ -173,12 +173,12 @@ def
 {
   ResetKernel
   << >> begin
-    /recvars [ /g_in ] def
+    /recvars [ /V_m ] def
     /N 10 def
 
         /nnet /subnet Create def
         nnet ChangeSubnet
-	/iaf_cond_alpha N Create ;
+	/iaf_psc_alpha N Create ;
         0 ChangeSubnet
         /nrns nnet GetLeaves def
 

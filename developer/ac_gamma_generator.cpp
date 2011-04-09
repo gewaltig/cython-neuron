@@ -14,8 +14,11 @@
  *
  */
 
-#include "exceptions.h"
 #include "ac_gamma_generator.h"
+
+#ifdef HAVE_GSL
+
+#include "exceptions.h"
 #include "network.h"
 #include "dict.h"
 #include "integerdatum.h"
@@ -28,9 +31,7 @@
 #include <cmath>
 #include <limits>
 
-#ifdef HAVE_GSL
 #include <gsl/gsl_sf_gamma.h>
-#endif
 
 namespace nest {
   RecordablesMap<ac_gamma_generator> ac_gamma_generator::recordablesMap_;
@@ -117,8 +118,6 @@ void nest::ac_gamma_generator::Parameters_::set(const DictionaryDatum& d)
   {
 	  if ( order_ < 1.0 )
 	  {
-	    //network()->error("ac_gamma_generator::get_status",
-	    //                 "The gamma order must be at least 1.");
 	    throw KernelException("ac_gamma_generator::get_status: The gamma order must be at least 1.");
 	  }
   }
@@ -131,8 +130,6 @@ void nest::ac_gamma_generator::Parameters_::set(const DictionaryDatum& d)
 
   if ( dc_ < 0.0 || dc_ < ac_ )
   {
-    //network()->error("ac_gamma_generator::set_status",
-    //                 "Amplitudes must fulfill ac_ >= dc_ >= 0.");
     throw KernelException("ac_gamma_generator::set_status: Amplitudes must fulfill ac_ >= dc_ >= 0.");
   }
 }
@@ -187,31 +184,20 @@ void nest::ac_gamma_generator::init_buffers_()
 {
   device_.init_buffers();
   B_.logger_.reset();
-}
 
-#ifndef HAVE_GSL
-  throw UnknownModelName("ac_gamma_generator requires GSL");
-#endif
   // thread number cannot change once nodes are created, so we can
   // place this check here.
-/*  if ( network()->get_num_threads() > 1 || network()->get_num_processes() > 1 ) {
-    throw BadProperty("ac_gamma_generator is presently not suitable" +
-                       " for parallel simulation.");
-}*/
+  //  if ( network()->get_num_threads() > 1 || network()->get_num_processes() > 1 ) {
+  //    throw BadProperty("ac_gamma_generator is presently not suitable" +
+  //                       " for parallel simulation.");
+}
 
 // ----------------------------------------------------
 
 void nest::ac_gamma_generator::calibrate()
 {
   B_.logger_.init();  // ensures initialization in case mm connected after Simulate
-
   device_.calibrate();
-
-  // time resolution
-  const double h = Time::get_resolution().get_ms();
-  const double_t t = network()->get_time().get_ms();
-
-  return;
 }
 
 
@@ -224,7 +210,7 @@ void nest::ac_gamma_generator::update(Time const& origin,
   const long_t start = origin.get_steps();
 
   // time resolution in seconds
-  const double h = Time::get_resolution().get_ms(); // / 1000.0;
+  const double h = Time::get_resolution().get_ms();
 
   // random number generator
   librandom::RngPtr rng = net_->get_rng(get_thread());
@@ -232,12 +218,12 @@ void nest::ac_gamma_generator::update(Time const& origin,
   for ( long_t lag = from ; lag < to ; ++lag )
   {
     // times in seconds
-    const double_t t = Time(Time::step(start+lag)).get_ms(); // / 1000.0;
-    const double_t tl= (S_.last_spike_-Time::step(1)).get_ms(); // / 1000.0;
+    const double_t t = Time(Time::step(start+lag)).get_ms();
+    const double_t tl= (S_.last_spike_-Time::step(1)).get_ms();
 
     // compute hazard---this should be done more efficiently
     const double_t lambda = P_.dc_ + P_.ac_ * std::sin(P_.om_ * t + P_.phi_);
-    const double_t Lambda = std::abs(P_.ac_) > 0
+    const double_t Lambda = std::abs(P_.ac_) > 0 && std::abs(P_.om_) > 0
     		? P_.order_ * ( P_.dc_ * (t-tl) - P_.ac_ / P_.om_
     			  * ( std::cos(P_.om_ * t + P_.phi_) - std::cos(P_.om_ * tl + P_.phi_) ))
     		: P_.order_ * P_.dc_ * (t-tl);
@@ -267,3 +253,5 @@ void nest::ac_gamma_generator::handle(DataLoggingRequest& e)
 {
   B_.logger_.handle(e);
 }
+
+#endif //HAVE_GSL

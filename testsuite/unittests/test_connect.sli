@@ -41,7 +41,7 @@ n1 n2 Connect
 << /source n1 /synapse_type /static_synapse >> FindConnections
 { GetStatus } Map { /target get } Map
 [2] eq assert_or_die
-(hello) ==
+
 % plain Connect with addresses
 n1 GetAddress n2 GetAddress Connect
 << /source n1 /synapse_type /static_synapse >> FindConnections

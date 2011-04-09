@@ -113,25 +113,20 @@ namespace nest
 
      SeeAlso: CurrentSubnet
   */
-  /*
   void NestModule::ChangeSubnet_aFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(1);
 
     TokenArray node_adr = getValue<TokenArray>(i->OStack.pick(0));
 
-    if(get_network().get_node(node_adr)->allow_entry())
-      get_network().go_to(node_adr);
-    else
-      throw SubnetExpected();
-    
+// TODO: This function should take gids instead of addresses
+//      if(get_network().get_node(node_adr)->allow_entry())
+//        get_network().go_to(node_adr);
+//      else
+//        throw SubnetExpected();
+//      
     i->OStack.pop();
     i->EStack.pop();
-    }*/
-
-  void NestModule::ChangeSubnet_aFunction::execute(SLIInterpreter *i) const
-  {
-    assert(false);
   }
 
   void NestModule::ChangeSubnet_iFunction::execute(SLIInterpreter *i) const
@@ -150,38 +145,16 @@ namespace nest
   }
 
   /* BeginDocumentation
-     Name: CurrentSubnet - return the address of the current network node.
-
-     Synopsis: CurrentSubnet -> array
-     Description:
-     CurrentSubnet returns the address of the current working subnet in form
-     of an address array. The address must conform the semantics for network
-     addresses.
-     Availability: NEST
-     SeeAlso: ChangeSubnet
-     Author: Marc-Oliver Gewaltig
-  */
-  /*
-  void NestModule::CurrentSubnetFunction::execute(SLIInterpreter *i) const
-  {
-    assert(get_network().get_cwn() != 0);
-    vector<size_t> current = get_network().get_adr(get_network().get_cwn());
-
-    i->OStack.push(ArrayDatum(current));
-    i->EStack.pop();
-    }*/
-
-  /* BeginDocumentation
      Name: CurrentSubnet - return the gid of the current network node.
 
      Synopsis: CurrentSubnet -> gid
      Description:
-     CurrentSubnet returns the gid of the current working subnet.
+     CurrentSubnet returns the gid of the current working subnet in form
+     of an integer number
      Availability: NEST
      SeeAlso: ChangeSubnet
      Author: Marc-Oliver Gewaltig
-  */
-  
+  */  
   void NestModule::CurrentSubnetFunction::execute(SLIInterpreter *i) const
   {
     assert(get_network().get_cwn() != 0);
@@ -1219,8 +1192,9 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
   
     TokenArray compound_adr = getValue<TokenArray>(i->OStack.pick(0));
     Compound  *compound_ptr; //!< pointer to source layer
-     
-    compound_ptr = dynamic_cast<Compound*>(get_network().get_node(compound_adr));
+
+// TODO: convert this function to take the gid instead of an address
+//    compound_ptr = dynamic_cast<Compound*>(get_network().get_node(compound_adr));
     if (compound_ptr == NULL)
         throw SubnetExpected();
     
@@ -1292,9 +1266,9 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      Name: PrintNetwork - Print network tree in readable form.
      Description:
      Synopsis: 
-     [adr] depth  PrintNetwork -> -
+     gid depth  PrintNetwork -> -
      Parameters: 
-     [adr]       - Address of the root subnet to start tree printout. 
+     gid        - Global ID of the subnet to start tree printout. 
      depth      - Integer, specifies down to which level the network is printed.
      Description:
      This function prints the network structure in a concise tree-like format 
@@ -1419,23 +1393,18 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      Availability: NEST
      Author: Marc-Oliver Gewaltig, Jochen Martin Eppler
   */
-  /*
   void NestModule::PrintNetworkFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
     
-    TokenArray node_adr = getValue<TokenArray>(i->OStack.pick(1));
+    long gid = getValue<long>(i->OStack.pick(1));
     long depth = getValue<long>(i->OStack.pick(0));
-    get_network().print(node_adr, depth - 1);
+    get_network().print(gid, depth - 1);
 
     i->OStack.pop(2);
     i->EStack.pop();
   }
-  */
-  void NestModule::PrintNetworkFunction::execute(SLIInterpreter *i) const
-  {
-    assert(false);
-  }
+
   /* BeginDocumentation
      Name: Rank - Return the MPI rank (MPI_Comm_rank) of the process.
      Availability: NEST 2.0
@@ -1663,7 +1632,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      Author: Jochen Martin Eppler
      FirstVersion: April 2009
      Availability: Only when compiled with MUSIC
-     SeeAlso: music_event_in_proxy
+     SeeAlso: music_event_in_proxyx
   */  
   void NestModule::SetAcceptableLatencyFunction::execute(SLIInterpreter *i) const
   {

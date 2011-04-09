@@ -118,7 +118,7 @@ namespace nest {
    * Valid port numbers start at zero (0.
    * The value -1 is used for invalid or unassigned ports.
    */
-  typedef size_t port;
+  typedef long_t port;
 
   /**
    * Value for invalid connection port number.

@@ -13,14 +13,15 @@
 #ifndef AC_GAMMA_GENERATOR_H
 #define AC_GAMMA_GENERATOR_H
 
+#include "config.h"
+
+#ifdef HAVE_GSL
+
 #include "nest.h"
 #include "event.h"
 #include "node.h"
-#include "ring_buffer.h" // ?
-#include "mutex.h"		// ?
 #include "stimulating_device.h"
-#include "poisson_randomdev.h"
-#include "connection.h"	//?
+#include "connection.h"
 #include "universal_data_logger.h"
 
 #include <vector>
@@ -82,8 +83,11 @@ namespace nest{
    * $[  \lambda(t) = dc + ac \sin ( 2 \pi f t + \phi ) $]
    * $[  \Lambda(t) = a \int_0^t \lambda(s) ds $]
    * and the incomplete Gamma function $\Gamma(a,z)$; $a$ is the order of the gamma function.
+   *
+   * @note This implementation includes an additional $a$ factor in the calculation of $\Lambda(t)$
+   * and $h(t)$ in order to keep the mean rate constant with varying $a$
    */
-  class ac_gamma_generator: public Node, public StimulatingDevice<SpikeEvent>
+  class ac_gamma_generator: public Node
   {
     
   public:        
@@ -226,3 +230,5 @@ namespace nest{
 } // namespace
 
 #endif // AC_GAMMA_GENERATOR_H
+
+#endif //HAVE_GSL

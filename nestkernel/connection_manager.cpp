@@ -308,7 +308,7 @@ ArrayDatum ConnectionManager::find_connections(DictionaryDatum params)
     else
     {
       if (static_cast<size_t>(source) < connections_[t].size())
-        for (syn_id = 0; syn_id < connections_[t].get(source).size(); ++syn_id)
+        for (syn_id = 0; syn_id < prototypes_.size(); ++syn_id)
         {
           int syn_vec_index = get_syn_vec_index(t, source, syn_id);
           if (syn_vec_index != -1)

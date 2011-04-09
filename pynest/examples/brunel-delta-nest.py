@@ -17,11 +17,11 @@ simtime = 1000.0 # Simulation time in ms
 delay   = 1.5    # synaptic delay in ms
 
 # Parameters for asynchronous irregular firing
-g       = 5.0
+g       = 6.0
 eta     = 2.0  # external rate relative to threshold rate
 epsilon = 0.1  # connection probability
 
-order     = 2500
+order     = 250
 NE        = 4*order
 NI        = 1*order
 N_neurons = NE+NI
@@ -34,7 +34,7 @@ C_tot = int(CI+CE)      # total number of synapses per neuron
 # Initialize the parameters of the integrate and fire neuron
 tauMem = 20.0
 theta  = 20.0
-J      = 0.1 # postsynaptic amplitude in mV
+J      = 10*0.1 # postsynaptic amplitude in mV
 
 J_ex  = J
 J_in  = -g*J_ex
@@ -128,5 +128,5 @@ print "Inhibitory rate   : %.2f Hz" % rate_in
 print "Building time     : %.2f s" % build_time
 print "Simulation time   : %.2f s" % sim_time
 
-nest.raster_plot.from_device(espikes, hist=True)
-nest.raster_plot.show()
+nest.raster_plot.from_device(espikes, "", hist=True)
+#nest.raster_plot.show()

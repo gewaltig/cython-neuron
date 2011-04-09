@@ -98,7 +98,7 @@ void Modelrangemanager::clear()
   range_idx_ = 0;
 }
 
-  //just for debug purposes, can be removed later. AM 13/2/2010
+// TODO: just for debug purposes, can be removed later. AM 13/2/2010
 void Modelrangemanager::print() const
 {
   std::cout << "Total model id search steps: " << range_misses_ << std::endl;
