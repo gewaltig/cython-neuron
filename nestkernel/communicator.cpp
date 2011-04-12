@@ -21,7 +21,7 @@
 */
 #ifdef HAVE_MPI
 #include <mpi.h>
-#endif
+#endif /* #ifdef HAVE_MPI */
 
 #include <limits>
 #include <numeric>
@@ -49,7 +49,7 @@ bool nest::Communicator::use_Allgather_ = true;
 #ifdef HAVE_MUSIC
 MUSIC::Setup *nest::Communicator::music_setup=0;
 MUSIC::Runtime *nest::Communicator::music_runtime=0;
-#endif
+#endif /* #ifdef HAVE_MUSIC */
 
 /* ------------------------------------------------------
    The following datatypes are defined here locally in the .cpp
@@ -73,9 +73,9 @@ MPI_Datatype MPI_OFFGRID_SPIKE = 0;
 // Variable to hold the MPI communicator to use.
 #ifdef HAVE_MUSIC
 MPI::Intracomm comm=0;
-#else
+#else /* #ifdef HAVE_MUSIC */
 MPI_Comm comm=0;
-#endif
+#endif /* #ifdef HAVE_MUSIC */
 
 
 /* ------------------------------------------------------ */
@@ -116,10 +116,10 @@ void nest::Communicator::init (int* argc, char** argv[])
     music_setup = new MUSIC::Setup(*argc, *argv, MPI_THREAD_FUNNELED, &provided_thread_level);
     // get a communicator from MUSIC
     comm = music_setup->communicator();
-#else
+#else /* #ifdef HAVE_MUSIC */
     MPI_Init_thread(argc, argv, MPI_THREAD_FUNNELED, &provided_thread_level);
     comm = MPI_COMM_WORLD;
-#endif
+#endif /* #ifdef HAVE_MUSIC */
   }
 
   MPI_Comm_size(comm, &num_processes_);
@@ -183,9 +183,9 @@ void nest::Communicator::finalize()
       music_runtime->finalize();
       delete music_runtime;
     }
-#else
+#else /* #ifdef HAVE_MUSIC */
       MPI_Finalize();
-#endif
+#endif /* #ifdef HAVE_MUSIC */
     else
     {
       net_->message(SLIInterpreter::M_INFO, "Communicator::finalize()",
@@ -303,26 +303,6 @@ void nest::Communicator::communicate_Allgather (std::vector<uint_t>& send_buffer
       send_buffer_size_ = max_recv_count;
       recv_buffer_size_ = send_buffer_size_ * num_processes_;
     }
-}
-
-nest::double_t nest::Communicator::time_communicate(int num_bytes, int samples)
-{
-  if (num_processes == 1)
-    return 0.0;
-  int num_elements = num_bytes/sizeof(uint_t);
-  std::vector<uint_t> test_send_buffer(num_elements);
-  std::vector<uint_t> test_recv_buffer(num_elements*num_processes);
-  //start time measurement here
-  struct tms foo;
-  const clock_t starttime = times(&foo);
-  for (int i = 0; i < samples; ++i)
-    MPI_Allgather(&test_send_buffer[0], num_elements, MPI_UNSIGNED,
-		  &test_recv_buffer[0], num_elements, MPI_UNSIGNED, MPI_COMM_WORLD);
-  //finish time measurement here
-  const clock_t finishtime = times(&foo);
-  double_t total_duration = (double)(finishtime-starttime);
-  return total_duration/(samples * sysconf(_SC_CLK_TCK));
-  return 0.0;
 }
   
 void nest::Communicator::communicate_CPEX (std::vector<uint_t>& send_buffer, 
@@ -694,7 +674,7 @@ void nest::Communicator::communicate_Allgather(std::vector<int_t>& buffer)
 {
   // avoid aliasing, see http://www.mpi-forum.org/docs/mpi-11-html/node10.html
   int_t my_val = buffer[rank_];
-  MPI_Allgather(&my_val, 1, MPI_INT, &buffer[0], 1, MPI_INT, MPI_COMM_WORLD);
+  MPI_Allgather(&my_val, 1, MPI_INT, &buffer[0], 1, MPI_INT, comm);
 }
 
 void nest::Communicator::communicate_CPEX(std::vector<int_t>& buffer)
@@ -897,8 +877,9 @@ void nest::Communicator::communicate_connector_properties(DictionaryDatum& dict)
 
 void nest::Communicator::communicate(const NodeList& local_nodes, vector<index>& gids)
 {
-  size_t np = Communicator::num_processes;
-  if (np > 1)
+  size_t np = Communicator::num_processes_;
+
+  if ( np > 1 )
   {
     size_t n_locals = local_nodes.local_size();
     vector<long_t> localgids;
@@ -909,7 +890,7 @@ void nest::Communicator::communicate(const NodeList& local_nodes, vector<index>&
 
     //get size of buffers
     std::vector<nest::int_t> n_gids(np);
-    n_gids[Communicator::rank] = n_locals;
+    n_gids[Communicator::rank_] = n_locals;
     communicate(n_gids);
       
     // Set up displacements vector.
@@ -966,9 +947,9 @@ void nest::Communicator::advance_music_time(long_t num_steps)
   for (int s = 0; s < num_steps; s++)
     music_runtime->tick();
 }
-#endif
+#endif /* #ifdef HAVE_MUSIC */
 
-#else  /* #ifdef HAVE_MPI */
+#else /* #ifdef HAVE_MPI */
 
 /**
  * communicate (on-grid) if compiled without MPI
@@ -986,7 +967,6 @@ void nest::Communicator::communicate (std::vector<uint_t>& send_buffer,
   recv_buffer.swap(send_buffer);
 }
 
-
 /**
  * communicate (off-grid) if compiled without MPI
  */
@@ -1003,7 +983,6 @@ void nest::Communicator::communicate (std::vector<OffGridSpike>& send_buffer,
   recv_buffer.swap(send_buffer);
 }
 
-
 void nest::Communicator::communicate(const NodeList& local_nodes, std::vector<index>& gids)
 {
   size_t n_locals = local_nodes.size();
@@ -1017,5 +996,4 @@ void nest::Communicator::communicate(const NodeList& local_nodes, std::vector<in
   gids.swap(localgids);
 }
 
-
-#endif // #ifdef HAVE_MPI
+#endif /* #ifdef HAVE_MPI */

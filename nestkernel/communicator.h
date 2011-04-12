@@ -35,7 +35,7 @@
 #ifdef HAVE_MUSIC
 #include <music.hh>
 #include "music_event_handler.h"
-#endif
+#endif /* #ifdef HAVE_MUSIC */
 
 
 namespace nest
@@ -50,6 +50,11 @@ namespace nest
     public:
       Communicator () {}
       ~Communicator () {}
+
+#ifdef HAVE_MUSIC
+      static MUSIC::Setup *music_setup;     //!< pointer to a MUSIC setup object
+      static MUSIC::Runtime *music_runtime; //!< pointer to a MUSIC runtime object
+#endif /* #ifdef HAVE_MUSIC */
 
       /**
        * Combined storage of GID and offset information for off-grid spikes.
@@ -119,7 +124,7 @@ namespace nest
        * channel comes in.
        */
       static void register_music_event_in_proxy(std::string portname, int channel, nest::Node *mp);
-#endif
+#endif /* #ifdef HAVE_MUSIC */
 
       static void init(int* argc, char** argv[]);
       static void finalize();
@@ -172,11 +177,6 @@ namespace nest
 
       static void init_communication();
 
-      static MPI_Datatype MPI_OFFGRID_SPIKE;
-      //static int MPI_OFFGRID_SPIKE;
-
-      static void communicate_Allgather(std::vector<int_t>&);
-
       static void communicate_Allgather(std::vector<uint_t>& send_buffer, 
                                         std::vector<uint_t>& recv_buffer, 
                                         std::vector<int>& displacements);
@@ -205,7 +205,7 @@ namespace nest
       static void communicate_CPEX(std::vector<int_t>&);
   };
 
-#else // #ifdef HAVE_MPI
+#else /* #ifdef HAVE_MPI */
 
 namespace nest
 {
@@ -230,6 +230,8 @@ namespace nest
 	uint_t   get_gid()    const  { return static_cast<uint_t  >(gid_   ); }
 	void     set_gid(uint_t gid) { gid_ = static_cast<double_t>(gid    ); }
 	double_t get_offset() const  { return offset_; }
+
+      private:
 
 	friend class Communicator; //void Communicator::init(int*, char**);
 
