@@ -348,13 +348,9 @@ void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, Dicti
 
 void ConnectionManager::send(thread t, index sgid, Event& e)
 {
-  //std::cout << "ConnectionManager::send 1 " << sgid << " " << e.get_sender().get_gid() << std::endl;
   if (sgid < connections_[t].size())
-  {
-    //std::cout << "ConnectionManager::send 2 " << sgid << " " << e.get_sender().get_gid() << std::endl;
     for (size_t i = 0; i < connections_[t].get(sgid).size(); ++i)
       connections_[t].get(sgid)[i].connector->send(e);
-  }
 }
 
 size_t ConnectionManager::get_num_connections() const

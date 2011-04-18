@@ -20,8 +20,8 @@
 %% (C) 2000-2006 The NEST Initiative
 %%        
 %%  Authors Marc-Oliver Gewaltig <marc-oliver.gewaltig@honda-ri.de>
-%%          Markus Diesmann <diesmann@biologie.uni-freiburg.de>
-%%          Jochen Martin Eppler <eppler@biologie.uni-freiburg.de>
+%%          Markus Diesmann <diesmann@fz-juelich.de>
+%%          Jochen Martin Eppler <eppler@fz-juelich.de>
 %%
 
 M_DEBUG (nest-init.sli) (Initializing SLI support for NEST Kernel.) message
@@ -29,7 +29,6 @@ M_DEBUG (nest-init.sli) (Initializing SLI support for NEST Kernel.) message
 
 /nest-init /SLI ($Revision$) provide-component
 /nest-init /C++ (1.157) require-component
-
 
 statusdict begin
 /kernellibrevision 
@@ -45,6 +44,13 @@ statusdict /prgdocdir get (/examples/FacetsBenchmarks) join addpath
   statusdict/prgdatadir :: (/extras/do_tests.sh ) join
   statusdict/prefix :: (/bin/nest) join
   join system ; ;  
+} def
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/ChangeSubnet_a
+{
+  GetGID ChangeSubnet_i
 } def
 
 /ChangeSubnet trie

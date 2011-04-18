@@ -76,9 +76,10 @@ class GenericConnectorBase : public Connector
    */ 
   void register_connection(Node&, Node&, DictionaryDatum&);
   
-
-  //! Experimental: bulk registration of targets for efficient memory handling
-  void register_connection_bulkdiv(Node&, const std::vector<Node*>&);
+  /**
+   * Register a new connection at the sender side.
+   */ 
+  void register_connection(Node&, Node&, ConnectionT&, port);
 
   /**
    * Return a list of ports
@@ -144,13 +145,6 @@ class GenericConnectorBase : public Connector
   // point in time of last spike transmitted
   double_t t_lastspike_;
 
- private:
-  /**
-   * Register a new connection at the sender side.
-   */ 
-  void register_connection(Node&, Node&, ConnectionT&, port);
-  void register_connection_bulkdiv(Node&, const std::vector<Node*>&, ConnectionT&, port);
-
 };
 
 
@@ -171,21 +165,6 @@ void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::re
 
   register_connection(s, r, cn, connector_model_.get_receptor_type());
 }
-
-template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
-void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection_bulkdiv(Node& s, const std::vector<Node*>& rv)
-{
-  // create a new instance of the default connection
-  ConnectionT cn = ConnectionT( connector_model_.get_default_connection() );
-
-  // tell the connector model, that we used the default delay
-  connector_model_.used_default_delay();
-
-  register_connection_bulkdiv(s, rv, cn, connector_model_.get_receptor_type());
-}
-
-
-  
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
 void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r, double_t w, double_t d)
@@ -249,7 +228,6 @@ void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::re
     }
   connector_model_.increment_num_connections();
 }
-
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
 std::vector<long>* GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::find_connections(DictionaryDatum params) const
@@ -330,8 +308,6 @@ void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::se
     conn_it->send(e, t_lastspike_, connector_model_.get_common_properties());
   }
 
-  //std::cout << "GenericConnectorBase::send " << e.get_sender().get_gid() << std::endl;
-
   t_lastspike_ = e.get_stamp().get_ms();
 }
 
@@ -392,7 +368,7 @@ class GenericConnector : public GenericConnectorBase< ConnectionT,
  public:
   GenericConnector(GCMT &cm) :
     GenericConnectorBase< ConnectionT, CommonPropertiesT, GCMT >(cm)
-      {}
+    {}
 };
 
 

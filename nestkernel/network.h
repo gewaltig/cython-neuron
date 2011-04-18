@@ -722,9 +722,6 @@ SeeAlso: Simulate, Node
     void connect(Node& s, Node& r, index sgid, thread t, double_t w, double_t d, index syn);
     void connect(Node& s, Node& r, index sgid, thread t, DictionaryDatum& d, index syn);
 
-    //! Experimental, pass all targets to CM at once, for more efficient allocation
-    void bulk_divergent_connect(Node& s, const std::vector<Node*>& r, index sgid, thread t, index syn);
-    
     /**
      * Initialize the network data structures.
      * init_() is used by the constructor and by reset().
@@ -835,12 +832,6 @@ SeeAlso: Simulate, Node
   void Network::connect(Node& s, Node& r, index sgid, thread t, index syn)
   {
     connection_manager_.connect(s, r, sgid, t, syn);
-  }
-  inline
-
-    void Network::bulk_divergent_connect(Node& s, const std::vector<Node*>& rv, index sgid, thread t, index syn)
-  {
-    connection_manager_.bulk_divergent_connect(s, rv, sgid, t, syn);
   }
 
   inline

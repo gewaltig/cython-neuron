@@ -39,7 +39,6 @@
 #include "communicator.h"
 #include "genericmodel.h"
 
-#include <set>
 #ifdef IS_BLUEGENE_P
 #include <sys/resource.h>
 #include <common/bgp_personality.h>
@@ -113,21 +112,6 @@ namespace nest
 
      SeeAlso: CurrentSubnet
   */
-  void NestModule::ChangeSubnet_aFunction::execute(SLIInterpreter *i) const
-  {
-    i->assert_stack_load(1);
-
-    TokenArray node_adr = getValue<TokenArray>(i->OStack.pick(0));
-
-// TODO: This function should take gids instead of addresses
-//      if(get_network().get_node(node_adr)->allow_entry())
-//        get_network().go_to(node_adr);
-//      else
-//        throw SubnetExpected();
-//      
-    i->OStack.pop();
-    i->EStack.pop();
-  }
 
   void NestModule::ChangeSubnet_iFunction::execute(SLIInterpreter *i) const
   {
@@ -409,7 +393,7 @@ namespace nest
       if ( get_network().dict_miss_is_error() )
         throw UnaccessedDictionaryEntry(missed);
       else
-        get_network().message(SLIInterpreter::M_WARNING, "SetConnections", 
+        get_network().message(SLIInterpreter::M_WARNING, "FindConnections", 
                               ("Unread dictionary entries: " + missed).c_str());
     }
     
@@ -617,7 +601,7 @@ namespace nest
 
     if ( include_remote )
     {
-      // TODO: Currently, there is no way in the bluegeneP branch to
+      // TODO: Currently, there is no way in the 10kproject branch to
       // collect only the direct children of a subnet from local and
       // remote machines, so this branch stays unimplemented for
       // now. The nicest way to implement it would be to write a class
@@ -1632,7 +1616,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      Author: Jochen Martin Eppler
      FirstVersion: April 2009
      Availability: Only when compiled with MUSIC
-     SeeAlso: music_event_in_proxyx
+     SeeAlso: music_event_in_proxy
   */  
   void NestModule::SetAcceptableLatencyFunction::execute(SLIInterpreter *i) const
   {
@@ -1662,7 +1646,6 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     net_->calibrate_clock();
       
     // register interface functions with interpreter
-    i->createcommand("ChangeSubnet_a",  &changesubnet_afunction);
     i->createcommand("ChangeSubnet_i",  &changesubnet_ifunction);
     i->createcommand("CurrentSubnet",   &currentsubnetfunction);
     i->createcommand("GetNodes_i_b",    &getnodes_i_bfunction);

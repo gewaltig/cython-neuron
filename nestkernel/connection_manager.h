@@ -50,7 +50,6 @@ class ConnectionManager
   };
 
   typedef std::vector< syn_id_connector > tVConnector;
-  //typedef std::vector< tVConnector > tVVConnector;
   typedef google::sparsetable< tVConnector > tVVConnector;
   typedef std::vector< tVVConnector > tVVVConnector;
 
@@ -126,9 +125,6 @@ public:
   void connect(Node& s, Node& r, index s_gid, thread tid, index syn);
   void connect(Node& s, Node& r, index s_gid, thread tid, double_t w, double_t d, index syn);
   void connect(Node& s, Node& r, index s_gid, thread tid, DictionaryDatum& p, index syn);
-
-  //! Experimental: connect all targets at once, hopefully better memory efficiency
-  void bulk_divergent_connect(Node& s, const std::vector<Node*>& rv, index s_gid, thread tid, index syn);
   
   void send(thread t, index sgid, Event& e);
 

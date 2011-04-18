@@ -50,8 +50,7 @@ nest::Compound::Compound(const Compound &c)
    homogeneous_(c.homogeneous_),
    next_lid_(c.next_lid_),
    last_mid_(c.last_mid_)
-{
-}
+{}
 
 void nest::Compound::set_status(const DictionaryDatum& dict)
 {

@@ -179,12 +179,6 @@ namespace nest
 
      //@{
      
-     class ChangeSubnet_aFunction: public SLIFunction
-     { 
-      public:
-       void execute(SLIInterpreter *) const;
-     } changesubnet_afunction;
-  
      class ChangeSubnet_iFunction: public SLIFunction
      { 
       public:

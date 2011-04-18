@@ -37,8 +37,6 @@
 
 #include "connection_het_wd.h"
 
-#include <iostream>
-
 namespace nest
 {
 
@@ -56,8 +54,7 @@ class StaticConnection : public ConnectionHetWD
    * Default Constructor.
    * Sets default values for all parameters. Needed by GenericConnectorModel.
    */
-  StaticConnection() : ConnectionHetWD() 
-    {}
+  StaticConnection() : ConnectionHetWD() {}
 
   /**
    * Default Destructor.
