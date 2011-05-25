@@ -9,7 +9,7 @@ When run with 1, 2, or 4 MPI processes, identical network structures must result
 Create one subdir per number of MPI processes, then move into each subdir, run there.
 Afterwards, diff subdirs. Diff should output nothing.
 
-
+This test creates divergent connections.
 
 Hans Ekkehard Plesser, 2010-11-03
 """
@@ -31,7 +31,7 @@ l2 = topo.CreateLayer({'rows': 10,
                        'elements': ['iaf_neuron', 2],
                        'edge_wrap': True})
 
-topo.ConnectLayers(l1, l2, {'connection_type': 'convergent',
+topo.ConnectLayers(l1, l2, {'connection_type': 'divergent',
                             'mask': {'circular': {'radius': 0.4}},
                             'weights': {'linear': {'c': 1., 'a': -5.}}})
 
@@ -39,6 +39,7 @@ topo.DumpLayerNodes(l1+l2, 'topo_mpi_test.lyr' )
 topo.DumpLayerConnections(l1, 'static_synapse', 'topo_mpi_test.cnn_tmp')
 
 # combine all connection files into one sorted file
+nest.sli_run('SyncProcesses') # make sure all are done dumping
 if nest.Rank() == 0:
     os.system('cat *.cnn_tmp | sort > all_sorted.cnn')
     os.system('rm *.cnn_tmp')
