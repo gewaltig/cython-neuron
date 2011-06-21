@@ -221,7 +221,7 @@ namespace nest
     bool update_reference() const;
 
     /**
-     * Update a fixed set of nodes per thread.
+     * Update a fixed set of nodes per thread using pthreads.
      * This is called by a thread.
      */
     void threaded_update(thread);

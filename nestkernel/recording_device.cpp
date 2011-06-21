@@ -226,12 +226,14 @@ void nest::RecordingDevice::State_::get(DictionaryDatum& d, const Parameters_& p
 
   if ( p.withgid_ || p.withpath_ )
   {
+    assert(not p.to_accumulator_);
     initialize_property_intvector(dict, names::senders);
     append_property(dict, names::senders, std::vector<long>(event_senders_));
   }
 
   if ( p.withweight_ )
   {
+    assert(not p.to_accumulator_);
     initialize_property_doublevector(dict, names::weights);
     append_property(dict, names::weights, std::vector<double_t>(event_weights_));
   }
@@ -240,20 +242,31 @@ void nest::RecordingDevice::State_::get(DictionaryDatum& d, const Parameters_& p
   {
     if ( p.time_in_steps_ )
     {
-      {
-        initialize_property_intvector(dict, names::times);
-        append_property(dict, names::times, std::vector<long>(event_times_steps_));
-      }
+      initialize_property_intvector(dict, names::times);
+      // When not accumulating, we just add time data. When accumulating, we must add
+      // time data only from one thread and ensure that time data from other threads
+      // is either empty of identical to what is present.
+      if ( not p.to_accumulator_ ) 
+	append_property(dict, names::times, std::vector<long>(event_times_steps_));
+      else
+	provide_property(dict, names::times, std::vector<long>(event_times_steps_));
+
       if ( p.precise_times_ )
       {
         initialize_property_doublevector(dict, names::offsets);
-        append_property(dict, names::offsets, std::vector<double_t>(event_times_offsets_));
+	if ( not p.to_accumulator_ )
+	  append_property(dict, names::offsets, std::vector<double_t>(event_times_offsets_));
+	else
+	  provide_property(dict, names::offsets, std::vector<double_t>(event_times_offsets_));
       }
     }
     else
     {
       initialize_property_doublevector(dict, names::times);
-      append_property(dict, names::times, std::vector<double_t>(event_times_ms_));
+      if ( not p.to_accumulator_ )
+	append_property(dict, names::times, std::vector<double_t>(event_times_ms_));
+      else
+	provide_property(dict, names::times, std::vector<double_t>(event_times_ms_));
     }
   }
 

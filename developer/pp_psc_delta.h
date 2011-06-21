@@ -41,14 +41,16 @@ namespace nest{
 
      Spikes are generated randomly according to the current value of the
      transfer function which operates on the membrane potential. Spike
-     generation is followed by an optional dead time.
+     generation is followed by an optional dead time. Setting with_reset to 
+     true will reset the membrane potential after each spike.
 
      The transfer function can be chosen to be linear, exponential or both by
      adjusting three parameters:
 
          rate = Rect[ c1 * V' + c2 * exp(c3 * V') ],
 
-     where the effective potential V' = V - Q and Q is the adaptive threshold.
+     where the effective potential V' = V_m - E_sfa and E_sfa is the adaptive 
+     threshold.
 
      By setting c3 = 0, c2 can be used as an offset spike rate for an otherwise
      linear model.
@@ -60,17 +62,21 @@ namespace nest{
 
      Spike generation can then be efficiently simulated by drawing uniform
      numbers. So, even if non-refractory neurons are to be modeled,
-     dead_time = 1e-8 might be the value of choice since it uses a faster
-     implementation than dead_time=0. Only for large spike rates (> 1 spike/h)
-     this will be wrong.
+     dead_time=1e-8 might be the value of choice since it uses a faster
+     random numbers than dead_time=0. Only for large spike rates (> 1 spike/h)
+     this will cause errors.
 
-     The model can optionally include relative refractoriness implemented as
-     an adaptive threshold. If the neuron is spiking too fast, the threshold
-     goes up and the membrane potential can no longer reach it. In the current
-     implementation it jumps by q_sfa when the neuron fires a spike and decays
-     exponentially with the time constant tau_sfa (see [2]).
+     The model can optionally include something which would be called adaptive 
+     threshold in an integrate-and-fire neuron. If the neuron spikes, the 
+     threshold goes up and the membrane potential will take longer to reach it. 
+     Here this is implemented by subtracting the value of the adaptive threshold
+     E_sfa from the membrane potential V_m before passing the potential to the 
+     transfer function. E_sfa jumps by q_sfa when the neuron fires a spike, and 
+     decays exponentially with the time constant tau_sfa after (see [2]).
 
-     This model has been adapted from iaf_psc_delta.
+     This model has been adapted from iaf_psc_delta. The default parameters are
+     set to the mean values in [2], which have been matched to spike-train 
+     recordings.
 
 
      Reference:
@@ -94,10 +100,13 @@ namespace nest{
      dead_time         double - Duration of the dead time in ms.
      dead_time_random  bool   - Should a random dead time be drawn after each spike?
      dead_time_shape   int    - Shape parameter of dead time gamma distribution.
+     t_ref_remaining   double   Remaining dead time at simulation start.
+     with_reset        bool     Should the membrane potential be reset after a spike?
      I_e               double - Constant input current in pA.
      c_1               double - Slope of linear part of transfer function in Hz/mV.
      c_2               double - Prefactor of exponential part of transfer function in Hz.
      c_3               double - Coefficient of exponential non-linearity of transfer function in 1/mV.
+
 
 
      Sends: SpikeEvent

@@ -40,8 +40,9 @@ pkg_doc_dir = '@PKGDOCDIR_AS_CONFIGURED@'
 install_dir = '@SLI_PREFIX@'
 
 # append include path for config.h, debug.h, ...
-CCFLAGS += " -I./include/ -I" + nest_src + "/include/ -I. -I" + nest_src + "/libltdl/" 
-CFLAGS += " -I./include/ -I" + nest_src + "/include/ -I."
+CCFLAGS += " -I./libnestutil/ -I./nest/ -I. -I" + nest_src + "/libltdl/" 
+CFLAGS += " -I./libnestutil/  -I./nest/ -I."
+
 
 DEFINES =\
     ' -DPKGDATADIR=\\\"' + pkg_data_dir + '\\\"'\
@@ -108,7 +109,7 @@ def find_and_copy_sources(srcdir, makefile_var_name):
     # patterns to find cc, h, and cpp files
     find_cc = re.compile('[\w]*\.cc|[\w]*\.cpp')
     find_c = re.compile('[\w]*\.c[^\w]')
-    find_h = re.compile('[\w]*\.h')
+    find_h = re.compile('[\w]*\.h[\w]*')
 
     # split into h, cc, and cpp files
     cc_files = find_cc.findall(sources)

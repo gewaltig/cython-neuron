@@ -16,7 +16,7 @@
  *
  */
 
-/* pp_psc_delta is a neuron where the potential jumps on each spike arrival. */
+/* pp_psc_delta is a stochastically spiking neuron where the potential jumps on each spike arrival. */
 
 #include "exceptions.h"
 #include "pp_psc_delta.h"
@@ -60,7 +60,7 @@ nest::pp_psc_delta::Parameters_::Parameters_()
     dead_time_shape_  (    1     ),
     with_reset_       (    1     ),
     tau_sfa_          (  34.0    ),  // ms
-    q_sfa_            (   0.0    ),  // mV, reasonable default is 7 mV
+    q_sfa_            (   0.0    ),  // mV, reasonable default is 7 mV [2]
     c_1_              (   0.0    ),  // Hz / mV
     c_2_              (   1.238  ),  // Hz / mV
     c_3_              (   0.25   ),  // 1.0 / mV
@@ -120,7 +120,7 @@ void nest::pp_psc_delta::Parameters_::set(const DictionaryDatum& d)
     throw BadProperty("Absolute refractory time must not be negative.");
 
   if ( dead_time_shape_ < 1 )
-    throw BadProperty("Shape of the dead time density must not be smaller than 1.");
+    throw BadProperty("Shape of the dead time gamma distribution must not be smaller than 1.");
 
   if ( tau_m_ <= 0 )
     throw BadProperty("All time constants must be strictly positive.");
@@ -221,14 +221,14 @@ void nest::pp_psc_delta::calibrate()
   // should be carried out via objects of class nest::Time. The conversion
   // requires 2 steps:
   //
-  //     1. A time object r is constructed defining  representation of
+  //     1. A time object r is constructed defining the representation of
   //        TauR in tics. This representation is then converted to computation time
   //        steps again by a strategy defined by class nest::Time.
-  //     2. The refractory time in units of steps is read out get_steps(), a member
+  //     2. The refractory time in units of steps is read out by get_steps(), a member
   //        function of class nest::Time.
   //
   // The definition of the refractory period of the pp_psc_delta is consistent
-  // the one of iaf_neuron_ps.
+  // with the one of iaf_neuron_ps.
   //
   // Choosing a TauR that is not an integer multiple of the computation time
   // step h will lead to accurate (up to the resolution h) and self-consistent

@@ -191,33 +191,30 @@ void append_property<std::vector<long> >(DictionaryDatum &d, Name propname, cons
 }
 
 
+/** Provide a value to a property DoubleVectorDatum in the dictionary.
+ * In contrast to append_property, this function adds the value only once
+ * to the property. On all subsequent events, it ensures that the value
+ * passed in is identical to the value present. This is needed by recording_decive.
+ * @ingroup DictUtils
+ */
+void provide_property(DictionaryDatum&, Name, const std::vector<double>&);
+
+/** Provide a value to a property IntVectorDatum in the dictionary.
+ * In contrast to append_property, this function adds the value only once
+ * to the property. On all subsequent events, it ensures that the value
+ * passed in is identical to the value present. This is needed by recording_decive.
+ * @ingroup DictUtils
+ */
+void provide_property(DictionaryDatum&, Name, const std::vector<long>&);
+
+
 /** Add values of a vector<double> to a property DoubleVectorDatum in the dictionary.
  * This variant of append_property is for adding vector<double>s to vector<double>s of the
  * same size. It is required for collecting data across threads when multimeter
  * is running in accumulation mode.
  * @ingroup DictUtils
  */
-inline
-void accumulate_property(DictionaryDatum &d, Name propname, const std::vector<double> &prop)
-{
-  Token t = d->lookup(propname);
-  assert (t != d->getvoid());
-
-  DoubleVectorDatum* arrd = dynamic_cast<DoubleVectorDatum*>(t.datum());
-  assert(arrd != 0);
-
-  if ( (*arrd)->empty() ) // first data, copy
-    (*arrd)->insert((*arrd)->end(), prop.begin(), prop.end());
-  else
-  {
-    assert((*arrd)->size() == prop.size());
-
-    // add contents of prop to **arrd elementwise
-    std::transform((*arrd)->begin(), (*arrd)->end(), prop.begin(), (*arrd)->begin(), std::plus<double>());
-  }
-}
-
-
+void accumulate_property(DictionaryDatum&, Name, const std::vector<double>&);
 
 #endif
 

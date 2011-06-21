@@ -36,9 +36,23 @@ Description:
   iaf_neuron is an implementation of a leaky integrate-and-fire model
   with alpha-function shaped synaptic currents. Thus, synaptic currents
   and the resulting post-synaptic potentials have a finite rise time. 
-
   The threshold crossing is followed by an absolute refractory period
   during which the membrane potential is clamped to the resting potential.
+
+  The subthreshold membrane potential dynamics are given by [3]
+
+  dV_m/dt = - ( V_m - E_L ) / tau_m + I_syn(t) / C_m + I_e / C_m
+
+  where I_syn(t) is the sum of alpha-shaped synaptic currents
+
+  I_syn(t) = Sum[w_j alpha(t-t_j) for t_j in input spike times]
+
+  w_j is the synaptic weight of the connection through which the spike
+  at time t_j arrived. Each individual alpha-current is given by
+
+  alpha(t) = e * t/tau_s * e^{-t/tau_s} * Heaviside(t)
+
+  alpha(t=tau_s) == 1 is the maximum of the alpha-current.
 
   The linear subthresold dynamics is integrated by the Exact
   Integration scheme [1]. The neuron dynamics is solved on the time
@@ -83,9 +97,9 @@ References:
   [2] Diesmann M, Gewaltig M-O, Rotter S, & Aertsen A (2001) State space 
       analysis of synchronous spiking in cortical neural networks. 
       Neurocomputing 38-40:565-571.
-  [3] Morrison A, Straube S, Plesser H E, & Diesmann M (2006) Exact subthreshold 
+  [3] Morrison A, Straube S, Plesser H E, & Diesmann M (2007) Exact subthreshold 
       integration with continuous spike times in discrete time neural network 
-      simulations. Neural Computation, in press
+      simulations. Neural Computation 19:47-79.
 
 Sends: SpikeEvent
 

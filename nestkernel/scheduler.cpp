@@ -138,6 +138,7 @@ void nest::Scheduler::init_()
 	       "Error initializing condition variable ready_");
     throw PthreadException(status);
   }
+
 #else
 #ifndef _OPENMP
   if (n_threads_ > 1)
@@ -320,14 +321,17 @@ void nest::Scheduler::simulate(Time const & t)
     net_.message(SLIInterpreter::M_ERROR, "Scheduler::simulate", 
 		 String::compose("Simulation time must be >= %1 ms (one time step).", 
 				 Time::get_resolution().get_ms()));
-    return;
+    throw KernelException();
   }
 
   // Check for synchronicity of global rngs over processes
   if(Communicator::get_num_processes() > 1)
     if (!Communicator::grng_synchrony(grng_->ulrand(100000)))
-      net_.message(SLIInterpreter::M_WARNING, "Scheduler::simulate", 
-		   "Global Random Number Generators are not synchronized.");
+      {
+        net_.message(SLIInterpreter::M_ERROR, "Scheduler::simulate",
+	  	     "Global Random Number Generators are not synchronized prior to simulation.");
+        throw KernelException();
+      }
 
   // As default, we have to place the iterator at the
   // leftmost node of the tree.
@@ -361,7 +365,7 @@ void nest::Scheduler::simulate(Time const & t)
        << (Time::max()-clock_).get_ms() << " of " << t.get_ms() << " ms.";
       net_.message(SLIInterpreter::M_ERROR, "Scheduler::simulate", os.str().c_str());
       net_.message(SLIInterpreter::M_ERROR, "Scheduler::simulate", "Please reset network clock first!");
-      return;
+      throw KernelException();
     }
   }
   else
@@ -371,7 +375,7 @@ void nest::Scheduler::simulate(Time const & t)
        << "(T_max = " << Time::max().get_ms() << "ms).";
     net_.message(SLIInterpreter::M_ERROR, "Scheduler::simulate", os.str().c_str());
     net_.message(SLIInterpreter::M_ERROR, "Scheduler::simulate", "Please use a shorter simulation time!");
-    return;
+    throw KernelException();
   }
   to_do_ += t.get_steps();
   to_do_total_ = to_do_;
@@ -408,10 +412,15 @@ void nest::Scheduler::simulate(Time const & t)
 
   resume();
   simulated_ = true;
-  //debug of modelrangemanager, can be removed once stable (AM 14/2/2010)
-  if (Communicator::get_rank() == 0)
-    net_.print_model_ranges();
 
+  // Check for synchronicity of global rngs over processes
+  if(Communicator::get_num_processes() > 1)
+    if (!Communicator::grng_synchrony(grng_->ulrand(100000)))
+    {
+      net_.message(SLIInterpreter::M_ERROR, "Scheduler::simulate",
+                   "Global Random Number Generators are not synchronized after simulation.");
+      throw KernelException();
+    }
 }
 
 void nest::Scheduler::resume()
@@ -468,7 +477,7 @@ void nest::Scheduler::resume()
   }
 
   if (n_threads_ == 1)
-    serial_update(); 
+    serial_update();
   else
   {
 #ifdef HAVE_PTHREADS
@@ -490,84 +499,6 @@ void nest::Scheduler::resume()
     serial_update();
 #endif
 #endif
-  }
-  simulating_ = false;
-  finalize_nodes();
-
-  if (print_time_)
-    std::cout << std::endl;
-
-  Communicator::synchronize();
-
-  if(terminate_)
-  {
-    net_.message(SLIInterpreter::M_ERROR, "Scheduler::resume", "Exiting on error or user signal.");
-    net_.message(SLIInterpreter::M_ERROR, "Scheduler::resume", "Scheduler: Use 'ResumeSimulation' to resume.");
-    
-    if(SLIsignalflag != 0)
-    {
-      SystemSignal signal(SLIsignalflag);
-      SLIsignalflag=0;
-      throw signal;
-    }
-    else
-      throw SimulationError();
-    
-    return;
-  }
-  
-  net_.message(SLIInterpreter::M_INFO, "Scheduler::resume", "Simulation finished.");
-}
-
-/**
- * the single-threaded update is just a single loop over all nodes
- * per time-slice.
- */
-void nest::Scheduler::serial_update()
-{
-  std::vector<Node*>::iterator i;
-
-  do
-  {
-    if (print_time_)
-      gettimeofday(&t_slice_begin_, NULL);
-
-    if ( from_step_ == 0 )  // deliver only at beginning of slice
-    {
-      deliver_events_(0);
-#ifdef HAVE_MUSIC
-      // advance the time of music by one step (min_delay * h) must
-      // be done after deliver_events_() since it calls
-      // music_event_out_proxy::handle(), which hands the spikes over to
-      // MUSIC *before* MUSIC time is advanced
-      if (slice_ > 0)
-        Communicator::advance_music_time(1);
-
-      net_.update_music_event_handlers_(clock_, from_step_, to_step_);
-#endif
-    }
-
-    for (i = nodes_vec_[0].begin(); i != nodes_vec_[0].end(); ++i)
-      update_(*i);
-      
-    if ( static_cast<ulong_t>(to_step_) == min_delay_ ) // gather only at end of slice 
-      gather_events_();
-
-    advance_time_();
-
-    if(SLIsignalflag != 0)
-    {
-      net_.message(SLIInterpreter::M_INFO, "Scheduler::serial_update", "Simulation exiting on user signal.");
-      terminate_=true;
-    }
-
-    if (print_time_)
-    { 
-      gettimeofday(&t_slice_end_, NULL);
-      print_progress_();
-    }
-  } while((to_do_ != 0) && (! terminate_));
-}
 
 void nest::Scheduler::threaded_update_openmp()
 {
@@ -792,7 +723,7 @@ void nest::Scheduler::threaded_update(thread t)
 
 }
 #else
-void nest::Scheduler::threaded_update(thread t)
+void nest::Scheduler::threaded_update(thread)
 {
    net_.message(SLIInterpreter::M_ERROR, "Scheduler::threaded_update", "Multithreading mode not available");
    throw KernelException();
@@ -902,18 +833,27 @@ void nest::Scheduler::set_status(DictionaryDatum const &d)
   if (n_threads_updated)
   {
     if (net_.size() > 1)
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-                 "Nodes already exist. Please call ResetKernel first.");
-    else if (net_.connection_manager_.has_user_prototypes())
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-                 "Custom synapse types already exist. Please call ResetKernel first.");
-    else if ( net_.get_simulated() )  // someone may have simulated empty network
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-                 "The network has already been simulated. Please call ResetKernel first.");
-    else if ((n_threads > 1) && (force_singlethreading_))
       {
 	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-		   "No multithreading available, using single threading");
+		     "Nodes already exist. Please call ResetKernel first.");
+	throw KernelException();
+      }
+    else if (net_.connection_manager_.has_user_prototypes())
+      {
+	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+		     "Custom synapse types already exist. Please call ResetKernel first.");
+	throw KernelException();
+      }
+    else if ( net_.get_simulated() )  // someone may have simulated empty network
+      {
+	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+		     "The network has already been simulated. Please call ResetKernel first.");
+	throw KernelException();
+      }
+    else if ( (n_threads > 1) && (force_singlethreading_) )
+      {
+	net_.message(SLIInterpreter::M_WARNING, "Scheduler::set_status",
+		     "No multithreading available, using single threading");
 	n_threads_ = 1;
       }
     else
@@ -931,14 +871,23 @@ void nest::Scheduler::set_status(DictionaryDatum const &d)
   if (n_vps_updated)
   {
     if (net_.size() > 1)
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-		   "Nodes already exist. Please call ResetKernel first.");
+      {
+	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+		     "Nodes already exist. Please call ResetKernel first.");
+	throw KernelException();
+      }
     else if (net_.connection_manager_.has_user_prototypes())
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-                 "Custom synapse types already exist. Please call ResetKernel first.");
+      {
+	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+		     "Custom synapse types already exist. Please call ResetKernel first.");
+	throw KernelException();
+      }
     else if ( net_.get_simulated() )  // someone may have simulated empty network
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-                 "The network has already been simulated. Please call ResetKernel first.");
+      {
+	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+		     "The network has already been simulated. Please call ResetKernel first.");
+	throw KernelException();
+      }
     else if  (n_vps % Communicator::get_num_processes() != 0)
     {
       throw BadProperty("Number of virtual processes (threads*processes) must be an integer"
@@ -949,7 +898,7 @@ void nest::Scheduler::set_status(DictionaryDatum const &d)
       n_threads_ = n_vps / Communicator::get_num_processes();
       if ((n_threads > 1) && (force_singlethreading_))
       {
-        net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+        net_.message(SLIInterpreter::M_WARNING, "Scheduler::set_status",
                    "No multithreading available, using single threading");
         n_threads_ = 1;
       }
@@ -973,19 +922,31 @@ void nest::Scheduler::set_status(DictionaryDatum const &d)
   if (tics_per_ms_updated || res_updated)
   {
     if (net_.size() > 1) // root always exists
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-                 "Cannot change time representation after nodes have been created. Please call ResetKernel first.");
+      {
+	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+		     "Cannot change time representation after nodes have been created. Please call ResetKernel first.");
+	throw KernelException();
+      }
     else if ( net_.get_simulated() )  // someone may have simulated empty network
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-                 "Cannot change time representation after the network has been simulated. Please call ResetKernel first.");
+      {
+	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+		     "Cannot change time representation after the network has been simulated. Please call ResetKernel first.");
+	throw KernelException();
+      }
     else if ( net_.connection_manager_.get_num_connections() != 0 )
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-		 "Cannot change time representation after connections have been created. Please call ResetKernel first.");
+      {
+	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+		     "Cannot change time representation after connections have been created. Please call ResetKernel first.");
+	throw KernelException();
+      }
     else if (res_updated && tics_per_ms_updated) // only allow TICS_PER_MS to be changed together with resolution
     {
       if ( resd < 1.0 / tics_per_ms )
-	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-		   "Resolution must be greater than or equal to one tic. Value unchanged.");
+	{
+	  net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+		       "Resolution must be greater than or equal to one tic. Value unchanged.");
+	  throw KernelException();
+	}
       else
       {
 	nest::TimeModifier::set_time_representation(tics_per_ms, resd);
@@ -997,8 +958,11 @@ void nest::Scheduler::set_status(DictionaryDatum const &d)
     else if (res_updated) // only resolution changed
     {
       if ( resd < Time::get_ms_per_tic() )
-	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-		   "Resolution must be greater than or equal to one tic. Value unchanged.");
+	{
+	  net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+		       "Resolution must be greater than or equal to one tic. Value unchanged.");
+	  throw KernelException();
+	}
       else
       {
 	Time::set_resolution(resd);
@@ -1008,8 +972,11 @@ void nest::Scheduler::set_status(DictionaryDatum const &d)
       }
     }
     else
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
-		 "change of tics_per_step requires simultaneous specification of resolution.");
+      {
+	net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status",
+		     "change of tics_per_step requires simultaneous specification of resolution.");
+	throw KernelException();
+      }
   }
 
 
