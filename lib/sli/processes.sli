@@ -1508,6 +1508,27 @@ or via MacPorts. procfs must be mounted at /proc.
 } def
 
 
+/hardware_memory_thisjob
+{
+    (/proc/) getPID cvs join (/status) join ifstream
+    not
+    {
+        (No information available on the NEST process from the /proc filesystem. ) M_ERROR message
+	/hardware_memory_thisjob /ProcOpenFailed raiseerror
+    }
+    if
+
+    { eof {exit} {getline {dup (VmHWM:) searchif {exch exit} {pop} ifelse } if} ifelse } loop
+
+
+    closeistream %close connection
+
+    0 6 erase
+    size 3 sub 3 erase    % assuming kb  may be unsafe
+    cvi
+} def
+
+
 % experimental, MD 090413
 statusdict/exitcodes :: /restart_serial 4 put
 
