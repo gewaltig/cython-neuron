@@ -1,0 +1,25 @@
+
+anbei die Zutaten zum Messen der Gather-Zeit in NEST.
+
+- ein jobscript, das Anzahl von Prozessen (M) und Neuronen pro Prozess
+(N_per_M) hochdreht
+
+- ein sli-script, das 1 poisson_generator und N Neurone anlegt und
+divergent_connect macht
+
+Diese Dateien muessen in NEST ausgetauscht werden (10kproject branch):
+
+communicator.h/.cpp -> hier wird die Funktion get_wtime zur Verfuegung
+gestellt
+
+scheduler.cpp -> hier wird gemessen; die gemessene Zeit landet im
+standard output (also dann im output file des jobs), aber nur rank 0
+misst und schreibt
+
+connection_manager.cpp -> hier gibt es einen kleinen boesen Hack, der
+verhindert dass die connection infrastructure auf die Groesse des
+Netzwerks aufgeblasen wird, das eignet sich natuerlich nur fuer das
+angehaengte sli-script und verursacht schreckliche Fehlermeldungen mit
+soziemlich allen anderen scripts
+
+

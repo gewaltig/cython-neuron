@@ -1,0 +1,20 @@
+% requires config file with M, N_per_M and nu
+
+/N M N_per_M mul def
+  
+ResetKernel
+  
+0
+<<
+  /resolution        0.1
+  /local_num_threads 1
+>> SetStatus
+
+/pg /poisson_generator Create def
+pg << /rate nu >> SetStatus
+  
+/parrots /parrot_neuron N Create def
+pg [2 parrots] Range [1.0] [1.0] DivergentConnect
+
+% time for gather() is measured in nest
+1000.0 Simulate

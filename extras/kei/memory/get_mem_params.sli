@@ -1,0 +1,24 @@
+% requires config file with M, N and K
+ResetKernel
+
+(MEMINFO	) M cvs join (	) join N cvs join (	) join K cvs join =
+
+0
+<<
+  /resolution        0.1
+  /local_num_threads 1
+>> SetStatus
+
+0 Rank eq {(MEM	0	) memory_thisjob cvs join =} if
+
+0 GetStatus /min_delay get
+0 Rank eq {(MEM	1	) memory_thisjob cvs join =} if
+
+/neurons /iaf_neuron N Create def
+0 Rank eq {(MEM	2	) memory_thisjob cvs join =} if
+
+K 0 gt {[N] Range {[K] Range /static_synapse_hom_wd DivergentConnect} bind forall} if
+0 Rank eq {(MEM	3	) memory_thisjob cvs join =} if
+
+10.0 Simulate
+0 Rank eq {(MEM	4	) memory_thisjob cvs join =} if
