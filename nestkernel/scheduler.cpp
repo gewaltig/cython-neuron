@@ -32,6 +32,9 @@
 #endif
 #endif
 
+// OpenMP
+#include <omp.h>
+
 #include <climits>
 #include "network.h"
 #include "exceptions.h"
@@ -136,13 +139,15 @@ void nest::Scheduler::init_()
     throw PthreadException(status);
   }
 #else
+#ifndef _OPENMP
   if (n_threads_ > 1)
-    {
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::reset",
-	       "No multithreading available, using single threading");
-      n_threads_ = 1;
-      force_singlethreading_ = true;
-    }
+  {
+    net_.message(SLIInterpreter::M_ERROR, "Scheduler::reset",
+		 "No multithreading available, using single threading");
+    n_threads_ = 1;
+    force_singlethreading_ = true;
+  }
+#endif
 #endif
 
   Communicator::set_num_threads(n_threads_);
@@ -466,6 +471,7 @@ void nest::Scheduler::resume()
     serial_update(); 
   else
   {
+#ifdef HAVE_PTHREADS
     // Now we fire up the threads ...
     for(index i = 0; i < threads_.size(); ++i)
       threads_[i].init(i, this);
@@ -473,6 +479,17 @@ void nest::Scheduler::resume()
     // ... and wait until all are done.
     for(vector<Thread>::iterator i = threads_.begin(); i != threads_.end(); ++i)
       i->join();
+#else
+#ifdef _OPENMP
+    // use openmp, if compiled with right compiler switch
+    // for gcc this is -fopenmp
+    threaded_update_openmp();
+#else
+    net_.message(SLIInterpreter::M_ERROR, "Scheduler::reset",
+		 "No multithreading available, using single threading");
+    serial_update();
+#endif
+#endif
   }
   simulating_ = false;
   finalize_nodes();
@@ -550,6 +567,77 @@ void nest::Scheduler::serial_update()
       print_progress_();
     }
   } while((to_do_ != 0) && (! terminate_));
+}
+
+void nest::Scheduler::threaded_update_openmp()
+{
+ 
+#ifdef _OPENMP
+  net_.message(SLIInterpreter::M_INFO, "Scheduler::threaded_update_openmp", "Simulating using OpenMP.");
+  omp_set_num_threads(n_threads_);
+#endif
+
+// parallel section begins
+#pragma omp parallel
+  {
+    int t = 0;
+#ifdef _OPENMP
+    t = omp_get_thread_num(); // which thread am I
+#endif
+    
+    do {
+      //if (print_time_)
+      //  gettimeofday(&t_slice_begin_, NULL);
+
+      if ( from_step_ == 0 )  // deliver only at beginning of slice
+	{
+	  deliver_events_(t);
+#ifdef HAVE_MUSIC
+	  // advance the time of music by one step (min_delay * h) must
+	  // be done after deliver_events_() since it calls
+	  // music_event_out_proxy::handle(), which hands the spikes over to
+	  // MUSIC *before* MUSIC time is advanced
+	  if (slice_ > 0)
+	    Communicator::advance_music_time(1);
+
+	  net_.update_music_event_handlers_(clock_, from_step_, to_step_);
+#endif
+	}
+
+      for (std::vector<Node*>::iterator i = nodes_vec_[t].begin(); i != nodes_vec_[t].end(); ++i)
+	update_(*i);
+    
+      // parallel section ends
+      // wait until all threads are done -> synchronize
+#pragma omp barrier
+
+      // the following block is executed by a single thread
+      // the other threads wait at the end of the block
+#pragma omp single    
+      {
+	if ( static_cast<ulong_t>(to_step_) == min_delay_ ) // gather only at end of slice 
+	  gather_events_();
+
+	advance_time_();
+
+	if(SLIsignalflag != 0)
+	  {
+	    net_.message(SLIInterpreter::M_INFO, "Scheduler::serial_update", "Simulation exiting on user signal.");
+	    terminate_ = true;
+	  }
+  
+	//if (print_time_)
+	//  { 
+	//    gettimeofday(&t_slice_end_, NULL);
+	//    print_progress_();
+	//  }
+      }
+      // end of single section, all threads synchronize at this point
+
+    }
+    while((to_do_ != 0) && (! terminate_));
+
+  } // end of #pragma parallel omp
 }
 
 #ifdef HAVE_PTHREADS

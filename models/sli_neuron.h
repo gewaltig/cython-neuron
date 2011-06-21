@@ -88,15 +88,6 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_sli_neuron
   {
     
   public:        
-    class SLIError: public KernelException
-    {
-    public:
-    SLIError() 
-      : KernelException("SLIError"){}
-      
-      ~SLIError() throw () {}
-      std::string message();
-    };
     
     typedef Node base;
     

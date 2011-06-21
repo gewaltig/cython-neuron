@@ -226,6 +226,11 @@ namespace nest
      */
     void threaded_update(thread);
 
+    /**
+     * Update a fixed set of nodes per thread using OpenMP.
+     */
+    void threaded_update_openmp();
+
     /** Update without any threading. */
     void serial_update();
  

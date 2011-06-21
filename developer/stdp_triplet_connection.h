@@ -142,6 +142,7 @@ namespace nest
   void send(Event& e, double_t t_lastspike, const CommonSynapseProperties &cp);
 
   // overloaded for all supported event types
+  // this needs to be commented out on Kei MH 11-06-21
   using Connection::check_event;
   void check_event(SpikeEvent&) {}
   

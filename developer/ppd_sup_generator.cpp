@@ -47,7 +47,7 @@ nest::ppd_sup_generator::FastBinomialRandomDev_::FastBinomialRandomDev_(size_t n
         f_[i+1] = 0.0;
         j = 1;
         while (j<=i){
-            f_[i+1] += std::log(j);
+	  f_[i+1] += std::log(static_cast<double>(j));
             j++;
             }
         i++;
