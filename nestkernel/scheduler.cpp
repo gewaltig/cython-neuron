@@ -138,7 +138,6 @@ void nest::Scheduler::init_()
 	       "Error initializing condition variable ready_");
     throw PthreadException(status);
   }
-
 #else
 #ifndef _OPENMP
   if (n_threads_ > 1)
@@ -499,6 +498,84 @@ void nest::Scheduler::resume()
     serial_update();
 #endif
 #endif
+  }   
+  simulating_ = false;   
+  finalize_nodes();   
+   
+  if (print_time_)   
+    std::cout << std::endl;   
+   
+  Communicator::synchronize();   
+   
+  if(terminate_)   
+  {   
+    net_.message(SLIInterpreter::M_ERROR, "Scheduler::resume", "Exiting on error or user signal.");   
+    net_.message(SLIInterpreter::M_ERROR, "Scheduler::resume", "Scheduler: Use 'ResumeSimulation' to resume.");   
+       
+    if(SLIsignalflag != 0)   
+    {   
+      SystemSignal signal(SLIsignalflag);   
+      SLIsignalflag=0;   
+      throw signal;   
+    }   
+    else   
+      throw SimulationError();   
+       
+    return;   
+  }   
+     
+  net_.message(SLIInterpreter::M_INFO, "Scheduler::resume", "Simulation finished.");   
+}   
+
+/**   
+ * the single-threaded update is just a single loop over all nodes   
+ * per time-slice.
+ */   
+void nest::Scheduler::serial_update()   
+{   
+  std::vector<Node*>::iterator i;   
+   
+  do   
+  {   
+    if (print_time_)   
+      gettimeofday(&t_slice_begin_, NULL);   
+   
+    if ( from_step_ == 0 )  // deliver only at beginning of slice   
+    {   
+      deliver_events_(0);   
+#ifdef HAVE_MUSIC   
+      // advance the time of music by one step (min_delay * h) must   
+      // be done after deliver_events_() since it calls   
+      // music_event_out_proxy::handle(), which hands the spikes over to   
+      // MUSIC *before* MUSIC time is advanced   
+      if (slice_ > 0)   
+        Communicator::advance_music_time(1);   
+   
+      net_.update_music_event_handlers_(clock_, from_step_, to_step_);   
+#endif   
+    }   
+   
+    for (i = nodes_vec_[0].begin(); i != nodes_vec_[0].end(); ++i)   
+      update_(*i);   
+         
+    if ( static_cast<ulong_t>(to_step_) == min_delay_ ) // gather only at end of slice    
+      gather_events_();   
+   
+    advance_time_();   
+   
+    if(SLIsignalflag != 0)   
+    {   
+      net_.message(SLIInterpreter::M_INFO, "Scheduler::serial_update", "Simulation exiting on user signal.");   
+      terminate_=true;   
+    }   
+   
+    if (print_time_)   
+    {    
+      gettimeofday(&t_slice_end_, NULL);   
+      print_progress_();   
+    }   
+  } while((to_do_ != 0) && (! terminate_));   
+}
 
 void nest::Scheduler::threaded_update_openmp()
 {
