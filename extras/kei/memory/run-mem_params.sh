@@ -1,6 +1,6 @@
 #!/bin/bash
 
-datapath="./data/"
+datapath="./data_meminfo/"
 
 nest="/work/user0049/10kproject_install/bin/nest"
 sli_script="get_mem_params.sli"
