@@ -10,15 +10,20 @@ ResetKernel
 >> SetStatus
 
 0 Rank eq {(MEM	0	) memory_thisjob cvs join =} if
+0 Rank eq {(MEM	1	) hardware_memory_thisjob cvs join =} if
 
 0 GetStatus /min_delay get
-0 Rank eq {(MEM	1	) memory_thisjob cvs join =} if
+0 Rank eq {(MEM	2	) memory_thisjob cvs join =} if
+0 Rank eq {(MEM	3	) hardware_memory_thisjob cvs join =} if
 
 /neurons /iaf_neuron N Create def
-0 Rank eq {(MEM	2	) memory_thisjob cvs join =} if
+0 Rank eq {(MEM	4	) memory_thisjob cvs join =} if
+0 Rank eq {(MEM	5	) hardware_memory_thisjob cvs join =} if
 
 K 0 gt {[N] Range {[K] Range /static_synapse_hom_wd DivergentConnect} bind forall} if
-0 Rank eq {(MEM	3	) memory_thisjob cvs join =} if
+0 Rank eq {(MEM	6	) memory_thisjob cvs join =} if
+0 Rank eq {(MEM	7	) hardware_memory_thisjob cvs join =} if
 
 10.0 Simulate
-0 Rank eq {(MEM	4	) memory_thisjob cvs join =} if
+0 Rank eq {(MEM	8	) memory_thisjob cvs join =} if
+0 Rank eq {(MEM	9	) hardware_memory_thisjob cvs join =} if
