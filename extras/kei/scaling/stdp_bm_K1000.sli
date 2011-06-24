@@ -44,6 +44,8 @@
 % recto - argument for /record_to variable of spike detectors
 % path_name - path where all files will have to be written
 % the file is usually created by a bash script
+% (param.conf0128.sli) run
+
 (param.conf.sli) run
 
 % to log data
@@ -54,17 +56,16 @@
 <<
 
   /virtual_processes nvp      % number of virtual processes to use
-  /simtime Tsim ms        % simulated time
-  /presimtime 100. ms     % simulation time until reaching equilibrium
+  /simtime Tsim ms        % simulated time 
   /dt         0.1 ms        % simulation step
 
   /scale scale def
   
-  /NE 9000 scale mul    % number of excitatory neurons
-  /NI 2250 scale mul    % number of inhibitory neurons
+  /NE 900 scale mul    % number of excitatory neurons
+  /NI 225 scale mul    % number of inhibitory neurons
 
   % number of neurons to record spikes from
-  /Nrec 1000 
+  /Nrec 100 
 
   /model_params
    <<
@@ -77,8 +78,7 @@
     /V_reset 0.0  mV  % Reset Potential [mV]
     /tau_syn  0.32582722403722841 ms  % time const. postsynaptic excitatory currents [ms]
     /tau_minus 30.0 ms %time constant for STDP (depression)
-    % V can be randomly initialized see below
-    /V_m 5.7 mV % mean value of membrane potential
+    % V randomly initialized see below
    >> 
 
   /mean_potential 5.7 mV
@@ -154,33 +154,27 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
   (Creating inhibitory population.) message  % show message
   /iaf_neuron [NI] LayoutNetwork /I_net Set
 
-  % obtain array with GIDs of all excitatory neurons
-%  /E_neurons  { E_net GetNodes } def
+  % obtain array with GIDs of all excitatory neurons    
   /E_neurons E_net GetNodes def
 
   % obtain array with GIDs of all inhibitory neurons    
-%  /I_neurons { I_net GetNodes } def
   /I_neurons I_net GetNodes def
 
   % all neurons    
-%  /allNeurons E_neurons I_neurons join def
+  /allNeurons E_neurons I_neurons join def
  
-  /N E_neurons length I_neurons length add def
+  /N allNeurons length def
 
   /CE NE scale cvd div iround def %number of incoming excitatory connections
   /CI NI scale cvd div iround def %number of incomining inhibitory connections	
 
-  % M_INFO (BuildNetwork)
-  % (Configuring neuron parameters.) message
-  % allNeurons
-  % {
-  %  /thisneuron Set
-  %  thisneuron GetStatus /local get
-  %  {  
-  %  << /V_m  normal_dv Random sigma_potential mul mean_potential add >> SetStatus
-  %  }
-  %  if
-  % } bind forall
+  M_INFO (BuildNetwork)
+  (Configuring neuron parameters.) message
+  allNeurons
+  {
+   %<< /V_m  normal_dv Random sigma_potential mul mean_potential add >> SetStatus
+   << /V_m mean_potential >> SetStatus
+  } forall
 
   M_INFO (BuildNetwork)
   (Creating excitatory stimulus generator.) message
@@ -226,6 +220,7 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
   BuildNodeTime cvs ( # build_time_nodes) join logger /log call
   
   tic
+
   
   % Create custom synapse types with appropriate values for
   % our excitatory and inhibitory connections
@@ -322,15 +317,14 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
   BuildEdgeTime cvs ( # build_edge_time ) join logger /log call
   hardware_memory_thisjob cvs ( # hard_mem_after_edges) join logger /log call
   memory_thisjob cvs ( # virt_mem_after_edges) join logger /log call
-
+  
  } def % end of buildnetwork
 
 /RunSimulation
 {
-
    % open log file
    log_file logger /init call
-   
+
    ResetKernel
    statusdict /MPI_Rank known
     {
@@ -344,20 +338,9 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
 
   hardware_memory_thisjob cvs ( # hard_mem_0) join logger /log call
   memory_thisjob cvs ( # virt_mem_0) join logger /log call
-  
+
   BuildNetwork
-   
-  tic
-
-  presimtime Simulate
-
-  toc /PreparationTime Set
-  mpi_rank cvs (] ) join (Preparation time   : ) join  =only PreparationTime   =only ( s\n) =
-
-  hardware_memory_thisjob cvs ( # hard_mem_after_presim)  join logger /log call
-  memory_thisjob cvs ( # virt_mem_after_presim) join logger /log call
-  PreparationTime cvs ( # presim_time) join logger /log call
-
+  
   tic
 
   simtime Simulate	
@@ -366,13 +349,12 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
 
   hardware_memory_thisjob cvs ( # hard_mem_after_sim) join logger /log call
   memory_thisjob cvs ( # virt_mem_after_sim) join logger /log call
-  SimCPUTime cvs ( # sim_time) join logger /log call
-
+  SimCPUTime cvs ( # sim_time)  join logger /log call
   
 %(\nBRN STDP Equilibrium Simulation) =
   mpi_rank cvs (] ) join (Simulation time   : ) join  =only SimCPUTime   =only ( s\n) =
 
-  logger /done call  
+  logger /done call
 } def
 
 RunSimulation  

@@ -1,10 +1,10 @@
 #!/bin/bash
 
-dat_dir="./data/"
+dat_dir="./data_meminfo/"
 cd $dat_dir
 pwd
 
-for M in 96 192 384 768 1536 3072 6144 12288
+for M in 192 384 768 1536 3072 6144
 do
   # determine number of nodes required (8 cores/node)
   N_NODES=$(($M/8))

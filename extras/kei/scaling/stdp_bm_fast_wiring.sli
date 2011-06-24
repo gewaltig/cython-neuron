@@ -84,7 +84,6 @@
   /mean_potential 5.7 mV
   /sigma_potential 7.2 mV
  
-  /plastic_synapses true
 
   /delay  1.5 ms         % synaptic delay, all connections [ms] 
 
@@ -154,33 +153,18 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
   (Creating inhibitory population.) message  % show message
   /iaf_neuron [NI] LayoutNetwork /I_net Set
 
-  % obtain array with GIDs of all excitatory neurons
-%  /E_neurons  { E_net GetNodes } def
+  /E_local_neurons E_net GetLocalNodes def
   /E_neurons E_net GetNodes def
 
-  % obtain array with GIDs of all inhibitory neurons    
-%  /I_neurons { I_net GetNodes } def
+  /I_local_neurons I_net GetLocalNodes def
   /I_neurons I_net GetNodes def
 
-  % all neurons    
-%  /allNeurons E_neurons I_neurons join def
- 
+  
   /N E_neurons length I_neurons length add def
 
   /CE NE scale cvd div iround def %number of incoming excitatory connections
   /CI NI scale cvd div iround def %number of incomining inhibitory connections	
 
-  % M_INFO (BuildNetwork)
-  % (Configuring neuron parameters.) message
-  % allNeurons
-  % {
-  %  /thisneuron Set
-  %  thisneuron GetStatus /local get
-  %  {  
-  %  << /V_m  normal_dv Random sigma_potential mul mean_potential add >> SetStatus
-  %  }
-  %  if
-  % } bind forall
 
   M_INFO (BuildNetwork)
   (Creating excitatory stimulus generator.) message
@@ -219,7 +203,7 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
 
   hardware_memory_thisjob cvs ( # hard_mem_after_nodes ) join logger /log call
   memory_thisjob cvs ( # virt_mem_after_nodes) join logger /log call
- 
+
   toc /BuildNodeTime Set
   mpi_rank cvs (] ) join (BuildNode time     : ) join  =only BuildNodeTime =only ( s) =
 
@@ -253,66 +237,52 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
 
    M_INFO (BuildNetwork)
   (Connecting excitatory -> excitatory population.) message
-  E_neurons
+
+  % E_neurons only contains the local neurons on this process
+  E_local_neurons
   {
-    /target Set
-    target GetStatus /local get
-    {	
-       E_neurons   % source population [we pick from this]
-       target      % target neuron
-       CE          % number of source neurons to pick
-       plastic_synapses
-       {
-	/stdp_pl_synapse_hom
-       }
-       {
-	 /syn_ex 
-       } ifelse
-       RandomConvergentConnect
-    } if
+     E_neurons   % source population [we pick from this]
+     exch
+     CE          % number of source neurons to pick
+     /stdp_pl_synapse_hom
+     RandomConvergentConnect
   } bind forall
 
   M_INFO (BuildNetwork)
   (Connecting excitatory -> inhibitory population.) message
 
-  I_neurons
+  I_local_neurons
   {
-    /target Set
-    target GetStatus /local get
-    {
-	E_neurons target CE /syn_ex RandomConvergentConnect
-    } if
+    E_neurons
+    exch
+    CE /syn_ex RandomConvergentConnect    
   } bind forall
 
   M_INFO (BuildNetwork)
   (Connecting inhibitory -> excitatory population.) message
   
-  E_neurons
+  E_local_neurons
   {
-    /target Set
-    target GetStatus /local get	 
-    {
-       I_neurons target CI /syn_in RandomConvergentConnect
-    } if
+    I_neurons
+    exch
+    CI /syn_in RandomConvergentConnect
   } bind forall
 
   M_INFO (BuildNetwork)
   (Connecting inhibitory -> inhibitory population.) message
 	
-  I_neurons
+  I_local_neurons
   {
-    /target Set
-    target GetStatus /local get
-    {
-       I_neurons target CI /syn_in RandomConvergentConnect
-    } if
+     I_neurons
+     exch
+     CI /syn_in RandomConvergentConnect
   } bind forall
 
   rtf true eq 
   {
     M_INFO (BuildNetwork)
     (Connecting spike detectors.) message
-    E_neurons Nrec Take E_detector /syn_std ConvergentConnect
+    E_local_neurons Nrec Take E_detector /syn_std ConvergentConnect
   } if    
 
   % read out time used for building    
