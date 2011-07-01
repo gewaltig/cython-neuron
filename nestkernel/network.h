@@ -54,7 +54,8 @@ class SLIInterpreter;
 
 namespace nest
 {
-  class Compound;
+  class Subnet;
+  class SiblingContainer;
   class Event;
   class Node;
 
@@ -238,7 +239,7 @@ SeeAlso: Simulate, Node
 
     /**
      * Return total number of network nodes.
-     * The size also includes all Compound objects.
+     * The size also includes all Subnet objects.
      */
     index size() const;
 
@@ -277,7 +278,7 @@ SeeAlso: Simulate, Node
      */ 
     bool connect(index s, index r, DictionaryDatum& d, index syn);
 
-    void compound_connect(Compound &, Compound &, int, index syn);
+    void subnet_connect(Subnet &, Subnet &, int, index syn);
 
     void divergent_connect(index s, TokenArray r, TokenArray weights, TokenArray delays, index syn);
     void random_divergent_connect(index s, TokenArray r, index n, TokenArray w, TokenArray d, bool, bool, index syn);
@@ -296,28 +297,28 @@ SeeAlso: Simulate, Node
 
     ArrayDatum find_connections(DictionaryDatum dict);
 
-    Compound * get_root() const;        ///< return root compound.
-    Compound * get_cwn() const;         ///< current working node.
+    Subnet * get_root() const;        ///< return root subnet.
+    Subnet * get_cwn() const;         ///< current working node.
 
     /**
      * Change current working node. The specified node must
-     * exist and be a compound.
-     * @throws nest::IllegalOperation Target is no compound.
+     * exist and be a subnet.
+     * @throws nest::IllegalOperation Target is no subnet.
      */
     void  go_to(index);
 
     /**
      * Change current working node. The specified node must
-     * exist and be a compound.
-     * @throws nest::IllegalOperation  Target is no compound.
+     * exist and be a subnet.
+     * @throws nest::IllegalOperation  Target is no subnet.
      * @throws nest::UnknownNode       Target does not exist in the network.
      */
     void  go_to(std::vector<size_t> const &);
 
     /**
      * Change current working node. The specified node must
-     * exist and be a compound.
-     * @throws nest::IllegalOperation  Target is no compound.
+     * exist and be a subnet.
+     * @throws nest::IllegalOperation  Target is no subnet.
      * @throws TypeMismatch            Array is not a flat & homogeneous array of integers.
      * @throws nest::UnknownNode       Target does not exist in the network.
      */
@@ -539,14 +540,14 @@ SeeAlso: Simulate, Node
     Node*  get_node(index, thread thr = 0);
 
     /**
-     * Return the Compound that contains the thread siblings.
+     * Return the Subnet that contains the thread siblings.
      * @param i Index of the specified Node.
      *
      * @throws nest::NoThreadSiblingsAvailable     Node does not have thread siblings.
      *
      * @ingroup net_access
      */
-    const Compound* get_thread_siblings(index n) const;
+    const SiblingContainer* get_thread_siblings(index n) const;
 
     /**
      * Check, if there are instances of a given model.
@@ -748,8 +749,8 @@ SeeAlso: Simulate, Node
     SLIInterpreter &interpreter_;
     ConnectionManager connection_manager_;
     
-    Compound *root_;               //!< Root node.
-    Compound *current_;            //!< Current working node (for insertion).
+    Subnet *root_;               //!< Root node.
+    Subnet *current_;            //!< Current working node (for insertion).
 
     /* BeginDocumentation
        Name: synapsedict - Dictionary containing all synapse models.
@@ -769,6 +770,8 @@ SeeAlso: Simulate, Node
     */
     Dictionary* modeldict_;        //!< Dictionary for models.
 
+    Model* siblingcontainer_model; //!< The model for the SiblingContainer class
+    
     std::string data_path_;        //!< Path for all files written by devices 
     std::string data_prefix_;      //!< Prefix for all files written by devices
     bool        overwrite_files_;  //!< If true, overwrite existing data files. 
@@ -931,13 +934,13 @@ SeeAlso: Simulate, Node
   }
 
   inline
-  Compound * Network::get_root() const
+  Subnet * Network::get_root() const
   {
     return root_;
   }
 
   inline
-  Compound* Network::get_cwn(void) const
+  Subnet* Network::get_cwn(void) const
   {
     return current_;
   }

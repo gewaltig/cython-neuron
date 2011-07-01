@@ -23,7 +23,7 @@
 
 #include <set>
 
-#include "compound.h"
+#include "subnet.h"
 #include "dictdatum.h"
 #include "dictutils.h"
 #include "exceptions.h"

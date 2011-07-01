@@ -23,7 +23,7 @@
 
 */
 
-#include "compound.h"
+#include "subnet.h"
 #include "iostreamdatum.h"
 #include "nest.h"
 
@@ -46,7 +46,7 @@ namespace nest
    * Abstract base class for the Layer* modeltypes used to add spatial
    * information to a group of nodes.
    */
-  class Layer: public Compound
+  class Layer: public Subnet
   {
   public:
 
@@ -129,7 +129,7 @@ namespace nest
     static std::vector<Node*> get_nodes(Node* n);
 
     /**
-     * Returns position of node recognized by current Layer/Compound
+     * Returns position of node recognized by current Layer/Subnet
      * local id value.
      * @param lid  local id of node
      * @returns position of node

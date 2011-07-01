@@ -23,7 +23,7 @@
 
 */
 
-#include "compound.h"
+#include "subnet.h"
 #include "iostreamdatum.h"
 #include "nest.h"
 
@@ -58,7 +58,7 @@ namespace nest {
     LayerSlice(const FromLayerType& layer, const DictionaryDatum& dict);
 
     /**
-     * Destructor. Deletes the compounds created when slicing.
+     * Destructor. Deletes the subnets created when slicing.
     */
     ~LayerSlice();
 
@@ -104,11 +104,11 @@ namespace nest {
 
     // Retrieve nodes at selected depth level.
     // Iterate through nodes and retrieve nodes that fit criteria.
-    // Selected nodes are inserted into a new compound structure
-    // (i.e. nested compound structures are flattened). 
+    // Selected nodes are inserted into a new subnet structure
+    // (i.e. nested subnet structures are flattened). 
     for(std::vector<Node*>::const_iterator it=layer.begin(); it != layer.end(); ++it)
     {
-      Compound* subnet = new Compound();
+      Subnet* subnet = new Subnet();
 
       selector.slice_node(*subnet, *it);
 
@@ -143,7 +143,7 @@ namespace nest {
     for(std::vector<Node*>::iterator it = this->begin();
 	it != this->end(); ++it)
       {
-      Compound* c = dynamic_cast<Compound*>(*it);
+      Subnet* c = dynamic_cast<Subnet*>(*it);
       assert(c);
 	    
       delete c;

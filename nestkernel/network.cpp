@@ -18,7 +18,8 @@
 #include "network.h"
 #include "genericmodel.h"
 #include "scheduler.h"
-#include "compound.h"
+#include "subnet.h"
+#include "sibling_container.h"
 #include "interpret.h"
 #include "dict.h"
 #include "dictstack.h"
@@ -32,6 +33,7 @@
 #include "sliexceptions.h"
 #include "processes.h"
 #include "nestmodule.h"
+#include "sibling_container.h"
 
 #include <cmath>
 #include <set>
@@ -56,8 +58,11 @@ Network::Network(SLIInterpreter &i)
   modeldict_ = new Dictionary();
   interpreter_.def("modeldict", new DictionaryDatum(modeldict_));
 
-  Model* model = new GenericModel<Compound>("subnet");
+  Model* model = new GenericModel<Subnet>("subnet");
   register_model(*model);
+
+  siblingcontainer_model = new GenericModel<SiblingContainer>("siblingcontainer");
+  register_model(*siblingcontainer_model, true);
 
   model = new GenericModel<proxynode>("proxynode");
   register_model(*model, true);
@@ -83,20 +88,21 @@ Network::~Network()
 void Network::init_()
 {
   /*
-   * We initialise the network with one compound that is the root of the tree.
+   * We initialise the network with one subnet that is the root of the tree.
    * Note that we MUST NOT call add_node(), since it expects a properly
    * initialized network.
    */
-  assert(pristine_models_.size() > 0);
-  Model* rootmodel= pristine_models_[0].first;
-  assert(rootmodel != 0);
-
   nodes_.resize(1);
   node_model_ids_.add_range(0,0,0);
 
-  Compound *root_container = static_cast<Compound *>(rootmodel->allocate(0));
+  SiblingContainer *root_container = static_cast<SiblingContainer *>(siblingcontainer_model->allocate(0));
   nodes_[0] = root_container;
   root_container->reserve(get_num_threads());
+  root_container->set_model_id(-1);
+
+  assert(pristine_models_.size() > 0);
+  Model* rootmodel= pristine_models_[0].first;
+  assert(rootmodel != 0);
 
   for(thread t = 0; t < get_num_threads(); ++t)
   {
@@ -108,7 +114,7 @@ void Network::init_()
     root_container->push_back(newnode);
   }
 
-  current_ = root_ = static_cast<Compound *>((*root_container)[0]);
+  current_ = root_ = static_cast<Subnet *>((*root_container)[0]);
 
   /**
     Build modeldict and list of models from clean prototypes.
@@ -243,28 +249,29 @@ void Network::reset_network()
   if ( !scheduler_.get_simulated() )
     return;  // nothing to do
   
-  /* Reinitialize state on all nodes, force init_buffers() on next Simulate
-     Finding all nodes is non-trivial:
-     - Nodes with proxies are found in nodes_. This is also true for any nodes
-       that are part of Compounds.
-     - Nodes without proxies are not registered in nodes_. Instead, a Compound
-       is created as container, and this container is stored in nodes_. The
-       container then contains the actual nodes, which need to be reset. Such
-       compounds have model_id==-1.
-     Thus, we iterate nodes_; additionally, we iterate the content of a Compound
-     if the Compound's replica_container flag is set. Other compounds are not
-     iterated, since their nodes are registered in nodes_ directly.
-   */
+  /* Reinitialize state on all nodes, force init_buffers() on next
+     Simulate Finding all nodes is non-trivial:
+     - Nodes with proxies are found in nodes_. This is also true for
+       any nodes that are part of Subnets.
+     - Nodes without proxies are not registered in nodes_. Instead, a
+       SiblingContainer is created as container, and this container is
+       stored in nodes_. The container then contains the actual nodes,
+       which need to be reset.
+     Thus, we iterate nodes_; additionally, we iterate the content of
+     a Node if it's model id is -1, which indicates that it is a
+     container.  Subnets are not iterated, since their nodes are
+     registered in nodes_ directly.
+  */
   for(size_t n = 0; n < nodes_.size(); ++n)
   {
-    if ( (*nodes_[n]).size() == 0 )  // not a compound
+    if ( (*nodes_[n]).size() == 0 )  // not a SiblingContainer
     {
       (*nodes_[n]).init_state();
       (*nodes_[n]).unset(Node::buffers_initialized);
     }
     else if ( (*nodes_[n]).get_model_id() == -1 )
     {
-      Compound* const c = dynamic_cast<Compound*>(&(*nodes_[n]));
+      SiblingContainer* const c = dynamic_cast<SiblingContainer*>(&(*nodes_[n]));
       assert(c);
       for ( vector<Node*>::iterator cit = c->begin() ; cit != c->end() ; ++cit )
       {
@@ -315,17 +322,15 @@ index Network::add_node(long_t mod, long_t n)   //no_p
 
   Model* model = models_[mod];
   assert(model != 0);
-  Model* container_model = models_[0];
-  assert(container_model != 0);
   
   /* current_ points to the instance of the current subnet on thread 0.
-     The following code makes subnet a pointer to the wrapper Compound
+     The following code makes subnet a pointer to the wrapper container
      containing the instances of the current subnet on all threads.
    */
   index subnet_gid = current_->get_gid();
   assert ( nodes_.test(subnet_gid) );
 
-  Compound* subnet = dynamic_cast<Compound *>(&(*nodes_[subnet_gid]));
+  SiblingContainer* subnet = dynamic_cast<SiblingContainer *>(&(*nodes_[subnet_gid]));
   assert(subnet != 0);
   assert(subnet->size() == static_cast<size_t>(n_threads));
   assert((*subnet)[0] == current_);
@@ -373,36 +378,38 @@ index Network::add_node(long_t mod, long_t n)   //no_p
   } 
   else if (!model->one_node_per_process())
   {
-    // We allocate space for n containers which will hold the threads sorted.
-    // We use Compounds to store the instances for each thread to exploit the
-    // very efficient memory allocation for nodes. 
+    // We allocate space for n containers which will hold the threads
+    // sorted. We use SiblingContainers to store the instances for
+    // each thread to exploit the very efficient memory allocation for
+    // nodes.
     //
-    // These wrapper compounds are registered in the global nodes_ array to 
-    // provide access to the instances both for manipulation by SLI functions 
-    // and so that Scheduler::calibrate() can discover the instances and 
-    // register them for updating.
+    // These containers are registered in the global nodes_ array to
+    // provide access to the instances both for manipulation by SLI
+    // functions and so that Scheduler::calibrate() can discover the
+    // instances and register them for updating.
     //
-    // The instances are also registered with the instance of the current subnet
-    // for the thread to which the created instance belongs. This is mainly
-    // important so that the compound structure is preserved on all VPs.
-    // Node enumeration is done on by the registration with the per-thread 
-    // instances.
+    // The instances are also registered with the instance of the
+    // current subnet for the thread to which the created instance
+    // belongs. This is mainly important so that the subnet structure
+    // is preserved on all VPs.  Node enumeration is done on by the
+    // registration with the per-thread instances.
     //
-    // The wrapper can be addressed under the GID assigned to no-proxy node 
-    // created. If this no-proxy node is NOT a compound (e.g. a device), then
-    // each instance can be retrieved by giving the respective thread-id to
-    // get_node(). Instances of compounds cannot be addressed individually.
+    // The wrapper container can be addressed under the GID assigned
+    // to no-proxy node created. If this no-proxy node is NOT a
+    // container (e.g. a device), then each instance can be retrieved
+    // by giving the respective thread-id to get_node(). Instances of
+    // SiblingContainers cannot be addressed individually.
     //
-    // The allocation of the wrapper compounds is spread over threads to 
-    // balance memory load.
+    // The allocation of the wrapper containers is spread over threads
+    // to balance memory load.
     size_t container_per_thread = n / n_threads + 1;
     
     // since we create the n nodes on each thread, we reserve the full load.
     for(thread t = 0; t < n_threads; ++t)
     {
       model->reserve(t,n);
-      container_model->reserve(t, container_per_thread);
-      static_cast<Compound *>((*subnet)[t])->reserve(n);
+      siblingcontainer_model->reserve(t, container_per_thread);
+      static_cast<Subnet *>((*subnet)[t])->reserve(n);
     }
     
     // The following loop creates n nodes. For each node, a wrapper is created
@@ -414,7 +421,7 @@ index Network::add_node(long_t mod, long_t n)   //no_p
       thread thread_id = vp_to_thread(suggest_vp(gid));
 
       // Create wrapper and register with nodes_ array.
-      Compound *container= static_cast<Compound *>(container_model->allocate(thread_id));
+      SiblingContainer *container= static_cast<SiblingContainer *>(siblingcontainer_model->allocate(thread_id));
       container->set_model_id(-1); // mark as pseudo-container wrapping replicas, see reset_network()
       container->reserve(n_threads); // space for one instance per thread
       nodes_[gid] = container; 
@@ -428,24 +435,24 @@ index Network::add_node(long_t mod, long_t n)   //no_p
         newnode->set_thread(t);
         newnode->set_vp(thread_to_vp(t));
         
-        // If the instance is a Compound, set Child-VP-Assignment policies.
-        Compound* newcomp = 0;
-        if ((newcomp = dynamic_cast<Compound*>(newnode)) != 0)
+        // If the instance is a Subnet, set child-vp-assignment policies.
+        Subnet* newsubnet = 0;
+        if ((newsubnet = dynamic_cast<Subnet*>(newnode)) != 0)
         {
           if (current_->get_children_on_same_vp())
           {
-            newcomp->set_children_on_same_vp(true);
-            newcomp->set_children_vp(current_->get_children_vp());
+            newsubnet->set_children_on_same_vp(true);
+            newsubnet->set_children_vp(current_->get_children_vp());
           }
           else
-            newcomp->set_children_vp(suggest_vp(gid));
+            newsubnet->set_children_vp(suggest_vp(gid));
         }
         
         // Register instance with wrapper
         container->push_back(newnode); 
         
         // Register instance with per-thread instance of enclosing subnet.
-        static_cast<Compound *>((*subnet)[t])->add_node(newnode); 
+        static_cast<Subnet*>((*subnet)[t])->add_node(newnode); 
       }
     }
   }
@@ -499,7 +506,7 @@ void Network::init_state(index GID)
 
 void Network::go_to(index n)
 {
-  if(Compound *target=dynamic_cast<Compound*>(get_node(n)))
+  if(Subnet *target=dynamic_cast<Subnet*>(get_node(n)))
     current_ = target;
   else
     throw SubnetExpected();
@@ -516,7 +523,7 @@ void Network::go_to(index n)
 //  
 //  void Network::go_to(vector<size_t> const &p)
 //  {
-//    if(Compound *target=dynamic_cast<Compound*>(get_node(p)))
+//    if(Subnet *target=dynamic_cast<Subnet*>(get_node(p)))
 //      current_ = target;
 //    else
 //      throw SubnetExpected();
@@ -534,7 +541,7 @@ void Network::go_to(index n)
 //  Node* Network::get_node(vector<size_t> const &p, thread thr) const
 //  {
 //    assert(root_ != NULL);
-//    Compound *position = current_;
+//    Subnet *position = current_;
 //  
 //    Node *new_position = position;
 //    
@@ -547,7 +554,7 @@ void Network::go_to(index n)
 //      if(p[i]==0)
 //      {
 //        new_position = root_;
-//        position = dynamic_cast<Compound*>(new_position);
+//        position = dynamic_cast<Subnet*>(new_position);
 //        // move directly to next vector element 
 //        continue;
 //      }
@@ -576,7 +583,7 @@ void Network::go_to(index n)
 //      if(new_position == 0)
 //        throw UnknownNode();
 //        
-//      if(Compound *pos=dynamic_cast<Compound*>(new_position))
+//      if(Subnet *pos=dynamic_cast<Subnet*>(new_position))
 //        position=pos;
 //      else if(i < p.size() - 1)
 //        throw UnknownNode();
@@ -611,12 +618,14 @@ Node* Network::get_node(index n, thread thr) //no_p
   return (*nodes_[n])[thr];
 }
 
-const Compound* Network::get_thread_siblings(index n) const
+const SiblingContainer* Network::get_thread_siblings(index n) const
 {
   if(nodes_[n]->size() == 0)
     throw NoThreadSiblingsAvailable(n);
-  
-  return dynamic_cast<Compound*>(nodes_[n]);
+  const SiblingContainer* siblings = dynamic_cast<SiblingContainer*>(nodes_[n]);
+  assert(siblings != 0);
+
+  return siblings;
 }
 
 vector<size_t> Network::get_adr(Node const* node) const
@@ -684,7 +693,7 @@ void Network::memory_info()
 
 void Network::print(index p, int depth)
 {
-  Compound *target = dynamic_cast<Compound*>(get_node(p));
+  Subnet *target = dynamic_cast<Subnet*>(get_node(p));
   if(target != NULL)
     std::cout << target->print_network(depth + 1, 0);
   else
@@ -698,9 +707,6 @@ void Network::print_model_ranges()
 
 void Network::set_status(index gid, const DictionaryDatum& d)
 {
-  // if (gid >= size())
-  //   throw UnknownNode(gid);
-
   // we first handle normal nodes, except the root (GID 0)
   if ( gid > 0)
   {
@@ -716,7 +722,7 @@ void Network::set_status(index gid, const DictionaryDatum& d)
       else
 	for(size_t t=0; t < target.size(); ++t)
 	{
-	  // non-root container for devices without proxies and compounds
+	  // non-root container for devices without proxies and subnets
 	  // we iterate over all threads
 	  assert(target[t] != 0);
 	  set_status_single_node_(*target[t], d);
@@ -1012,7 +1018,7 @@ void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArr
   
   Node* source = get_node(source_id);
     
-  Compound *source_comp=dynamic_cast<Compound *>(source);
+  Subnet *source_comp=dynamic_cast<Subnet *>(source);
   if(source_comp !=0)
   {
     message(SLIInterpreter::M_INFO, "DivergentConnect", "Source ID is a subnet; I will iterate it.");
@@ -1089,7 +1095,7 @@ void Network::random_divergent_connect(index source_id, TokenArray target_ids, i
     throw DimensionMismatch();
   }
     
-  Compound *source_comp=dynamic_cast<Compound *>(source);
+  Subnet *source_comp=dynamic_cast<Subnet *>(source);
   if(source_comp !=0)
   {
     message(SLIInterpreter::M_INFO, "RandomDivergentConnect", "Source ID is a subnet; I will iterate it.");
@@ -1153,7 +1159,7 @@ void Network::convergent_connect(TokenArray source_ids, index target_id, TokenAr
 
   Node* target = get_node(target_id);
 
-  Compound *target_comp = dynamic_cast<Compound *>(target);
+  Subnet *target_comp = dynamic_cast<Subnet *>(target);
   if(target_comp != 0)
   {
     message(SLIInterpreter::M_INFO, "ConvergentConnect", "Target node is a subnet; I will iterate it.");
@@ -1237,7 +1243,7 @@ void Network::random_convergent_connect(TokenArray source_ids, index target_id, 
     throw DimensionMismatch();
   }
     
-  Compound *target_comp=dynamic_cast<Compound *>(target);
+  Subnet *target_comp=dynamic_cast<Subnet *>(target);
   if(target_comp !=0)
   {
     message(SLIInterpreter::M_INFO, "RandomConvergentConnect","Target ID is a subnet; I will iterate it.");
@@ -1281,7 +1287,7 @@ void Network::random_convergent_connect(TokenArray source_ids, index target_id, 
    
 // -----------------------------------------------------------------------------
 
-void Network::compound_connect(Compound &sources, Compound &targets, int radius, index syn)
+void Network::subnet_connect(Subnet &sources, Subnet &targets, int radius, index syn)
 {
   vector<Node*>::const_iterator it_target_row;
   for(it_target_row = targets.begin(); it_target_row != targets.end(); ++it_target_row)
@@ -1292,10 +1298,10 @@ void Network::compound_connect(Compound &sources, Compound &targets, int radius,
     int row = (*it_target_row)->get_lid();
 
     Node* nodetemp = targets.at(row);
-    Compound* ct = dynamic_cast<Compound *>(nodetemp);
+    Subnet* ct = dynamic_cast<Subnet *>(nodetemp);
     if(ct==0)
     {
-      message(SLIInterpreter::M_ERROR, "CompoundConnect", "targets subnetwork must be compound.");
+      message(SLIInterpreter::M_ERROR, "SubnetConnect", "targets subnetwork must be subnet.");
       continue;
     }
       
@@ -1316,10 +1322,10 @@ void Network::compound_connect(Compound &sources, Compound &targets, int radius,
 	    if(n>=0&&row+k>=0&&row+k<(int_t)sources.size())
 	    {
 	      Node* nodetemp =sources.at(row+k);
-	      Compound* cn = dynamic_cast<Compound *>(nodetemp);
+	      Subnet* cn = dynamic_cast<Subnet *>(nodetemp);
 	      if(cn==0)
 	      {
-		message(SLIInterpreter::M_ERROR, "CompoundConnect", "targets subnetwork must be compound.");
+		message(SLIInterpreter::M_ERROR, "SubnetConnect", "targets subnetwork must be subnet.");
 		continue;
 	      }
 	      //Insert source node id in scope.
@@ -1364,10 +1370,10 @@ void Network::compound_connect(Compound &sources, Compound &targets, int radius,
 	  if(row+k>=0&&row+k<(int_t)sources.size())
 	  {
 	    Node* nodetemp =sources.at(row+k);
-	    Compound* cn = dynamic_cast<Compound *>(nodetemp);
+	    Subnet* cn = dynamic_cast<Subnet *>(nodetemp);
 	    if(cn==0)
 	    {
-	      message(SLIInterpreter::M_ERROR, "CompoundConnect", "targets subnetwork must be compound.");
+	      message(SLIInterpreter::M_ERROR, "SubnetConnect", "targets subnetwork must be subnet.");
 	      continue;
 	    }
 	    //Insert source node id in scope.

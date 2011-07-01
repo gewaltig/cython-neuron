@@ -25,6 +25,7 @@
 #include "connection.h"
 #include "dictutils.h"
 #include "exceptions.h"
+#include "sibling_container.h"
 
 /*BeginDocumentation
 Name: multimeter - Device to record analog data from neurons.
@@ -306,7 +307,7 @@ namespace nest {
     // siblings on other threads
     if (get_thread() == 0)
     {
-      const Compound* siblings = network()->get_thread_siblings(get_gid());
+      const SiblingContainer* siblings = network()->get_thread_siblings(get_gid());
       std::vector<Node*>::const_iterator sibling;
       for (sibling = siblings->begin() + 1; sibling != siblings->end(); ++sibling)
         (*sibling)->get_status(d);

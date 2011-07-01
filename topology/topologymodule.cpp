@@ -180,13 +180,13 @@ namespace nest
     The element variable can be set in the following ways:
     /modeltype                   - create a layer consisting of single
                                    neurons
-    {procedure}                  - creates a compound of nodes decided 
+    {procedure}                  - creates a subnet of nodes decided 
                                    by the procedure at each position in 
 				   the layer
 
-    [/iaf_neuron /iaf_psc_alpha] - create a compound of one iaf_neuron and
+    [/iaf_neuron /iaf_psc_alpha] - create a subnet of one iaf_neuron and
                                    one iaf_psc_alpha
-    [/iaf_neuron 2]              - create a compound of two iaf_neurons
+    [/iaf_neuron 2]              - create a subnet of two iaf_neurons
     or a combination of the two (e.g. [/iaf_psc_alpha [/iaf_psc_alpha 3]])
 
 

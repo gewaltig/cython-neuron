@@ -38,7 +38,7 @@ namespace nest {
   class Scheduler;
   class Model;
 
-  class Compound;
+  class Subnet;
   class Network;
   class Archiving_Node;
   class histentry;
@@ -68,7 +68,7 @@ namespace nest {
    * to direcly subclass from base class Node.
    *
    * @see class Event
-   * @see Compound
+   * @see Subnet
    * @ingroup user_interface
    */
 
@@ -93,7 +93,7 @@ namespace nest {
   {
     friend class Network;
     friend class Scheduler;
-    friend class Compound;
+    friend class Subnet;
     friend class Synapse;
     friend class Model;
     
@@ -189,9 +189,9 @@ namespace nest {
 
 
     /** 
-     * Return the size of the node. The return value for
-     * standard nodes is 0. For subnets and other compounds, 
-     * size() will return the number of nodes it contains.
+     * Return the size of the node. The return value for standard
+     * nodes is 0. For subnets, size() will return the number of nodes
+     * it contains.
      */
     virtual
     size_t size() const { return 0;}
@@ -209,7 +209,7 @@ namespace nest {
      * Returns the global network ID of the Node.
      * Each node has a unique network ID which can be used to access
      * the Node comparable to a pointer. By definition, the top-level
-     * compound has ID=0.
+     * subnet has ID=0.
      */
     index get_gid() const;
 
@@ -223,23 +223,20 @@ namespace nest {
     /**
      * Return model ID of the node.
      * Returns the model ID of the model for this node.
-     * Model IDs start with 0, Compound always having ID 0.
+     * Model IDs start with 0, Subnet always having ID 0.
      * @note The model ID is not stored in the model prototype instance. 
      *       It is only set when actual nodes are created from a prototype.
-     * @note A node ID of -1 indicates that the model ID has not been set.
-     *       This identifies Compound instances that are used as containers
-     *       for replicas of nodes without proxies.
      */
     int get_model_id() const;
 
     /**
-     * Return pointer to parent compound.
-     * Each node is member of a compound whose pointer can be accessed
+     * Return pointer to parent subnet.
+     * Each node is member of a subnet whose pointer can be accessed
      * through this function.
      * This pointer must be non NULL for all Nodes which are not the
-     * top-level compound. Only the top-level compound returns NULL.
+     * top-level subnet. Only the top-level subnet returns NULL.
      */
-    Compound* get_parent() const;
+    Subnet* get_parent() const;
 
     /************************************************
      * Functions to modify and test state flags
@@ -688,7 +685,7 @@ namespace nest {
 
     /**
      * @returns true if node can be entered with the NestModule::ChangeSubnet() 
-     *          commands (only true for Compounds).
+     *          commands (only true for Subnets).
      */
     virtual bool allow_entry() const;
 
@@ -713,8 +710,8 @@ namespace nest {
     
   private:
 
-    void  set_lid_(index);         //!< Set local id, relative to the parent compound
-    void  set_parent_(Compound *); //!< Set pointer to parent compound.
+    void  set_lid_(index);         //!< Set local id, relative to the parent subnet
+    void  set_parent_(Subnet *);   //!< Set pointer to parent subnet.
     void  set_gid_(index);         //!< Set global node id
 
     /** Return a new dictionary datum .
@@ -780,12 +777,10 @@ namespace nest {
      * Model ID.
      * It is only set for actual node instances, not for instances of class Node
      * representing model prototypes. Model prototypes always have model_id_==-1.
-     * Compound instances with model_id_==-1 are containers of replicas of nodes
-     * without proxies.
      * @see get_model_id(), set_model_id()
      */
     int      model_id_;      
-    Compound *parent_;            //!< Pointer to parent.
+    Subnet *parent_;              //!< Pointer to parent.
     std::bitset<n_flags> stat_;   //!< enum flag as bit mask.
 
     thread   thread_;        //!< thread node is assigned to
@@ -906,16 +901,14 @@ namespace nest {
     model_id_ = i;
   }
 
-
   inline
-  Compound * Node::get_parent() const
+  Subnet * Node::get_parent() const
   {
     return parent_;
   }
 
-
   inline
-  void Node::set_parent_(Compound *c)
+  void Node::set_parent_(Subnet *c)
   {
     parent_=c;
   }

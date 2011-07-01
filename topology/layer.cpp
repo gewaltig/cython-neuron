@@ -36,7 +36,7 @@ namespace nest
   }
 
   Layer::Layer(const Layer& l):
-    Compound(l),
+    Subnet(l),
     extent_(l.extent_),
     center_(l.center_),
     upper_left_(l.upper_left_),
@@ -58,20 +58,20 @@ namespace nest
     // added by manipulating this class. 
     Selector selector(layer_connection_dict);
 
-    Compound nodes;
+    Subnet nodes;
 
     // Retrieve nodes at selected depth level.
     // Iterate through nodes and retrieve nodes that fit criteria.
-    // Selected nodes are inserted into a new compound structure
-    // (i.e. nested compound structures are flattened). 
+    // Selected nodes are inserted into a new subnet structure
+    // (i.e. nested subnet structures are flattened). 
     for(std::vector<Node*>::const_iterator it=begin(); it != end(); ++it)
       {
-	Compound subnet;
+	Subnet subnet;
 
 	selector.slice_node(subnet, *it);
 	//	selector(subnet, *it, slice_depth, modeltype);
 
-	nodes.push_back(new Compound(subnet));
+	nodes.push_back(new Subnet(subnet));
       }
 
     return std::vector<Node*>(nodes.begin(), nodes.end());
@@ -136,7 +136,7 @@ namespace nest
 
     updateValue<bool>(layer_dictionary, names::edge_wrap, EDGE_WRAP_);
 
-    Compound::set_status(layer_dictionary);
+    Subnet::set_status(layer_dictionary);
   }
 
 
@@ -150,7 +150,7 @@ namespace nest
     (*dict)[names::edge_wrap] = EDGE_WRAP_;
 
     (*d)[names::topology] = dict;
-    Compound::get_status(d);
+    Subnet::get_status(d);
   }
 
   Position<double_t> Layer::get_upper_left() const
@@ -205,7 +205,7 @@ namespace nest
 
   std::vector<Node*> Layer::get_nodes(Node* n)
   {
-    Compound *subnet = dynamic_cast<Compound*>(n);
+    Subnet *subnet = dynamic_cast<Subnet*>(n);
     assert(subnet != 0);
     // Slicing of layer before calling ConnectLayer function
     // assures that the subnet isn't nested.

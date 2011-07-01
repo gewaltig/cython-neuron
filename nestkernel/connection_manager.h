@@ -26,7 +26,6 @@
 #include "connector.h"
 #include "nest_time.h"
 #include "nest_timeconverter.h"
-#include "compound.h"
 #include "arraydatum.h"
 
 #include "sparsetable.h"

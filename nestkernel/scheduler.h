@@ -42,7 +42,6 @@ namespace nest
   using std::vector;
   typedef Communicator::OffGridSpike OffGridSpike;
 
-  class Compound;
   class Network;
   
   /**

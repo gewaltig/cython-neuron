@@ -31,7 +31,7 @@ namespace nest{
    * traversing multidimensional subnets.
    * Only leavess are returned, not the non-leaf-nodes.
    * For a list interface that also accesses the intermediate
-   * compounds, see class NodeList and its iterator.
+   * subnets, see class NodeList and its iterator.
    */
 
   class LeafList: public NodeList
@@ -72,7 +72,7 @@ namespace nest{
     friend class iterator;
 
     LeafList(): NodeList() {}
-    explicit LeafList(Compound &c): NodeList(c) {};
+    explicit LeafList(Subnet &c): NodeList(c) {};
 
     iterator begin()  const; //!< iterator to the first leaf
     iterator end()    const;
@@ -81,8 +81,8 @@ namespace nest{
     size_t size()    const; //!< number of leaves in the network tree
 
     // next two inherited from NodeList
-    // Compound& get_root() const;
-    // void set_root(Compound &);
+    // Subnet& get_root() const;
+    // void set_root(Subnet &);
 
   private:
     /** Return true if Element is a leaf, false otherwise.
@@ -94,8 +94,8 @@ namespace nest{
   inline
     bool LeafList::is_leaf_(Node const * n)
     {
-      //check if it is derived from Compound:
-      return dynamic_cast<Compound const *>(n) == NULL; //yes, its no compund
+      //check if it is derived from Subnet:
+      return dynamic_cast<Subnet const *>(n) == NULL; //yes, its no compund
     }
 
   inline

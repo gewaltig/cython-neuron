@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "nodewrapper.h"
-#include "compound.h"
+#include "subnet.h"
 
 namespace nest
 {
@@ -30,7 +30,7 @@ namespace nest
   lockPTR<std::vector<NodeWrapper> >
   NodeWrapper::get_nodewrappers(Node* n, const Position<double_t>& pos, std::vector<double_t> *extent)
   {
-    Compound *subnet = dynamic_cast<Compound*>(n);
+    Subnet *subnet = dynamic_cast<Subnet*>(n);
     assert(subnet != 0);
     // Slicing of layer before calling ConnectLayer function
     // assures that the subnet isn't nested.

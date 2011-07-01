@@ -242,7 +242,7 @@ namespace nest
 	for(std::vector<NodeWrapper>::iterator it = nodes_.begin();
 	    it != nodes_.end(); ++it)
 	  {
-	    Compound *subnet = dynamic_cast<Compound*>(it->get_node());
+	    Subnet *subnet = dynamic_cast<Subnet*>(it->get_node());
 	    assert(subnet != 0);
 	    // Slicing of layer before calling ConnectLayer function
 	    // assures that the subnet isn't nested.
@@ -267,8 +267,7 @@ namespace nest
 	  {
 	    if(box->within_range((*it).get_position()-shift))
 	      {
-		Compound *subnet = 
-		  dynamic_cast<Compound*>(it->get_node());
+		Subnet *subnet = dynamic_cast<Subnet*>(it->get_node());
 
 		assert(subnet != 0);
 		// Slicing of layer before calling ConnectLayer function

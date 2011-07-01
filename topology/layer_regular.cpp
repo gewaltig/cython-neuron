@@ -23,7 +23,6 @@
 
 #include <vector>
 
-#include "compound.h"
 #include "dictutils.h"
 #include "node.h"
 #include "nestmodule.h"

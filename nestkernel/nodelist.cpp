@@ -23,13 +23,13 @@ namespace nest{
     if (empty())
       return end();
 
-    Compound *r=root_;
+    Subnet *r=root_;
     vector<Node*>::iterator n;
 
     while( r!=NULL && !r->empty() )
     {
       n=r->begin(); //!< Move down in tree
-      if( (r=dynamic_cast<Compound*>(*n)) == NULL)
+      if( (r=dynamic_cast<Subnet*>(*n)) == NULL)
 	break;
     }
     /** We have reached the end of tree */
@@ -52,14 +52,15 @@ namespace nest{
   NodeList::iterator NodeList::iterator::operator++()
   {
     /**
-     * We must assume that this operator is not called on
-     * end(). For this case, the result is undefined!
+     * We must assume that this operator is not called on end(). For
+     * this case, the result is undefined!
      */
 
-    /** This compound is the container to which e belongs!
-     *  If c yields NULL, the tree is ill-formed!
+    /**
+     * This subnet is the container to which e belongs! If c yields
+     * NULL, the tree is ill-formed!
      */
-    Compound *c=(*p_)->get_parent();
+    Subnet *c=(*p_)->get_parent();
     assert(c != NULL);
 
     /**
@@ -68,7 +69,7 @@ namespace nest{
      * 3.   return leaf of leftmost branch
      * 4. If no right neigbor exists, go up one level
      * 5.   return element.
-     * 6. If we cannot go up, return end() of local compound
+     * 6. If we cannot go up, return end() of local subnet
      */
 
     /** Goto right neighbor */
@@ -76,12 +77,12 @@ namespace nest{
     
     if(p_ != c->end())
     {
-      Compound *r=dynamic_cast<Compound *>(*p_);
+      Subnet *r=dynamic_cast<Subnet *>(*p_);
 
       while(r != NULL && ! r->empty())
       {
 	p_=r->begin();
-	r=dynamic_cast<Compound *>(*p_);
+	r=dynamic_cast<Subnet *>(*p_);
       }
       
       return *this;
@@ -91,7 +92,7 @@ namespace nest{
     /** This is the case where no right neighbor exists.
      * We have to go up and return the parent
      */
-    Compound *p=c->get_parent();
+    Subnet *p=c->get_parent();
     if(p==NULL)
     {
       /** We are already at the root container and
@@ -114,12 +115,12 @@ namespace nest{
     return *this;
   }
 
-  void NodeList::set_root(Compound &r)
+  void NodeList::set_root(Subnet &r)
   {
     root_=&r;
   }
 
-  Compound & NodeList::get_root() const
+  Subnet & NodeList::get_root() const
   {
     assert(root_ != NULL);
     return *root_;

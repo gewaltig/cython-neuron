@@ -21,7 +21,7 @@
 
 #include "selector.h"
 
-#include "compound.h"
+#include "subnet.h"
 #include "nestmodule.h"
 #include "dictdatum.h"
 
@@ -63,23 +63,23 @@ namespace nest{
       }
   }
 
-  void Selector::slice_node(Compound& subnet,
+  void Selector::slice_node(Subnet& subnet,
 			    Node* node)
   {
     slice_node(subnet, node, slice_depth_);
   }
   
-  void Selector::slice_node(Compound& subnet,
+  void Selector::slice_node(Subnet& subnet,
 			    Node* node,
 			    index slice_depth)
   {
-    Compound *c = dynamic_cast<Compound*>(node);
+    Subnet *c = dynamic_cast<Subnet*>(node);
 
     if(c)
       {
 	// Move to correct node depth if a slice depth is selected.
 	//
-	// Only topmost Compound is sliced based upon depth. Slicing
+	// Only topmost Subnet is sliced based upon depth. Slicing
 	// based upon depth is ignored if a single node is found at 
 	// topmost node level.
 	if(slice_depth != 0)
@@ -116,9 +116,9 @@ namespace nest{
 	    // At this point all node criterias are fulfilled
 	    // and the node is added to the result subnet.
 	    //
-	    // The subnet Compound structure only acts as a wrapper
+	    // The subnet Subnet structure only acts as a wrapper
 	    // for the candidate node and is not the actual parent 
-	    // of the node so we should not use the Compound 
+	    // of the node so we should not use the Subnet 
 	    // function add_node(..) to add the node pointer 
 	    // (push_back() suffice).
 	    subnet.push_back(node);

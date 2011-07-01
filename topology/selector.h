@@ -25,7 +25,7 @@
 
 #include "nest.h"
 #include "dictdatum.h"
-#include "compound.h"
+#include "subnet.h"
 
 /** @file selector.h
  *  Implements the slicing functionality.
@@ -34,7 +34,7 @@
 namespace nest{
 
   /**
-   * The Selector class extracts nodes from a node or a compound 
+   * The Selector class extracts nodes from a node or a subnet 
    * structure. The nodes are extracted based upon the entries set
    * in the layer slice dictionaries. Nodes can be extracted based
    * upon modeltype and subnet depth.
@@ -53,10 +53,10 @@ namespace nest{
     Selector(const DictionaryDatum&);
     
     /**
-     * @param subnet Compound where nodes extracted by slicing are stored
+     * @param subnet Subnet where nodes extracted by slicing are stored
      * @param node   Layer node that will be sliced
      */
-    void slice_node(Compound& subnet, Node* node);
+    void slice_node(Subnet& subnet, Node* node);
     
   private:
     // Class variables. slice_depth_ of 0 indicates that all depths
@@ -66,13 +66,13 @@ namespace nest{
     long_t modeltype_;
     
     /**
-     * Recursive function called by slice_node(Compound&, Node*).
+     * Recursive function called by slice_node(Subnet&, Node*).
      *
-     * @param subnet Compound where nodes extracted by slicing are stored
+     * @param subnet Subnet where nodes extracted by slicing are stored
      * @param node   Node that will be sliced
      * @param slice_depth 
      */
-    void slice_node(Compound& subnet, Node* node,
+    void slice_node(Subnet& subnet, Node* node,
 		    index slice_depth);
 
   };

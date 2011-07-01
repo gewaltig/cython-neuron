@@ -301,18 +301,18 @@ def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-/CompoundConnect_main trie
+/SubnetConnect_main trie
 [/integertype /integertype /integertype /literaltype]
-  /CompoundConnect_i_i_i_l load addtotrie
+  /SubnetConnect_i_i_i_l load addtotrie
 def
 
-/CompoundConnect [/literaltype] {
-  CompoundConnect_main  
+/SubnetConnect [/literaltype] {
+  SubnetConnect_main  
 } def
 
-/CompoundConnect [/anytype] {
+/SubnetConnect [/anytype] {
   /Connect /synapse_model GetOption
-  CompoundConnect_main
+  SubnetConnect_main
 } def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1199,18 +1199,17 @@ def
      [adr] GetNodes -> [gid1 ... gidn]
      gid   GetNodes -> [gid1 ... gidn]
    Parameters:
-     [adr]   - address of a compound or subnet
-     gid     - id of a compound or subnet
+     [adr]   - address of a subnet
+     gid     - id of a subnet
      [gid..] - Array with the global ids of all child nodes.
    Description:
-   This function recursively traverses a subnet or compound and
-   returns the global ids of all child nodes in post-order.
+   This function recursively traverses a subnet and returns the global
+   ids of all child nodes in post-order.
 
-   The returned Nodes include the intermediate compounds/subnets.
-   For a variant of this command that EXcludes the compounds, see
-   "GetLeaves".
+   The returned Nodes include the intermediate subnets. For a variant
+   of this command that excludes the subnets, see "GetLeaves".
 
-   Author: Marc-Oliver Gewaltig, added documentation Ruediger Kupper
+   Author: Marc-Oliver Gewaltig
      
    SeeAlso: GetLocalNodes, GetLeaves, GetChildren
 */
@@ -1227,8 +1226,8 @@ def
      [adr] GetLocalNodes -> [gid1 ... gidn]
      gid   GetLocalNodes -> [gid1 ... gidn]
    Parameters:
-     [adr]   - address of a compound or subnet
-     gid     - id of a compound or subnet
+     [adr]   - address of a subnet
+     gid     - id of a subnet
      [gid..] - Array with the global ids of all local child nodes.
    Description:
    This function is equivalent to GetNodes, but returns only those
@@ -1251,8 +1250,8 @@ def
    [adr] GetChildren -> [gid1 ... gidn]
    gid   GetChildren -> [gid1 ... gidn]
    Parameters:
-   [adr]   - address of a compound or subnet
-   gid     - id of a compound or subnet
+   [adr]   - address of a subnet
+   gid     - id of a subnet
    [gid..] - Array with the global ids of all child nodes.
    
    Description:
@@ -1274,8 +1273,8 @@ def
    [adr] GetLocalChildren -> [gid1 ... gidn]
    gid   GetLocalChildren -> [gid1 ... gidn]
    Parameters:
-   [adr]   - address of a compound or subnet
-   gid     - id of a compound or subnet
+   [adr]   - address of a subnet
+   gid     - id of a subnet
    [gid..] - Array with the global ids of all local child nodes.
    
    Description:
@@ -1300,21 +1299,20 @@ def
    [adr] GetLeaves -> [gid1 ... gidn]
    gid   GetLeaves -> [gid1 ... gidn]
    Parameters:
-   [adr]   - address of a compound or subnet
-   gid     - id of a compound or subnet
+   [adr]   - address of a subnet
+   gid     - id of a subnet
    [gid..] - Array with the global ids of all leaf nodes.
 
    Description:
-   This function recursively traverses a subnet or compound and
-   returns the global ids of all leaf nodes in post-order.
-   Note that this is the standard NEST counting order for
-   traversing multidimensional (nested) subnets, for example,
-   those that were created using "LayoutNetwork". (E.g.
-   twodimensional layers).
+   This function recursively traverses a subnet and returns the global
+   ids of all leaf nodes in post-order. Note that this is the standard
+   NEST counting order for traversing multidimensional (nested)
+   subnets, for example, those that were created using
+   "LayoutNetwork".  (E.g. twodimensional layers).
 
-   The returned Nodes DO NOT include the intermediate
-   compounds/subnets. For a variant of this command that also
-   returns the compounds, see "GetNodes".
+   The returned nodes DO NOT include the intermediate subnets. For a
+   variant of this command that also returns the subnets, see
+   "GetNodes".
 
    Author: Ruediger Kupper
     
@@ -1334,8 +1332,8 @@ def
    [adr] GetLocalLeaves -> [gid1 ... gidn]
    gid   GetLocalLeaves -> [gid1 ... gidn]
    Parameters:
-   [adr]   - address of a compound or subnet
-   gid     - id of a compound or subnet
+   [adr]   - address of a subnet
+   gid     - id of a subnet
    [gid..] - Array with the global ids of all local leaf nodes.
 
    Description:

@@ -66,7 +66,7 @@ class SLIException: public std::exception
    * @code
    * catch(IllegalOperation &e)
    * {
-   * 	 i->error("ChangeSubnet","Target node must be a subnet or compound.");
+   * 	 i->error("ChangeSubnet","Target node must be a subnet.");
    *	 i->raiseerror(e.what());
    *   return;
    * }

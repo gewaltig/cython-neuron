@@ -27,7 +27,7 @@
 #include "doubledatum.h"
 #include "dictutils.h"
 #include "numerics.h"
-#include "compound.h"
+#include "subnet.h"
 
 #include "tokenarray.h"
 #include "quadtree.h"

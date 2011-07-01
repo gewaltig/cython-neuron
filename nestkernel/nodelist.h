@@ -18,7 +18,7 @@
 #define NODELIST_H
 
 #include "node.h"
-#include "compound.h"
+#include "subnet.h"
 
 namespace nest{
 
@@ -29,7 +29,7 @@ namespace nest{
    * network tree in post-order.  This iterator is not used during
    * Network update, since it is not thread safe.
    * For a list interface that only accesses the leaves of a network
-   * tree, excluding the intermediate compounds, see class LeafList
+   * tree, excluding the intermediate subnets, see class LeafList
    * and its iterator.
    */
 
@@ -58,7 +58,7 @@ namespace nest{
     };
 
     NodeList():root_(NULL){}
-    explicit NodeList(Compound &c):root_(&c){};
+    explicit NodeList(Subnet &c):root_(&c){};
 
     iterator begin() const;
     iterator end()   const;
@@ -68,11 +68,11 @@ namespace nest{
     size_t size()    const;
     size_t local_size()    const;
 
-    Compound& get_root() const;
-    void set_root(Compound &);
+    Subnet& get_root() const;
+    void set_root(Subnet &);
 
   private:
-    Compound *root_;  //!< root of the network
+    Subnet *root_;  //!< root of the network
 
   };
 
@@ -97,7 +97,7 @@ namespace nest{
   inline
   NodeList::iterator NodeList::end() const
   {
-    Compound *p=root_->get_parent();
+    Subnet *p=root_->get_parent();
     return iterator(p == NULL ? root_->end() : p->begin()+root_->get_lid());
   }
 

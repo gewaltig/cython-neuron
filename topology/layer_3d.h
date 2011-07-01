@@ -25,8 +25,6 @@
 
 #include <vector>
 
-#include "compound.h"
-
 #include "layer_unrestricted.h"
 #include "quadtree.h"
 #include "octtree.h"

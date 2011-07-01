@@ -30,7 +30,8 @@ libnest_la_SOURCES=\
 		archiving_node.h archiving_node.cpp\
 		common_synapse_properties.h common_synapse_properties.cpp\
 		communicator.h communicator.cpp\
-		compound.h compound.cpp\
+		sibling_container.h sibling_container.cpp\
+		subnet.h subnet.cpp\
 		connection.h connection.cpp\
 		connection_het_wd.h connection_het_wd.cpp\
 		connection_hom_wd.h connection_hom_wd.cpp\

@@ -311,11 +311,11 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } connect_i_i_D_lfunction;
 
-     class CompoundConnect_i_i_i_lFunction: public SLIFunction
+     class SubnetConnect_i_i_i_lFunction: public SLIFunction
      {
       public:
        void execute(SLIInterpreter *) const;
-     } compoundconnect_i_i_i_lfunction;
+     } subnetconnect_i_i_i_lfunction;
 
      class DivergentConnect_i_ia_a_a_lFunction: public SLIFunction
      {

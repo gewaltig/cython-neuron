@@ -26,7 +26,7 @@
 #include "leaflist.h"
 #include "interpret.h"
 #include "node.h"
-#include "compound.h"
+#include "subnet.h"
 #include "integerdatum.h"
 #include "doubledatum.h"
 #include "booldatum.h"
@@ -558,7 +558,7 @@ namespace nest
     const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
     const index node_id        = getValue<long>(i->OStack.pick(1));
 
-    Compound *subnet = dynamic_cast<Compound *>(get_network().get_node(node_id));     
+    Subnet *subnet = dynamic_cast<Subnet *>(get_network().get_node(node_id));     
     if (subnet==NULL)
       throw SubnetExpected();
  
@@ -593,7 +593,7 @@ namespace nest
     const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
     const index node_id        = getValue<long>(i->OStack.pick(1));
 
-    Compound *subnet = dynamic_cast<Compound *>(get_network().get_node(node_id));     
+    Subnet *subnet = dynamic_cast<Subnet *>(get_network().get_node(node_id));     
     if (subnet == NULL)
       throw SubnetExpected();
  
@@ -640,7 +640,7 @@ namespace nest
     const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
     const index node_id        = getValue<long>(i->OStack.pick(1));
 
-    Compound *subnet = dynamic_cast<Compound *>(get_network().get_node(node_id));     
+    Subnet *subnet = dynamic_cast<Subnet *>(get_network().get_node(node_id));     
     if (subnet == NULL)
       throw SubnetExpected();
  
@@ -905,19 +905,19 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
   }
 
   /* BeginDocumentation
-     Name: CompoundConnect - Connect a source compound to a target compound.
+     Name: SubnetConnect - Connect a source subnet to a target subnet.
 
      Synopsis: 
-     sources targets radius           CompoundConnect -> -
-     sources targets radius /synmodel CompoundConnect -> -
+     sources targets radius           SubnetConnect -> -
+     sources targets radius /synmodel SubnetConnect -> -
 
      Options:
      If not given, the synapse model is taken from the Options dictionary
      of the Connect command.
 
      Description:
-     Connect every node in a source compound to a selection of nodes in a 
-     target compound.
+     Connect every node in a source subnet to a selection of nodes in a 
+     target subnet.
 
      Goes through every target node and connects it to source nodes.
      Source nodes connected is in the within the range 'radius' from
@@ -930,7 +930,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      reset at the beginning of every row, and is being shifted to the
      right as the for-loops traverse the columns.
      
-     Nodes outside the boundaries of the source compound are given the
+     Nodes outside the boundaries of the source subnet are given the
      value false in the scope list. The nodes in the scope list gets
      connected to the target by use of the function
      convergent_connect.
@@ -939,25 +939,25 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      FirstVersion: 24.10.2006
      SeeAlso: Connect
   */
-  void NestModule::CompoundConnect_i_i_i_lFunction::execute(SLIInterpreter *i) const
+  void NestModule::SubnetConnect_i_i_i_lFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(4);
      
     index node_id = getValue<long>(i->OStack.pick(3));
-    Compound *sources=dynamic_cast<Compound *>(get_network().get_node(node_id));
+    Subnet *sources=dynamic_cast<Subnet *>(get_network().get_node(node_id));
      
     if (sources==NULL)
     {
-      i->message(SLIInterpreter::M_ERROR, "CompoundConnect","Input sources must be a compound.");
+      i->message(SLIInterpreter::M_ERROR, "SubnetConnect","Input sources must be a subnet.");
       throw SubnetExpected();
     }
 
     node_id = getValue<long>(i->OStack.pick(2));
-    Compound *targets=dynamic_cast<Compound *>(get_network().get_node(node_id));
+    Subnet *targets=dynamic_cast<Subnet *>(get_network().get_node(node_id));
 
     if (targets==NULL)
     {
-      i->message(SLIInterpreter::M_ERROR, "CompoundConnect","Input targets must be a compound.");
+      i->message(SLIInterpreter::M_ERROR, "SubnetConnect","Input targets must be a subnet.");
       throw SubnetExpected();
     }
  
@@ -965,7 +965,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
 
     if(radius<0)
     {
-      i->message(SLIInterpreter::M_ERROR, "CompoundConnect","Radius must be a positive integer.");
+      i->message(SLIInterpreter::M_ERROR, "SubnetConnect","Radius must be a positive integer.");
       throw RangeCheck();
     }
 
@@ -976,7 +976,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
       throw UnknownSynapseType(synmodel_name.toString());
     const index synmodel_id = static_cast<index>(synmodel);
      
-    get_network().compound_connect(*sources, *targets, radius, synmodel_id);
+    get_network().subnet_connect(*sources, *targets, radius, synmodel_id);
      
     i->OStack.pop(4);
     i->EStack.pop(); 
@@ -1174,12 +1174,12 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(1);
   
-    TokenArray compound_adr = getValue<TokenArray>(i->OStack.pick(0));
-    Compound  *compound_ptr; //!< pointer to source layer
+    TokenArray subnet_adr = getValue<TokenArray>(i->OStack.pick(0));
+    Subnet  *subnet_ptr; //!< pointer to source layer
 
 // TODO: convert this function to take the gid instead of an address
-//    compound_ptr = dynamic_cast<Compound*>(get_network().get_node(compound_adr));
-    if (compound_ptr == NULL)
+//    subnet_ptr = dynamic_cast<Subnet*>(get_network().get_node(subnet_adr));
+    if (subnet_ptr == NULL)
         throw SubnetExpected();
     
     // determine dimensions:
@@ -1187,16 +1187,16 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     index sh;  //!< number of nodes of subnet
   
     // stopping conditions for loop:
-    // 1. the next level node is not a compound (non-empty subnet)
+    // 1. the next level node is not a subnet (non-empty subnet)
     // 2. there is no next level (empty subnet)
     do
     {
-      sh = compound_ptr->size();
+      sh = subnet_ptr->size();
       result.push_back(new IntegerDatum(sh));
       if (sh == 0) break;
-      compound_ptr = dynamic_cast<Compound*>((*compound_ptr)[0]);
+      subnet_ptr = dynamic_cast<Subnet*>((*subnet_ptr)[0]);
     }
-    while ( compound_ptr );
+    while ( subnet_ptr );
 
     i->OStack.pop(1);
     i->OStack.push(ArrayDatum(result));
@@ -1260,7 +1260,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      - Each Node is shown on a separate line, showing its model name followed 
      by its in global id in brackets.
      
-     +-[0] Compound Dim=[1]
+     +-[0] Subnet Dim=[1]
      |
      +- iaf_neuron [1]
      
@@ -1269,17 +1269,17 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      sequence, then the number of consecutive nodes, then the global id of 
      the last node in the sequence.
      
-     +-[0] Compound Dim=[1]
+     +-[0] Subnet Dim=[1]
      |
      +- iaf_neuron [1]..(2)..[2]
      
-     - If a node is a compound, its global id is printed first, followed by the model
+     - If a node is a subnet, its global id is printed first, followed by the model
      name or its label (if it is defined). Next, the dimension is shown.
      If the current recursion level is less than the specified depth, the printout descends
-     to the children of the compound. 
+     to the children of the subnet. 
      After the header, a new line is printed, followed by the list of children
      at the next indentation level.
-     After the last child, a new line is printed and the printout of the parent compound
+     After the last child, a new line is printed and the printout of the parent subnet
      is continued.
 
      Example:
@@ -1287,89 +1287,89 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
      SLI [1] /iaf_cond_alpha 10 Create
      SLI [2] /dc_generator [2 5 6] LayoutNetwork
      SLI [3] [0] 1 PrintNetwork
-     +-[0] Compound Dim=[12]
+     +-[0] Subnet Dim=[12]
         |
         +- iaf_neuron [1]
         +- lifb_cond_neuron [2]..(10)..[11]
-        +-[12] Compound Dim=[2 5 6]
+        +-[12] Subnet Dim=[2 5 6]
      SLI [3] [0] 2 PrintNetwork
-     +-[0] Compound Dim=[12]
+     +-[0] Subnet Dim=[12]
         |
         +- iaf_neuron [1]
         +- lifb_cond_neuron [2]..(10)..[11]
-        +-[12] Compound Dim=[2 5 6]
+        +-[12] Subnet Dim=[2 5 6]
             |
-            +-[13] Compound Dim=[5 6]
-            +-[49] Compound Dim=[5 6]
+            +-[13] Subnet Dim=[5 6]
+            +-[49] Subnet Dim=[5 6]
      SLI [3] [0] 3 PrintNetwork
-     +-[0] Compound Dim=[12]
+     +-[0] Subnet Dim=[12]
         |
         +- iaf_neuron [1]
         +- lifb_cond_neuron [2]..(10)..[11]
-        +-[12] Compound Dim=[2 5 6]
+        +-[12] Subnet Dim=[2 5 6]
             |
-            +-[13] Compound Dim=[5 6]
+            +-[13] Subnet Dim=[5 6]
             |   |
-            |   +-[14] Compound Dim=[6]
-            |   +-[21] Compound Dim=[6]
-            |   +-[28] Compound Dim=[6]
-            |   +-[35] Compound Dim=[6]
-            |   +-[42] Compound Dim=[6]
-            +-[49] Compound Dim=[5 6]
+            |   +-[14] Subnet Dim=[6]
+            |   +-[21] Subnet Dim=[6]
+            |   +-[28] Subnet Dim=[6]
+            |   +-[35] Subnet Dim=[6]
+            |   +-[42] Subnet Dim=[6]
+            +-[49] Subnet Dim=[5 6]
                 |
-                +-[50] Compound Dim=[6]
-                +-[57] Compound Dim=[6]
-                +-[64] Compound Dim=[6]
-                +-[71] Compound Dim=[6]
-                +-[78] Compound Dim=[6]
+                +-[50] Subnet Dim=[6]
+                +-[57] Subnet Dim=[6]
+                +-[64] Subnet Dim=[6]
+                +-[71] Subnet Dim=[6]
+                +-[78] Subnet Dim=[6]
      SLI [3] [0] 4 PrintNetwork
-     +-[0] Compound Dim=[12]
+     +-[0] Subnet Dim=[12]
         |
         +- iaf_neuron [1]
         +- lifb_cond_neuron [2]..(10)..[11]
-        +-[12] Compound Dim=[2 5 6]
+        +-[12] Subnet Dim=[2 5 6]
             |
-            +-[13] Compound Dim=[5 6]
+            +-[13] Subnet Dim=[5 6]
             |   |
-            |   +-[14] Compound Dim=[6]
+            |   +-[14] Subnet Dim=[6]
             |   |   |
             |   |   +- dc_generator [15]..(6)..[20]
             |   |
-            |   +-[21] Compound Dim=[6]
+            |   +-[21] Subnet Dim=[6]
             |   |   |
             |   |   +- dc_generator [22]..(6)..[27]
             |   |
-            |   +-[28] Compound Dim=[6]
+            |   +-[28] Subnet Dim=[6]
             |   |   |
             |   |   +- dc_generator [29]..(6)..[34]
             |   |
-            |   +-[35] Compound Dim=[6]
+            |   +-[35] Subnet Dim=[6]
             |   |   |
             |   |   +- dc_generator [36]..(6)..[41]
             |   |
-            |   +-[42] Compound Dim=[6]
+            |   +-[42] Subnet Dim=[6]
             |       |
             |       +- dc_generator [43]..(6)..[48]
             |
-            +-[49] Compound Dim=[5 6]
+            +-[49] Subnet Dim=[5 6]
                 |
-                +-[50] Compound Dim=[6]
+                +-[50] Subnet Dim=[6]
                 |   |
                 |   +- dc_generator [51]..(6)..[56]
                 |
-                +-[57] Compound Dim=[6]
+                +-[57] Subnet Dim=[6]
                 |   |
                 |   +- dc_generator [58]..(6)..[63]
                 |
-                +-[64] Compound Dim=[6]
+                +-[64] Subnet Dim=[6]
                 |   |
                 |   +- dc_generator [65]..(6)..[70]
                 |
-                +-[71] Compound Dim=[6]
+                +-[71] Subnet Dim=[6]
                 |   |
                 |   +- dc_generator [72]..(6)..[77]
                 |
-                +-[78] Compound Dim=[6]
+                +-[78] Subnet Dim=[6]
                     |
                     +- dc_generator [79]..(6)..[84]
 
@@ -1677,7 +1677,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     i->createcommand("Connect_i_i_d_d_l", &connect_i_i_d_d_lfunction);
     i->createcommand("Connect_i_i_D_l", &connect_i_i_D_lfunction);
 
-    i->createcommand("CompoundConnect_i_i_i_l", &compoundconnect_i_i_i_lfunction);
+    i->createcommand("SubnetConnect_i_i_i_l", &subnetconnect_i_i_i_lfunction);
    
     i->createcommand("DivergentConnect_i_ia_a_a_l", &divergentconnect_i_ia_a_a_lfunction);
     i->createcommand("RandomDivergentConnect_i_i_ia_da_da_b_b_l", &rdivergentconnect_i_i_ia_da_da_b_b_lfunction);

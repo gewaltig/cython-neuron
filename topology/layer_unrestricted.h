@@ -25,7 +25,7 @@
 
 #include <vector>
 
-#include "compound.h"
+#include "subnet.h"
 
 #include "layer_regular.h"
 #include "quadtree.h"
@@ -156,7 +156,7 @@ namespace nest
 
   protected:
 
-    //Vector of positions. Should match node vector in Compound.
+    //Vector of positions. Should match node vector in Subnet.
     std::vector<Position<double_t> > positions_;
 
     /**

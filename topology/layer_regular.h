@@ -26,7 +26,7 @@
 #include <map>
 #include <vector>
 
-#include "compound.h"
+#include "subnet.h"
 #include "leaflist.h"
 #include "iostreamdatum.h"
 #include "nest.h"
@@ -85,15 +85,15 @@ namespace nest
     The element variable can be set in the following ways:
     /modeltype                   - create a layer consisting of single
                                    neurons
-    {procedure}                  - creates a compound of nodes decided 
+    {procedure}                  - creates a subnet of nodes decided 
                                    by the procedure at each position in 
 				   the layer
 
     Deprecated syntax:				   
 
-    [/iaf_neuron /iaf_psc_alpha] - create a compound of one iaf_neuron and
+    [/iaf_neuron /iaf_psc_alpha] - create a subnet of one iaf_neuron and
                                    one iaf_psc_alpha
-    [/iaf_neuron 2]              - create a compound of two iaf_neurons
+    [/iaf_neuron 2]              - create a subnet of two iaf_neurons
     or a combination of the two (e.g. [/iaf_psc_alpha [/iaf_psc_alpha 3]])
 
     Author: Kittel Austvoll
@@ -203,7 +203,7 @@ namespace nest
     using Layer::get_position;
 
     /**
-     * Returns 2D position of node recognized by current Layer/Compound
+     * Returns 2D position of node recognized by current Layer/Subnet
      * local id value.
      * @param lid  local id of node
      * @returns 2D position of node
