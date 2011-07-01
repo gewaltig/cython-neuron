@@ -69,11 +69,11 @@
 /simtime  1000.0 def % simulation time [ms] 
 /dt          0.1 def % simulation step length [ms]   
 
-% Number of POSIX threads per program instance.
+% Number of virtual processes in the simulation.
 % When using MPI, the mpirun call determines the number
-% of MPI processes (=program instances). The total number
-% of virtual processes is #MPI processes x local_num_threads.
-/local_num_threads 8 def
+% of MPI processes (=program instances). The number of threads
+% per process is total_num_virtual_procs / # MPI processes.
+/total_num_virtual_procs 4 def
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %       NO USER-SERVICABLE PARTS BELOW
@@ -174,11 +174,11 @@ ComputePSPnorm /J_max_unit Set
 ResetKernel      % clear all existing network elements
 
 % set resolution and total/local number of threads
-[0]
- << 
-   /resolution  dt 
-   /local_num_threads local_num_threads
- >> SetStatus
+0
+<< 
+ /resolution  dt 
+ /total_num_virtual_procs total_num_virtual_procs
+>> SetStatus
     
  tic % start timer on construction    
 
