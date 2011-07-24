@@ -369,6 +369,8 @@ index Network::add_node(long_t mod, long_t n)   //no_p
       thread vp = (current_->get_children_on_same_vp()) ? current_->get_children_vp() : suggest_vp(gid);
       thread t = vp_to_thread(vp);
 
+      //std::cout << "gid " << gid << ", size of nodes " << nodes_.size() << std::endl;
+
       if(is_local_vp(vp))
       {
         Node *newnode = 0;
@@ -429,6 +431,8 @@ index Network::add_node(long_t mod, long_t n)   //no_p
     {
       thread thread_id = vp_to_thread(suggest_vp(gid));
 
+      //std::cout << "gid " << gid << ", size of nodes " << nodes_.size() << std::endl;
+
       // Create wrapper and register with nodes_ array.
       SiblingContainer *container= static_cast<SiblingContainer *>(siblingcontainer_model->allocate(thread_id));
       container->set_model_id(-1); // mark as pseudo-container wrapping replicas, see reset_network()
@@ -469,6 +473,8 @@ index Network::add_node(long_t mod, long_t n)   //no_p
   {
     for(index gid = min_gid; gid < max_gid; ++gid)
     {
+      //std::cout << "gid " << gid << ", size of nodes " << nodes_.size() << std::endl;
+
       Node *newnode = model->allocate(0);
       newnode->set_gid_(gid);
       newnode->set_model_id(mod);
@@ -1267,39 +1273,45 @@ void Network::convergent_connect(TokenArray source_ids, index target_id, TokenAr
 
   // We retrieve pointers for all sources, this implicitly checks if they
   // exist and throws UnknownNode if not.
-  std::vector<Node*> sources(source_ids.size());
-  for (index i = 0; i < source_ids.size(); ++i)
-    sources[i] = get_node(getValue<long>(source_ids[i]));
+   
+  //std::vector<Node*> sources(source_ids.size());
+//for (index i = 0; i < source_ids.size(); ++i)
+    //    sources[i] = get_node(getValue<long>(source_ids[i]));
+  //sources[i] = get_node(getValue<long>(source_ids.get(i)));
 
-  for(index i = 0; i < sources.size(); ++i)
+  for(index i = 0; i < source_ids.size(); ++i)
   {
+    index source_id = source_ids.get(i);
+    Node* source = get_node(getValue<long>(source_id));
+
     thread target_thread = target->get_thread();
 
     if (!target->has_proxies())
     {
-      target_thread = sources[i]->get_thread();
+      //target_thread = sources[i]->get_thread();
+      target_thread = source->get_thread();
       
       // If target is on the wrong thread, we need to get the right one now.
       if (target->get_thread() != target_thread)
         target = get_node(target_id, target_thread);
 
-      if (sources[i]->is_proxy())
+      if ( source->is_proxy())
         continue;
     }
     
     // The source node may still be on a wrong thread, so we need to get the right
     // one now. As get_node() is quite expensive, so we only call it if we need to
-    if (sources[i]->get_thread() != target_thread)
-      sources[i] = get_node(source_ids[i], target_thread);
+    //if (source->get_thread() != target_thread)
+      //  source = get_node(sid, target_thread);
 
     try
     {
       if (complete_wd_lists)
-        connect(*sources[i], *target, source_ids[i], target_thread, weights.get(i), delays.get(i), syn);
+	connect(*source, *target, source_id, target_thread, weights.get(i), delays.get(i), syn);
       else if (short_wd_lists)
-	connect(*sources[i], *target, source_ids[i], target_thread, weights.get(0), delays.get(0), syn);
+	connect(*source, *target, source_id, target_thread, weights.get(0), delays.get(0), syn);
       else 
-        connect(*sources[i], *target, source_ids[i], target_thread, syn);
+	connect(*source, *target, source_id, target_thread, syn);
     }
     catch (IllegalConnection& e)
     {
@@ -1310,7 +1322,7 @@ void Network::convergent_connect(TokenArray source_ids, index target_id, TokenAr
     }
     catch (UnknownReceptorType& e)
     {
-      std::string msg = String::compose("In Connection from global source ID %1 to target ID %2:", source_ids[i], target_id);
+      std::string msg = String::compose("In Connection from global source ID %1 to target ID %2:", source_id, target_id);
       message(SLIInterpreter::M_WARNING, "ConvergentConnect", msg.c_str());
       message(SLIInterpreter::M_WARNING, "ConvergentConnect", "Target does not support requested receptor type.");
       message(SLIInterpreter::M_WARNING, "ConvergentConnect", "Connection will be ignored.");

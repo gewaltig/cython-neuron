@@ -1193,7 +1193,7 @@ SeeAlso: Simulate, Node
   {
     return dict_miss_is_error_;
   }
-  
+
   typedef lockPTR<Network> NetPtr;
 
   //!< Functor to compare Models by their name.

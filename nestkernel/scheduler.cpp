@@ -69,6 +69,7 @@ nest::Scheduler::Scheduler(Network &net)
         : initialized_(false),
           simulating_(false),
       	  force_singlethreading_(false),
+          n_procs_(1),
           n_threads_(1),
           entry_counter_(0),
           exit_counter_(0),
@@ -904,6 +905,9 @@ void nest::Scheduler::set_status(DictionaryDatum const &d)
   }
 
   updateValue<bool>(d, "print_time", print_time_);
+
+  if ( updateValue<long>(d, "num_procs", n_procs_) )
+    Communicator::set_num_processes(n_procs_);
 
   long n_threads;
   bool n_threads_updated = updateValue<long>(d, "local_num_threads", n_threads);

@@ -62,7 +62,7 @@ void ConnectionManager::init_()
   // move allocated memory into the connection structure in a second step using swap
   // look at example test_alloc.cpp
   std::vector< google::sparsetable< std::vector< syn_id_connector > > > tmp(
-    net_.get_num_threads(), google::sparsetable< std::vector< syn_id_connector > >());
+  net_.get_num_threads(), google::sparsetable< std::vector< syn_id_connector > >());
 
   connections_.swap(tmp);
 }
