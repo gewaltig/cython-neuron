@@ -587,6 +587,7 @@ void nest::Scheduler::threaded_update_openmp()
 
 #ifdef _OPENMP
   net_.message(SLIInterpreter::M_INFO, "Scheduler::threaded_update_openmp", "Simulating using OpenMP.");
+  // TODO: better do in set_status
   omp_set_num_threads(n_threads_);
 #endif
 

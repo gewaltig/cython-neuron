@@ -341,6 +341,12 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } rconvergentconnect_ia_i_i_da_da_b_b_lfunction;
 
+     class RConvergentConnect_ia_ia_ia_daa_daa_b_b_lFunction: public SLIFunction
+     {
+      public:
+       void execute(SLIInterpreter *) const;
+     } rconvergentconnect_ia_ia_ia_daa_daa_b_b_lfunction;
+
      class ResetKernelFunction: public SLIFunction
      { 
       public:

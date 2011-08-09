@@ -49,6 +49,11 @@ public:
         return d;
     }
 
+    const D& get(void) const
+    {
+        return d;
+    }
+
     D& get(void)
     {
         return d;

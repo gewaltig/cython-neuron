@@ -37,6 +37,9 @@
 
 #include <cmath>
 #include <set>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 namespace nest {
 
@@ -1241,6 +1244,83 @@ void Network::convergent_connect(const TokenArray source_ids, index target_id, c
 }
 
 
+/**
+ * new version of convergent connect specifically for threaded random convergent connect
+ * takes vector<Node*> sources
+ * uses information that target neuron is on our thread
+ */
+void Network::convergent_connect(std::vector<Node*> sources, index target_id, const TokenArray weights, const TokenArray delays, index syn)
+{
+  bool complete_wd_lists = (sources.size() == weights.size() && weights.size() != 0 && weights.size() == delays.size());
+  bool short_wd_lists = (sources.size() != weights.size() && weights.size() == 1 && delays.size() == 1);
+  bool no_wd_lists = (weights.size() == 0 && delays.size() == 0);
+
+  // check if we have consistent lists for weights and delays
+  if (! (complete_wd_lists || short_wd_lists || no_wd_lists))
+  {
+    message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights and delays must be either doubles or lists of equal size. "
+            "If given as lists, their size must be 1 or the same size as sources.");
+    throw DimensionMismatch();
+  }
+
+  Node* target = get_node(target_id);
+  thread target_thread = target->get_thread();
+
+  for(index i = 0; i < sources.size(); ++i)
+  {
+    
+    if (!target->has_proxies()) // == it's a device
+    {
+      if (sources[i]->is_proxy()) // we do not establish connections from proxies to devices,
+	                          // because connections are always made on thread of source node
+	{
+	  continue;
+	  // TODO: remove me just for debugging
+	  assert(false);
+	}
+
+      thread source_thread = sources[i]->get_thread(); // get thread of presynaptic node
+      
+      // If target is on the wrong thread, we need to get the right one now.
+      if (source_thread != target_thread)
+        target = get_node(target_id, source_thread);
+
+    }
+        
+    // if source is a device we need to obtain the replica of the device on the target thread
+    // as get_node() is quite expensive, so we only call it if we need to
+    if (!sources[i]->has_proxies() && sources[i]->get_thread() != target_thread)
+      sources[i] = get_node(sources[i]->get_gid(), target_thread);
+
+    try
+    {
+      if (complete_wd_lists)
+        connect(*sources[i], *target, sources[i]->get_gid(), target_thread, weights.get(i), delays.get(i), syn);
+      else if (short_wd_lists)
+	connect(*sources[i], *target, sources[i]->get_gid(), target_thread, weights.get(0), delays.get(0), syn);
+      else 
+        connect(*sources[i], *target, sources[i]->get_gid(), target_thread, syn);
+    }
+    catch (IllegalConnection& e)
+    {
+      std::string msg = String::compose("Global target ID %1: Target does not support event.", target_id);
+      message(SLIInterpreter::M_WARNING, "ConvergentConnect", msg.c_str());
+      message(SLIInterpreter::M_WARNING, "ConvergentConnect", "Connection will be ignored.");
+      continue;
+    }
+    catch (UnknownReceptorType& e)
+    {
+      std::string msg = String::compose("In Connection from global source ID %1 to target ID %2:", sources[i]->get_gid(), target_id);
+      message(SLIInterpreter::M_WARNING, "ConvergentConnect", msg.c_str());
+      message(SLIInterpreter::M_WARNING, "ConvergentConnect", "Target does not support requested receptor type.");
+      message(SLIInterpreter::M_WARNING, "ConvergentConnect", "Connection will be ignored.");
+      interpreter_.raiseerror(e.what());
+      continue;
+    }
+  }
+}
+
+
 void Network::random_convergent_connect(const TokenArray source_ids, index target_id, index n, const TokenArray weights, const TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
 {
   if (!is_local_gid(target_id))
@@ -1296,7 +1376,121 @@ void Network::random_convergent_connect(const TokenArray source_ids, index targe
   
   convergent_connect(chosen_sources, target_id, weights, delays, syn);
 }
-   
+
+
+
+
+void Network::random_convergent_connect(TokenArray source_ids, TokenArray target_ids, TokenArray ns, TokenArray weights, TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
+{
+  
+  // loop over all targets
+  // every thread takes care of his own target nodes
+ 
+  // it only makes sense to call this function if we have openmp
+#ifndef _OPENMP
+  assert(false);
+#else
+  // TODO: better do this in scheduler::set_status 
+  omp_set_num_threads(get_num_threads());
+#endif
+
+  // collect all nodes on this process and convert source TokenArray to vector<Node*>
+  // this is needed, because
+  // 1.) otherwise we call get_node within the loop for many neurons several times
+  // 2.) token_array::operator[] is not thread save, so the threads will
+  // possibly access the same element at the same time causing
+  // segfaults
+  std::vector<Node*> sources(source_ids.size());
+  for (index i = 0; i < source_ids.size(); ++i)
+    sources[i] = get_node(getValue<long>(source_ids.get(i)));
+  
+
+// check if we have consistent lists for weights and delays
+  if (! (weights.size() == ns.size() || weights.size() == 0) && (weights.size() == delays.size()))
+  {
+    message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights, delays and ns must be same size.");
+    throw DimensionMismatch();
+  }
+
+
+#pragma omp parallel
+  {
+    int nrn_counter = 0;
+    int syn_counter = 0;
+
+    int tid = omp_get_thread_num();
+    librandom::RngPtr rng = get_rng(tid);
+
+    
+    for (size_t i=0; i < target_ids.size(); i++)
+    {      
+      index target_id = target_ids.get(i);
+      Node* target = get_node(target_id, tid);
+
+      // this is true for neurons on remote processes
+      if (target->is_proxy())
+	continue;
+
+      // check, if targets is on our thread
+      if (target->get_thread() != tid)
+	continue;
+
+      nrn_counter++;
+
+      // TODO: This throws std::bad_cast if the dynamic_cast goes wrong
+      const IntegerDatum& nid = dynamic_cast<const IntegerDatum&>(*ns.get(i));
+      const size_t n = nid.get();
+      //const size_t n = getValue<long>(ns[i]);
+
+      TokenArray ws = getValue<TokenArray>(weights.get(i));
+      TokenArray ds = getValue<TokenArray>(delays.get(i));
+
+      // check if we have consistent lists for weights and delays
+      if (! (ws.size() == n || ws.size() == 0) && (ws.size() == ds.size()))
+      {
+	message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights and delays must be lists of size n.");
+	throw DimensionMismatch();
+      }
+          
+      vector<Node*> chosen_sources(n);
+      std::set<long> ch_ids;
+  
+      long n_rnd = source_ids.size();
+      
+      for (size_t j = 0; j < n; ++j)
+	{
+	  long s_id;
+      
+	  do 
+	    {
+	      s_id  = rng->ulrand(n_rnd);
+	    }
+	  while ( ( !allow_autapses && ((index)source_ids.get(s_id)) == target_id )
+		  || ( !allow_multapses && ch_ids.find( s_id ) != ch_ids.end() ) );
+      
+	  if (!allow_multapses)
+	    ch_ids.insert(s_id);
+      
+	  chosen_sources[j] = sources[s_id];
+	}
+
+      // we use a specialized function which uses the information that target *is* already on this thread
+      // and that takes a vector<Node*> for sources
+      syn_counter += chosen_sources.size();
+      convergent_connect(chosen_sources, target_id, ws, ds, syn);
+    
+    } // of for all targets
+
+    
+    std::cerr << "A thread's diary " << std::endl;
+    std::cerr << "I am thread " << tid << " and was working on " << nrn_counter << " neurons." << std::endl;
+    std::cerr << "I am thread " << tid << " and created " << syn_counter << " synapses." << std::endl;
+    
+
+  } // of omp parallel
+
+}
+
 // -----------------------------------------------------------------------------
 
 void Network::subnet_connect(Subnet &sources, Subnet &targets, int radius, index syn)

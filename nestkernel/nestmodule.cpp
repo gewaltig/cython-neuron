@@ -1139,6 +1139,32 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     i->EStack.pop();     
   }
 
+  // Documentation can be found in lib/sli/nest-init.sli near definition
+  // of the trie for RandomConvergentConnect.
+  void NestModule::RConvergentConnect_ia_ia_ia_daa_daa_b_b_lFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(8);
+     
+    TokenArray source_adr = getValue<TokenArray>(i->OStack.pick(7));
+    TokenArray target_adr = getValue<TokenArray>(i->OStack.pick(6));
+    TokenArray n = getValue<TokenArray>(i->OStack.pick(5));
+    TokenArray weights = getValue<TokenArray>(i->OStack.pick(4));
+    TokenArray delays = getValue<TokenArray>(i->OStack.pick(3));      
+    bool allow_multapses = getValue<bool>(i->OStack.pick(2));
+    bool allow_autapses = getValue<bool>(i->OStack.pick(1));
+
+    const Name synmodel_name = getValue<std::string>(i->OStack.pick(0));
+    const Token synmodel = get_network().get_synapsedict().lookup(synmodel_name);
+    if ( synmodel.empty() )
+      throw UnknownSynapseType(synmodel_name.toString());
+    const index synmodel_id = static_cast<index>(synmodel);
+
+    get_network().random_convergent_connect(source_adr, target_adr, n, weights, delays, allow_multapses, allow_autapses, synmodel_id);
+
+    i->OStack.pop(8);
+    i->EStack.pop();     
+  }
+
 
   /* BeginDocumentation
      Name: NetworkDimensions - Determine dimensions of a subnet
@@ -1684,6 +1710,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     
     i->createcommand("ConvergentConnect_ia_i_a_a_l", &convergentconnect_ia_i_a_a_lfunction);
     i->createcommand("RandomConvergentConnect_ia_i_i_da_da_b_b_l", &rconvergentconnect_ia_i_i_da_da_b_b_lfunction);
+    i->createcommand("RandomConvergentConnect_ia_ia_ia_daa_daa_b_b_l", &rconvergentconnect_ia_ia_ia_daa_daa_b_b_lfunction);
    
     i->createcommand("ResetNetwork",&resetnetworkfunction);
     i->createcommand("ResetKernel",&resetkernelfunction);
