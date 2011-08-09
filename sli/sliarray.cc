@@ -154,8 +154,9 @@ void SLIArrayModule::RangeFunction::execute(SLIInterpreter *i) const
 	    ad->push_back_move(it);
 	  }
 	}
-      }
-      i->EStack.pop();
+	i->EStack.pop();
+      } 
+      else i->raiseerror(i->DivisionByZeroError);
     }
     else
     {
@@ -181,9 +182,11 @@ void SLIArrayModule::RangeFunction::execute(SLIInterpreter *i) const
 	      ad->push_back_move(it);
 	    }
 	  }
-	}
-	i->EStack.pop();
-      } else i->raiseerror(i->ArgumentTypeError);
+	  i->EStack.pop();
+	} 
+	else i->raiseerror(i->DivisionByZeroError);
+      } 
+      else i->raiseerror(i->ArgumentTypeError);
     } 
   } else i->raiseerror(i->ArgumentTypeError);
 }

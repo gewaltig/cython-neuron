@@ -11,7 +11,6 @@
  */
 
 #include "gamma_sup_generator.h"
-#include "ppd_sup_generator.h"
 #include "network.h"
 #include "dict.h"
 #include "integerdatum.h"
@@ -30,7 +29,6 @@ nest::gamma_sup_generator::Internal_states_::Internal_states_(size_t num_bins, u
 {
     occ_.resize(num_bins, ini_occ_ref);
     occ_.back() += ini_occ_act;
-    bino_dev_ = new ppd_sup_generator::FastBinomialRandomDev_( ini_occ_act + num_bins*ini_occ_ref );
 }
 
 /* ---------------------------------------------------------------- 
@@ -42,17 +40,13 @@ nest::ulong_t nest::gamma_sup_generator::Internal_states_::update(double_t trans
     std::vector<ulong_t> n_trans;
     n_trans.resize( occ_.size() );
     
-    // go through all states and draw number of transiting components
+    // go through all states and draw number of transitioning components
     for (ulong_t i=0; i<occ_.size(); i++)
         {
         if (occ_[i]>0) 
             {
-            poisson_dev_.set_lambda( transition_prob * occ_[i]);
-            n_trans[i] = poisson_dev_.uldev(rng);
-            if (n_trans[i]>occ_[i])
-               n_trans[i] = occ_[i];   
-//            bino_dev_->set_p_n( transition_prob, occ_[i]);
-//            n_trans[i] = bino_dev_->uldev(rng); 
+            bino_dev_.set_p_n( transition_prob, occ_[i]);
+            n_trans[i] = bino_dev_.uldev(rng); 
             }
         else
             n_trans[i] = 0;
@@ -220,6 +214,4 @@ void nest::gamma_sup_generator::event_hook(DSSpikeEvent& e)
     e.set_multiplicity(n_spikes);
     e.get_receiver().handle(e);
   }
-
-
 }

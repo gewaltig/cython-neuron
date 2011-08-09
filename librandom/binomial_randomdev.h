@@ -13,7 +13,8 @@
 #include <vector>
 #include "randomgen.h"
 #include "randomdev.h"
-#include "gamma_randomdev.h"
+#include "poisson_randomdev.h"
+#include "exp_randomdev.h"
 #include "lockptr.h"
 #include "dictdatum.h"
 
@@ -31,7 +32,7 @@ Parameters:
    n - number of trials (positive integer)
 
 SeeAlso: CreateRDV, RandomArray, rdevdict
-Author: Hans Ekkehard Plesser
+Author: Hans Ekkehard Plesser, Moritz Deger
 */
 
 
@@ -51,9 +52,19 @@ namespace librandom {
   - parameter p (optional, default = 1)                   
   - parameter n (optional, defautl = 1)                                       
                                  
- @see Devroye, Non-Uniform Random ..., Ch X.4., p 537                                 
+ @see Fishman, Sampling From the Binomial Distribution on a Computer, Journal of the American Statistical Association, Vol. 74, No. 366 (Jun., 1979), pp. 418-423
  @ingroup RandomDeviateGenerators
 */
+
+/* ---------------------------------------------------------------- 
+ * Draw a binomial random number using the BP algoritm
+ * Sampling From the Binomial Distribution on a Computer
+ * Author(s): George S. Fishman
+ * Source: Journal of the American Statistical Association, Vol. 74, No. 366 (Jun., 1979), pp. 418-423
+ * Published by: American Statistical Association
+ * Stable URL: http://www.jstor.org/stable/2286346 .
+ * ---------------------------------------------------------------- */
+
 
 class BinomialRandomDev : public RandomDev
   {
@@ -99,11 +110,15 @@ class BinomialRandomDev : public RandomDev
 
 
   private:
-    GammaRandomDev gamma_dev_;  //!< source of gamma distributed numbers
+    PoissonRandomDev poisson_dev_;     //!< source of Poisson random numbers
+    ExpRandomDev exp_dev_;             //!< source of exponential random numbers
     double p_;                  //!<probability p of binomial distribution
     unsigned int n_;            //!<parameter n in binomial distribution
+    std::vector<double_t> f_;                     //!< precomputed table of f
+    unsigned int n_tablemax_;   //!< current maximal n with precomputed values
 
     void check_params_();       //!< check internal parameters
+    void PrecomputeTable(size_t);     //!< compute the internal lookup table
    
   };
 

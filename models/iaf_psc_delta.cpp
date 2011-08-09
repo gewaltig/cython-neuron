@@ -117,13 +117,13 @@ double nest::iaf_psc_delta::Parameters_::set(const DictionaryDatum& d)
     throw BadProperty("Reset potential must be smaller than threshold.");
     
   if ( c_m_ <= 0 )
-    throw BadProperty("Capacitance must be strictly positive.");
+    throw BadProperty("Capacitance must be >0.");
 
   if ( t_ref_ < 0 )
     throw BadProperty("Refractory time must not be negative.");
     
   if ( tau_m_ <= 0 )
-    throw BadProperty("All time constants must be strictly positive.");
+    throw BadProperty("Membrane time constant must be > 0.");
 
   updateValue<bool>(d, "refractory_input", with_refr_input_);
 

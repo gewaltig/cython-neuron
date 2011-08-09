@@ -1507,7 +1507,6 @@ or via MacPorts. procfs must be mounted at /proc.
   ifelse 
 } def
 
-
 /hardware_memory_thisjob
 {
     (/proc/) getPID cvs join (/status) join ifstream
@@ -1526,6 +1525,29 @@ or via MacPorts. procfs must be mounted at /proc.
     0 6 erase
     size 3 sub 3 erase    % assuming kb  may be unsafe
     cvi
+} def
+
+/meminfo_thisjob
+{
+    (/proc/) getPID cvs join (/statm) join ifstream
+    not
+    {
+        (No information available on the NEST process from the /proc filesystem. ) M_ERROR message
+	/meminfo_thisjob /ProcOpenFailed raiseerror
+    }
+    if
+
+    getline
+    not
+    {
+        (No information available on the NEST process from the /proc filesystem. ) M_ERROR message
+	/meminfo_thisjob /ProcOpenFailed raiseerror
+    }
+    if
+    exch
+
+    closeistream %close connection
+
 } def
 
 

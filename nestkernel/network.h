@@ -280,11 +280,11 @@ SeeAlso: Simulate, Node
 
     void subnet_connect(Subnet &, Subnet &, int, index syn);
 
-    void divergent_connect(index s, TokenArray r, TokenArray weights, TokenArray delays, index syn);
-    void random_divergent_connect(index s, TokenArray r, index n, TokenArray w, TokenArray d, bool, bool, index syn);
+    void divergent_connect(index s, const TokenArray r, const TokenArray weights, const TokenArray delays, index syn);
+    void random_divergent_connect(index s, const TokenArray r, index n, const TokenArray w, const TokenArray d, bool, bool, index syn);
     
-    void convergent_connect(TokenArray s, index r, TokenArray weights, TokenArray delays, index syn);
-    void random_convergent_connect(TokenArray s, index t, index n, TokenArray w, TokenArray d, bool, bool, index syn);
+    void convergent_connect(const TokenArray s, index r, const TokenArray weights, const TokenArray delays, index syn);
+    void random_convergent_connect(const TokenArray s, index t, index n, const TokenArray w, const TokenArray d, bool, bool, index syn);
  
     DictionaryDatum get_connector_defaults(index sc);
     void set_connector_defaults(index sc, DictionaryDatum& d);
@@ -322,7 +322,7 @@ SeeAlso: Simulate, Node
      * @throws TypeMismatch            Array is not a flat & homogeneous array of integers.
      * @throws nest::UnknownNode       Target does not exist in the network.
      */
-    void  go_to(TokenArray);
+    void  go_to(const TokenArray);
 
     void simulate(Time const &);
     /**
@@ -368,7 +368,7 @@ SeeAlso: Simulate, Node
     /**
      * Send event e to all targets of node source on thread t
      */
-    void send_local(thread t, index sgid, Event& e);
+    void send_local(thread t, Node& source, Event& e);
 
     /**
      * Send event e directly to its target node. This should be
@@ -526,7 +526,7 @@ SeeAlso: Simulate, Node
      *
      * @ingroup net_access
      */
-    Node* get_node(TokenArray a, thread thr = 0) const;
+    Node* get_node(const TokenArray a, thread thr = 0) const;
 
     /**
      * Return pointer of the specified Node.
@@ -1050,9 +1050,6 @@ SeeAlso: Simulate, Node
     e.set_stamp(get_slice_origin() + Time::step(lag + 1));
     e.set_sender(source);
     thread t = source.get_thread();
-    index gid = source.get_gid();
-
-    //std::cout << "Network::send 2 " << gid << " " << e.get_sender().get_gid() << std::endl;
 
     if (source.has_proxies())
     {
@@ -1062,7 +1059,7 @@ SeeAlso: Simulate, Node
         scheduler_.send_remote(t, e, lag);
     }
     else
-      connection_manager_.send(t, gid, e);
+      send_local(t, source, e);
   }
 
   template <>
@@ -1072,17 +1069,15 @@ SeeAlso: Simulate, Node
     e.set_stamp(get_slice_origin() + Time::step(lag + 1));
     e.set_sender(source);
     thread t = source.get_thread();
-    index gid = source.get_gid();
-
-    //std::cout << "Network::send 3 " << gid << " " << e.get_sender().get_gid() << std::endl;
 
     assert(!source.has_proxies());
-    connection_manager_.send(t, gid, e);
+    send_local(t, source, e);
   } 
 
   inline
-  void Network::send_local(thread t, index sgid, Event& e)
+  void Network::send_local(thread t, Node& source, Event& e)
   {
+    index sgid = source.get_gid();
     //std::cout << "Network::send_local " << sgid << " " << e.get_sender().get_gid() << std::endl;
     connection_manager_.send(t, sgid, e);
   }

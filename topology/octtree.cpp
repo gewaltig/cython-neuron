@@ -109,13 +109,16 @@ namespace nest
   {
     lockPTR<std::vector<NodeWrapper> > nodes(new std::vector<NodeWrapper>());
 
-    // Add edge truncate (and edge wrap) here.
-    
-    // Get a list of octants overlapping or almost overlapping
-    // the given region.
+    // Edge wrap not supported
+
     Position<double_t> lower_left = box->get_lower_left();
     Position<double_t> upper_right = box->get_upper_right();
     
+    lower_left.constrain(root_->get_lower_left(), root_->get_upper_right());
+    upper_right.constrain(root_->get_lower_left(), root_->get_upper_right());
+      
+    // Get a list of octants overlapping or almost overlapping
+    // the given region.
     std::list<Octant> region = 
       get_leaves(Position<double_t>(lower_left.get_x(), 
 					  upper_right.get_y(),

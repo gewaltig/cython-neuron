@@ -1,9 +1,9 @@
 /*
- *  iaf_psc_alpha.h
+ *  iaf_psc_alpha_norec.h
  *
  *  This file is part of NEST
  *
- *  Copyright (C) 2004-2008 by
+ *  Copyright (C) 2004-2011 by
  *  The NEST Initiative
  *
  *  See the file AUTHORS for details.
@@ -14,23 +14,25 @@
  *
  */
 
-#ifndef IAF_PSC_ALPHA_H
-#define IAF_PSC_ALPHA_H
+#ifndef IAF_PSC_ALPHA_NOREC_H
+#define IAF_PSC_ALPHA_NOREC_H
 
 #include "nest.h"
 #include "event.h"
 #include "archiving_node.h"
 #include "ring_buffer.h"
 #include "connection.h"
-#include "universal_data_logger.h"
-#include "recordables_map.h"
 
 /* BeginDocumentation
-Name: iaf_psc_alpha - Leaky integrate-and-fire neuron model.
+Name: iaf_psc_alpha_norec - Leaky integrate-and-fire neuron model.
 
 Description:
 
-  iaf_psc_alpha is an implementation of a leaky integrate-and-fire model
+  This model differs (per r9274) from iaf_psc_alpha only in that all support
+  for multimeter recording is removed. The models is for benchmarking the
+  recording overhead only and SHOULD NOT BE USED FOR SIMULATIONS.
+
+  iaf_psc_alpha_norec is an implementation of a leaky integrate-and-fire model
   with alpha-function shaped synaptic currents. Thus, synaptic currents
   and the resulting post-synaptic potentials have a finite rise time. 
 
@@ -53,7 +55,7 @@ Description:
   comparisons of simulation results for different computation step
   sizes. sli/testsuite/nest contains a number of such tests.
   
-  The iaf_psc_alpha is the standard model used to check the consistency
+  The iaf_psc_alpha_norec is the standard model used to check the consistency
   of the nest simulation kernel because it is at the same time complex
   enough to exhibit non-trivial dynamics and simple enough compute
   relevant measures analytically.
@@ -69,7 +71,7 @@ Remarks:
 
   The template support of recent C++ compilers enables a more succinct
   formulation without loss of runtime performance already at minimal
-  optimization levels. A future version of iaf_psc_alpha will probably
+  optimization levels. A future version of iaf_psc_alpha_norec will probably
   address the problem of efficient usage of appropriate vector and
   matrix objects.
 
@@ -116,15 +118,15 @@ namespace nest
   /**
    * Leaky integrate-and-fire neuron with alpha-shaped PSCs.
    */
-  class iaf_psc_alpha : public Archiving_Node
+  class iaf_psc_alpha_norec : public Archiving_Node
   {
     
   public:        
     
     typedef Node base;
     
-    iaf_psc_alpha();
-    iaf_psc_alpha(const iaf_psc_alpha&);
+    iaf_psc_alpha_norec();
+    iaf_psc_alpha_norec(const iaf_psc_alpha_norec&);
 
     /**
      * Import sets of overloaded virtual functions.
@@ -142,11 +144,9 @@ namespace nest
     
     void handle(SpikeEvent &);
     void handle(CurrentEvent &);
-    void handle(DataLoggingRequest &); 
     
     port connect_sender(SpikeEvent&, port);
     port connect_sender(CurrentEvent&, port);
-    port connect_sender(DataLoggingRequest &, port);
 
     void get_status(DictionaryDatum &) const;
     void set_status(const DictionaryDatum &);
@@ -159,10 +159,6 @@ namespace nest
     void calibrate();
 
     void update(Time const &, const long_t, const long_t);
-
-    // The next two classes need to be friends to access the State_ class/member
-    friend class RecordablesMap<iaf_psc_alpha>;
-    friend class UniversalDataLogger<iaf_psc_alpha>;
 
     // ---------------------------------------------------------------- 
 
@@ -186,15 +182,15 @@ namespace nest
       /** External current in pA */
       double_t I_e_;
 
-      /** Reset value of the membrane potential */
+      /** reset value of the membrane potential */
       double_t V_reset_;
 
-      /** Threshold, RELATIVE TO RESTING POTENTIAL(!).
+      /** Threshold, RELATIVE TO RESTING POTENTAIL(!).
           I.e. the real threshold is (U0_+Theta_). */
       double_t Theta_;
 
-      /** Lower bound, RELATIVE TO RESTING POTENTIAL(!).
-          I.e. the real lower bound is (LowerBound_+U0_). */
+      /** Lower bound, RELATIVE TO RESTING POTENTAIL(!).
+          I.e. the real lower bound is (LowerBound_+Theta_). */
       double_t LowerBound_;
 
       /** Time constant of excitatory synaptic current in ms. */
@@ -246,16 +242,13 @@ namespace nest
      * Buffers of the model.
      */
     struct Buffers_ {
-      Buffers_(iaf_psc_alpha&);
-      Buffers_(const Buffers_&, iaf_psc_alpha&);
+      Buffers_(iaf_psc_alpha_norec&);
+      Buffers_(const Buffers_&, iaf_psc_alpha_norec&);
 
       /** buffers and summs up incoming spikes/currents */
       RingBuffer ex_spikes_;
       RingBuffer in_spikes_;
       RingBuffer currents_;
-
-      //! Logger for all analog data
-      UniversalDataLogger<iaf_psc_alpha> logger_;
     };
     
     // ---------------------------------------------------------------- 
@@ -290,18 +283,10 @@ namespace nest
       double_t weighted_spikes_in_;
     };
 
-    // Access functions for UniversalDataLogger -------------------------------
-
-    //! Read out the real membrane potential
-    double_t get_V_m_() const { return S_.y3_ + P_.U0_; }
-
-    double_t get_weighted_spikes_ex_() const { return V_.weighted_spikes_ex_; }
-    double_t get_weighted_spikes_in_() const { return V_.weighted_spikes_in_; }
-
     // Data members ----------------------------------------------------------- 
     
    /**
-    * @defgroup iaf_psc_alpha_data
+    * @defgroup iaf_psc_alpha_norec_data
     * Instances of private data structures for the different types
     * of data pertaining to the model.
     * @note The order of definitions is important for speed.
@@ -312,13 +297,10 @@ namespace nest
    Variables_  V_;
    Buffers_    B_;
    /** @} */
-
-   //! Mapping of recordables names to access functions
-   static RecordablesMap<iaf_psc_alpha> recordablesMap_;
   };
 
 inline
-port nest::iaf_psc_alpha::check_connection(Connection& c, port receptor_type)
+port nest::iaf_psc_alpha_norec::check_connection(Connection& c, port receptor_type)
 {
   SpikeEvent e;
   e.set_sender(*this);
@@ -327,7 +309,7 @@ port nest::iaf_psc_alpha::check_connection(Connection& c, port receptor_type)
 }
   
 inline
-port iaf_psc_alpha::connect_sender(SpikeEvent&, port receptor_type)
+port iaf_psc_alpha_norec::connect_sender(SpikeEvent&, port receptor_type)
 {
   if (receptor_type != 0)
     throw UnknownReceptorType(receptor_type, get_name());
@@ -335,7 +317,7 @@ port iaf_psc_alpha::connect_sender(SpikeEvent&, port receptor_type)
 }
  
 inline
-port iaf_psc_alpha::connect_sender(CurrentEvent&, port receptor_type)
+port iaf_psc_alpha_norec::connect_sender(CurrentEvent&, port receptor_type)
 {
   if (receptor_type != 0)
     throw UnknownReceptorType(receptor_type, get_name());
@@ -343,26 +325,15 @@ port iaf_psc_alpha::connect_sender(CurrentEvent&, port receptor_type)
 }
  
 inline
-port iaf_psc_alpha::connect_sender(DataLoggingRequest& dlr, 
-                                   port receptor_type)
-{
-  if (receptor_type != 0)
-    throw UnknownReceptorType(receptor_type, get_name());
-  return B_.logger_.connect_logging_device(dlr, recordablesMap_);
-}
-
-inline
-void iaf_psc_alpha::get_status(DictionaryDatum &d) const
+void iaf_psc_alpha_norec::get_status(DictionaryDatum &d) const
 {
   P_.get(d);
   S_.get(d, P_);
   Archiving_Node::get_status(d);
-
-  (*d)[names::recordables] = recordablesMap_.get_list();
 }
 
 inline
-void iaf_psc_alpha::set_status(const DictionaryDatum &d)
+void iaf_psc_alpha_norec::set_status(const DictionaryDatum &d)
 {
   Parameters_ ptmp = P_;  // temporary copy in case of errors
   const double delta_EL = ptmp.set(d);                       // throws if BadProperty
@@ -382,4 +353,4 @@ void iaf_psc_alpha::set_status(const DictionaryDatum &d)
 
 } // namespace
 
-#endif /* #ifndef IAF_PSC_ALPHA_H */
+#endif /* #ifndef IAF_PSC_ALPHA_NOREC_H */

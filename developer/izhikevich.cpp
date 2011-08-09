@@ -14,8 +14,6 @@
  *
  */
 
-/* izhikevich neuron: the potential jumps on each spike arrival. */
-
 #include "exceptions.h"
 #include "izhikevich.h"
 #include "network.h"
@@ -24,11 +22,28 @@
 #include "doubledatum.h"
 #include "dictutils.h"
 #include "numerics.h"
-#include "analog_data_logger_impl.h"
+#include "universal_data_logger_impl.h"
 
 #include <limits>
+
+/* ---------------------------------------------------------------- 
+ * Recordables map
+ * ---------------------------------------------------------------- */
+
+nest::RecordablesMap<nest::izhikevich> nest::izhikevich::recordablesMap_;
+
 namespace nest
 {
+  // Override the create() method with one call to RecordablesMap::insert_() 
+  // for each quantity to be recorded.
+  template <>
+  void RecordablesMap<izhikevich>::create()
+  {
+    // use standard names whereever you can for consistency!
+    insert_(names::V_m, &izhikevich::get_V_m_);
+  }
+}
+
 
 /* ---------------------------------------------------------------- 
  * Default constructors defining default parameters and state
@@ -42,12 +57,13 @@ nest::izhikevich::Parameters_::Parameters_()
     I_e_       (  0.0     ),  // pA
     V_th_      ( -30.0    ),  // mV 
     V_min_     (-std::numeric_limits<double_t>::max())
-                              // relative U0_-55.0-U0_)  // mV, rel to U0_
+                              // mV
 {}
 
 nest::izhikevich::State_::State_()
-  : v_    (-65.0),  // membrane potential
-    u_    (0.0)    // membrane recovery variable
+  : v_    (-65.0),   // membrane potential
+    u_    (0.0),     // membrane recovery variable
+    I_    (0.0)      //input current
 {}
 
 /* ---------------------------------------------------------------- 
@@ -69,10 +85,7 @@ void nest::izhikevich::Parameters_::set(const DictionaryDatum& d)
 {
 
   updateValue<double>(d, names::V_th, V_th_);
- 
-  updateValue<double>(d, names::V_min, V_min_);
-   
-    
+  updateValue<double>(d, names::V_min, V_min_);  
   updateValue<double>(d, names::I_e, I_e_);
   updateValue<double>(d, names::a, a_);
   updateValue<double>(d, names::b, b_);
@@ -93,6 +106,15 @@ void nest::izhikevich::State_::set(const DictionaryDatum& d,  const Parameters_&
   updateValue<double>(d, names::V_m, v_);
 }
 
+nest::izhikevich::Buffers_::Buffers_(izhikevich &n)
+  : logger_(n)
+{}
+
+nest::izhikevich::Buffers_::Buffers_(const Buffers_ &, izhikevich &n)
+  : logger_(n)
+{}
+
+
 /* ---------------------------------------------------------------- 
  * Default and copy constructor for node
  * ---------------------------------------------------------------- */
@@ -100,13 +122,18 @@ void nest::izhikevich::State_::set(const DictionaryDatum& d,  const Parameters_&
 nest::izhikevich::izhikevich()
   : Archiving_Node(), 
     P_(), 
-    S_()
-{}
+    S_(),
+    B_(*this)
+{
+  recordablesMap_.create();
+
+}
 
 nest::izhikevich::izhikevich(const izhikevich& n)
   : Archiving_Node(n), 
     P_(n.P_), 
-    S_(n.S_)
+    S_(n.S_),
+    B_(n.B_, *this)
 {}
 
 /* ---------------------------------------------------------------- 
@@ -129,13 +156,14 @@ void nest::izhikevich::init_state_(const Node& proto)
 void nest::izhikevich::init_buffers_()
 {
   B_.spikes_.clear();       // includes resize
-  B_.currents_.clear();        // includes resize
-  B_.potentials_.clear_data(); // includes resize
+  B_.currents_.clear();     // includes resize
+  B_.logger_.reset();       // includes resize
   Archiving_Node::clear_history();
 }
 
 void nest::izhikevich::calibrate()
 {
+  B_.logger_.init();
 }
 
 /* ---------------------------------------------------------------- 
@@ -147,15 +175,16 @@ void nest::izhikevich::update(Time const & origin,
 {
   assert(to >= 0 && (delay) from < Scheduler::get_min_delay());
   assert(from < to);
-
+  const double_t h = Time::get_resolution().get_ms();
+  double_t v_old, u_old;
   for ( long_t lag = from ; lag < to ; ++lag )
   {
-    // neuron is never refractory   //ToDo: define local var. for h = Time::get_resolution().get_ms()
-    S_.v_  +=  (Time::get_resolution().get_ms())*( 0.04*S_.v_*S_.v_ + 5*S_.v_ + 140 -S_.u_ + P_.I_e_) +  B_.spikes_.get_value(lag) ;
-    S_.u_  +=  (Time::get_resolution().get_ms())*P_.a_*(P_.b_*S_.v_ - S_.u_);
-
-
-    // never accumulated spikes from refractory period,
+    v_old = S_.v_;
+    u_old = S_.u_;
+    // neuron is never refractory 
+    S_.v_  +=  h*( 0.04*v_old*v_old + 5.0*v_old + 140.0 - u_old + S_.I_ + P_.I_e_) 
+               +  B_.spikes_.get_value(lag) ;
+    S_.u_  +=  h*P_.a_*(P_.b_*v_old - u_old);
 
     // lower bound of membrane potential
     S_.v_ = ( S_.v_<P_.V_min_ ? P_.V_min_ : S_.v_);
@@ -167,7 +196,7 @@ void nest::izhikevich::update(Time const & origin,
       S_.v_ = P_.c_;
       S_.u_ = S_.u_ + P_.d_;
 
-      // EX: must compute spike time
+      // compute spike time
       set_spiketime(Time::step(origin.get_steps()+lag+1));
 
       SpikeEvent se;
@@ -175,10 +204,10 @@ void nest::izhikevich::update(Time const & origin,
     }
 
     // set new input current   
-//    S_.v_ += B_.currents_.get_value(lag);
+    S_.I_ = B_.currents_.get_value(lag);
 
     // voltage logging
-    B_.potentials_.record_data(origin.get_steps()+lag, S_.v_);
+    B_.logger_.record_data(origin.get_steps()+lag);
   }
 }
 
@@ -186,11 +215,6 @@ void nest::izhikevich::update(Time const & origin,
 void nest::izhikevich::handle(SpikeEvent & e)
 {
   assert(e.get_delay() > 0);
-
-  // EX: We must compute the arrival time of the incoming spike
-  //     explicity, since it depends on delay and offset within
-  //     the update cycle.  The way it is done here works, but
-  //     is clumsy and should be improved.
   B_.spikes_.add_value(e.get_rel_delivery_steps(network()->get_slice_origin()),
                     e.get_weight() * e.get_multiplicity() );
 }
@@ -201,16 +225,13 @@ void nest::izhikevich::handle(CurrentEvent& e)
 
   const double_t c=e.get_current();
   const double_t w=e.get_weight();
-
-  // add weighted current; HEP 2002-10-04
   B_.currents_.add_value(e.get_rel_delivery_steps(network()->get_slice_origin()), 
-		      w *c);
+			 w *c);
 }
 
-void nest::izhikevich::handle(PotentialRequest& e)
+void nest::izhikevich::handle(DataLoggingRequest& e)
 {
-  B_.potentials_.handle(*this, e);
+  B_.logger_.handle(e);
 }
- 
-} // namespace
+
 

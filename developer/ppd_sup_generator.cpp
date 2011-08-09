@@ -22,117 +22,6 @@
 
 
 
-/* ---------------------------------------------------------------- 
- * Draw a binomial random number using the BP algoritm
- * Sampling From the Binomial Distribution on a Computer
- * Author(s): George S. Fishman
- * Source: Journal of the American Statistical Association, Vol. 74, No. 366 (Jun., 1979), pp. 418-423
- * Published by: American Statistical Association
- * Stable URL: http://www.jstor.org/stable/2286346 .
- * ---------------------------------------------------------------- */
-
-/* ---------------------------------------------------------------- 
- * Constructor of FastBinomialRandomDev class
- * ---------------------------------------------------------------- */
-    
-nest::ppd_sup_generator::FastBinomialRandomDev_::FastBinomialRandomDev_(size_t nmax)
-{
-    // precompute the table of f
-    f_.resize( nmax+2 );
-    f_[0] = 0.0;
-    f_[1] = 0.0;    
-    ulong_t i, j;
-    i = 1;
-    while (i < f_.size()-1){
-        f_[i+1] = 0.0;
-        j = 1;
-        while (j<=i){
-	  f_[i+1] += std::log(static_cast<double>(j));
-            j++;
-            }
-        i++;
-        }
-}
-
-
-void nest::ppd_sup_generator::FastBinomialRandomDev_::set_p_n(double_t p, ulong_t n)
-{
-    n_ = n;
-    p_ = p;
-}
-
-nest::ulong_t nest::ppd_sup_generator::FastBinomialRandomDev_::uldev(librandom::RngPtr rng)
-{
-    // BP algorithm 
-    ulong_t  X_;
-    double_t q_, phi_, theta_, mu_, V_;
-    long_t  Y_, m_;
-
-    // 1, 2
-    if (p_>0.5) 
-        {
-        q_ = 1.-p_;
-        }
-    else
-        {
-        q_ = p_;
-        }
-    
-    // 3,4
-    long_t n1mq = static_cast<long_t> ( static_cast<double_t>(n_) * (1.-q_)); 
-    double_t n1mq_dbl = static_cast<double_t>(n1mq);
-    if ( static_cast<double_t>(n_)*(1.-q_) - n1mq_dbl  > q_)
-        {
-        mu_ = q_* (n1mq_dbl + 1.) / (1.-q_);
-        }
-    else
-        {
-        mu_ = static_cast<double_t>(n_) - n1mq_dbl;
-        }
-    
-    //5, 6, 7
-    theta_ = (1./q_ - 1.) * mu_;
-    phi_ = std::log(theta_);
-    m_ = static_cast<long_t> (theta_);
-    
-    bool not_finished = 1;
-    poisson_dev_.set_lambda( mu_ );
-    while (not_finished)
-        {
-        //8,9
-        X_ = n_+1;
-        while( X_ > n_)
-            {
-            X_ = poisson_dev_.uldev(rng);
-            }
-        
-        //10
-        V_ = exp_dev_(rng);
-        
-        //11
-        Y_ = n_ - X_;
-        
-        //12
-        if ( V_ < static_cast<double_t>(m_-Y_)*phi_ - f_[m_+1] + f_[Y_+1] )
-            {
-            not_finished = 1;
-            }
-        else
-            {
-            not_finished = 0;
-            }        
-        }
-    if (p_ <= 0.5)
-        {
-        return X_;
-        }
-    else
-        {
-        return static_cast<ulong_t>(Y_);
-        }
-}
-
-
 
 /* ---------------------------------------------------------------- 
  * Constructor of age distribution class
@@ -143,8 +32,6 @@ nest::ppd_sup_generator::Age_distribution_::Age_distribution_(size_t num_age_bin
     occ_active_ = ini_occ_act;
     occ_refractory_.resize(num_age_bins, ini_occ_ref);
     activate_ = 0;
-    bino_dev_ = new FastBinomialRandomDev_( ini_occ_act + num_age_bins*ini_occ_ref );
-    
 }
 
 /* ---------------------------------------------------------------- 
@@ -153,37 +40,11 @@ nest::ppd_sup_generator::Age_distribution_::Age_distribution_(size_t num_age_bin
 
 nest::ulong_t nest::ppd_sup_generator::Age_distribution_::update(double_t hazard_rate, librandom::RngPtr rng)
 {
-
-//    // test the bino generator
-//    ulong_t bino_bp = 0;
-//    bino_dev_->set_p_n(0.01, 2);
-//    for (int i=0; i<100000; i++){
-//        bino_bp += bino_dev_->uldev(rng);
-//        }
-//    ulong_t bino_nest = 0;
-//    bino_dev_nest_.set_p_n(0.01, 2);
-//    for (int i=0; i<100000; i++){
-//        bino_nest += bino_dev_nest_.uldev(rng);
-//        }
-//    std::cout << bino_bp << ", " << bino_nest << "\n";
-//    //
-    
     ulong_t n_spikes;
     if (occ_active_>0)
     { 
-      //Poisson approximation of binomial deviate
-//      poisson_dev_.set_lambda( hazard_rate * occ_active_);
-//      n_spikes = poisson_dev_.uldev(rng);
-//      if (n_spikes>occ_active_)
-//         n_spikes = occ_active_;
-      
-      // binomial_randomdev deviate from librandom (slow)
-//      bino_dev_nest_.set_p_n( hazard_rate, occ_active_);
-//      n_spikes = bino_dev_nest_.uldev(rng);
-      
-//      // binomial variate from custom generator (BP algorithm)
-      bino_dev_->set_p_n( hazard_rate, occ_active_);
-      n_spikes = bino_dev_->uldev(rng);
+      bino_dev_.set_p_n( hazard_rate, occ_active_);      
+      n_spikes = bino_dev_.uldev(rng);
     }
     else
       n_spikes = 0;
@@ -358,13 +219,10 @@ void nest::ppd_sup_generator::update(Time const & T, const long_t from, const lo
 
 void nest::ppd_sup_generator::event_hook(DSSpikeEvent& e)
 {
-
   // get port number
   const port prt = e.get_port();
 
-  // we handle only one port here, get reference to vector element
-  //  std::cout << P_.rate_ << "-" << P_.dead_time_ << "-" << prt << " - " << static_cast<size_t>(prt) << " - " << B_.age_distributions_.size() << "\n";
-  // THIS SEEMS TO BREAK WITH rev 9192. Sometimes prt then becomes incredibly large and the assertion fails
+  // we handle only one port here, get reference to vector element 
   assert(0 <= prt && static_cast<size_t>(prt) < B_.age_distributions_.size() );
 
   // age_distribution object propagates one time step and returns number of spikes
@@ -375,6 +233,4 @@ void nest::ppd_sup_generator::event_hook(DSSpikeEvent& e)
     e.set_multiplicity(n_spikes);
     e.get_receiver().handle(e);
   }
-
-
 }

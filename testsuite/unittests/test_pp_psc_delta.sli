@@ -1,4 +1,3 @@
-
 /* 
  *  test_pp_psc_delta.sli
  *
@@ -15,37 +14,42 @@
  *  
  */
 
- /* BeginDocumentation
-Name: testsuite::test_pp_psc_delta - sli script for test of pp_psc_delta_neuron functionality
+
+/* BeginDocumentation
+Name: testsuite::test_pp_psc_delta - test of pp_psc_delta neuron functionality
 
 Synopsis: (test_pp_psc_delta) run -> compare spike train statistics with expectations
 
-
 Description:
  
- test_pp_psc_delta is a collection of four basic tests which require basic 
- functionality of the neuron model. It tests
- 1) if the firing rate is close to the preset one.
- 2) if a fixed dead-time is respected absolutely.
- 3) if for a randomly distributed dead-time mean and variance of the dead-timem
-    close to the theoretical ones.
- 4) if threshold adaptation works by looking for negative serial correlation of 
-    inter spike intervals.
+ This simulation tests the basic functionality of the pp_psc_delta neuron model.
+ Specifically, it checks whether:
 
- All of these tests are based on random number realizations, which is 
- necessarily so  since the model is stochastic. There is thus a finite 
- probability of test failure, even if everything is fine. The choice of the 
- variable err, which is the allowed relative deviation from the reference value, 
- can be used to make the test more or less strict. Increasing T inside the test 
- functions can also help to get more reliable statistics and a reduced 
- probability of false alarms.
- 
- The values are chosen to have a reasonable execution time. False alarm were 
+ - the firing rate is close to the preset one
+
+ - the fixed dead-time is respected in all cases
+
+ - for randomly distributed dead-times, the mean and the variance of the
+   dead-times are close to the theoretical values
+
+ - the threshold adaptation works by looking for negative serial correlation of
+   the inter-spike intervals
+
+ All of these tests are based on random number realizations, which is necessary
+ since the model is stochastic. Thus there is a finite probability for the test
+ to fail, even if everything is fine.
+
+ The choice of the variable err, which is the allowed relative deviation from
+ the reference value, can be used to make the test more or less strict.
+ Increasing T inside the test functions can also help to get more reliable
+ statistics and a reduced probability of false alarms.
+
+ The values are chosen to have a reasonable execution time. False alarms were 
  never observed yet. Since random numbers are preserved through repetitions of
  the simulations, the test should work for sure as long as the random number 
- generation procedure of nest is not changed. If it is changed, failure of the
+ generation procedure of NEST is not changed. If it is changed, failure of the
  test is still very unlikely.
- 
+
  The intention of this script is to make sure that there are no gross errors in
  the main functions of the neuron model pp_psc_delta.
 
@@ -53,17 +57,17 @@ Remarks:
 
   This test script is based on the python version 
   
-      test_pp_psc_delta.py 
+      test_pp_psc_delta.py
       
-  and was adapted to SLI using 
+  and was adapted to SLI using
   
-      test_iaf_dc_aligned.sli 
+      test_iaf_dc_aligned.sli
       
   as a guideline. The commented code is the original python test code.
 
 
-Author:  June 2011, Deger
-SeeAlso: 
+Author:  June 2011, Deger, Zaytsev
+SeeAlso: pp_psc_delta
 */
 
 
@@ -124,7 +128,7 @@ SeeAlso:
     % ratio = rate_sim / rate_ana
     rate_sim rate_ana div /ratio Set
     
-    % this could fail due to bad luck. However, if it passes once, then it should
+    % This could fail due to bad luck. However, if it passes once, then it should
     % always do so, since the random numbers are reproducible in NEST.
     1.0 err sub ratio lt
     ratio 1.0 err add lt
@@ -194,7 +198,7 @@ SeeAlso:
     % ratio = rate_sim / rate_ana
     rate_sim rate_ana div /ratio Set
     
-    % this could fail due to bad luck. However, if it passes once, then it should
+    % This could fail due to bad luck. However, if it passes once, then it should
     % always do so, since the random numbers are reproducible in NEST.
     1.0 err sub ratio lt
     ratio 1.0 err add lt
@@ -326,7 +330,7 @@ SeeAlso:
     isi_m2 isi_size div isi_mean dup mul sub /isi_var Set
     isi_size 1 sub isi_12 exch div isi_mean dup mul sub isi_var div /isi_corr Set
 
-    % this could fail due to bad luck. However, if it passes once, then it should
+    % This could fail due to bad luck. However, if it passes once, then it should
     % always do so, since the random numbers are reproducible in NEST.
     %    assert( -1.0<isi_corr<0.0 )
     -1.0 isi_corr lt

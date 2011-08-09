@@ -278,7 +278,7 @@ void nest::Scheduler::configure_spike_buffers_()
   offgrid_spike_register_.resize(n_threads_, std::vector<std::vector<OffGridSpike> >(min_delay_));
   for (size_t j = 0; j < offgrid_spike_register_.size(); ++j)
       for (size_t k = 0; k < offgrid_spike_register_[j].size(); ++k)
-	  offgrid_spike_register_[j][k].clear();
+      	offgrid_spike_register_[j][k].clear();
 
   //send_buffer must be >= 2 as the 'overflow' signal takes up 2 spaces.
   int send_buffer_size = n_threads_ * min_delay_ > 2 ? n_threads_ * min_delay_ : 2;
@@ -286,9 +286,13 @@ void nest::Scheduler::configure_spike_buffers_()
   Communicator::set_buffer_sizes(send_buffer_size, recv_buffer_size);
 
   // DEC cxx required 0U literal, HEP 2007-03-26
+  local_grid_spikes_.clear();
   local_grid_spikes_.resize(send_buffer_size, 0U);
+  local_offgrid_spikes_.clear();
   local_offgrid_spikes_.resize(send_buffer_size, OffGridSpike(0,0.0));
+  global_grid_spikes_.clear();
   global_grid_spikes_.resize(recv_buffer_size, 0U);
+  global_offgrid_spikes_.clear();
   global_offgrid_spikes_.resize(recv_buffer_size, OffGridSpike(0,0.0));
 
   displacements_.resize(Communicator::get_num_processes(), 0);

@@ -34,6 +34,7 @@ libmodelsmodule_la_SOURCES= \
 		hh_cond_exp_traub.cpp hh_cond_exp_traub.h\
 		mat2_psc_exp.h mat2_psc_exp.cpp\
 		parrot_neuron.h parrot_neuron.cpp\
+		pp_psc_delta.h pp_psc_delta.cpp\
 		ac_generator.h ac_generator.cpp\
 		dc_generator.h dc_generator.cpp\
 		spike_generator.h spike_generator.cpp\

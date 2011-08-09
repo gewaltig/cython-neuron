@@ -1,9 +1,9 @@
 /*
- *  iaf_psc_alpha.h
+ *  iaf_psc_alpha_dynth.h
  *
  *  This file is part of NEST
  *
- *  Copyright (C) 2004-2008 by
+ *  Copyright (C) 2004-2011 by
  *  The NEST Initiative
  *
  *  See the file AUTHORS for details.
@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef IAF_PSC_ALPHA_H
-#define IAF_PSC_ALPHA_H
+#ifndef IAF_PSC_ALPHA_DYNTH_H
+#define IAF_PSC_ALPHA_DYNTH_H
 
 #include "nest.h"
 #include "event.h"
@@ -26,53 +26,17 @@
 #include "recordables_map.h"
 
 /* BeginDocumentation
-Name: iaf_psc_alpha - Leaky integrate-and-fire neuron model.
+Name: iaf_psc_alpha_dynth - Leaky integrate-and-fire with dynamic threshold neuron model
 
 Description:
 
-  iaf_psc_alpha is an implementation of a leaky integrate-and-fire model
-  with alpha-function shaped synaptic currents. Thus, synaptic currents
-  and the resulting post-synaptic potentials have a finite rise time. 
-
-  The threshold crossing is followed by an absolute refractory period
-  during which the membrane potential is clamped to the resting potential.
-
-  The linear subthresold dynamics is integrated by the Exact
-  Integration scheme [1]. The neuron dynamics is solved on the time
-  grid given by the computation step size. Incoming as well as emitted
-  spikes are forced to that grid.  
-
-  An additional state variable and the corresponding differential
-  equation represents a piecewise constant external current.
-
-  The general framework for the consistent formulation of systems with
-  neuron like dynamics interacting by point events is described in
-  [1].  A flow chart can be found in [2].
-
-  Critical tests for the formulation of the neuron model are the
-  comparisons of simulation results for different computation step
-  sizes. sli/testsuite/nest contains a number of such tests.
-  
-  The iaf_psc_alpha is the standard model used to check the consistency
-  of the nest simulation kernel because it is at the same time complex
-  enough to exhibit non-trivial dynamics and simple enough compute
-  relevant measures analytically.
-
-Remarks:
-
-  The present implementation uses individual variables for the
-  components of the state vector and the non-zero matrix elements of
-  the propagator.  Because the propagator is a lower triangular matrix
-  no full matrix multiplication needs to be carried out and the
-  computation can be done "in place" i.e. no temporary state vector
-  object is required.
-
-  The template support of recent C++ compilers enables a more succinct
-  formulation without loss of runtime performance already at minimal
-  optimization levels. A future version of iaf_psc_alpha will probably
-  address the problem of efficient usage of appropriate vector and
-  matrix objects.
-
+  iaf_psc_alpha_dynth is a copy of iaf_psc_alpha_dynth neuron model with addition
+  of a dynamic threshold (see figure 4.5 in [1]). One of the earliest extensions 
+  to the integrate-and-fire model, dynamic threshold introduces simple spike 
+  frequency adaptation by increasing the firing threshold by some delta and then
+  decaying it back exponentially to the initial threshold value with a specified
+  time constant. Specifically, after each emitted spike the threshold is increased 
+  (cumulatively) by ’V_th_delta’ and decayed with time constant ’tau_th’.
 
 Parameters: 
 
@@ -84,29 +48,24 @@ Parameters:
   tau_m      double - Membrane time constant in ms.
   t_ref      double - Duration of refractory period in ms. 
   V_th       double - Spike threshold in mV.
+  V_th_delta double - Post-spike dynamic threshold change in mV. // MOD
   V_reset    double - Reset potential of the membrane in mV.
+  tau_th     double - Dynamic threshold time constant in ms. // MOD
   tau_syn_ex double - Rise time of the excitatory synaptic alpha function in ms.
   tau_syn_in double - Rise time of the inhibitory synaptic alpha function in ms.
   I_e        double - Constant external input current in pA.
   V_min      double - Absolute lower value for the membrane potential.
  
 References:
-  [1] Rotter S & Diesmann M (1999) Exact simulation of time-invariant linear
-      systems with applications to neuronal modeling. Biologial Cybernetics
-      81:381-402.
-  [2] Diesmann M, Gewaltig M-O, Rotter S, & Aertsen A (2001) State space 
-      analysis of synchronous spiking in cortical neural networks. 
-      Neurocomputing 38-40:565-571.
-  [3] Morrison A, Straube S, Plesser H E, & Diesmann M (2006) Exact subthreshold 
-      integration with continuous spike times in discrete time neural network 
-      simulations. Neural Computation, in press
+  [1] Gerstner W & Kistler W (2002) Spiking Neuron Models. Single Neurons, 
+      Populations, Plasticity. Cambridge University Press
 
 Sends: SpikeEvent
 
 Receives: SpikeEvent, CurrentEvent, DataLoggingRequest
 
-Author:  September 1999, Diesmann, Gewaltig
-SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp
+Author:  June 2011, Kazeka
+SeeAlso: iaf_psc_alpha_dynth
 */
 
 namespace nest
@@ -114,17 +73,17 @@ namespace nest
   class Network;
 
   /**
-   * Leaky integrate-and-fire neuron with alpha-shaped PSCs.
+   * Leaky integrate-and-fire neuron with alpha-shaped PSCs and dynamic threshold.
    */
-  class iaf_psc_alpha : public Archiving_Node
+  class iaf_psc_alpha_dynth : public Archiving_Node
   {
     
   public:        
     
     typedef Node base;
     
-    iaf_psc_alpha();
-    iaf_psc_alpha(const iaf_psc_alpha&);
+    iaf_psc_alpha_dynth();
+    iaf_psc_alpha_dynth(const iaf_psc_alpha_dynth&);
 
     /**
      * Import sets of overloaded virtual functions.
@@ -161,8 +120,8 @@ namespace nest
     void update(Time const &, const long_t, const long_t);
 
     // The next two classes need to be friends to access the State_ class/member
-    friend class RecordablesMap<iaf_psc_alpha>;
-    friend class UniversalDataLogger<iaf_psc_alpha>;
+    friend class RecordablesMap<iaf_psc_alpha_dynth>;
+    friend class UniversalDataLogger<iaf_psc_alpha_dynth>;
 
     // ---------------------------------------------------------------- 
 
@@ -186,15 +145,19 @@ namespace nest
       /** External current in pA */
       double_t I_e_;
 
-      /** Reset value of the membrane potential */
+      /** reset value of the membrane potential */
       double_t V_reset_;
 
       /** Threshold, RELATIVE TO RESTING POTENTIAL(!).
           I.e. the real threshold is (U0_+Theta_). */
       double_t Theta_;
 
+      /** Post-spike dynamic threshold change, RELATIVE TO THRESHOLD (!).
+          I.e. the immeate post-spike threshold is (ThetaDelta_+Theta_+U0_). */
+      double_t ThetaDelta_; // MOD
+
       /** Lower bound, RELATIVE TO RESTING POTENTIAL(!).
-          I.e. the real lower bound is (LowerBound_+U0_). */
+          I.e. the real lower bound is (U0_+LowerBound_). */
       double_t LowerBound_;
 
       /** Time constant of excitatory synaptic current in ms. */
@@ -202,7 +165,10 @@ namespace nest
 
       /** Time constant of inhibitory synaptic current in ms. */
       double_t tau_in_;
-      
+
+      /** Time constant dynamic threshold change in ms. */
+      double_t tau_th_; // MOD
+
       Parameters_();  //!< Sets default parameter values
 
       void get(DictionaryDatum&) const;  //!< Store current values in dictionary
@@ -225,6 +191,7 @@ namespace nest
       double_t y1_in_;
       double_t y2_in_;
       double_t y3_; //!< This is the membrane potential RELATIVE TO RESTING POTENTIAL.
+      double_t y4_; //!< This is the effective change to threshold. // MOD
 
       int_t    r_;  //!< Number of refractory steps remaining
 
@@ -246,8 +213,8 @@ namespace nest
      * Buffers of the model.
      */
     struct Buffers_ {
-      Buffers_(iaf_psc_alpha&);
-      Buffers_(const Buffers_&, iaf_psc_alpha&);
+      Buffers_(iaf_psc_alpha_dynth&);
+      Buffers_(const Buffers_&, iaf_psc_alpha_dynth&);
 
       /** buffers and summs up incoming spikes/currents */
       RingBuffer ex_spikes_;
@@ -255,7 +222,7 @@ namespace nest
       RingBuffer currents_;
 
       //! Logger for all analog data
-      UniversalDataLogger<iaf_psc_alpha> logger_;
+      UniversalDataLogger<iaf_psc_alpha_dynth> logger_;
     };
     
     // ---------------------------------------------------------------- 
@@ -284,6 +251,7 @@ namespace nest
       double_t P32_in_;
       double_t P30_;
       double_t P33_;
+      double_t P44_; // MOD
       double_t expm1_tau_m_;
 
       double_t weighted_spikes_ex_;
@@ -298,10 +266,13 @@ namespace nest
     double_t get_weighted_spikes_ex_() const { return V_.weighted_spikes_ex_; }
     double_t get_weighted_spikes_in_() const { return V_.weighted_spikes_in_; }
 
+    //! Read out the effective threshold
+    double_t get_effective_th_() const { return S_.y4_ + P_.U0_ + P_.Theta_; } // MOD
+
     // Data members ----------------------------------------------------------- 
     
    /**
-    * @defgroup iaf_psc_alpha_data
+    * @defgroup iaf_psc_alpha_dynth_data
     * Instances of private data structures for the different types
     * of data pertaining to the model.
     * @note The order of definitions is important for speed.
@@ -314,11 +285,11 @@ namespace nest
    /** @} */
 
    //! Mapping of recordables names to access functions
-   static RecordablesMap<iaf_psc_alpha> recordablesMap_;
+   static RecordablesMap<iaf_psc_alpha_dynth> recordablesMap_;
   };
 
 inline
-port nest::iaf_psc_alpha::check_connection(Connection& c, port receptor_type)
+port nest::iaf_psc_alpha_dynth::check_connection(Connection& c, port receptor_type)
 {
   SpikeEvent e;
   e.set_sender(*this);
@@ -327,7 +298,7 @@ port nest::iaf_psc_alpha::check_connection(Connection& c, port receptor_type)
 }
   
 inline
-port iaf_psc_alpha::connect_sender(SpikeEvent&, port receptor_type)
+port iaf_psc_alpha_dynth::connect_sender(SpikeEvent&, port receptor_type)
 {
   if (receptor_type != 0)
     throw UnknownReceptorType(receptor_type, get_name());
@@ -335,7 +306,7 @@ port iaf_psc_alpha::connect_sender(SpikeEvent&, port receptor_type)
 }
  
 inline
-port iaf_psc_alpha::connect_sender(CurrentEvent&, port receptor_type)
+port iaf_psc_alpha_dynth::connect_sender(CurrentEvent&, port receptor_type)
 {
   if (receptor_type != 0)
     throw UnknownReceptorType(receptor_type, get_name());
@@ -343,7 +314,7 @@ port iaf_psc_alpha::connect_sender(CurrentEvent&, port receptor_type)
 }
  
 inline
-port iaf_psc_alpha::connect_sender(DataLoggingRequest& dlr, 
+port iaf_psc_alpha_dynth::connect_sender(DataLoggingRequest& dlr, 
                                    port receptor_type)
 {
   if (receptor_type != 0)
@@ -352,7 +323,7 @@ port iaf_psc_alpha::connect_sender(DataLoggingRequest& dlr,
 }
 
 inline
-void iaf_psc_alpha::get_status(DictionaryDatum &d) const
+void iaf_psc_alpha_dynth::get_status(DictionaryDatum &d) const
 {
   P_.get(d);
   S_.get(d, P_);
@@ -362,7 +333,7 @@ void iaf_psc_alpha::get_status(DictionaryDatum &d) const
 }
 
 inline
-void iaf_psc_alpha::set_status(const DictionaryDatum &d)
+void iaf_psc_alpha_dynth::set_status(const DictionaryDatum &d)
 {
   Parameters_ ptmp = P_;  // temporary copy in case of errors
   const double delta_EL = ptmp.set(d);                       // throws if BadProperty
@@ -382,4 +353,4 @@ void iaf_psc_alpha::set_status(const DictionaryDatum &d)
 
 } // namespace
 
-#endif /* #ifndef IAF_PSC_ALPHA_H */
+#endif /* #ifndef IAF_PSC_ALPHA_DYNTH_H */

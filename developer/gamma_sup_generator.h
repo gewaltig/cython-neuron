@@ -19,18 +19,16 @@
 #include "node.h"
 #include "stimulating_device.h"
 #include "scheduler.h"
-//#include "binomial_randomdev.h"
-#include "poisson_randomdev.h"
+#include "binomial_randomdev.h"
 #include "connection.h"
 #include "ppd_sup_generator.h"
 
 /*BeginDocumentation
-Name: gamma_sup_generator - simulate the spiking of population of Poisson processes with dead time.
+Name: gamma_sup_generator - simulate the superimposed spike train of a population of Gamma process.
 Description:
 
-  The gamma_sup_generator generator simulates a population of neurons firing 
-  independently with gamma process statistics. 
-  The generator does not initialize to equilibrium in general, initial transients might occur.
+  The gamma_sup_generator generator simulates the pooled spike train of a 
+  population of neurons firing independently with gamma process statistics. 
 
 Parameters:
    The following parameters appear in the element's status dictionary:
@@ -40,7 +38,9 @@ Parameters:
    n_proc - number of superimposed independent component processes. (long, var)
 
 Note:
-   This generator has only been validated in a very basic manner.
+   The generator will be published in Deger, Helias, Boucsein, Rotter (2011) 
+   Statistical properties of superimposed stationary spike trains, Journal of
+   Computational Neuroscience.
 
 Author:
    Jan 2011, Deger
@@ -132,9 +132,7 @@ namespace nest{
     
     class Internal_states_ {
     
-//      librandom::BinomialRandomDev bino_dev_;       //!< random deviate generator
-      ppd_sup_generator::FastBinomialRandomDev_ *bino_dev_;   //!< random deviate generator
-      librandom::PoissonRandomDev poisson_dev_;   //!< random deviate generator
+      librandom::BinomialRandomDev bino_dev_;       //!< random deviate generator
       std::vector<ulong_t> occ_;                    //!< occupation numbers of internal states
       
       public:

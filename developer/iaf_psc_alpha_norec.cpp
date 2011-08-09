@@ -1,5 +1,5 @@
 /*
- *  iaf_psc_alpha.cpp
+ *  iaf_psc_alpha_norec.cpp
  *
  *  This file is part of NEST
  *
@@ -15,43 +15,25 @@
  */
 
 #include "exceptions.h"
-#include "iaf_psc_alpha.h"
+#include "iaf_psc_alpha_norec.h"
 #include "network.h"
 #include "dict.h"
 #include "integerdatum.h"
 #include "doubledatum.h"
 #include "dictutils.h"
 #include "numerics.h"
-#include "universal_data_logger_impl.h"
 
 #include <limits>
 
-/* ---------------------------------------------------------------- 
- * Recordables map
- * ---------------------------------------------------------------- */
-
-nest::RecordablesMap<nest::iaf_psc_alpha> nest::iaf_psc_alpha::recordablesMap_;
 
 namespace nest
 {
-  /*
-   * Override the create() method with one call to RecordablesMap::insert_() 
-   * for each quantity to be recorded.
-   */
-  template <>
-  void RecordablesMap<iaf_psc_alpha>::create()
-  {
-    // use standard names whereever you can for consistency!
-    insert_(names::V_m, &iaf_psc_alpha::get_V_m_);
-    insert_("weighted_spikes_ex", &iaf_psc_alpha::get_weighted_spikes_ex_);
-    insert_("weighted_spikes_in", &iaf_psc_alpha::get_weighted_spikes_in_);
-  }
 
 /* ---------------------------------------------------------------- 
  * Default constructors defining default parameters and state
  * ---------------------------------------------------------------- */
     
-nest::iaf_psc_alpha::Parameters_::Parameters_()
+nest::iaf_psc_alpha_norec::Parameters_::Parameters_()
   : Tau_       ( 10.0    ),  // ms
     C_         (250.0    ),  // pF
     TauR_      (  2.0    ),  // ms
@@ -65,7 +47,7 @@ nest::iaf_psc_alpha::Parameters_::Parameters_()
 {
 }
 
-nest::iaf_psc_alpha::State_::State_()
+nest::iaf_psc_alpha_norec::State_::State_()
   : y0_   (0.0),
     y1_ex_(0.0),
     y2_ex_(0.0),
@@ -79,7 +61,7 @@ nest::iaf_psc_alpha::State_::State_()
  * Parameter and state extractions and manipulation functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_psc_alpha::Parameters_::get(DictionaryDatum &d) const
+void nest::iaf_psc_alpha_norec::Parameters_::get(DictionaryDatum &d) const
 {
   def<double>(d, names::E_L, U0_);   // Resting potential
   def<double>(d, names::I_e, I_e_);
@@ -93,7 +75,7 @@ void nest::iaf_psc_alpha::Parameters_::get(DictionaryDatum &d) const
   def<double>(d, names::t_ref, TauR_);
 }
 
-double nest::iaf_psc_alpha::Parameters_::set(const DictionaryDatum& d)
+double nest::iaf_psc_alpha_norec::Parameters_::set(const DictionaryDatum& d)
 {
   // if U0_ is changed, we need to adjust all variables defined relative to U0_
   const double ELold = U0_;
@@ -141,12 +123,12 @@ double nest::iaf_psc_alpha::Parameters_::set(const DictionaryDatum& d)
   return delta_EL;
 }
 
-void nest::iaf_psc_alpha::State_::get(DictionaryDatum &d, const Parameters_& p) const
+void nest::iaf_psc_alpha_norec::State_::get(DictionaryDatum &d, const Parameters_& p) const
 {
   def<double>(d, names::V_m, y3_ + p.U0_); // Membrane potential
 }
 
-void nest::iaf_psc_alpha::State_::set(const DictionaryDatum& d, const Parameters_& p, double delta_EL)
+void nest::iaf_psc_alpha_norec::State_::set(const DictionaryDatum& d, const Parameters_& p, double delta_EL)
 {
   if ( updateValue<double>(d, names::V_m, y3_) )
     y3_ -= p.U0_;
@@ -154,12 +136,10 @@ void nest::iaf_psc_alpha::State_::set(const DictionaryDatum& d, const Parameters
     y3_ -= delta_EL;
 }
 
-nest::iaf_psc_alpha::Buffers_::Buffers_(iaf_psc_alpha& n)
-  : logger_(n)
+nest::iaf_psc_alpha_norec::Buffers_::Buffers_(iaf_psc_alpha_norec&)
 {}
 
-nest::iaf_psc_alpha::Buffers_::Buffers_(const Buffers_&, iaf_psc_alpha& n)
-  : logger_(n)
+nest::iaf_psc_alpha_norec::Buffers_::Buffers_(const Buffers_&, iaf_psc_alpha_norec&)
 {}
 
 
@@ -167,16 +147,15 @@ nest::iaf_psc_alpha::Buffers_::Buffers_(const Buffers_&, iaf_psc_alpha& n)
  * Default and copy constructor for node
  * ---------------------------------------------------------------- */
 
-nest::iaf_psc_alpha::iaf_psc_alpha()
+nest::iaf_psc_alpha_norec::iaf_psc_alpha_norec()
   : Archiving_Node(), 
     P_(), 
     S_(),
     B_(*this)
 {
-  recordablesMap_.create();
 }
 
-nest::iaf_psc_alpha::iaf_psc_alpha(const iaf_psc_alpha& n)
+nest::iaf_psc_alpha_norec::iaf_psc_alpha_norec(const iaf_psc_alpha_norec& n)
   : Archiving_Node(n), 
     P_(n.P_), 
     S_(n.S_),
@@ -187,34 +166,30 @@ nest::iaf_psc_alpha::iaf_psc_alpha(const iaf_psc_alpha& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_psc_alpha::init_node_(const Node& proto)
+void nest::iaf_psc_alpha_norec::init_node_(const Node& proto)
 {
-  const iaf_psc_alpha& pr = downcast<iaf_psc_alpha>(proto);
+  const iaf_psc_alpha_norec& pr = downcast<iaf_psc_alpha_norec>(proto);
   P_ = pr.P_;
   S_ = pr.S_;
 }
 
-void nest::iaf_psc_alpha::init_state_(const Node& proto)
+void nest::iaf_psc_alpha_norec::init_state_(const Node& proto)
 {
-  const iaf_psc_alpha& pr = downcast<iaf_psc_alpha>(proto);
+  const iaf_psc_alpha_norec& pr = downcast<iaf_psc_alpha_norec>(proto);
   S_ = pr.S_;
 }
 
-void nest::iaf_psc_alpha::init_buffers_()
+void nest::iaf_psc_alpha_norec::init_buffers_()
 {
   B_.ex_spikes_.clear();       // includes resize
   B_.in_spikes_.clear();       // includes resize
   B_.currents_.clear();        // includes resize
 
-  B_.logger_.reset();
-
   Archiving_Node::clear_history();
 }
 
-void nest::iaf_psc_alpha::calibrate()
+void nest::iaf_psc_alpha_norec::calibrate()
 {
-  B_.logger_.init();  // ensures initialization in case mm connected after Simulate
-
   const double h = Time::get_resolution().get_ms(); 
 
   // these P are independent
@@ -242,7 +217,7 @@ void nest::iaf_psc_alpha::calibrate()
   V_.IPSCInitialValue_=1.0 * numerics::e/P_.tau_in_;
 
   // TauR specifies the length of the absolute refractory period as 
-  // a double_t in ms. The grid based iaf_psc_alpha can only handle refractory
+  // a double_t in ms. The grid based iaf_psc_alpha_norec can only handle refractory
   // periods that are integer multiples of the computation step size (h).
   // To ensure consistency with the overall simulation scheme such conversion
   // should be carried out via objects of class nest::Time. The conversion 
@@ -253,8 +228,8 @@ void nest::iaf_psc_alpha::calibrate()
   //     2. The refractory time in units of steps is read out get_steps(), a member
   //        function of class nest::Time.
   //
-  // The definition of the refractory period of the iaf_psc_alpha is consistent 
-  // the one of iaf_psc_alpha_ps.
+  // The definition of the refractory period of the iaf_psc_alpha_norec is consistent 
+  // the one of iaf_psc_alpha_norec_ps.
   //
   // Choosing a TauR that is not an integer multiple of the computation time 
   // step h will lead to accurate (up to the resolution h) and self-consistent
@@ -269,7 +244,7 @@ void nest::iaf_psc_alpha::calibrate()
  * Update and spike handling functions
  */
  
-void nest::iaf_psc_alpha::update(Time const & origin, const long_t from, const long_t to)
+void nest::iaf_psc_alpha_norec::update(Time const & origin, const long_t from, const long_t to)
 {
   assert(to >= 0 && (delay) from < Scheduler::get_min_delay());
   assert(from < to);
@@ -324,14 +299,11 @@ void nest::iaf_psc_alpha::update(Time const & origin, const long_t from, const l
 
     // set new input current
     S_.y0_ = B_.currents_.get_value(lag);
-
-    // log state data
-    B_.logger_.record_data(origin.get_steps() + lag);
   }  
 }                           
                      
 
-void nest::iaf_psc_alpha::handle(SpikeEvent & e)
+void nest::iaf_psc_alpha_norec::handle(SpikeEvent & e)
 {
   assert(e.get_delay() > 0);
 
@@ -343,7 +315,7 @@ void nest::iaf_psc_alpha::handle(SpikeEvent & e)
                             e.get_weight() * e.get_multiplicity() );
 }
 
-void nest::iaf_psc_alpha::handle(CurrentEvent& e)
+void nest::iaf_psc_alpha_norec::handle(CurrentEvent& e)
 {
   assert(e.get_delay() > 0);
 
@@ -353,11 +325,6 @@ void nest::iaf_psc_alpha::handle(CurrentEvent& e)
   // add weighted current; HEP 2002-10-04
   B_.currents_.add_value(e.get_rel_delivery_steps(network()->get_slice_origin()), 
 		                     w * I);
-}
-
-void nest::iaf_psc_alpha::handle(DataLoggingRequest& e)
-{
-  B_.logger_.handle(e);
 }
 
 } // namespace

@@ -54,12 +54,17 @@ libdevelopermodule_la_SOURCES= \
                         theta_neuron_ps.cpp theta_neuron_ps.h\
 			static_connection_mult0.h\
                         iaf_psc_delta_canon_cvv.cpp iaf_psc_delta_canon_cvv.h\
+	    stdp_connection_rsnn_spikepairing_hom.cpp stdp_connection_rsnn_spikepairing_hom.h\
+			stdp_connection_facetshw_hom.cpp stdp_connection_facetshw_hom.h\
 			pif_psc_delta_canon_cvv.cpp pif_psc_delta_canon_cvv.h\
-	 		pp_psc_delta.cpp pp_psc_delta.h\
 	 		inh_gamma_generator.cpp inh_gamma_generator.h\
 			ac_gamma_generator.cpp ac_gamma_generator.h\
 			ht_neuron_fs.cpp ht_neuron_fs.h\
-			iaf_psc_alpha_mod.cpp iaf_psc_alpha_mod.h
+			iaf_psc_alpha_mod.cpp iaf_psc_alpha_mod.h\
+			iaf_psc_alpha_norec.cpp iaf_psc_alpha_norec.h\
+		        iaf_psc_alpha_dynth.cpp iaf_psc_alpha_dynth.h\
+			izhikevich.cpp izhikevich.h
+
 
 # Please leave this separating blank line. It is needed for the build tools on the PETA fx machine to work. MH 2010-11-4
 #			dopamine_connection.cpp dopamine_connection.h\
@@ -67,7 +72,6 @@ libdevelopermodule_la_SOURCES= \
 #			dopamine_th_connection.cpp dopamine_th_connection.h\
 #			policy_th_connection.cpp policy_th_connection.h\
 #			iaf_psc_exp_canon.cpp iaf_psc_exp_canon.h
-#                        izhikevich.cpp izhikevich.h\
 #	 		pp_psc_delta.cpp pp_psc_delta.h\
 #			iaf_psc_delta_canon_stepcurr.cpp iaf_psc_delta_canon_stepcurr.h\
 #			iaf_psc_alpha_currents.cpp iaf_psc_alpha_currents.h\

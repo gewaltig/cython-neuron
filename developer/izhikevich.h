@@ -22,25 +22,29 @@
 #include "archiving_node.h"
 #include "ring_buffer.h"
 #include "connection.h"
-#include "analog_data_logger.h"
+#include "universal_data_logger.h"
 
 namespace nest{
   
   class Network;
 
   /* BeginDocumentation
-     Name: izhikevich - 
-
-     Simple Model of Spiking Neurons
+     Name: izhikevich 
 
      Description:
-
      Implementation of the simple spiking neuron model introduced by Izhikevich [1].
+     The dynamics are given by:
+        dv/dt = 0.004*v*v + 5*v + 140 - u - I
+	du/dt = a*(b*v - u)
+ 
+	if v >= V_th
+	v is set to c
+	u is incremented by d
 
-     Remarks:	
+	the potential jumps on each spike arrival by the weight of the spike.
+
 
      Parameters: 
-
      The following parameters can be set in the status dictionary.
 
      V_m        double - Membrane potential in mV 
@@ -60,9 +64,9 @@ namespace nest{
 
      Sends: SpikeEvent
 
-     Receives: SpikeEvent, CurrentEvent, PotentialRequest
+     Receives: SpikeEvent, CurrentEvent, DataLoggingRequest
 
-     Author:  January 2009, Hanuschkin
+     Author:  January 2009, Hanuschkin; modified August 2011, Morrison
      SeeAlso: iaf_psc_delta
   */
 
@@ -92,20 +96,22 @@ namespace nest{
     using Node::connect_sender;
     using Node::handle;
 
-    port check_connection(Connection&, port);
-    
+    void handle(DataLoggingRequest &);
     void handle(SpikeEvent &);
     void handle(CurrentEvent &);
-    void handle(PotentialRequest &);
-    
+
+    port connect_sender(DataLoggingRequest&, port);
     port connect_sender(SpikeEvent &, port);
     port connect_sender(CurrentEvent &, port);
-    port connect_sender(PotentialRequest &, port);
+
+    port check_connection(Connection&, port);
 
     void get_status(DictionaryDatum &) const;
     void set_status(const DictionaryDatum &);
 
   private:
+    friend class RecordablesMap<izhikevich>;
+    friend class UniversalDataLogger<izhikevich>;
 
     void init_node_(const Node& proto);
     void init_state_(const Node& proto);
@@ -128,12 +134,10 @@ namespace nest{
       /** External DC current */
       double_t I_e_;
 
-      /** Threshold
-          I.e. the real threshold is (U0_+V_th_). */
+      /** Threshold */
       double_t V_th_;
 
-      /** Lower bound
-          I.e. the real lower bound is (V_min_+V_th_). */
+      /** Lower bound */
       double_t V_min_;
 
       Parameters_();  //!< Sets default parameter values
@@ -150,6 +154,7 @@ namespace nest{
     struct State_ {
       double_t     v_; // membrane potential
       double_t     u_; // membrane recovery variable
+      double_t     I_; // input current
  
 
       /** Accumulate spikes arriving during refractory period, discounted for
@@ -168,14 +173,16 @@ namespace nest{
      * Buffers of the model.
      */
     struct Buffers_ {
-      /** buffers and summs up incoming spikes/currents */
+      /**
+       * Buffer for recording
+       */
+      Buffers_(izhikevich &);
+      Buffers_(const Buffers_ &, izhikevich &);
+      UniversalDataLogger<izhikevich> logger_;
+
+      /** buffers and sums up incoming spikes/currents */
       RingBuffer spikes_;
       RingBuffer currents_;  
-
-      /**
-       * Buffer for membrane potential.
-       */
-      AnalogDataLogger<PotentialRequest> potentials_;
     };
     
     // ---------------------------------------------------------------- 
@@ -187,6 +194,13 @@ namespace nest{
     
 
     };
+
+    // Access functions for UniversalDataLogger -------------------------------
+
+    //! Read out the membrane potential
+    double_t get_V_m_() const { return S_.v_; }
+
+   // ---------------------------------------------------------------- 
 
     // ---------------------------------------------------------------- 
 
@@ -201,6 +215,9 @@ namespace nest{
     State_      S_;
     Variables_  V_;
     Buffers_    B_;
+
+    //! Mapping of recordables names to access functions
+    static RecordablesMap<izhikevich> recordablesMap_;
     /** @} */
     
   };
@@ -229,23 +246,23 @@ namespace nest{
 	throw UnknownReceptorType(receptor_type, get_name());
       return 0;
     }
- 
+
   inline
-    port izhikevich::connect_sender(PotentialRequest& pr, port receptor_type)
+    port izhikevich::connect_sender(DataLoggingRequest &dlr, port receptor_type)
     {
       if (receptor_type != 0)
 	throw UnknownReceptorType(receptor_type, get_name());
-      B_.potentials_.connect_logging_device(pr);
-      return 0;
+      return B_.logger_.connect_logging_device(dlr, recordablesMap_);
     }
 
-inline
-void izhikevich::get_status(DictionaryDatum &d) const
-{
-  P_.get(d);
-  S_.get(d, P_);
-  Archiving_Node::get_status(d);
-}
+  inline
+    void izhikevich::get_status(DictionaryDatum &d) const
+  {
+    P_.get(d);
+    S_.get(d, P_);
+    Archiving_Node::get_status(d);
+    (*d)[names::recordables] = recordablesMap_.get_list();
+  }
 
 inline
 void izhikevich::set_status(const DictionaryDatum &d)

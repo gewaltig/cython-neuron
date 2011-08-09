@@ -38,22 +38,20 @@ Description:
  functions can also help to get more reliable statistics and a reduced 
  probability of false alarms.
  
- The values are chosen to have a reasonable execution time. False alarm were 
+ The values are chosen to have a reasonable execution time. False alarms were 
  never observed yet. Since random numbers are preserved through repetitions of
  the simulations, the test should work for sure as long as the random number 
  generation procedure of nest is not changed. If it is changed, failure of the
  test is still very unlikely.
  
  The intention of this script is to make sure that there are no gross errors in
- the main functions of the ppd_sup_generator. It does not test the sinusoidal
- hazard feature yet. 
+ the main functions of the gamma_sup_generator. 
 
 Remarks:
-
   This test script was adapted from test_ppd_sup_generator.sli  
 
 
-Author:  June 2011, Deger
+Author:  June 2011, Moritz Deger
 SeeAlso: test_ppd_sup_generator.sli
 */
 

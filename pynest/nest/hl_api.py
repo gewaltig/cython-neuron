@@ -175,9 +175,25 @@ def help(obj=None, pager="less"):
         print
 	print "For more information visit http://www.nest-initiative.org."
 
+def get_verbosity():
+    """Return verbosity level of NEST's messages."""
+    
+    sr('verbosity')
+    return spp()
+
+def set_verbosity(level):
+    """Change verbosity level of NEST's messages."""
+    sps(level)
+    sr("setverbosity")
+
+def message(level,sender,text):
+    """Print a message using NEST's message system."""
+    sps(level)
+    sps(sender)
+    sps(text)
+    sr('message')
 
 # -------------------- Functions for simulation control
-
 
 def Simulate(t):
     """Simulate the network for t milliseconds."""

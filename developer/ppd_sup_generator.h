@@ -19,19 +19,18 @@
 #include "node.h"
 #include "stimulating_device.h"
 #include "scheduler.h"
-//#include "binomial_randomdev.h"
-#include "poisson_randomdev.h"
-#include "exp_randomdev.h"
+#include "binomial_randomdev.h"
 #include "connection.h"
 
 /*BeginDocumentation
-Name: ppd_sup_generator - simulate the spiking of population of Poisson processes with dead time.
+Name: ppd_sup_generator - simulate the superimposed spike train of a population of Poisson processes with dead time.
 Description:
 
-  The ppd_sup_generator generator simulates a population of neurons firing 
-  independently with Poisson process with dead time statistics. 
-  The output rate can also be sin-modulated, which is reflected in a time-dependent 
-  hazard function. The generator does not initialize to equilibrium in general, initial transients might occur.
+  The ppd_sup_generator generator simulates the pooled spike train of a 
+  population of neurons firing independently with Poisson process with dead 
+  time statistics. 
+  The rate parameter can also be sine-modulated. The generator does not 
+  initialize to equilibrium in this case initial transients might occur.
 
 Parameters:
    The following parameters appear in the element's status dictionary:
@@ -43,30 +42,15 @@ Parameters:
    amplitude - relative rate modulation amplitude. (double, var)
 
 Note:
-   This generator has only been validated in a very basic manner.
+   The generator will be published in Deger, Helias, Boucsein, Rotter (2011) 
+   Statistical properties of superimposed stationary spike trains, Journal of
+   Computational Neuroscience.
 
 Authors:
-   June 2009, Deger, Helias
+   June 2009, Moritz Deger, Moritz Helias
 
 SeeAlso: poisson_generator_ps, spike_generator, Device, StimulatingDevice, gamma_sup_generator
 */
-
-
-// Edit Deger, March 31, 2011:
-// librandom::binomial_randomdev is very slow in for the parameters used here, 
-// since it only sums up n drand()'s. 
-// I therefore implemented the BP algorith (see below) which uses Poisson and 
-// exponential random deviates to sample a binomial one.
-// FastBinomialRandomDev is also used by gamma_sup_generator
-
-/* ---------------------------------------------------------------- 
- * Draw a binomial random number using the BP algoritm
- * Sampling From the Binomial Distribution on a Computer
- * Author(s): George S. Fishman
- * Source: Journal of the American Statistical Association, Vol. 74, No. 366 (Jun., 1979), pp. 418-423
- * Published by: American Statistical Association
- * Stable URL: http://www.jstor.org/stable/2286346 .
- * ---------------------------------------------------------------- */
 
 
 namespace nest{
@@ -98,32 +82,6 @@ namespace nest{
 
     void get_status(DictionaryDatum &) const;
     void set_status(const DictionaryDatum &);
-    
-    
-    class FastBinomialRandomDev_ {
-    
-        /* ---------------------------------------------------------------- 
-         * Draw a binomial random number using the BP algoritm
-         * Sampling From the Binomial Distribution on a Computer
-         * Author(s): George S. Fishman
-         * Source: Journal of the American Statistical Association, Vol. 74, No. 366 (Jun., 1979), pp. 418-423
-         * Published by: American Statistical Association
-         * Stable URL: http://www.jstor.org/stable/2286346 .
-         * ---------------------------------------------------------------- */    
-    
-//      librandom::BinomialRandomDev bino_dev_;       //!< random deviate generator
-      librandom::PoissonRandomDev poisson_dev_;     //!< random deviate generator
-      librandom::ExpRandomDev exp_dev_;             //!< random deviate generator
-//      librandom::RngPtr rng                         //!< random deviate generator
-      std::vector<double_t> f_;                     //!< precomputed table of f
-      ulong_t  n_;                                 //!< number of bernoulli trials
-      double_t p_;                                  //!< probability of heads
-      
-      public:
-      FastBinomialRandomDev_(size_t nmax);         //!< initialize 
-      void set_p_n(double_t p, ulong_t n);         //!< set parameters
-      ulong_t uldev(librandom::RngPtr rng);        //!< udraw random numbers
-    };
     
 
   private:
@@ -181,10 +139,7 @@ namespace nest{
 
     class Age_distribution_ {
     
-//      librandom::BinomialRandomDev bino_dev_nest_;       //!< random deviate generator
-      FastBinomialRandomDev_ *bino_dev_;             //!< random deviate generator
-      librandom::PoissonRandomDev poisson_dev_;     //!< random deviate generator
-//      librandom::ExpRandomDev exp_dev_;             //!< random deviate generator
+      librandom::BinomialRandomDev bino_dev_;       //!< random deviate generator
       std::vector<ulong_t> occ_refractory_;         //!< occupation numbers of ages below dead time
       ulong_t  occ_active_;                         //!< summed occupation number of ages above dead time
       size_t activate_;                             //!< rotating pointer
@@ -271,4 +226,4 @@ void ppd_sup_generator::set_status(const DictionaryDatum &d)
 
 } // namespace
 
-#endif //POISSON_GENERATOR_PS_H
+#endif //PPD_SUP_GENERATOR_H

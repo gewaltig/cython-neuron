@@ -194,7 +194,7 @@ namespace nest
      */
     bool hit(const Position<double_t>& pos) const;
 
-  private:
+  protected:
 
     // Quadrant children (empty if quadrant is a leaf)
     std::vector<Quadrant*> children_;

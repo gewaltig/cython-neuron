@@ -91,11 +91,6 @@ namespace nest
 		     bool within_region);
 
 
-  private:
-
-    // Octant children (empty if octant is a leaf)
-    std::vector<Octant*> children_;
-
   };
 
 }

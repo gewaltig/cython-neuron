@@ -191,8 +191,8 @@ void Network::init_()
 
 void Network::destruct_nodes_()
 {
-  // We call the destructor for each node excplicitly.  This destroys
-  // the objects without releasing their memory.  since the Memory is
+  // We call the destructor for each node excplicitly. This destroys
+  // the objects without releasing their memory. since the Memory is
   // owned by the Model objects, we must not call delete on the Node
   // objects!
   for(size_t n = 0; n < nodes_.size(); ++n)
@@ -277,6 +277,7 @@ void Network::reset_network()
     {
       (*nodes_[n]).init_state();
       (*nodes_[n]).unset(Node::buffers_initialized);
+      assert(! (*nodes_[n]).test(Node::buffers_initialized));
     }
     else if ( (*nodes_[n]).get_model_id() == -1 )
     {
@@ -286,6 +287,7 @@ void Network::reset_network()
       {
         (*cit)->init_state();
         (*cit)->unset(Node::buffers_initialized);
+        assert(! (*nodes_[n]).test(Node::buffers_initialized));
       }
     }
   }
@@ -527,25 +529,23 @@ void Network::go_to(index n)
     throw SubnetExpected();
 }
 
+// void Network::go_to(const TokenArray p)
+// {
+//   std::vector<size_t> adr;
+//   p.toVector(adr);
+//   go_to(adr);
+// }
 
-//  void Network::go_to(TokenArray p)
-//  {
-//    std::vector<size_t> adr;
-//    p.toVector(adr);
-//    go_to(adr);
-//  }
-//  
-//  
-//  void Network::go_to(vector<size_t> const &p)
-//  {
-//    if(Subnet *target=dynamic_cast<Subnet*>(get_node(p)))
-//      current_ = target;
-//    else
-//      throw SubnetExpected();
-//  }
+// void Network::go_to(vector<size_t> const &p)
+// {
+//   if(Subnet *target=dynamic_cast<Subnet*>(get_node(p)))
+//     current_ = target;
+//   else
+//     throw SubnetExpected();
+// }
 
 
-//  Node* Network::get_node(TokenArray p, thread thr) const
+//  Node* Network::get_node(const TokenArray p, thread thr) const
 //  {
 //    std::vector<size_t> adr;
 //    p.toVector(adr);
@@ -1017,7 +1017,7 @@ bool Network::connect(index source_id, index target_id, DictionaryDatum& params,
 
 // -----------------------------------------------------------------------------
 
-void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArray weights, TokenArray delays, index syn)
+void Network::divergent_connect(index source_id, const TokenArray target_ids, const TokenArray weights, const TokenArray delays, index syn)
 {
   struct tms foo;
   clock_t starttime, startopenmp, endopenmp, startparallel, startfirstloop, startsecondloop, endparallel;
@@ -1182,7 +1182,7 @@ void Network::divergent_connect(index source_id, TokenArray target_ids, TokenArr
   std::cout << msg << std::endl;
 }
 
-void Network::random_divergent_connect(index source_id, TokenArray target_ids, index n, TokenArray weights, TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
+void Network::random_divergent_connect(index source_id, const TokenArray target_ids, index n, const TokenArray weights, const TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
 {
   Node *source = get_node(source_id);
 
@@ -1224,13 +1224,13 @@ void Network::random_divergent_connect(index source_id, TokenArray target_ids, i
     {
       t_id  = rng->ulrand(n_rnd);
     }
-    while ( ( !allow_autapses && ((index)target_ids[t_id]) == source_id )
+    while ( ( !allow_autapses && ((index)target_ids.get(t_id)) == source_id )
             || ( !allow_multapses && ch_ids.find( t_id ) != ch_ids.end() ) );
       
     if (!allow_multapses)
       ch_ids.insert(t_id);
       
-    chosen_targets.push_back(target_ids[t_id]);
+    chosen_targets.push_back(target_ids.get(t_id));
   }
   
   divergent_connect(source_id, chosen_targets, weights, delays, syn);
@@ -1238,7 +1238,7 @@ void Network::random_divergent_connect(index source_id, TokenArray target_ids, i
 
 // -----------------------------------------------------------------------------
 
-void Network::convergent_connect(TokenArray source_ids, index target_id, TokenArray weights, TokenArray delays, index syn)
+void Network::convergent_connect(const TokenArray source_ids, index target_id, const TokenArray weights, const TokenArray delays, index syn)
 {
   bool complete_wd_lists = (source_ids.size() == weights.size() && weights.size() != 0 && weights.size() == delays.size());
   bool short_wd_lists = (source_ids.size() != weights.size() && weights.size() == 1 && delays.size() == 1);
@@ -1333,7 +1333,7 @@ void Network::convergent_connect(TokenArray source_ids, index target_id, TokenAr
 }
 
 
-void Network::random_convergent_connect(TokenArray source_ids, index target_id, index n, TokenArray weights, TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
+void Network::random_convergent_connect(const TokenArray source_ids, index target_id, index n, const TokenArray weights, const TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
 {
   if (!is_local_gid(target_id))
      return;

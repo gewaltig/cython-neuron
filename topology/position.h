@@ -446,6 +446,26 @@ namespace nest
 	  assert(static_cast<size_t>(y)<rows);
 	}
 
+      /**
+       * Constrain a position to lie inside the rectangle between
+       * `min` and `max`
+       * @param min minimum coordinates
+       * @param max maximum coordinates
+       */
+      void constrain(const Position<DataType> &min, const Position<DataType> &max)
+      {
+	if ((dim_ != min.dim_) || (dim_ != max.dim_)) {
+	  throw DimensionalityMismatch();
+	}
+
+	if (x<min.get_x()) { x = min.get_x(); }
+	if (x>max.get_x()) { x = min.get_x(); }
+	if (y<min.get_y()) { y = min.get_y(); }
+	if (y>max.get_y()) { y = min.get_y(); }
+	if (z<min.get_z()) { z = min.get_z(); }
+	if (z>max.get_z()) { z = min.get_z(); }
+      }
+
       void set_x(const DataType& a)
       {
 	assert( dim_ >= 1 );

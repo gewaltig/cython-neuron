@@ -36,8 +36,7 @@
 namespace nest
 {
   Octant::Octant():
-    Quadrant(),
-    children_()
+    Quadrant()
   {
 //     children_.clear();
   }
@@ -47,15 +46,14 @@ namespace nest
   Octant::Octant(const Position<double_t>& lower_left, 
 		 const Position<double_t>& upper_right,
 		 index max_nodes):
-    Quadrant(lower_left, upper_right, max_nodes),
-    children_()
+    Quadrant(lower_left, upper_right, max_nodes)
   {
  //    children_.clear();
   }
 
   Octant::~Octant()
   {
-    for(std::vector<Octant*>::iterator it = children_.begin();
+    for(std::vector<Quadrant*>::iterator it = children_.begin();
 	it != children_.end(); ++it)
       {
 	delete *it;
@@ -69,8 +67,7 @@ namespace nest
     leaf_ = false;
 
     Position<double_t> dist =
-      Position<double_t>(upper_right_ - lower_left_).absolute()/
-      Position<double_t>(2.0);
+      Position<double_t>(upper_right_ - lower_left_).absolute()/2.0;
     
     for(index i=0; i<8; ++i)
       {
@@ -203,18 +200,19 @@ namespace nest
 	return;
       }
 
-    for(std::vector<Octant*>::iterator it = children_.begin();
+    for(std::vector<Quadrant*>::iterator it = children_.begin();
 	it != children_.end(); ++it)
       {
+	Octant* oct = dynamic_cast<Octant*>(*it);
 	if((*it) == lower_right)
 	  {
-	    (*it)->find_region(upper_left, lower_right, 
+	    oct->find_region(upper_left, lower_right, 
 			       oct_region, false);
 	    return;
 	  }
-	if(!within_region && (*it)->hit(upper_left))
+	if(!within_region && oct->hit(upper_left))
 	  {
-	    (*it)->find_region(upper_left, lower_right, 
+	    oct->find_region(upper_left, lower_right, 
 			       oct_region, false);
 	    within_region = true;
 	    continue;
@@ -222,7 +220,7 @@ namespace nest
 	
 	if(within_region)
 	  {
-	    (*it)->find_region(upper_left, lower_right,
+	    oct->find_region(upper_left, lower_right,
 			       oct_region, true);
 	  }
       }

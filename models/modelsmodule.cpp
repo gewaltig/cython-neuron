@@ -36,22 +36,23 @@
 #include <string>
 
 // Neuron models
+#include "aeif_cond_alpha.h"
+#include "aeif_cond_exp.h"
+#include "hh_cond_exp_traub.h"
+#include "hh_psc_alpha.h"
+#include "ht_neuron.h"
+#include "iaf_cond_alpha.h"
+#include "iaf_cond_alpha_mc.h"
+#include "iaf_cond_exp.h"
+#include "iaf_cond_exp_sfa_rr.h"
 #include "iaf_neuron.h"
 #include "iaf_psc_alpha.h"
 #include "iaf_psc_delta.h"
 #include "iaf_psc_exp.h"
 #include "iaf_tum_2000.h"
-#include "iaf_cond_alpha.h"
-#include "iaf_cond_exp.h"
-#include "iaf_cond_exp_sfa_rr.h"
-#include "iaf_cond_alpha_mc.h"
-#include "aeif_cond_alpha.h"
-#include "aeif_cond_exp.h"
-#include "hh_psc_alpha.h"
-#include "hh_cond_exp_traub.h"
 #include "mat2_psc_exp.h"
 #include "parrot_neuron.h"
-#include "ht_neuron.h"
+#include "pp_psc_delta.h"
 #include "sli_neuron.h"
 
 // Stimulation devices
@@ -131,6 +132,7 @@ namespace nest
     register_model<iaf_tum_2000>(net_,  "iaf_tum_2000");
     register_model<mat2_psc_exp>(net_,  "mat2_psc_exp");
     register_model<parrot_neuron>(net_, "parrot_neuron");
+    register_model<pp_psc_delta>(net_, "pp_psc_delta");
 
     register_model<ac_generator>(net_,           "ac_generator");
     register_model<dc_generator>(net_,           "dc_generator");

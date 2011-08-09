@@ -44,7 +44,7 @@ def check_rate_and_fixed_dead_time():
     rate_ana = 1./(1./lam + d*1e-3)
     ratio = rate_sim / rate_ana
     
-    # this could fail due to bad luck. However, if it passes once, then it should
+    # This could fail due to bad luck. However, if it passes once, then it should
     # always do so, since the random numbers are reproducible in NEST.
     assert( 0.5<ratio<1.5 )
     
@@ -95,7 +95,7 @@ def check_random_dead_time():
     rate_ana = 1./(1./lam + d*1e-3)
     ratio = rate_sim / rate_ana
     
-    # this could fail due to bad luck. However, if it passes once, then it should
+    # This could fail due to bad luck. However, if it passes once, then it should
     # always do so, since the random numbers are reproducible in NEST.
     assert( 0.5<ratio<1.5 )
     
@@ -159,7 +159,7 @@ def check_adapting_threshold():
     rate_ana = 1./(1./lam + d*1e-3)
     ratio = rate_sim / rate_ana
     
-    # this could fail due to bad luck. However, if it passes once, then it should
+    # This could fail due to bad luck. However, if it passes once, then it should
     # always do so, since the random numbers are reproducible in NEST.
     # Adaptive threshold changes rate, thus not asserted here
     # assert( 0.5<ratio<1.5 )

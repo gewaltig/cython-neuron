@@ -163,7 +163,7 @@ public:
     {
         return (*data)[i];
     }
-    
+
     const Token &get(size_t i) const
     {
         return (*data)[i];
@@ -219,7 +219,7 @@ public:
      */
     void resize(size_t s, const Token &t = Token())
       {
-     clone(); data->resize(s,t);
+	clone(); data->resize(s,t);
     }
 
         // Insertion, deletion

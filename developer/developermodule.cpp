@@ -62,6 +62,8 @@
 
 // #include "iaf_psc_alpha_multisynapse.h"
 #include "iaf_psc_alpha_mod.h"
+#include "iaf_psc_alpha_norec.h"
+#include "iaf_psc_alpha_dynth.h"
 #include "theta_neuron.h"
 #include "theta_neuron_ps.h"
 // #include "izhikevich.h"
@@ -71,7 +73,6 @@
 // #include "iaf_psc_delta_canon_stepcurr.h"
 // #include "iaf_psc_alpha_canon_nr.h"
 #include "mirollo_strogatz_ps.h"
-#include "pp_psc_delta.h"
 // #include "ginzburg_neuron.h"
 // #include "iaf_psc_exp_canon.h"
 
@@ -113,6 +114,9 @@
 // #include "policy_th_connection.h"
 // #include "iaf_cond_delta.h"
 #include "static_connection_mult0.h"
+
+#include "stdp_connection_rsnn_spikepairing_hom.h"
+#include "stdp_connection_facetshw_hom.h"
 
 
 namespace nest
@@ -929,6 +933,8 @@ BeginDocumentation
    
     // register_model<iaf_psc_alpha_multisynapse>(*net_, "iaf_psc_alpha_multisynapse");
     register_model<iaf_psc_alpha_mod>(*net_, "iaf_psc_alpha_mod");
+    register_model<iaf_psc_alpha_norec>(*net_, "iaf_psc_alpha_norec");
+    register_model<iaf_psc_alpha_dynth>(*net_, "iaf_psc_alpha_dynth");
     //register_model<iaf_psc_delta_cvv>(*net_, "iaf_psc_delta_cvv");
 
     register_model<iaf_psc_delta_canon_cvv>(*net_, "iaf_psc_delta_canon_cvv");
@@ -941,7 +947,6 @@ BeginDocumentation
     // register_model<izhikevich>(*net_, "izhikevich");
     // register_model<iaf_psc_alpha_canon_nr>(*net_, "iaf_psc_alpha_canon_nr");
     register_model<mirollo_strogatz_ps>(*net_, "mirollo_strogatz_ps");
-    register_model<pp_psc_delta>(*net_, "pp_psc_delta");
     // register_model<ginzburg>(*net_, "ginzburg_neuron");
     // register_model<iaf_psc_exp_canon>(*net_, "iaf_psc_exp_canon");
 
@@ -1028,7 +1033,9 @@ BeginDocumentation
     // static connection with weight, delay, rport, target
     register_prototype_connection<StaticConnectionMult0>(*net_,    "static_synapse_mult0");
 
- 
+    register_prototype_connection_commonproperties<STDPRSNNSpikePairingConnectionHom, STDPRSNNSpikePairingHomCommonProperties>(*net_, "stdp_rsnn_spikepairing_synapse_hom");
+    register_prototype_connection_commonproperties<STDPFACETSHWConnectionHom, STDPFACETSHWHomCommonProperties>(*net_, "stdp_facetshw_synapse_hom");
+
   }  // DeveloperModule::init()
 
 } // namespace nest

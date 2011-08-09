@@ -263,6 +263,7 @@ namespace nest
     
       static int get_rank();
       static int get_num_processes();
+      static void set_num_processes(int);
       static int get_num_virtual_processes();
       static int get_send_buffer_size();
       static int get_recv_buffer_size();

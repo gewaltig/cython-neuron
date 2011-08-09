@@ -47,6 +47,7 @@ void nest::spike_detector::init_state_(const Node& np)
 {
   const spike_detector& sd = dynamic_cast<const spike_detector&>(np);
   device_.init_state(sd.device_);
+  init_buffers_();
 }
 
 void nest::spike_detector::init_buffers_()
