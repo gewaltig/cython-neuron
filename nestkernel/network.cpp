@@ -35,15 +35,6 @@
 #include "nestmodule.h"
 #include "sibling_container.h"
 
-#include <time.h>
-#include <sys/time.h>  // required to fix header dependencies in OS X, HEP
-#include <sys/times.h>
-#include <sys/resource.h>
-
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #include <cmath>
 #include <set>
 
@@ -1019,11 +1010,6 @@ bool Network::connect(index source_id, index target_id, DictionaryDatum& params,
 
 void Network::divergent_connect(index source_id, const TokenArray target_ids, const TokenArray weights, const TokenArray delays, index syn)
 {
-  struct tms foo;
-  clock_t starttime, startopenmp, endopenmp, startparallel, startfirstloop, startsecondloop, endparallel;
-
-  starttime = times(&foo); 
-
   bool complete_wd_lists = (target_ids.size() == weights.size() && weights.size() != 0 && weights.size() == delays.size());
   bool short_wd_lists = (target_ids.size() != weights.size() && weights.size() == 1 && delays.size() == 1);
   bool no_wd_lists = (weights.size() == 0 && delays.size() == 0);
@@ -1055,131 +1041,53 @@ void Network::divergent_connect(index source_id, const TokenArray target_ids, co
 
   // We retrieve pointers for all targets, this implicitly checks if they
   // exist and throws UnknownNode if not.
+  std::vector<Node*> targets;
+  targets.reserve(target_ids.size());
 
-  startopenmp = times(&foo); 
-
-#ifdef _OPENMP
-  int n_threads = get_num_threads();
-  omp_set_num_threads(n_threads);
-#else
-  int n_threads = 1;
-#endif
-
-  endopenmp = times(&foo); 
-
-  // we need to convert to gids in a serial way
-  // because tokenutils is currently not thread safe
-  std::vector< index > gids;
-  target_ids.toVector(gids); 
-
-  startparallel = times(&foo); 
-
-  #pragma omp parallel
+  //only bother with local targets - is_local_gid is cheaper than get_node()
+  for (index i = 0; i < target_ids.size(); ++i)
   {
-#ifdef _OPENMP
-    int omp_target_thread = omp_get_thread_num();
-#else
-    int omp_target_thread = -1;
-#endif
+    index gid = getValue<long>(target_ids[i]);
+    if (is_local_gid(gid))
+      targets.push_back(get_node(gid));
+  }
 
-    std::cout << "running with " << n_threads << " threads\n";
-
-    std::vector<Node*> targets;
-    targets.reserve(gids.size()/n_threads + 1);
-
-    // thread local copy of weights and delays
-    std::vector<double_t> lweights;
-    std::vector<double_t> ldelays;
-    if (complete_wd_lists)
-    {
-      lweights.reserve(gids.size()/n_threads + 1);
-      ldelays.reserve(gids.size()/n_threads + 1);
-    }
-
-    if (omp_target_thread == 0)
-      startfirstloop = times(&foo); 
-
-    //only bother with local targets on this machine and on this thread - is_local_gid is cheaper than get_node
-    for (index i = 0; i < gids.size(); ++i)
-    {	
-      index gid = gids[i];	    
-	    
-      if ( is_local_gid(gid) )
-      {
-	Node* tgt = get_node(gid);
-	
-	if ( omp_target_thread == -1 || tgt->get_thread() == omp_target_thread )
-	{
-	  targets.push_back(tgt);
-	  if (complete_wd_lists)
-	  {
-	    lweights.push_back(weights.get(i));
-	    ldelays.push_back(delays.get(i));
-       	  }
-	}
-      }
-    }
-
-    thread target_thread = omp_target_thread;
-
-    if (omp_target_thread == 0)
-      startsecondloop = times(&foo); 
+  for(index i = 0; i < targets.size(); ++i)
+  {
+    thread target_thread = targets[i]->get_thread();
  
-    for(index i = 0; i < targets.size(); ++i)
+    if (source->get_thread() != target_thread)
+      source = get_node(source_id, target_thread);
+
+    if (!targets[i]->has_proxies() && source->is_proxy())
+      continue;
+
+    try
     {
-      // if we are running this loop serially, we need to obtain
-      // the thread if of the target node
-      // otherwise, we already know that all nodes in targets are
-      // local to this omp_target_thread
-      if (omp_target_thread == -1)
-	thread target_thread = targets[i]->get_thread();
-
-      if (source->get_thread() != target_thread)
-	source = get_node(source_id, target_thread);
-
-      // we do not need to make connections from proxies to devices
-      // these connections are made on another machine
-      if (!targets[i]->has_proxies() && source->is_proxy())
-	continue;
-
-      try
-      {
-	if (complete_wd_lists)
-	  connect(*source, *targets[i], source_id, target_thread, lweights[i], ldelays[i], syn);
-	else if (short_wd_lists)
-	  connect(*source, *targets[i], source_id, target_thread, weights.get(0), delays.get(0), syn);
-	else 
-	  connect(*source, *targets[i], source_id, target_thread, syn);
-      }
-      catch (IllegalConnection& e)
-      {
-	std::string msg; // = String::compose("Global target ID %1: Target does not support event.", target_ids[i]);
-	message(SLIInterpreter::M_WARNING, "DivergentConnect", msg.c_str());
-	message(SLIInterpreter::M_WARNING, "DivergentConnect", "Connection will be ignored.");
-	continue;
-      }
-      catch (UnknownReceptorType& e)
-      {
-	std::string msg; // = String::compose("In Connection from global source ID %1 to target ID %2:", source_id, target_ids[i]);
-	message(SLIInterpreter::M_WARNING, "Connect", msg.c_str());
-	message(SLIInterpreter::M_WARNING, "Connect", "Target does not support requested receptor type.");
-	message(SLIInterpreter::M_WARNING, "Connect", "Connection will be ignored.");
-	interpreter_.raiseerror(e.what());
-	continue;
-      }
+      if (complete_wd_lists)
+	connect(*source, *targets[i], source_id, target_thread, weights.get(i), delays.get(i), syn);
+      else if (short_wd_lists)
+	connect(*source, *targets[i], source_id, target_thread, weights.get(0), delays.get(0), syn);
+      else 
+	connect(*source, *targets[i], source_id, target_thread, syn);
     }
-  } // of #pragma omp parallel
-
-  endparallel = times(&foo); 
-
-  std::string total = String::compose("total time: %1", (((double)endparallel-starttime)/sysconf(_SC_CLK_TCK)));
-  std::string parallel = String::compose("parallel section: %1", (((double)endparallel-startparallel)/sysconf(_SC_CLK_TCK)));
-  std::string openmpinit = String::compose("openmp init: %1", (((double)endopenmp-startopenmp)/sysconf(_SC_CLK_TCK)));
-  std::string firstloop = String::compose("first loop: %1", (((double)startsecondloop-startfirstloop)/sysconf(_SC_CLK_TCK)));
-  std::string secondloop = String::compose("second loop: %1", (((double)endparallel-startsecondloop)/sysconf(_SC_CLK_TCK)));
-
-  std::string msg = String::compose("%1, %2, %3, %4, %5, %6", total, parallel, openmpinit, firstloop, secondloop);
-  std::cout << msg << std::endl;
+    catch (IllegalConnection& e)
+    {
+      std::string msg; // = String::compose("Global target ID %1: Target does not support event.", target_ids[i]);
+      message(SLIInterpreter::M_WARNING, "DivergentConnect", msg.c_str());
+      message(SLIInterpreter::M_WARNING, "DivergentConnect", "Connection will be ignored.");
+      continue;
+    }
+    catch (UnknownReceptorType& e)
+    {
+      std::string msg; // = String::compose("In Connection from global source ID %1 to target ID %2:", source_id, target_ids[i]);
+      message(SLIInterpreter::M_WARNING, "Connect", msg.c_str());
+      message(SLIInterpreter::M_WARNING, "Connect", "Target does not support requested receptor type.");
+      message(SLIInterpreter::M_WARNING, "Connect", "Connection will be ignored.");
+      interpreter_.raiseerror(e.what());
+      continue;
+    }
+  }
 }
 
 void Network::random_divergent_connect(index source_id, const TokenArray target_ids, index n, const TokenArray weights, const TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)

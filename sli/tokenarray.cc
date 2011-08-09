@@ -122,7 +122,7 @@ void TokenArray::toVector(std::vector<long> &a) const
         {
 	  IntegerDatum const d;
 	  throw TypeMismatch(d.gettypename().toString(), 
-	  		     idx->datum()->gettypename().toString());
+			     idx->datum()->gettypename().toString());
         }   
       
       a.push_back(targetid->get());

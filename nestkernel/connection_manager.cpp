@@ -56,11 +56,6 @@ void ConnectionManager::init_()
       synapsedict_->insert(name, prototypes_.size() - 1);
     }
 
-  // OpenMP_fast_connect
-  // parallelize this allocation so that every thread takes care of his/her/its
-  // entries
-  // move allocated memory into the connection structure in a second step using swap
-  // look at example test_alloc.cpp
   std::vector< google::sparsetable< std::vector< syn_id_connector > > > tmp(
   net_.get_num_threads(), google::sparsetable< std::vector< syn_id_connector > >());
 
@@ -185,10 +180,6 @@ index ConnectionManager::validate_connector(thread tid, index gid, index syn_id)
 {
   assert_valid_syn_id(syn_id);
 
-  // OpenMP_fast_connect
-  // we are now using a google sparse table
-  // so we do not need to resize anymore
-  // check google documentation what resize does
   if (connections_[tid].size() < net_.size())
     connections_[tid].resize(net_.size());
 
