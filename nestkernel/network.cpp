@@ -1412,15 +1412,18 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
     throw DimensionMismatch();
   }
 
-
 #pragma omp parallel
   {
     int nrn_counter = 0;
     int syn_counter = 0;
 
+#ifdef _OPENMP
     int tid = omp_get_thread_num();
-    librandom::RngPtr rng = get_rng(tid);
+#else
+    int tid = 0;
+#endif
 
+    librandom::RngPtr rng = get_rng(tid);
     
     for (size_t i=0; i < target_ids.size(); i++)
     {      
