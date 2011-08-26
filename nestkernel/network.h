@@ -284,7 +284,10 @@ SeeAlso: Simulate, Node
     void random_divergent_connect(index s, const TokenArray r, index n, const TokenArray w, const TokenArray d, bool, bool, index syn);
     
     void convergent_connect(const TokenArray s, index r, const TokenArray weights, const TokenArray delays, index syn);
-    void convergent_connect(std::vector<Node*> s, index r, const TokenArray weights, const TokenArray delays, index syn);
+
+    
+    void convergent_connect(const std::vector<index> &s_id, const std::vector<Node*> &s, index r, const TokenArray &weight, const TokenArray &delays, index syn);
+
     void random_convergent_connect(const TokenArray s, index t, index n, const TokenArray w, const TokenArray d, bool, bool, index syn);
 
     /**
