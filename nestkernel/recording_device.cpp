@@ -505,7 +505,7 @@ void nest::RecordingDevice::set_status(const DictionaryDatum &d)
 void nest::RecordingDevice::record_event(const Event& event, bool endrecord)
 {
   ++S_.events_;
-  const index  sender = event.get_sender().get_gid();
+  const index  sender = event.get_sender_gid();
   const Time   stamp  = event.get_stamp();
   const double offset = event.get_offset();
   const double weight = event.get_weight();

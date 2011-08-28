@@ -130,10 +130,14 @@ void nest::spike_detector::handle(SpikeEvent & e)
     assert(e.get_multiplicity() > 0);
 
     long_t dest_buffer;
-    if ( e.get_sender().has_proxies() )
+    if ( network()->get_model_of_gid(e.get_sender_gid())->has_proxies() )
+    {
       dest_buffer = network()->read_toggle();   // events from central queue
+    }
     else
+    {
       dest_buffer = network()->write_toggle();  // locally delivered events
+    }
 
     for (int_t i = 0; i < e.get_multiplicity(); ++i)
     {

@@ -1481,7 +1481,6 @@ void nest::Scheduler::deliver_events_(thread t)
 
   size_t n_markers = 0;
   SpikeEvent se;
-  Node * sender = net_.dummy_spike_sources_[t]; // we need a dummy sender for sending the event
 
   std::vector<int> pos(displacements_);
 
@@ -1496,11 +1495,9 @@ void nest::Scheduler::deliver_events_(thread t)
         index nid = global_grid_spikes_[pos[pid]];
         if (nid != comm_marker_)
         {
-          // recording devices need a valid gid
-          sender->set_gid_(nid);
           // tell all local nodes about spikes on remote machines.
           se.set_stamp(clock_ - Time::step(lag));
-          se.set_sender(*sender);
+          se.set_sender_gid(nid);
           net_.connection_manager_.send(t, nid, se);
         }
         else
@@ -1524,13 +1521,9 @@ void nest::Scheduler::deliver_events_(thread t)
         index nid = global_offgrid_spikes_[pos[pid]].get_gid();
         if (nid != comm_marker_)
         {
-          // recording devices need a valid gid
-          sender->set_gid_(nid);
-
           // tell all local nodes about spikes on remote machines.
           se.set_stamp(clock_ - Time::step(lag));
-
-          se.set_sender(*sender);
+          se.set_sender_gid(nid);
           se.set_offset(global_offgrid_spikes_[pos[pid]].get_offset());
           net_.connection_manager_.send(t, nid, se);
         }

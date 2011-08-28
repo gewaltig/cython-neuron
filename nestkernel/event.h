@@ -94,18 +94,28 @@ namespace nest{
     /**
      * Return reference to receiving Node.
      */
-    Node &  get_receiver() const; 
+    Node & get_receiver() const; 
 
     /**
      * Return reference to sending Node.
      */
-    Node &  get_sender() const;
-    
+    Node & get_sender() const;
+
     /**
      * Change pointer to sending Node.
      */
-    void  set_sender(Node &);
+    void set_sender(Node &);
 
+    /**
+     * Return GID of sending Node.
+     */
+    index get_sender_gid() const;
+
+    /**
+     * Change GID of sending Node.
+     */
+    void set_sender_gid(index);
+    
     /**
      * Return time stamp of the event.
      * The stamp denotes the time when the event was created.
@@ -238,6 +248,8 @@ namespace nest{
      */
     Node * sender_; //!< Pointer to sender or NULL.
     Node * receiver_; //!< Pointer to receiver or NULL.
+
+    index sender_gid_; //!< GID of sender or -1.
     
     /**
      * Sender port number.  
@@ -695,7 +707,13 @@ namespace nest{
   {
     sender_= &s;
   }
-  
+   
+  inline
+  void Event::set_sender_gid(index gid) 
+  {
+    sender_gid_ = gid;
+  }
+ 
   inline
   Node & Event::get_receiver(void) const 
   {
@@ -706,6 +724,12 @@ namespace nest{
   Node & Event::get_sender(void) const 
   {
     return *sender_;
+  }
+
+  inline
+  index Event::get_sender_gid(void) const 
+  {
+    return sender_gid_;
   }
 
   inline
