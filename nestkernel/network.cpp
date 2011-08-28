@@ -1282,7 +1282,7 @@ void Network::convergent_connect(const std::vector<index> & source_ids, const st
       if (target->get_thread() != target_thread)
         target = get_node(target_id, target_thread);
 
-      if ( source->is_proxy())
+      if (source->is_proxy())
         continue;
     }
     
@@ -1427,11 +1427,12 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
     for (size_t i=0; i < target_ids.size(); i++)
     {      
       index target_id = target_ids.get(i);
-      Node* target = get_node(target_id, tid);
 
       // this is true for neurons on remote processes
-      if (target->is_proxy())
+      if ( !is_local_gid(target_id) )
 	continue;
+      
+      Node* target = get_node(target_id, tid);
 
       // check, if targets is on our thread
       if (target->get_thread() != tid)
