@@ -201,7 +201,7 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
     >> SetStatus
   } if
 
-  BGPMemInfo ( # mem_after_nodes ) join logger /log call
+  BGPMemInfo cvs ( # mem_after_nodes ) join logger /log call
 
   toc /BuildNodeTime Set
   mpi_rank cvs (] ) join (BuildNode time     : ) join  =only BuildNodeTime =only ( s) =
