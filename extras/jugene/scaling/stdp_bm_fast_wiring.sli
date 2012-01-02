@@ -201,9 +201,7 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
     >> SetStatus
   } if
 
-  %hardware_memory_thisjob cvs ( # hard_mem_after_nodes ) join logger /log call
-  %memory_thisjob cvs ( # virt_mem_after_nodes) join logger /log call
-  %meminfo_thisjob ( # meminfo_after_nodes) join logger /log call
+  BGPMemInfo ( # mem_after_nodes ) join logger /log call
 
   toc /BuildNodeTime Set
   mpi_rank cvs (] ) join (BuildNode time     : ) join  =only BuildNodeTime =only ( s) =
@@ -282,9 +280,7 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
   mpi_rank cvs (] ) join (BuildEdge time     : ) join  =only BuildEdgeTime =only ( s) =
   
   BuildEdgeTime cvs ( # build_edge_time ) join logger /log call
-  %hardware_memory_thisjob cvs ( # hard_mem_after_edges) join logger /log call
-  %memory_thisjob cvs ( # virt_mem_after_edges) join logger /log call
-  %meminfo_thisjob ( # meminfo_after_edges) join logger /log call
+  BGPMemInfo cvs ( # mem_after_edges) join logger /log call
   
  } def % end of buildnetwork
 
@@ -305,9 +301,7 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
    ifelse  
   %stdp_params using
 
-  %hardware_memory_thisjob cvs ( # hard_mem_0) join logger /log call
-  %memory_thisjob cvs ( # virt_mem_0) join logger /log call
-  %meminfo_thisjob ( # meminfo_0) join logger /log call
+  BGPMemInfo cvs ( # mem_0) join logger /log call
   
   BuildNetwork
    
@@ -318,9 +312,8 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
   toc /PreparationTime Set
   mpi_rank cvs (] ) join (Preparation time   : ) join  =only PreparationTime   =only ( s\n) =
 
-  %hardware_memory_thisjob cvs ( # hard_mem_after_presim)  join logger /log call
-  %memory_thisjob cvs ( # virt_mem_after_presim) join logger /log call
-  %meminfo_thisjob ( # meminfo_after_presim) join logger /log call
+
+  BGPMemInfo cvs ( # mem_after_presim) join logger /log call
   PreparationTime cvs ( # presim_time) join logger /log call
 
   tic
@@ -329,9 +322,7 @@ myrng rdevdict /normal get CreateRDV /normal_dv Set
 
   toc /SimCPUTime Set
 
-  %hardware_memory_thisjob cvs ( # hard_mem_after_sim) join logger /log call
-  %memory_thisjob cvs ( # virt_mem_after_sim) join logger /log call
-  %meminfo_thisjob ( # meminfo_after_sim) join logger /log call
+  BGPMemInfo cvs ( # mem_after_sim) join logger /log call
   SimCPUTime cvs ( # sim_time) join logger /log call
 
   

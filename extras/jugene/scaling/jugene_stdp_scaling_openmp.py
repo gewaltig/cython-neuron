@@ -13,7 +13,7 @@ absbasedir = os.getcwd()
 T_sim = 1000.
 
 # TODO #2: adapt this array for the number of nodes to use
-N_Nodes = [512]
+N_Nodes = [1024, 2048, 4096]
 
 email = 'm.helias@fz-juelich.de'
 
@@ -21,11 +21,11 @@ threads_per_node = 4
 
 # must be at least 10 minutes, maximum 60
 # TODO #3: adapt wallclock time
-expected_times = [60, 60, 60, 60, 60, 60] # min
+expected_times = [15, 15, 15, 15, 15, 15] # min
 
 # size of network
-scale = 300
-base_name = 'sim_openmp_3e6_N'
+scale = 100
+base_name = 'sim_openmp_1e6_N'
 
 N_procs = [N * threads_per_node for N in N_Nodes]
 
@@ -74,7 +74,7 @@ for i, N_proc in enumerate(N_procs):
        f.write('# @notify_user      = ' + email + '\n')
        f.write('# @queue\n')
 
-       f.write('mpirun -exe ' + nest_install + 'nest -np 512 -mode SMP -verbose 1 -args "' + absbasedir + '/' + base_dir + '/' + sli_script + '"\n')
+       f.write('mpirun -exe ' + nest_install + 'nest -np ' + str(N_Nodes[i]) + ' -mode SMP -verbose 1 -args "' + absbasedir + '/' + base_dir + '/' + sli_script + '"\n')
 
 
        f.close()
