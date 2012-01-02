@@ -1,0 +1,4 @@
+
+# option -qsmp=omp enables openmp
+
+../10kproject/configure CC=mpixlc_r CXX=mpixlcxx_r CFLAGS='-I/bgsys/drivers/ppcfloor/arch/include -qsmp=omp' CXXFLAGS='-I/bgsys/drivers/ppcfloor/arch/include -qsmp=omp' --without-python --without-pthread --enable-bluegene --prefix=/homea/jinb33/jinb3307/10kproject.build/
