@@ -123,7 +123,7 @@ def get_data(N_procs, filedir, filestem, n_files_try):
       mem4.append( mem_tot4 / n_files )
       n_procs.append(N_proc)
 
-  return n_procs, runtime_sim, runtime_setup, mem0, mem1, mem2, mem3, mem4
+  return n_procs, runtime_sim, runtime_setup, np.array(mem0), np.array(mem1), np.array(mem2), np.array(mem3), np.array(mem4)
 
 
 threaded_n,\
@@ -173,10 +173,12 @@ pl.xticks([1024, 2048, 4096, 8192, 16384], [r'$1024$', r'$2048$', r'$4096$', r'$
 pl.yticks([25, 50, 100, 200, 400], [r'$25$', r'$50$', r'$100$', r'$200$', r'$400$'])
 
 pl.xlim([800, 24000])
-pl.ylim([25, 800])
+pl.ylim([25, 250])
 
 pl.legend()
 pl.savefig('sim_jugene_stdp.pdf')
+pl.savefig('sim_jugene_stdp.eps')
+pl.savefig('sim_jugene_stdp.png')
 
 #######################
 ## memory consumption
@@ -186,17 +188,23 @@ pl.rcParams['figure.subplot.left'] = 0.20
 K = 1024.
 pl.figure(2)
 pl.clf()
-pl.semilogx(threaded_n, threaded_mem0, '.', markersize=markersize, label='after start')
-pl.semilogx(threaded_n, threaded_mem1, '.', markersize=markersize, label='after nodes')
-pl.semilogx(threaded_n, threaded_mem2, '.', markersize=markersize, label='after edges')
-pl.semilogx(threaded_n, threaded_mem3, '.', markersize=markersize, label='after presim')
-pl.semilogx(threaded_n, threaded_mem4, '.', markersize=markersize, label='after sim')
+GB = 1./(1024*1024)
+pl.semilogx(threaded_n, threaded_mem0*GB, '.', markersize=markersize, label='after start')
+pl.semilogx(threaded_n, threaded_mem1*GB, '.', markersize=markersize, label='after nodes')
+pl.semilogx(threaded_n, threaded_mem2*GB, '.', markersize=markersize, label='after edges')
+pl.semilogx(threaded_n, threaded_mem3*GB, '.', markersize=markersize, label='after presim')
+pl.semilogx(threaded_n, threaded_mem4*GB, '.', markersize=markersize, label='after sim')
 pl.legend()
 
 pl.xticks([1024, 2048, 4096, 8192, 16384], [r'$1024$', r'$2048$', r'$4096$', r'$8192$', r'$16384$'])
 
+pl.ylabel(r'memory / node (GB)')
+pl.xlabel(r'number of cores')
+pl.xlim([800, 24000])
 
 pl.savefig('memory_jugene_stdp.pdf')
+pl.savefig('memory_jugene_stdp.eps')
+pl.savefig('memory_jugene_stdp.png')
 
 pl.show()
 
