@@ -1,5 +1,5 @@
 /*
- *  ppd_sup_generator.h
+ *  gamma_sup_generator.h
  *
  *  This file is part of NEST
  *
@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef ppd_sup_generator_H
-#define ppd_sup_generator_H
+#ifndef GAMMA_SUP_GENERATOR_H
+#define GAMMA_SUP_GENERATOR_H
 
 #include <vector>
 #include "nest.h"
@@ -21,58 +21,57 @@
 #include "scheduler.h"
 #include "binomial_randomdev.h"
 #include "connection.h"
+#include "ppd_sup_generator.h"
 
 /*BeginDocumentation
-Name: ppd_sup_generator - simulate the superimposed spike train of a population of Poisson processes with dead time.
+Name: gamma_sup_generator - simulate the superimposed spike train of a population of Gamma process.
 Description:
 
-  The ppd_sup_generator generator simulates the pooled spike train of a 
-  population of neurons firing independently with Poisson process with dead 
-  time statistics. 
-  The rate parameter can also be sine-modulated. The generator does not 
-  initialize to equilibrium in this case initial transients might occur.
+  The gamma_sup_generator generator simulates the pooled spike train of a 
+  population of neurons firing independently with gamma process statistics. 
 
 Parameters:
    The following parameters appear in the element's status dictionary:
 
    rate - mean firing rate of the component processes. (double, var)
-   dead_time - minimal time between two spikes of the component processes. (double, var)
+   gamma_shape - shape paramter of component gamma processes. (long, var)
    n_proc - number of superimposed independent component processes. (long, var)
-   frequency - rate modulation frequency. (double, var)
-   amplitude - relative rate modulation amplitude. (double, var)
 
 Note:
-   The generator will be published in Deger, Helias, Boucsein, Rotter (2011) 
-   Statistical properties of superimposed stationary spike trains, Journal of
-   Computational Neuroscience.
+   The generator has been published in Deger, Helias, Boucsein, Rotter (2011) 
+   Statistical properties of superimposed stationary spike trains, 
+   Journal of Computational Neuroscience.
+   URL: http://www.springerlink.com/content/u75211r381p08301/
+   DOI: 10.1007/s10827-011-0362-8
 
-Authors:
-   June 2009, Moritz Deger, Moritz Helias
+Author:
+   Jan 2011, Deger
 
-SeeAlso: poisson_generator_ps, spike_generator, Device, StimulatingDevice, gamma_sup_generator
+SeeAlso: poisson_deadtime_sup_generator, poisson_generator_ps, spike_generator, 
+         Device, StimulatingDevice
 */
-
 
 namespace nest{
 
   /** 
-   * Generator of the spike output of a population of Poisson processes with dead time.
+   * Generator of the spike output of a population of gamma processes with 
+   * integer shape parameter.
    * 
-   * This Poisson process with dead time superposition generator sends different spike 
+   * This gamma process superposition generator sends different spike 
    * trains to all its targets. 
    *
    * @ingroup Devices
    */
-  class ppd_sup_generator: public Node
+  class gamma_sup_generator: public Node
   {
     
   public:        
     
     typedef Node base;
     
-    ppd_sup_generator();
-    ppd_sup_generator(const ppd_sup_generator&);
-    
+    gamma_sup_generator();
+    gamma_sup_generator(const gamma_sup_generator&);
+
     bool has_proxies() const {return false;}
     bool is_off_grid() const {return false;}  // does not use off_grid events
 
@@ -82,7 +81,6 @@ namespace nest{
 
     void get_status(DictionaryDatum &) const;
     void set_status(const DictionaryDatum &);
-    
 
   private:
     void init_node_(const Node&);
@@ -114,11 +112,9 @@ namespace nest{
      * Store independent parameters of the model.
      */
     struct Parameters_ {
-      double_t                rate_;        //!< process rate [Hz]
-      double_t                dead_time_;   //!< dead time [ms]
-      ulong_t                 n_proc_;      //!< number of component processes
-      double_t                frequency_;   //!< rate modulation frequency [Hz]
-      double_t                amplitude_;   //!< rate modulation amplitude [Hz]
+      double_t                rate_;        //!< rate of component gamma process [Hz]
+      ulong_t                 gamma_shape_;       //!< gamma shape parameter [1] 
+      ulong_t                 n_proc_;      //!< number of component processes      
 
       /**
        * Number of targets.
@@ -135,38 +131,32 @@ namespace nest{
     };
 
     // ------------------------------------------------------------
-
-
-    class Age_distribution_ {
+    
+    class Internal_states_ {
     
       librandom::BinomialRandomDev bino_dev_;       //!< random deviate generator
-      std::vector<ulong_t> occ_refractory_;         //!< occupation numbers of ages below dead time
-      ulong_t  occ_active_;                         //!< summed occupation number of ages above dead time
-      size_t activate_;                             //!< rotating pointer
+      std::vector<ulong_t> occ_;                    //!< occupation numbers of internal states
       
       public:
-      Age_distribution_(size_t num_age_bins, ulong_t ini_occ_ref, ulong_t ini_occ_act);  //!< initialize age dist
-      ulong_t update(double_t hazard_rate, librandom::RngPtr rng);    //!< update age dist and generate spikes
+      Internal_states_(size_t num_bins, ulong_t ini_occ_ref, ulong_t ini_occ_act);  //!< initialize occupation numbers
+      ulong_t update(double_t transition_prob, librandom::RngPtr rng);    //!< update age dist and generate spikes
     
     };
-    
     
 
     struct Buffers_ {
       /**
-       * Age distribution of component Poisson processes with dead time of the superposition.
+       * Occupation numbers of the internal states of the generator
        */
 
-      std::vector<Age_distribution_> age_distributions_;
+      std::vector<Internal_states_> internal_states_;
       
     };
 
     // ------------------------------------------------------------
 
     struct Variables_ {
-      double_t                hazard_step_;    //!< base hazard rate in units of time step
-      double_t                hazard_step_t_;  //!< hazard rate at time t in units of time step
-      double_t                omega_;          //!< angular velocity of rate modulation [rad/ms]
+      double_t                transition_prob_;  //!< transition probabililty to go to next internal state
 
       /** 
        * @name update-hook communication.
@@ -192,7 +182,7 @@ namespace nest{
   };
 
 inline  
-port ppd_sup_generator::check_connection(Connection& c, port receptor_type)
+port gamma_sup_generator::check_connection(Connection& c, port receptor_type)
 {
   DSSpikeEvent e;
   e.set_sender(*this);
@@ -203,14 +193,14 @@ port ppd_sup_generator::check_connection(Connection& c, port receptor_type)
 }
 
 inline
-void ppd_sup_generator::get_status(DictionaryDatum &d) const
+void gamma_sup_generator::get_status(DictionaryDatum &d) const
 {
   P_.get(d);
   device_.get_status(d);
 }
 
 inline
-void ppd_sup_generator::set_status(const DictionaryDatum &d)
+void gamma_sup_generator::set_status(const DictionaryDatum &d)
 {
   Parameters_ ptmp = P_;  // temporary copy in case of errors
   ptmp.set(d);               // throws if BadProperty
@@ -226,4 +216,4 @@ void ppd_sup_generator::set_status(const DictionaryDatum &d)
 
 } // namespace
 
-#endif //PPD_SUP_GENERATOR_H
+#endif 

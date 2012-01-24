@@ -176,6 +176,17 @@ const Time ConnectionManager::get_max_delay() const
   return max_delay;
 }
 
+bool ConnectionManager::get_user_set_delay_extrema() const
+{
+  bool user_set_delay_extrema = false;
+  
+  for (size_t syn_id = 0; syn_id < prototypes_.size(); ++syn_id)
+    if (prototypes_[syn_id] != 0)
+        user_set_delay_extrema |= prototypes_[syn_id]->get_user_set_delay_extrema();
+  
+  return user_set_delay_extrema;
+}
+
 index ConnectionManager::validate_connector(thread tid, index gid, index syn_id)
 {
   assert_valid_syn_id(syn_id);
@@ -272,14 +283,14 @@ ArrayDatum ConnectionManager::find_connections(DictionaryDatum params)
 {
   ArrayDatum connectome;
   
-  long source;
+  long source=0L;
   bool have_source = updateValue<long>(params, names::source, source);
   if (have_source)
     net_.get_node(source); // This throws if the node does not exist
   else
     throw UndefinedName(names::source.toString());
   
-  long target;
+  long target=0L;
   bool have_target = updateValue<long>(params, names::target, target);
   if (have_target)
     net_.get_node(target); // This throws if the node does not exist
@@ -344,6 +355,25 @@ void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, Dicti
 {
   index syn_vec_index = validate_connector(tid, s_gid, syn);
   connections_[tid].get(s_gid)[syn_vec_index].connector->register_connection(s, r, p);
+}
+
+/**
+ * Connect, using a dictionary with arrays. 
+ * This variant of connect combines the functionalities of 
+ * - connect
+ * - divergent_connect
+ * - convergent_connect
+ * The decision is based on the details of the dictionary entries source and target. 
+ * If source and target are both either a GID or a list of GIDs with equal size, then source and target are connected one-to-one.
+ * If source is a gid and target is a list of GIDs then divergent_connect is used.
+ * If source is a list of GIDs and target is a GID, then convergent_connect is used.
+ * At this stage, the task of connect is to separate the dictionary into one for each thread and then to forward the
+ * connect call to the connectors who can then deal with the details of the connection.
+ */
+
+bool ConnectionManager::connect(DictionaryDatum&)
+{
+    return false;
 }
 
 void ConnectionManager::send(thread t, index sgid, Event& e)

@@ -1092,6 +1092,140 @@ void Network::divergent_connect(index source_id, const TokenArray target_ids, co
     }
   }
 }
+// -----------------------------------------------------------------------------
+
+
+void Network::divergent_connect(index source_id, DictionaryDatum pars, index syn)
+{
+  // We extract the parameters from the dictionary explicitly since getValue() for DoubleVectorDatum
+  // copies the data into an array, from which the data must then be copied once more.
+ 
+  DictionaryDatum par_i(new Dictionary());
+  Dictionary::iterator di_s, di_t;
+  // To save time, we first create the parameter dictionary for connect(), then we copy
+  // all keys from the original dictionary into the parameter dictionary.
+  // We can the later use iterators to change the values inside the parameter dictionary,
+  // rather than using the lookup operator.
+  // We also do the parameter checking here so that we can later use unsafe operations.
+  for(di_s=(*pars).begin(); di_s !=(*pars).end();++di_s)
+    {
+      par_i->insert(di_s->first,Token(new DoubleDatum()));
+      DoubleVectorDatum const* tmp = dynamic_cast<DoubleVectorDatum*>(di_s->second.datum());
+      if(tmp==0)
+	{
+	  std::string msg=String::compose("Parameter '%1' must be a DoubleVectorArray or numpy.array. ",di_s->first.toString());
+	  message(SLIInterpreter::M_WARNING, "DivergentConnect",msg);
+	  message(SLIInterpreter::M_WARNING, "DivergentConnect", "Trying to convert, but this takes time.");
+	  IntVectorDatum const* tmpint = dynamic_cast<IntVectorDatum*>(di_s->second.datum());
+	  if(tmpint){
+	    std::vector<double> *data=new std::vector<double>((*tmpint)->begin(),(*tmpint)->end());
+	    DoubleVectorDatum *dvd= new DoubleVectorDatum(data);
+	    di_s->second= dvd;
+	    continue;
+	  }
+	  ArrayDatum *ad= dynamic_cast<ArrayDatum *>(di_s->second.datum());
+	  if ( ad ) 
+	    {
+	      std::vector<double> *data=new std::vector<double>;
+	      ad->toVector(*data);
+	      DoubleVectorDatum *dvd= new DoubleVectorDatum(data);
+	      di_s->second= dvd;
+	    }
+	  else  
+	    throw TypeMismatch(DoubleVectorDatum().gettypename().toString() 
+			       + " or " + ArrayDatum().gettypename().toString(),  
+			       di_s->second.datum()->gettypename().toString());
+
+	}
+    }
+
+  const Token target_t=pars->lookup2(names::target);
+  DoubleVectorDatum const* ptarget_ids = static_cast<DoubleVectorDatum*>(target_t.datum());
+  const std::vector<double> &target_ids(**ptarget_ids);
+
+  const Token weight_t=pars->lookup2(names::weight);
+  DoubleVectorDatum const* pweights = static_cast<DoubleVectorDatum*>(weight_t.datum());
+  const std::vector<double> &weights(**pweights);
+
+  const Token delay_t=pars->lookup2(names::delay);
+  DoubleVectorDatum const* pdelays = static_cast<DoubleVectorDatum*>(delay_t.datum());
+  const std::vector<double> &delays(**pdelays);
+
+
+  bool complete_wd_lists = (target_ids.size() == weights.size() && weights.size() == delays.size());
+  // check if we have consistent lists for weights and delays
+  if (! complete_wd_lists)
+  {
+    message(SLIInterpreter::M_ERROR, "DivergentConnect", "All lists in the paramter dictionary must be of equal size.");
+    throw DimensionMismatch();
+  }
+  
+  Node* source = get_node(source_id);
+    
+  Subnet *source_comp=dynamic_cast<Subnet *>(source);
+  if(source_comp !=0)
+  {
+    message(SLIInterpreter::M_INFO, "DivergentConnect", "Source ID is a subnet; I will iterate it.");
+    
+    NodeList source_nodes(*source_comp);
+    for(NodeList::iterator src=source_nodes.begin(); src!= source_nodes.end(); ++src)
+      divergent_connect((*src)->get_gid(), pars, syn);
+
+    return;
+  }
+
+  // We retrieve pointers for all targets, this implicitly checks if they
+  // exist and throws UnknownNode if not.
+  std::vector<Node*> targets(target_ids.size());
+  size_t n_targets=target_ids.size();
+  for (index i = 0; i < n_targets; ++i)
+    targets[i] = get_node(target_ids[i]);
+ 
+  for(index i = 0; i < n_targets; ++i)
+    {
+      if (targets[i]->is_proxy())
+	continue;
+
+      thread target_thread = targets[i]->get_thread();
+      
+      if (source->get_thread() != target_thread)
+	source = get_node(source_id, target_thread);
+
+      if (!targets[i]->has_proxies() && source->is_proxy())
+	continue;
+
+      // here we fill a parameter dictionary with the values of the current loop index.
+      for(di_s=(*pars).begin(), di_t=par_i->begin(); di_s !=(*pars).end();++di_s,++di_t)
+	{
+	  DoubleVectorDatum const* tmp = static_cast<DoubleVectorDatum*>(di_s->second.datum());
+	  const std::vector<double> &tmpvec=**tmp;
+	  DoubleDatum *dd= static_cast<DoubleDatum *>(di_t->second.datum());
+	  (*dd)= tmpvec[i]; // We assign the double directly into the double datum.
+	}
+
+      try
+	{
+	  connect(source->get_gid(), targets[i]->get_gid(), par_i, syn);
+	  
+	}
+      catch (IllegalConnection& e)
+	{
+	  std::string msg = String::compose("Global target ID %1: Target does not support event.", target_ids[i]);
+	  message(SLIInterpreter::M_WARNING, "DivergentConnect", msg.c_str());
+	  message(SLIInterpreter::M_WARNING, "DivergentConnect", "Connection will be ignored.");
+	  continue;
+	}
+      catch (UnknownReceptorType& e)
+	{
+	  std::string msg = String::compose("In Connection from global source ID %1 to target ID %2:", source_id, target_ids[i]);
+	  message(SLIInterpreter::M_WARNING, "Connect", msg.c_str());
+	  message(SLIInterpreter::M_WARNING, "Connect", "Target does not support requested receptor type.");
+	  message(SLIInterpreter::M_WARNING, "Connect", "Connection will be ignored.");
+	  continue;
+	}
+    }
+}
+
 
 void Network::random_divergent_connect(index source_id, const TokenArray target_ids, index n, const TokenArray weights, const TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
 {
@@ -1100,7 +1234,7 @@ void Network::random_divergent_connect(index source_id, const TokenArray target_
   // check if we have consistent lists for weights and delays
   if (! (weights.size() == n || weights.size() == 0) && (weights.size() == delays.size()))
   {
-    message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights and delays must be lists of size n.");
+    message(SLIInterpreter::M_ERROR, "RandomDivergentConnect", "weights and delays must be lists of size n.");
     throw DimensionMismatch();
   }
     

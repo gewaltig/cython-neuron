@@ -23,6 +23,7 @@
 #include "event.h"
 #include "node.h"
 #include "slice_ring_buffer.h"
+#include "ring_buffer.h"
 #include "connection.h"
 
 #include "universal_data_logger.h"
@@ -79,13 +80,13 @@ namespace nest{
      relevant measures analytically.
 
      Remarks:
-     The iaf_psc_delta_canon neuron does not accept CurrentEvent connections.
-     This is because the present method for transmitting CurrentEvents in 
+
+     The iaf_psc_delta_canon neuron accepts CurrentEvent connections.
+     However, the present method for transmitting CurrentEvents in 
      NEST (sending the current to be applied) is not compatible with off-grid
      currents, if more than one CurrentEvent-connection exists. Once CurrentEvents
      are changed to transmit change-of-current-strength, this problem will 
      disappear and the canonical neuron will also be able to handle CurrentEvents.
-     For now, the only way to inject a current is the built-in current I_e.
 
      The present implementation uses individual variables for the
      components of the state vector and the non-zero matrix elements of
@@ -137,7 +138,7 @@ namespace nest{
 
      Sends: SpikeEvent
 
-     Receives: SpikeEvent, DataLoggingRequest
+     Receives: SpikeEvent, CurrentEvent, DataLoggingRequest
      
      Author:  May 2006, Plesser; based on work by Diesmann, Gewaltig, Morrison, Straube, Eppler
      SeeAlso: iaf_psc_delta
@@ -181,10 +182,12 @@ namespace nest{
     port check_connection(Connection&, port);
     
     void handle(SpikeEvent &);
+    void handle(CurrentEvent &);
     void handle(DataLoggingRequest &);
 
     bool is_off_grid() const {return true;}  // uses off_grid events    
     port connect_sender(SpikeEvent &, port);
+    port connect_sender(CurrentEvent &, port);
     port connect_sender(DataLoggingRequest &, port);
 
     void get_status(DictionaryDatum &) const;
@@ -296,6 +299,7 @@ namespace nest{
      */
     struct State_ {
       double_t U_;  //!< This is the membrane potential RELATIVE TO RESTING POTENTIAL.
+      double_t I_;  //!< This is the current to be applied during this time step
       
       long_t   last_spike_step_;   //!< step of last spike, for reporting in status dict
       double_t last_spike_offset_; //!< offset of last spike, for reporting in status dict
@@ -330,6 +334,11 @@ namespace nest{
        *       with weight == numerics::NaN
        */
       SliceRingBuffer events_;
+
+      /**
+       * Queue for incoming current events.
+       */
+      RingBuffer currents_;
   
       //! Logger for all analog data
       UniversalDataLogger<iaf_psc_delta_canon> logger_;
@@ -398,14 +407,22 @@ namespace nest{
       return 0;
     }
 
-inline
-port iaf_psc_delta_canon::connect_sender(DataLoggingRequest& dlr, 
-					 port receptor_type)
-{
-  if (receptor_type != 0)
-    throw UnknownReceptorType(receptor_type, get_name());
-  return B_.logger_.connect_logging_device(dlr, recordablesMap_);
-}
+  inline
+    port iaf_psc_delta_canon::connect_sender(CurrentEvent&, port receptor_type)
+    {
+      if (receptor_type != 0)
+	throw UnknownReceptorType(receptor_type, get_name());
+      return 0;
+    }
+
+  inline
+    port iaf_psc_delta_canon::connect_sender(DataLoggingRequest& dlr, 
+					     port receptor_type)
+    {
+      if (receptor_type != 0)
+	throw UnknownReceptorType(receptor_type, get_name());
+      return B_.logger_.connect_logging_device(dlr, recordablesMap_);
+    }
   
   inline 
     Time iaf_psc_delta_canon::get_spiketime() const

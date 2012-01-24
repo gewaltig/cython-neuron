@@ -24,7 +24,6 @@
 #include "doubledatum.h"
 #include "dictutils.h"
 #include "numerics.h"
-#include "analog_data_logger_impl.h"
 #include "universal_data_logger_impl.h"
 
 #include <limits>
@@ -150,7 +149,6 @@ void ginzburg::init_state_(const Node& proto)
 void ginzburg::init_buffers_()
 {
   B_.spikes_.clear();       // includes resize
-  B_.h_.clear_data(); // includes resize
   B_.logger_.reset();
   Archiving_Node::clear_history();
 }
@@ -218,8 +216,6 @@ void ginzburg::update(Time const & origin,
     // log state data
     B_.logger_.record_data(origin.get_steps() + lag);
 
-    B_.h_.record_data(origin.get_steps()+lag, S_.h_);
-
   } // of for (lag ...
 
 }                           
@@ -269,11 +265,6 @@ void ginzburg::handle(SpikeEvent & e)
   S_.t_last_in_spike_ = t_spike;
 }
 
-
-void ginzburg::handle(PotentialRequest& e)
-{
-  B_.h_.handle(*this, e);
-}
 
 void ginzburg::handle(DataLoggingRequest& e)
 {

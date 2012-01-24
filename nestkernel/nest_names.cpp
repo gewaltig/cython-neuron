@@ -78,6 +78,7 @@ namespace nest
     const Name c("c");
     const Name d("d");
     const Name U_m("U_m");
+    const Name consistent_integration("consistent_integration");
 
     // Other Adaptation
     const Name E_sfa("E_sfa");
@@ -88,7 +89,6 @@ namespace nest
     const Name q_rr("q_rr");
     const Name tau_sfa("tau_sfa");
     const Name tau_rr("tau_rr");
-
 
     // Specific to Hodgkin Huxley models
     const Name Act_m("Act_m");

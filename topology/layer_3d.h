@@ -99,6 +99,14 @@ namespace nest
 	    const std::vector<Node*>& nodes);
 
     /**
+     * Set member variables in layer according to details in input 
+     * dictionary. 
+     * @param dict  Dictionary containing new values for selected 
+     *              layer variables.
+     */
+    void set_status(const DictionaryDatum&);
+
+    /**
      * Removes node elements in the layer that don't fit the criterias
      * set in the input dictionary.
      * @param dict  Dictionary containing the criterias that the function

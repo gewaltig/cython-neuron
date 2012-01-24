@@ -95,7 +95,7 @@
        Joint Conference on Neural Networks, pp.1--6, IEEE Press
 
   FirstVersion: March 2006
-  Author: Moritz Helias, Abigail Morrison, Thomas Pfeil
+  Author: Moritz Helias, Abigail Morrison, Thomas Pfeil (TP)
   SeeAlso: synapsedict, tsodyks_synapse, static_synapse
 */
 

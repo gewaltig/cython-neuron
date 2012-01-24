@@ -59,7 +59,7 @@ define_macros        = []
 setup_flags          = []
 extra_objects        = []
 cxxflags             = []
-extra_link_args      = []
+extra_link_args      = ['@OPENMP_CXXFLAGS@']
 runtime_library_dirs = []
 
 for incs in pre_includes :
@@ -153,6 +153,9 @@ for opt in ["-Wstrict-prototypes", "-Wno-long-double", "-no-cpp-precomp"]:
 # from here, it's distutils' way
 from distutils.core import setup, Extension
 
+# an empty string is also interpreted as a library to link against.
+if extra_link_args == ['']:
+    extra_link_args = []
 
 extdict = {'include_dirs'       : include_dirs,
            'libraries'          : libraries,

@@ -855,7 +855,7 @@ sli_cv_check_stl_vector_capacity_base_unity,
  h=$CXXFLAGS
  CXXFLAGS=$AM_CXXFLAGS
  AC_LANG_CPLUSPLUS
- AC_RUN_IFELSE([
+ AC_RUN_IFELSE([AC_LANG_SOURCE([
 #include <vector>
 int main(void)
 {
@@ -863,7 +863,7 @@ int main(void)
   v.push_back(7);
   return v.capacity() > 1;     
 } 
- ], 
+ ])], 
  sli_cv_check_stl_vector_capacity_base_unity=yes, 
  sli_cv_check_stl_vector_capacity_base_unity=no,
  [echo "cross compiling, assuming no"
@@ -885,7 +885,7 @@ sli_cv_check_stl_vector_capacity_doubling,
  h=$CXXFLAGS
  CXXFLAGS=$AM_CXXFLAGS
  AC_LANG_CPLUSPLUS
- AC_RUN_IFELSE([
+ AC_RUN_IFELSE([AC_LANG_SOURCE([
  #include <vector>
 int main(void)
 {
@@ -910,7 +910,7 @@ int main(void)
   } 
   return 0;
 }
- ], 
+ ])], 
  sli_cv_check_stl_vector_capacity_doubling=yes, 
  sli_cv_check_stl_vector_capacity_doubling=no,
  [echo "cross compiling, assuming no"

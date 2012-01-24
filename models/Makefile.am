@@ -43,6 +43,8 @@ libmodelsmodule_la_SOURCES= \
 		mip_generator.h mip_generator.cpp\
 		step_current_generator.h step_current_generator.cpp\
 		pulsepacket_generator.h pulsepacket_generator.cpp\
+		ppd_sup_generator.cpp ppd_sup_generator.h\
+		gamma_sup_generator.cpp gamma_sup_generator.h\
 		spike_detector.h spike_detector.cpp\
 		multimeter.cpp multimeter.h\
 		correlation_detector.h correlation_detector.cpp\
@@ -51,6 +53,7 @@ libmodelsmodule_la_SOURCES= \
 		static_connection_hom_wd.h\
 		cont_delay_connection.h cont_delay_connection.cpp\
 		tsodyks_connection.h tsodyks_connection.cpp\
+		tsodyks2_connection.h tsodyks2_connection.cpp\
 		stdp_connection.h stdp_connection.cpp\
 		stdp_connection_hom.h stdp_connection_hom.cpp\
 		stdp_pl_connection_hom.h stdp_pl_connection_hom.cpp\
@@ -59,6 +62,7 @@ libmodelsmodule_la_SOURCES= \
 		ht_connection.cpp ht_connection.h \
 		smp_generator.cpp smp_generator.h \
 		sli_neuron.cpp sli_neuron.h\
+		ginzburg_neuron.cpp ginzburg_neuron.h\
 	 	modelsmodule.h modelsmodule.cpp
 
 AM_CPPFLAGS= -I$(top_srcdir)/libnestutil\

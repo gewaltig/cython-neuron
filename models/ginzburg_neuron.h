@@ -22,7 +22,6 @@
 #include "archiving_node.h"
 #include "ring_buffer.h"
 #include "connection.h"
-#include "analog_data_logger.h"
 #include "universal_data_logger.h"
 #include "recordables_map.h"
 #include "exp_randomdev.h"
@@ -62,7 +61,11 @@ namespace nest{
      
      
      Remarks:
-     TODO: Explain usage of spike events to convey binary information.
+     This neuron has a special use for spike events to convey the
+     binary state of the neuron to the target. The neuron model
+     only sends a spike if a transition of its state occurs. If the
+     state makes an up-transition it sends a spike with multiplicity 2,
+     if a down transition occurs, it sends a spike with multiplicity 1.
      
      Parameters: 
 
@@ -119,11 +122,9 @@ namespace nest{
     port check_connection(Connection&, port);
     
     void handle(SpikeEvent &);
-    void handle(PotentialRequest &);
     void handle(DataLoggingRequest &);
     
     port connect_sender(SpikeEvent &, port);
-    port connect_sender(PotentialRequest &, port);
     port connect_sender(DataLoggingRequest &, port);
 
     void get_status(DictionaryDatum &) const;
@@ -205,12 +206,7 @@ namespace nest{
 
       //! Logger for all analog data
       UniversalDataLogger<ginzburg> logger_;
- 
-      /**
-       * Buffer for total input current.
-       */
-      AnalogDataLogger<PotentialRequest> h_;
-    };
+     };
     
     // ---------------------------------------------------------------- 
 
@@ -268,15 +264,6 @@ namespace nest{
       return 0;
     }
  
-   inline
-    port ginzburg::connect_sender(PotentialRequest& pr, port receptor_type)
-    {
-      if (receptor_type != 0)
-	throw UnknownReceptorType(receptor_type, get_name());
-      B_.h_.connect_logging_device(pr);
-      return 0;
-    }
-
    inline
     port ginzburg::connect_sender(DataLoggingRequest& dlr, 
 				       port receptor_type)

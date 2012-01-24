@@ -14,7 +14,7 @@
  *
  */
 
-# ifndef CharCode_H
+#ifndef CharCode_H
 #define CharCode_H
 /* 
 
@@ -27,6 +27,8 @@
 #include <vector>
 #include <cassert>
 
+using std::size_t;
+
 class CharCode : public std::vector<size_t> {
 public:
  CharCode(size_t, size_t);
@@ -37,4 +39,4 @@ public:
 };
 
 
-# endif
+#endif

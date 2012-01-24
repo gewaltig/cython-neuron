@@ -81,6 +81,7 @@ namespace nest
      * @param radius Radius of circular region.
      * @param extent layer extent for periodic boundary conditions, or 0 otherwise
      */
+    using Quadrant::get_nodes;
     void get_nodes(lockPTR<std::vector<NodeWrapper> > nodes,
 		   Volume const * const box,
 		   std::vector<double_t> * extent=0);

@@ -106,6 +106,8 @@ public:
   index copy_synapse_prototype(index old_id, std::string new_name);
 
   bool has_user_prototypes() const;
+
+  bool get_user_set_delay_extrema() const;
   
   size_t get_num_connections() const;
 
@@ -124,7 +126,11 @@ public:
   void connect(Node& s, Node& r, index s_gid, thread tid, index syn);
   void connect(Node& s, Node& r, index s_gid, thread tid, double_t w, double_t d, index syn);
   void connect(Node& s, Node& r, index s_gid, thread tid, DictionaryDatum& p, index syn);
-  
+  /** 
+   * Experimental bulk connector. see documentation in network.h
+   */
+  bool connect(DictionaryDatum &d);
+
   void send(thread t, index sgid, Event& e);
 
   /**

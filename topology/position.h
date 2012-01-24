@@ -35,7 +35,31 @@
 namespace nest
 {
 
-  class DimensionalityMismatch;
+  /**
+   * Exception to be thrown if a Position is compared to another
+   * with a different dimensionality.
+   * @ingroup KernelExceptions
+   */
+  class DimensionalityMismatch: public KernelException
+  {
+    std::string positions_;
+
+  public:
+    DimensionalityMismatch()
+      : KernelException("TopologyDimensionalityMismatch")  {}
+    DimensionalityMismatch(const std::string &p)
+      : KernelException("TopologyDimensionalityMismatch"), positions_(p)  {}
+    ~DimensionalityMismatch() throw () {}
+    
+    std::string message() {
+      if (positions_.empty()) {
+	return std::string("Dimensionality of positions do not match.");
+      } else {
+	return std::string("Dimensionality of positions " + positions_ +
+			   " do not match.");
+      }
+    }
+  };
 
   /**
    * Template class that stores data pairs giving the coordinates of a 
@@ -459,11 +483,11 @@ namespace nest
 	}
 
 	if (x<min.get_x()) { x = min.get_x(); }
-	if (x>max.get_x()) { x = min.get_x(); }
+	if (x>max.get_x()) { x = max.get_x(); }
 	if (y<min.get_y()) { y = min.get_y(); }
-	if (y>max.get_y()) { y = min.get_y(); }
+	if (y>max.get_y()) { y = max.get_y(); }
 	if (z<min.get_z()) { z = min.get_z(); }
-	if (z>max.get_z()) { z = min.get_z(); }
+	if (z>max.get_z()) { z = max.get_z(); }
       }
 
       void set_x(const DataType& a)
@@ -601,34 +625,6 @@ namespace nest
     if ( dim_ > 2 ) out << sep << z;
     return;
   }
-
-  /**
-   * Exception to be thrown if a Position is compared to another
-   * with a different dimensionality.
-   * @ingroup KernelExceptions
-   */
-  class DimensionalityMismatch: public KernelException
-  {
-    std::string positions_;
-
-  public:
-    DimensionalityMismatch()
-      : KernelException("TopologyDimensionalityMismatch")  {}
-    DimensionalityMismatch(const std::string &p)
-      : KernelException("TopologyDimensionalityMismatch"), positions_(p)  {}
-    ~DimensionalityMismatch() throw () {}
-    
-    std::string message() {
-      if (positions_.empty()) {
-	return std::string("Dimensionality of positions do not match.");
-      } else {
-	return std::string("Dimensionality of positions " + positions_ +
-			   " do not match.");
-      }
-    }
-  };
-
-
 
 }
 

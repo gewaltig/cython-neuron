@@ -48,13 +48,12 @@ libdevelopermodule_la_SOURCES= \
 			mirollo_strogatz_ps.cpp mirollo_strogatz_ps.h\
 			environment.cpp environment.h\
 			environment_cliff.cpp environment_cliff.h\
-			ppd_sup_generator.cpp ppd_sup_generator.h\
-			gamma_sup_generator.cpp gamma_sup_generator.h\
                         theta_neuron.cpp theta_neuron.h\
                         theta_neuron_ps.cpp theta_neuron_ps.h\
 			static_connection_mult0.h\
                         iaf_psc_delta_canon_cvv.cpp iaf_psc_delta_canon_cvv.h\
-	    stdp_connection_rsnn_spikepairing_hom.cpp stdp_connection_rsnn_spikepairing_hom.h\
+			iaf_psc_delta_nodelay.cpp iaf_psc_delta_nodelay.h\
+                        stdp_connection_rsnn_spikepairing_hom.cpp stdp_connection_rsnn_spikepairing_hom.h\
 			stdp_connection_facetshw_hom.cpp stdp_connection_facetshw_hom.h\
 			pif_psc_delta_canon_cvv.cpp pif_psc_delta_canon_cvv.h\
 	 		inh_gamma_generator.cpp inh_gamma_generator.h\
@@ -63,7 +62,9 @@ libdevelopermodule_la_SOURCES= \
 			iaf_psc_alpha_mod.cpp iaf_psc_alpha_mod.h\
 			iaf_psc_alpha_norec.cpp iaf_psc_alpha_norec.h\
 		        iaf_psc_alpha_dynth.cpp iaf_psc_alpha_dynth.h\
-			izhikevich.cpp izhikevich.h
+			izhikevich.cpp izhikevich.h\
+			spike_dilutor.cpp spike_dilutor.h\
+			lossy_connection.cpp lossy_connection.h
 
 
 # Please leave this separating blank line. It is needed for the build tools on the PETA fx machine to work. MH 2010-11-4

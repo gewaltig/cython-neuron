@@ -67,6 +67,15 @@ namespace nest
     return lockPTR<Layer>(new LayerSlice<Layer3D>(*this, options));
   }
 
+  void Layer3D::set_status(const DictionaryDatum& layer_dict)
+  {
+    LayerUnrestricted::set_status(layer_dict);
+
+    if (EDGE_WRAP_) {
+      throw BadProperty("Edge wrap is currently not supported for 3D layers.");
+    }
+  }
+
   void Layer3D::set_tree_settings(const DictionaryDatum&)
   {
 

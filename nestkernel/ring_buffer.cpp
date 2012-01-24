@@ -79,7 +79,7 @@ void nest::ListRingBuffer::clear()
 {
   resize();    // does nothing if size is fine
   // clear all elements
-  for (int i=0;i<buffer_.size();i++) {
+  for (unsigned int i=0;i<buffer_.size();i++) {
     buffer_[i].clear(); 
   }
 }

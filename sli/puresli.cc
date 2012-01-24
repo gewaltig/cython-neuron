@@ -54,7 +54,6 @@
 // on various static objects (e.g. of class Name), the
 // interpreter engine MUST NOT be global.
 
-
    SLIInterpreter engine;
 #ifdef HAVE_READLINE
    addmodule<GNUReadline>(engine);
@@ -65,7 +64,7 @@
    addmodule<Processes>(engine);
    addmodule<RegexpModule>(engine);
    addmodule<FilesystemModule>(engine);
-   int exitcode = engine.execute();
-   
+   int exitcode = engine.execute(1);
+ 
    return exitcode;
  }

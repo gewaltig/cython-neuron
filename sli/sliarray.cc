@@ -14,7 +14,7 @@
  *
  */
 
-/* 
+/*
     SLI's data access functions
 */
 #include <cmath>
@@ -29,7 +29,7 @@
 #include "tokenutils.h"
 #include "config.h"
 #include <vector>
-
+#include "slinames.h"
 const std::string  SLIArrayModule::commandstring(void) const
 {
   return std::string("/mathematica /C++ ($Revision$) provide-component  /mathematica /SLI (1.7) require-component");
@@ -40,7 +40,7 @@ const std::string SLIArrayModule::name(void) const
 {
   return std::string("Mathematica");
 }
- 
+
 void SLIArrayModule::RangeFunction::execute(SLIInterpreter *i) const
 {
 //  call:  array Range -> array
@@ -67,8 +67,8 @@ void SLIArrayModule::RangeFunction::execute(SLIInterpreter *i) const
 	}
       }
       i->EStack.pop();
-    } 
-    else 
+    }
+    else
     {
       double d=ad->get(0);
       ad->erase();
@@ -82,7 +82,7 @@ void SLIArrayModule::RangeFunction::execute(SLIInterpreter *i) const
 	}
       }
       i->EStack.pop();
-    } 
+    }
   }
   else if(ad->size() == 2) // [n1 n2]
   {
@@ -95,7 +95,7 @@ void SLIArrayModule::RangeFunction::execute(SLIInterpreter *i) const
       long start = n1d->get();
       long stop  = n2d->get();
 
-      ad->erase(); 
+      ad->erase();
       if (n>0)
        ad->reserve(n);
 
@@ -107,17 +107,17 @@ void SLIArrayModule::RangeFunction::execute(SLIInterpreter *i) const
       i->EStack.pop();
     }
     else
-    { 
+    {
       DoubleDatum *n1d= dynamic_cast<DoubleDatum *>(ad->get(0).datum());
       DoubleDatum *n2d= dynamic_cast<DoubleDatum *>(ad->get(1).datum());
       if( (n1d !=0) && (n2d != 0))
       {
 	long n= 1 + static_cast<long>(n2d->get()-n1d->get());
-     
+
 	double start = n1d->get();
 	double stop  = n2d->get();
- 
-	ad->erase(); 
+
+	ad->erase();
         if (n>0)
          ad->reserve(n);
 
@@ -155,7 +155,7 @@ void SLIArrayModule::RangeFunction::execute(SLIInterpreter *i) const
 	  }
 	}
 	i->EStack.pop();
-      } 
+      }
       else i->raiseerror(i->DivisionByZeroError);
     }
     else
@@ -172,7 +172,7 @@ void SLIArrayModule::RangeFunction::execute(SLIInterpreter *i) const
 	if(di != 0)
 	{
 	  long n= 1 + static_cast<long>((stop-start)/di);
-	  ad->erase(); 
+	  ad->erase();
 	  if(n>0)
 	  {
 	    ad->reserve(n);
@@ -183,13 +183,17 @@ void SLIArrayModule::RangeFunction::execute(SLIInterpreter *i) const
 	    }
 	  }
 	  i->EStack.pop();
-	} 
+	}
 	else i->raiseerror(i->DivisionByZeroError);
-      } 
+      }
       else i->raiseerror(i->ArgumentTypeError);
-    } 
+    }
   } else i->raiseerror(i->ArgumentTypeError);
 }
+
+
+
+
 
 void SLIArrayModule::ReverseFunction::execute(SLIInterpreter *i) const
 {
@@ -198,7 +202,7 @@ void SLIArrayModule::ReverseFunction::execute(SLIInterpreter *i) const
 
   ArrayDatum *ad = dynamic_cast<ArrayDatum *>(i->OStack.top().datum());
   assert(ad !=0);
-  ad->reverse(); 
+  ad->reverse();
   i->EStack.pop();
 }
 
@@ -210,7 +214,7 @@ void SLIArrayModule::RotateFunction::execute(SLIInterpreter *i) const
   ArrayDatum *ad = dynamic_cast<ArrayDatum *>(i->OStack.pick(1).datum());
 
   ad->rotate(n);
-  
+
   i->OStack.pop();
   i->EStack.pop();
 }
@@ -254,10 +258,10 @@ void SLIArrayModule::FlattenFunction::execute(SLIInterpreter *i) const
        {
 	 if(ad1->references() > 1)
 	   for(Token *t1= ad1->begin(); t1 != ad1->end(); ++t1)
-	     ta->push_back(*t1); 
+	     ta->push_back(*t1);
 	 else
 	   for(Token *t1= ad1->begin(); t1 != ad1->end(); ++t1)
-	     ta->push_back_move(*t1); 
+	     ta->push_back_move(*t1);
        }
        else
 	   ta->push_back_move(*t);
@@ -287,7 +291,7 @@ void SLIArrayModule::FlattenFunction::execute(SLIInterpreter *i) const
 /*BeginDocumentation
 Name: Sort - Sorts a homogeneous array of doubles, ints, or strings.
 Synopsis:
- array Sort -> array 
+ array Sort -> array
 Parameters:
  array of doubles, ints, or strings
 Description:
@@ -310,7 +314,7 @@ void SLIArrayModule::SortFunction::execute(SLIInterpreter *i) const
     std::sort(vd.begin(),vd.end());
     i->OStack.pop();
     i->OStack.push(new ArrayDatum(vd));
-    i->EStack.pop();   
+    i->EStack.pop();
     return;
   }
   catch (TypeMismatch) {;}
@@ -322,11 +326,11 @@ void SLIArrayModule::SortFunction::execute(SLIInterpreter *i) const
     std::sort(vd.begin(),vd.end());
     i->OStack.pop();
     i->OStack.push(new ArrayDatum(vd));
-    i->EStack.pop();   
+    i->EStack.pop();
     return;
   }
   catch (TypeMismatch) {;}
-  
+
   try
   {
     std::vector<std::string> vd;
@@ -340,11 +344,11 @@ void SLIArrayModule::SortFunction::execute(SLIInterpreter *i) const
       output->push_back(Token(sd));
     }
     i->OStack.push(output);
-    i->EStack.pop();   
+    i->EStack.pop();
     return;
   }
   catch (TypeMismatch) {;}
-  
+
   i->message(SLIInterpreter::M_ERROR, "Sort", "argument array may only contain doubles, ints, or strings");
   i->raiseerror(i->ArgumentTypeError);
 }
@@ -359,17 +363,17 @@ BeginDocumentation
       array Transpose -> array
 
    Description:
-     Transpose gives the usual transpose of a matrix. 
-     Acting on a tensor Tijkl... Transpose gives the tensor Tjikl... 
+     Transpose gives the usual transpose of a matrix.
+     Acting on a tensor Tijkl... Transpose gives the tensor Tjikl...
 
    Parameters:
- 
+
    Examples:
-     [ [3 4 5] [6 7 8] ] Transpose  -> [[3 6] [4 7] [5 8]] 
+     [ [3 4 5] [6 7 8] ] Transpose  -> [[3 6] [4 7] [5 8]]
 
    Bugs:
-     protected for non-rectangular shapes by assert().        
-     Transpose should raise 
+     protected for non-rectangular shapes by assert().
+     Transpose should raise
        /NonRectangularShapeError error
      and message
       "The first two levels of the one-dimensional list cannot be transposed."
@@ -390,7 +394,7 @@ void SLIArrayModule::TransposeFunction::execute(SLIInterpreter *i) const
   ArrayDatum *hd = dynamic_cast<ArrayDatum *>(sd->begin()->datum());
   assert(hd != 0);
 
-  // size of source first level 
+  // size of source first level
   size_t m = sd->size();
 
   // size of source second level
@@ -399,7 +403,7 @@ void SLIArrayModule::TransposeFunction::execute(SLIInterpreter *i) const
   //   std::cerr << "Transpose:: rows:    " << m << std::endl;
   //  std::cerr << "Transpose:: columns: " << n << std::endl;
 
- 
+
   ArrayDatum *td = new ArrayDatum();
   assert(td != 0);
 
@@ -415,7 +419,7 @@ void SLIArrayModule::TransposeFunction::execute(SLIInterpreter *i) const
     assert(td != 0);
 
     hd->reserve(m);
-  
+
     td->push_back(Token(hd));
    }
 
@@ -425,18 +429,18 @@ void SLIArrayModule::TransposeFunction::execute(SLIInterpreter *i) const
 
      // raiseerror instead
      assert(hd != 0);
- 
+
      Token *sc;
      Token *tr;
 
      for
       (
-       sc= hd->begin(), tr=td->begin(); 
-       sc != hd->end(); 
+       sc= hd->begin(), tr=td->begin();
+       sc != hd->end();
        ++sc, ++tr
-      ) 
+      )
      {
-    
+
       ArrayDatum *trd = dynamic_cast<ArrayDatum *>(tr->datum());
 
       // raiseerror instead
@@ -446,7 +450,7 @@ void SLIArrayModule::TransposeFunction::execute(SLIInterpreter *i) const
 
      }
     }
-   
+
 
 
   i->OStack.pop();
@@ -473,15 +477,15 @@ void SLIArrayModule::PartitionFunction::execute(SLIInterpreter *i) const
   long n = nd->get();
   long d = dd->get();
 
-  if (n>0) 
+  if (n>0)
   {
-    if (d>0) 
+    if (d>0)
     {
       size_t na= source->size();
       if(na >0)
       {
 	long max = (na - n + d)/d;
-	
+
 	target->reserve( (max > 0) ? max : 0 );
 	Token *b = source->begin();
 	Token *e = source->end();
@@ -499,7 +503,7 @@ void SLIArrayModule::PartitionFunction::execute(SLIInterpreter *i) const
 	}
       }
       // need to pop ourselves, arguments, push (empty) target
-      // even if argument array was empty --- HEP 2001-10-22 
+      // even if argument array was empty --- HEP 2001-10-22
       i->EStack.pop();
       i->OStack.pop(3);
       i->OStack.push(target);
@@ -514,22 +518,22 @@ void SLIArrayModule::PartitionFunction::execute(SLIInterpreter *i) const
 /*
 BeginDocumentation
 
-   Name: arrayload - pushes array elements followed by number of elements 
+   Name: arrayload - pushes array elements followed by number of elements
 
    Synopsis:
       array Transpose ->  array arrayload -> t1 ... tn n
 
    Description:
-    The stack is invariant under the sequences 
-       arrayload arraystore 
+    The stack is invariant under the sequences
+       arrayload arraystore
        arraystore arrayload  .
-    arrayload is the SLI version of PostScript operator aload. 
+    arrayload is the SLI version of PostScript operator aload.
     In contrast to PostScript SLI arrays are dynamic therefore
     the syntax of aload and astore is obsolete in SLI.
     If used aload and astore issue a warning message.
 
    Examples:
-        [ 5 4 2 ] arrayload  --> 5 4 2   3 
+        [ 5 4 2 ] arrayload  --> 5 4 2   3
 
    Author: Marc-Oliver Gewaltig, Markus Diesmann
    Remarks: There are two obsolete versions existing called aload and astore.
@@ -546,7 +550,7 @@ void SLIArrayModule::ArrayloadFunction::execute(SLIInterpreter *i) const
   assert(ad !=0);
   i->EStack.pop();
   int  arraysize=ad->size();
-  i->OStack.reserve(arraysize);
+  i->OStack.reserve_token(arraysize);
 
   if(ad->references()==1)
     for(Token *ti=ad->begin(); ti != ad->end(); ++ti)
@@ -556,27 +560,27 @@ void SLIArrayModule::ArrayloadFunction::execute(SLIInterpreter *i) const
       i->OStack.push(*ti);
 
   i->OStack.push(arraysize);
-}      
+}
 
 /*
 BeginDocumentation
 
-   Name: arraystore - pops the first n elements of the stack into an array 
+   Name: arraystore - pops the first n elements of the stack into an array
 
    Synopsis:
      t1 ... tn n  arraystore -->  array
 
    Description:
-    The stack is invariant under the sequences 
-       arrayload arraystore 
+    The stack is invariant under the sequences
+       arrayload arraystore
        arraystore arrayload  .
-    arraystore is the SLI version of PostScript operator astore. 
+    arraystore is the SLI version of PostScript operator astore.
     In contrast to PostScript SLI arrays are dynamic therefore
     the syntax of aload and astore is obsolete in SLI.
     If used aload and astore issue a warning message.
 
    Parameters:
- 
+
    Examples:
       5 4 2   3  arraystore  -->   [ 5 4 2 ]
 
@@ -587,8 +591,8 @@ BeginDocumentation
 */
 void SLIArrayModule::ArraystoreFunction::execute(SLIInterpreter *i) const
 {
-//  call: t1 ... tn n  arraystore -> array 
-  assert(i->OStack.load()>0);
+//  call: t1 ... tn n  arraystore -> array
+//  assert(i->OStack.load()>0);
 
   IntegerDatum *id=dynamic_cast<IntegerDatum *>(i->OStack.top().datum());
   assert(id != NULL);
@@ -613,7 +617,7 @@ void SLIArrayModule::ArraystoreFunction::execute(SLIInterpreter *i) const
 
 void SLIArrayModule::ArraycreateFunction::execute(SLIInterpreter *i) const
 {
-//  call: mark t1 ... tn  arraycreate -> array 
+//  call: mark t1 ... tn  arraycreate -> array
   if(i->OStack.load()==0)
   {
     i->message(SLIInterpreter::M_ERROR, "arraycreate","Opening bracket missing.");
@@ -631,7 +635,7 @@ void SLIArrayModule::ArraycreateFunction::execute(SLIInterpreter *i) const
     found = (i->OStack.pick(n) == mark_token);
     ++n;
   }
-    
+
   if(found)
   {
     ArrayDatum *ad= new ArrayDatum();
@@ -659,11 +663,11 @@ void SLIArrayModule::IMapFunction::backtrace(SLIInterpreter *i, int p) const
   IntegerDatum   *count= static_cast<IntegerDatum *>(i->EStack.pick(p+2).datum());
   assert(count==NULL);
 
-  ProcedureDatum const *pd= static_cast<ProcedureDatum *>(i->EStack.pick(p+1).datum());   
+  ProcedureDatum const *pd= static_cast<ProcedureDatum *>(i->EStack.pick(p+1).datum());
   assert(pd !=NULL);
 
   std::cerr << "During Map at iteration " << count->get() << "." << std::endl;
-  
+
 
   pd->list(std::cerr,"   ",id->get()-1);
   std::cerr <<std::endl;
@@ -673,7 +677,7 @@ void SLIArrayModule::IMapFunction::backtrace(SLIInterpreter *i, int p) const
 /**********************************************/
 /* % IMap                                     */
 /*  call: array mark procc count proc %map   */
-/*  pick   5     4    3     2    1      0     */        
+/*  pick   5     4    3     2    1      0     */
 /**********************************************/
 void SLIArrayModule::IMapFunction::execute(SLIInterpreter *i) const
 {
@@ -688,7 +692,7 @@ void SLIArrayModule::IMapFunction::execute(SLIInterpreter *i) const
 
     // Do we  start a new iteration ?
     if(pos==0)
-    {      
+    {
       if(iterator < limit) // Is Iteration is still running
       {
 	if(iterator>0)
@@ -701,7 +705,7 @@ void SLIArrayModule::IMapFunction::execute(SLIInterpreter *i) const
 	    i->raiseerror(i->StackUnderflowError);
 	    return;
 	  }
-	  array->assign_move(iterator-1,i->OStack.top()); 
+	  array->assign_move(iterator-1,i->OStack.top());
 	  i->OStack.pop();
 	}
 
@@ -716,7 +720,7 @@ void SLIArrayModule::IMapFunction::execute(SLIInterpreter *i) const
 	  std::cerr << std::endl;
 	}
 
-	count->incr();
+	++(count->get());
 	// We continue after this if-branch and do the commands
       }
       else
@@ -730,7 +734,7 @@ void SLIArrayModule::IMapFunction::execute(SLIInterpreter *i) const
 	    i->raiseerror(i->StackUnderflowError);
 	    return;
 	  }
-	  array->assign_move(iterator-1,i->OStack.top()); 
+	  array->assign_move(iterator-1,i->OStack.top());
 	  i->OStack.pop();
 	}
 	i->OStack.push_move(i->EStack.pick(5)); // push array
@@ -744,7 +748,7 @@ void SLIArrayModule::IMapFunction::execute(SLIInterpreter *i) const
     {
       /* we are still evaluating the procedure. */
       i->EStack.push(proc->get(pos));  // get next command from the procedure
-      procc->incr();                 // increment the counter and
+      ++(procc->get());                 // increment the counter and
 
       if(i->step_mode())
       {
@@ -759,7 +763,7 @@ void SLIArrayModule::IMapFunction::execute(SLIInterpreter *i) const
 	      std::cerr <<std::endl;
 	    }
 	  }
-	  else 
+	  else
 	    break;
 	} while (true);
       }
@@ -767,14 +771,14 @@ void SLIArrayModule::IMapFunction::execute(SLIInterpreter *i) const
     }
     if((size_t)procc->get() >= proclimit)
       (*procc)=0;
-    
-    
+
+
 }
 
 /********************************/
 /* Map                          */
 /*  call: array proc Map -> array */
-/*  pick   1    0               */        
+/*  pick   1    0               */
 /********************************/
 /*
 BeginDocumentation
@@ -795,11 +799,11 @@ BeginDocumentation
    Description:
      Map works like the corresponding Mathematica function.
      For each element of the input array, Map calls f and replaces
-     the element with the result of f. 
+     the element with the result of f.
      Note that f must return exactly one value! The result of Map
      is a list with the same number of values as the argument list.
      If f does not return a value, Map fails.
-     If f returns more than one value, the result of Map is undefined.     
+     If f returns more than one value, the result of Map is undefined.
 
    Examples:
 
@@ -836,14 +840,11 @@ void SLIArrayModule::MapFunction::execute(SLIInterpreter *i) const
     i->EStack.push_move(i->OStack.pick(1));        // push array
     i->EStack.push(i->baselookup(i->mark_name));
 
-    ArrayDatum  *ad= dynamic_cast<ArrayDatum *>(i->EStack.pick(1).datum());
-    assert(ad !=NULL);
-
-    i->EStack.push(new IntegerDatum(0));          // push procedure counter
-    i->EStack.push(new IntegerDatum(0));          // push initial counter
+    i->EStack.push_by_pointer(new IntegerDatum(0));          // push procedure counter
+    i->EStack.push_by_pointer(new IntegerDatum(0));          // push initial counter
     i->EStack.push_move(i->OStack.pick(0));       // push procedure
 
-    i->EStack.push(i->baselookup(Name("::Map")));
+    i->EStack.push(i->baselookup(sli::imap));
     i->inc_call_depth();
     i->OStack.pop(2);
 }
@@ -866,12 +867,12 @@ void SLIArrayModule::IMapIndexedFunction::backtrace(SLIInterpreter *i, int p) co
   IntegerDatum   *count= static_cast<IntegerDatum *>(i->EStack.pick(p+2).datum());
   assert(count!=NULL);
 
-  ProcedureDatum const *pd= static_cast<ProcedureDatum *>(i->EStack.pick(p+1).datum());   
+  ProcedureDatum const *pd= static_cast<ProcedureDatum *>(i->EStack.pick(p+1).datum());
   assert(pd !=NULL);
 
 
   std::cerr << "During MapIndexed at iteration " << count->get() << "." << std::endl;
-  
+
 
   pd->list(std::cerr,"   ",id->get()-1);
   std::cerr <<std::endl;
@@ -881,7 +882,7 @@ void SLIArrayModule::IMapIndexedFunction::backtrace(SLIInterpreter *i, int p) co
 /**********************************************/
 /* % IMapIndexed                              */
 /*  call: array mark procc count proc %map    */
-/*  pick   5     4    3     2    1      0     */        
+/*  pick   5     4    3     2    1      0     */
 /**********************************************/
 void SLIArrayModule::IMapIndexedFunction::execute(SLIInterpreter *i) const
 {
@@ -896,7 +897,7 @@ void SLIArrayModule::IMapIndexedFunction::execute(SLIInterpreter *i) const
 
     // Do we  start a new iteration ?
     if(pos==0)
-    {      
+    {
       if(iterator < limit) // Is Iteration is still running
       {
 	if(iterator>0)
@@ -910,13 +911,13 @@ void SLIArrayModule::IMapIndexedFunction::execute(SLIInterpreter *i) const
 	  }
 	  array->assign_move(iterator-1,i->OStack.top());
 
- 
+
 	  i->OStack.pop();
 	}
 
 	i->OStack.push(array->get(iterator));  // push element to user
 	i->OStack.push(*count);             // push iterator to user
-	count->incr();
+	++(count->get());
 
 	if(i->step_mode())
 	{
@@ -942,7 +943,7 @@ void SLIArrayModule::IMapIndexedFunction::execute(SLIInterpreter *i) const
 	    i->raiseerror(i->StackUnderflowError);
 	    return;
 	  }
-	  array->assign_move(iterator-1,i->OStack.top()); 
+	  array->assign_move(iterator-1,i->OStack.top());
 	  i->OStack.pop();
 	}
 	i->OStack.push_move(i->EStack.pick(5)); // push array
@@ -956,7 +957,7 @@ void SLIArrayModule::IMapIndexedFunction::execute(SLIInterpreter *i) const
     {
       /* we are still evaluating the procedure. */
       i->EStack.push(proc->get(pos));  // get next command from the procedure
-      procc->incr();                 // increment the counter and
+      ++(procc->get());                 // increment the counter and
       if(i->step_mode())
       {
 	std::cerr << std::endl;
@@ -970,15 +971,15 @@ void SLIArrayModule::IMapIndexedFunction::execute(SLIInterpreter *i) const
 	      std::cerr <<std::endl;
 	    }
 	  }
-	  else 
+	  else
 	    break;
 	} while (true);
       }
     }
     if((size_t)procc->get() >= proclimit)
       (*procc)=0;
-    
-    
+
+
 }
 
 
@@ -999,14 +1000,11 @@ void SLIArrayModule::MapIndexedFunction::execute(SLIInterpreter *i) const
     i->EStack.push_move(i->OStack.pick(1));        // push array
     i->EStack.push(i->baselookup(i->mark_name));
 
-    ArrayDatum  *ad= dynamic_cast<ArrayDatum *>(i->EStack.pick(1).datum());
-    assert(ad !=NULL);
-
     i->EStack.push(new IntegerDatum(0));          // push procedure counter
     i->EStack.push(new IntegerDatum(0));          // push initial counter
     i->EStack.push_move(i->OStack.pick(0));       // push procedure
 
-    i->EStack.push(i->baselookup(Name("::MapIndexed")));
+    i->EStack.push(i->baselookup(sli::imapindexed));
     i->inc_call_depth();
     i->OStack.pop(2);
 }
@@ -1019,12 +1017,12 @@ void SLIArrayModule::IMapThreadFunction::backtrace(SLIInterpreter *i, int p) con
   IntegerDatum   *count= static_cast<IntegerDatum *>(i->EStack.pick(p+2).datum());
   assert(count!=NULL);
 
-  ProcedureDatum const *pd= static_cast<ProcedureDatum *>(i->EStack.pick(p+1).datum());   
+  ProcedureDatum const *pd= static_cast<ProcedureDatum *>(i->EStack.pick(p+1).datum());
   assert(pd !=NULL);
 
 
   std::cerr << "During MapThread at iteration " << count->get() << "." << std::endl;
-  
+
 
   pd->list(std::cerr,"   ",id->get()-1);
   std::cerr <<std::endl;
@@ -1032,7 +1030,7 @@ void SLIArrayModule::IMapThreadFunction::backtrace(SLIInterpreter *i, int p) con
 }
 
 //******************************************************
-// % IMapThread                                     
+// % IMapThread
 //  call: mark  lim  tarray sarray procc count proc %map
 //  pick   7     6      5      4      3     2   1    0
 //*******************************************************
@@ -1078,7 +1076,7 @@ void SLIArrayModule::IMapThreadFunction::execute(SLIInterpreter *i) const
 	    i->raiseerror(i->StackUnderflowError);
 	    return;
 	  }
-	  tarray->assign_move(argcount-1,i->OStack.top()); 
+	  tarray->assign_move(argcount-1,i->OStack.top());
 	  i->OStack.pop();
 	}
 
@@ -1089,7 +1087,7 @@ void SLIArrayModule::IMapThreadFunction::execute(SLIInterpreter *i) const
 	  i->OStack.push(ad->get(argcount));  // push element to user
 	}
 	assert(i->OStack.load()>= args);
-	argcountd->incr();
+	++(argcountd->get());
 
 	// We continue after this if-branch and do the commands
 	if(i->step_mode())
@@ -1114,7 +1112,7 @@ void SLIArrayModule::IMapThreadFunction::execute(SLIInterpreter *i) const
 	    i->raiseerror(i->StackUnderflowError);
 	    return;
 	  }
-	  tarray->assign_move(argcount-1,i->OStack.top()); 
+	  tarray->assign_move(argcount-1,i->OStack.top());
 	  i->OStack.pop();
 	}
 	i->OStack.push_move(i->EStack.pick(5)); // push result array
@@ -1128,7 +1126,7 @@ void SLIArrayModule::IMapThreadFunction::execute(SLIInterpreter *i) const
     {
       /* we are still evaluating the procedure. */
       i->EStack.push(procd->get(proccount));  // get next command from the procedure
-      proccountd->incr();                 // increment the counter and
+      ++(proccountd->get());                 // increment the counter and
 
       if(i->step_mode())
       {
@@ -1143,7 +1141,7 @@ void SLIArrayModule::IMapThreadFunction::execute(SLIInterpreter *i) const
 	      std::cerr <<std::endl;
 	    }
 	  }
-	  else 
+	  else
 	    break;
 	} while (true);
       }
@@ -1154,7 +1152,7 @@ void SLIArrayModule::IMapThreadFunction::execute(SLIInterpreter *i) const
 
 /* BeginDocumentation
 Name: MapThread - apply a procedure to corresponding elements of n arrays
-Synopsis: [[a11 ... a1n]...[am1 ... amn]] {f} MapThread -> 
+Synopsis: [[a11 ... a1n]...[am1 ... amn]] {f} MapThread ->
                                   [f(a11, a21,... am1)...f(a1n, a2n,...,amn)]
 Description: MapThread is like a multidimensional Map. It applies the function of
              to corresponding elements of m argument arrays.
@@ -1163,7 +1161,7 @@ Parameters: the first parameter is a list of m arrays of equal size n.
             The second parameter is a procedure which takes m arguments and returns
             a single value.
 Examples:    [[1 2][3 4]] {add} MapThread -> [4 6]
-            [[1 2 3 4] [1 1 1 1]] {add} MapThread -> [2 3 4 5] 
+            [[1 2 3 4] [1 1 1 1]] {add} MapThread -> [2 3 4 5]
 
 References: This function implements the simple version of Mathematica's MapThread
 SeeAlso: Map, MapIndexed, NestList, FoldList, ScanThread
@@ -1189,7 +1187,7 @@ void SLIArrayModule::MapThreadFunction::execute(SLIInterpreter *i) const
 
   if(ad->size() >0)
   {
-    // check if the components are arrays of equal length. 
+    // check if the components are arrays of equal length.
     ArrayDatum *ad1= dynamic_cast<ArrayDatum *>(ad->get(0).datum());
     if (ad1 == NULL)
     {
@@ -1205,13 +1203,13 @@ void SLIArrayModule::MapThreadFunction::execute(SLIInterpreter *i) const
 	i->raiseerror(i->ArgumentTypeError);
 	return;
       }
-      
+
       if(ad2->size() != ad1->size())
       {
 	i->raiseerror(i->RangeCheckError);
 	return;
       }
-    }	
+    }
 
     i->EStack.pop(); // remove MapThread object
     i->EStack.push(i->baselookup(i->mark_name));    //  mark
@@ -1221,13 +1219,13 @@ void SLIArrayModule::MapThreadFunction::execute(SLIInterpreter *i) const
     i->EStack.push(new IntegerDatum(0));            //  procedure counter
     i->EStack.push(new IntegerDatum(0));            //  initial counter
     i->EStack.push_move(i->OStack.top());           //  procedure
-      
+
     i->EStack.push(i->baselookup(Name("::MapThread")));
     i->OStack.pop(2);
     i->inc_call_depth();
   }
   else // size > 0
-  { 
+  {
     i->OStack.pop();
     i->EStack.pop();
   }
@@ -1254,8 +1252,8 @@ void SLIArrayModule::Put_a_a_tFunction::execute(SLIInterpreter *i) const
     i->raiseerror(i->ArgumentTypeError);
     return;
   }
-    
-    
+
+
   ArrayDatum *pos    = dynamic_cast<ArrayDatum *>(i->OStack.pick(1).datum());
 
   if(pos == NULL)
@@ -1295,7 +1293,7 @@ void SLIArrayModule::Put_a_a_tFunction::execute(SLIInterpreter *i) const
       i->raiseerror(i->ArgumentTypeError);
       return;
     }
-    
+
     if(t < pos->end()-1)
     {
       source= dynamic_cast<ArrayDatum *>((*source)[j].datum());
@@ -1323,23 +1321,23 @@ void SLIArrayModule::Put_a_a_tFunction::execute(SLIInterpreter *i) const
 
 Name: area - Return array of indices defining a 2d subarea of a 2d array.
 
-Synopsis:     
+Synopsis:
                 source_width source_anchor_y source_anchor_x
     area_height   area_width   area_anchor_y   area_anchor_x
                                                         area -> [1d-indices]
- 
-Description: 
+
+Description:
   Given a -- hypothetical -- twodimensional array,
   "area" tells you, what indices you need to
   subscript a contiguous, twodimensional subarea.
-  
+
   The subarea is defined by specifying it's size
   (width and height), as well as its location in the
   source array. The location is defined by specifying
   an anchor point in the source array as well as in
   the subarea. Anchor points are matched, see
   illustration, and examples below:
-  
+
   source array: height=6, width=15, anchor=(2,5)
   subarea     : height=4, width= 5, anchor=(1,3)
   ...............
@@ -1348,8 +1346,8 @@ Description:
   ..ooooo........
   ..ooooo........
   ...............
-  
-  
+
+
   "area" returns an array of ONEDIMENSIONAL indices.
   There is a SLI function called "area2" returning
   twodimensional indices, as well as the conversion
@@ -1357,41 +1355,41 @@ Description:
   (For information on the order of subscription in NEST
   arrays, see references below.)
 
-Parameters: 
+Parameters:
    In: "area" takes seven integer arguments (one integer
        and three pairs). These arguments describe (1) the width of the
        (hypothetical) source array, (2) the height and width of the
        subarea, as well as (3&4) an anchor point in each of the two
        arrays (see illustration above):
-       
+
          source_width   : width  of the (hypothetical) source
                           array to be subscribed into
          source_anchor_y,
          source_anchor_x: position of the anchor point relative
                           to ORIGIN OF THE SOURCE ARRAY
-       
+
          area_heigh  t  : height of the subarea to be subscribed
          area_width     : width  of the subarea to be subscribed
          area_anchor_y,
          area_anchor_x  : position of the anchor point relative
                           to ORIGIN OF THE SUBAREA
 
-  Out: "area" returns an array of ONEDIMENSIONAL indices: 
-         
+  Out: "area" returns an array of ONEDIMENSIONAL indices:
+
          [1d-indices]   : flat integer array containing the indices
                           that can be used to subscript the
                           (hypothetical) source array in order to
                           access the desired subarea.
 
                           Indices are onedimensional, and are returned
-                          in standard NEST (monotonic) counting order. 
+                          in standard NEST (monotonic) counting order.
                           (For information on the order of
                           subscription in NEST arrays, see references
                           below.)
 
-Examples: 
+Examples:
   (Examples are illustrated):
-  
+
   Ex. 1: source array: (height=5), width=10, anchor=(0,0)
          subarea     :  height=3, width= 3, anchor=(0,0)
          xoo.......
@@ -1399,9 +1397,9 @@ Examples:
          ooo.......
          ..........
          ..........
-  
+
          10 0 0  3 3 0 0 area -> [0 1 2  10 11 12  20 21 22]
-  
+
   Ex. 1b:source array: (height=5), width=10, anchor=(2,2)
          subarea     :  height=3, width= 3, anchor=(2,2)
          ooo.......
@@ -1409,9 +1407,9 @@ Examples:
          oox.......
          ..........
          ..........
-  
+
          10 2 2  3 3 2 2 area -> [0 1 2  10 11 12  20 21 22]
-  
+
   Ex. 1c:Note that anchor point may lie outside both
          arrays' bounds:
          source array: (height=5), width=10, anchor=(1,12)
@@ -1421,9 +1419,9 @@ Examples:
          ooo.......
          ..........
          ..........
-  
+
          10 1 12  3 3 1 12 area -> [0 1 2  10 11 12  20 21 22]
-  
+
   Ex. 2: source array: (height=6), width=15, anchor=(2,5)
          subarea     :  height=4, width= 5, anchor=(1,3)
          ...............
@@ -1432,30 +1430,30 @@ Examples:
          ..ooooo........
          ..ooooo........
          ...............
-  
+
          15 2 5  4 5 1 3 area -> [17 18 19 20 21
                                   32 33 34 35 36
                                   47 48 49 50 51
                                   62 63 64 65 66]
 
 
-Diagnostics: 
+Diagnostics:
   May raise the following SLI interpreter errors:
     StackUnderflowError
     ArgumentTypeError
-  
+
   NO ARGUMENT RANGE CHECK IS PERFORMED.
   The result may be useless if subarea is not
   contained in the source array. Note that THIS
   RESTRICTION DOES NOT APPLY TO FUNCTION "area2".
-  
+
   However, anchor points may lie outside the array
   bounds.
-  
+
   Note that the height of the source array is not used in computation,
   and does not appear in the parameter list
 
-Author: Rüdiger Kupper
+Author: Ruediger Kupper
 
 References: (TO BE DONE: NEST layer indexing conventions)
 
@@ -1552,9 +1550,9 @@ void SLIArrayModule::AreaFunction::execute(SLIInterpreter *i) const
           indices.push_back(s_0_x + s_0_y*s_w  +  x + y*s_w);
         }
     }
- 
+
   i->OStack.pop(7);
-  i->OStack.push(ArrayDatum(indices));
+  i->OStack.push_by_pointer(new ArrayDatum(indices));
   i->EStack.pop();
 }
 
@@ -1562,12 +1560,12 @@ void SLIArrayModule::AreaFunction::execute(SLIInterpreter *i) const
 
 Name: area2 - Return array of indices defining a 2d subarea of a 2d array.
 
-Synopsis:    
+Synopsis:
                              source_anchor_y source_anchor_x
     area_height   area_width   area_anchor_y   area_anchor_x
                                                        area2 -> [2d-indices]
 
-Description: 
+Description:
   Given a -- hypothetical -- twodimensional array,
   "area" tells you, what indices you need to
   subscript a contiguous, twodimensional subarea.
@@ -1596,25 +1594,25 @@ Description:
   (For information on the order of subscription in NEST
   arrays, see references below.)
 
-Parameters: 
-   In: "area2" takes six integer arguments (three pairs). 
+Parameters:
+   In: "area2" takes six integer arguments (three pairs).
        These arguments describe (1) the height and width of the
        subarea to be indexed in the (hypothetical) source array, as
        well as (2&3) an anchor point in each of the two arrays (see
        illustration above):
-     
+
          source_anchor_y,
          source_anchor_x: position of the anchor point relative
                           to ORIGIN OF THE SOURCE ARRAY
-       
+
          area_heigh  t  : height of the subarea to be subscribed
          area_width     : width  of the subarea to be subscribed
          area_anchor_y,
          area_anchor_x  : position of the anchor point relative
                           to ORIGIN OF THE SUBAREA
 
-  Out: "area" returns an array of ONEDIMENSIONAL indices: 
-         
+  Out: "area" returns an array of ONEDIMENSIONAL indices:
+
          [2d-indices]   : flat integer array containing the indices
                           that can be used to subscript the
                           (hypothetical) source array in order to
@@ -1632,7 +1630,7 @@ Parameters:
                           order of subscription in NEST arrays, see
                           references below.)
 
-Examples: 
+Examples:
   (Examples are illustrated):
 
   Ex. 1: source array: (height=5), (width=10), anchor=(0,0)
@@ -1693,15 +1691,15 @@ Examples:
          subarea     :  height=2,   width= 3,  anchor=(1, 0)
          ........
          ........
-         ........  
+         ........
         ooo......
         xoo
-         
+
 
          4 -1  2 3 1 0 area2 -> [3 -1  3 0  3 1
                                  4 -1  4 0  4 1]
 
-Diagnostics: 
+Diagnostics:
   "area2" may raise the following SLI interpreter errors:
     StackUnderflowError
     ArgumentTypeError
@@ -1718,7 +1716,7 @@ Diagnostics:
   Note that arguments source_width and source_height are not used in
   computation, and do not appear in the argument list.
 
-Author: Rüdiger Kupper
+Author: Ruediger Kupper
 
 References: (TO BE DONE: NEST layer indexing conventions)
 
@@ -1815,9 +1813,9 @@ void SLIArrayModule::Area2Function::execute(SLIInterpreter *i) const
           indices.push_back(s_0_x + x);
         }
     }
- 
+
   i->OStack.pop(6);
-  i->OStack.push(ArrayDatum(indices));
+  i->OStack.push_by_pointer(new ArrayDatum(indices));
   i->EStack.pop();
 }
 
@@ -1851,7 +1849,7 @@ void SLIArrayModule::Cv1dFunction::execute(SLIInterpreter *i) const
       i->raiseerror(i->StackUnderflowError);
     return;
   }
-  
+
   IntegerDatum *w= dynamic_cast<IntegerDatum*>(i->OStack.pick(0).datum());
   IntegerDatum *x= dynamic_cast<IntegerDatum*>(i->OStack.pick(1).datum());
   IntegerDatum *y= dynamic_cast<IntegerDatum*>(i->OStack.pick(2).datum());
@@ -1881,8 +1879,8 @@ void SLIArrayModule::Cv1dFunction::execute(SLIInterpreter *i) const
   }
 
   // y= y*w + x
-  y->mul(w->get());
-  y->add(x->get());
+  y->get()*=(w->get());
+  y->get()+= (x->get());
   i->OStack.pop(2);
   i->EStack.pop();
   // no i->OStack.push(), because we change the objects directly
@@ -1894,8 +1892,8 @@ Name: cv2d - convert 1-dimensional index to 2-dim coordinate
 Synopsis: i  w  cv2d -> y   x
 int int        int int
 
-Description:This function transforms an array index to y,x 
-coordinate pair. Useful if you have intrinsically 2-dimensional 
+Description:This function transforms an array index to y,x
+coordinate pair. Useful if you have intrinsically 2-dimensional
 data stored in a linear array (e.g. images).
 
 Parameters:i : integer. the index in the array
@@ -1920,7 +1918,7 @@ void SLIArrayModule::Cv2dFunction::execute(SLIInterpreter *i) const
       i->raiseerror(i->StackUnderflowError);
       return;
     }
-  
+
   IntegerDatum *w  = dynamic_cast<IntegerDatum*>(i->OStack.pick(0).datum());
   IntegerDatum *in = dynamic_cast<IntegerDatum*>(i->OStack.pick(1).datum());
 
@@ -1931,7 +1929,7 @@ void SLIArrayModule::Cv2dFunction::execute(SLIInterpreter *i) const
     i->raiseerror(i->ArgumentTypeError);
     return;
   }
-  
+
   if(in == NULL)
   {
     i->message(SLIInterpreter::M_ERROR, "cv2d","integertype expected");
@@ -1939,11 +1937,11 @@ void SLIArrayModule::Cv2dFunction::execute(SLIInterpreter *i) const
     i->raiseerror(i->ArgumentTypeError);
     return;
   }
-  
+
 
   long tmp = in->get();
   //  y = i / w
-  in->div(w->get());
+  (in->get()) /= (w->get());
   // x = i % w
   *w = tmp % w->get();
   i->EStack.pop();
@@ -1953,11 +1951,11 @@ void SLIArrayModule::Cv2dFunction::execute(SLIInterpreter *i) const
 
 
 /* BeginDocumentation
-Name: GetMax - get maximal element 
+Name: GetMax - get maximal element
 Synopsis: array GetMax -> int
-Description: returns the maximum value in an array of ints. 
+Description: returns the maximum value in an array of ints.
 SeeAlso: GetMin
-Remarks: works only for integer arrays. 
+Remarks: works only for integer arrays.
 */
 void SLIArrayModule::GetMaxFunction::execute(SLIInterpreter *i) const
 {
@@ -1967,7 +1965,7 @@ void SLIArrayModule::GetMaxFunction::execute(SLIInterpreter *i) const
       i->message(SLIInterpreter::M_ERROR, "GetMax","Usage: <array> GetMax");
       i->raiseerror(i->StackUnderflowError);
       return;
-    }  
+    }
 
   ArrayDatum *a=dynamic_cast<ArrayDatum*>(i->OStack.top().datum());
   if (a==NULL)
@@ -1975,19 +1973,19 @@ void SLIArrayModule::GetMaxFunction::execute(SLIInterpreter *i) const
       i->message(SLIInterpreter::M_ERROR, "GetMax","argument must be an array");
       i->raiseerror(i->ArgumentTypeError);
       return;
-    }  
-  
+    }
+
   IntegerDatum * tmp = dynamic_cast<IntegerDatum*>(a->begin()->datum());
   if (tmp==NULL)
     {
       i->message(SLIInterpreter::M_ERROR, "GetMax","argument array may only contain integers");
       i->raiseerror(i->ArgumentTypeError);
       return;
-    }  
-  
+    }
+
   IntegerDatum * tmp2;
   unsigned int pos=0;
-  while (pos < a->size()) 
+  while (pos < a->size())
     {
       tmp2 = dynamic_cast<IntegerDatum*>(a->get(pos).datum());
       if (tmp2==NULL)
@@ -1995,7 +1993,7 @@ void SLIArrayModule::GetMaxFunction::execute(SLIInterpreter *i) const
 	  i->message(SLIInterpreter::M_ERROR, "GetMax","argument array may only contain integers");
 	  i->raiseerror(i->ArgumentTypeError);
 	  return;
-	}  
+	}
       if (tmp->get() < tmp2->get()) tmp=tmp2;
       ++pos;
     }
@@ -2007,10 +2005,10 @@ void SLIArrayModule::GetMaxFunction::execute(SLIInterpreter *i) const
 }
 
 /* BeginDocumentation
-Name: GetMin - get minimal element 
+Name: GetMin - get minimal element
 Synopsis: array GetMin -> int
-Description: returns the minimum value in an array of ints. 
-Remarks: works only for integer arrays. 
+Description: returns the minimum value in an array of ints.
+Remarks: works only for integer arrays.
 SeeAlso: GetMax
 */
 void SLIArrayModule::GetMinFunction::execute(SLIInterpreter *i) const
@@ -2021,7 +2019,7 @@ void SLIArrayModule::GetMinFunction::execute(SLIInterpreter *i) const
       i->message(SLIInterpreter::M_ERROR, "GetMin","Usage: <array> GetMin");
       i->raiseerror(i->StackUnderflowError);
       return;
-    }  
+    }
 
   ArrayDatum *a=dynamic_cast<ArrayDatum*>(i->OStack.top().datum());
   if (a==NULL)
@@ -2029,8 +2027,8 @@ void SLIArrayModule::GetMinFunction::execute(SLIInterpreter *i) const
       i->message(SLIInterpreter::M_ERROR, "GetMin","argument must be an array");
       i->raiseerror(i->ArgumentTypeError);
       return;
-    }  
- 
+    }
+
 
   IntegerDatum * tmp = dynamic_cast<IntegerDatum*>(a->begin()->datum());
   if (tmp==NULL)
@@ -2038,11 +2036,11 @@ void SLIArrayModule::GetMinFunction::execute(SLIInterpreter *i) const
       i->message(SLIInterpreter::M_ERROR, "GetMin","argument array may only contain integers");
       i->raiseerror(i->ArgumentTypeError);
       return;
-    }  
-  
+    }
+
   IntegerDatum * tmp2;
   unsigned int pos=0;
-  while (pos < a->size()) 
+  while (pos < a->size())
     {
       tmp2 = dynamic_cast<IntegerDatum*>(a->get(pos).datum());
       if (tmp2==NULL)
@@ -2050,7 +2048,7 @@ void SLIArrayModule::GetMinFunction::execute(SLIInterpreter *i) const
 	  i->message(SLIInterpreter::M_ERROR, "GetMin","argument array may only contain integers");
 	  i->raiseerror(i->ArgumentTypeError);
 	  return;
-	}  
+	}
       if (tmp->get() > tmp2->get()) tmp=tmp2;
       ++pos;
     }
@@ -2060,12 +2058,12 @@ void SLIArrayModule::GetMinFunction::execute(SLIInterpreter *i) const
   i->OStack.push(result);
   i->EStack.pop();
 }
-    
+
 /* BeginDocumentation
 Name: gabor_ - Return 2D array with Gabor patch.
-Synopsis: 
+Synopsis:
 nr nc xmin xmax ymin ymax lambda orient phase sigma el
-Description: 
+Description:
 Returns an nr by nc matrix with a Gabor patch, computed over the
 argument range of [xmin,xmax] by [ymin,ymax].
 This function is the low level variant of the more user-friendly
@@ -2171,9 +2169,9 @@ void SLIArrayModule::GaborFunction::execute(SLIInterpreter *i) const
 
 /* BeginDocumentation
 Name: gauss2d_ - Return 2D array with Gauss patch.
-Synopsis: 
+Synopsis:
 nr nc xmin xmax ymin ymax phi sigma gamma
-Description: 
+Description:
 Returns an nr by nc matrix with a Gauss patch, computed over the
 argument range of [xmin,xmax] by [ymin,ymax].
 This function is the low level variant of the more user-friendly
@@ -2260,7 +2258,7 @@ void SLIArrayModule::Gauss2dFunction::execute(SLIInterpreter *i) const
       const double x=xmin + c*dx;
       const double x1=x*cos_phi - y*sin_phi;
       const double y1=x*sin_phi + y*cos_phi;
-      
+
       col[c]= std::exp(-(x1*x1 + gam_sq*y1*y1)/sig_sq);
     }
     result.push_back(new ArrayDatum(col));
@@ -2374,8 +2372,8 @@ void SLIArrayModule::init(SLIInterpreter *i)
   i->createcommand("Sort", &sortfunction);
   i->createcommand("Transpose", &transposefunction);
   i->createcommand("Partition_a_i_i", &partitionfunction);
-  i->createcommand("::Map", &imapfunction);
-  i->createcommand("::MapIndexed", &imapindexedfunction);
+  i->createcommand(sli::imap, &imapfunction);
+  i->createcommand(sli::imapindexed, &imapindexedfunction);
   i->createcommand("::MapThread", &imapthreadfunction);
   i->createcommand("Range", &rangefunction);
   i->createcommand("arrayload", &arrayloadfunction);
@@ -2395,7 +2393,7 @@ void SLIArrayModule::init(SLIInterpreter *i)
   i->createcommand("GetMin", &getminfunction);
   i->createcommand("gabor_", &gaborfunction);
   i->createcommand("gauss2d_", &gauss2dfunction);
-  i->createcommand("put_a_a_t", &put_a_a_tfunction);  
+  i->createcommand("put_a_a_t", &put_a_a_tfunction);
   i->createcommand("array2intvector", &array2intvectorfunction);
   i->createcommand("array2doublevector", &array2doublevectorfunction);
   i->createcommand("doublevector2array", &doublevector2arrayfunction);

@@ -319,6 +319,9 @@ namespace nest {
     bool to_memory() const { return P_.to_memory_; }
     bool to_accumulator() const { return P_.to_accumulator_; }
 
+    inline
+      void set_precise(bool use_precise, long precision);
+
   private:
 
     /** 
@@ -455,6 +458,15 @@ void RecordingDevice::get_status(DictionaryDatum &d) const
   S_.get(d, P_);
   Device::get_status(d);
 }
+
+inline
+void RecordingDevice::set_precise(bool use_precise, long precision)
+{
+  P_.precise_times_ = use_precise;
+  P_.precision_ = precision;
+}
+
+
 
 template <typename ValueT>
 void RecordingDevice::print_value(const ValueT& value, bool endrecord)

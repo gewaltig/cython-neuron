@@ -36,8 +36,6 @@
 #include "position.h"
 #include "walker.h"
 
-#include "binomial.h"
-
 namespace nest
 {
   TopologyConnector::TopologyConnector(Network& net):
@@ -146,7 +144,8 @@ namespace nest
   {
     //Creates array and inserts output elements in array. 
     std::vector<double_t> array;
-    
+    librandom::RngPtr rng = net_.get_grng();
+
     for(index i = 0; 
 	i != region.get_rows()*region.get_columns(); ++i)
       {
@@ -167,7 +166,7 @@ namespace nest
 
 	//Converts distance vector to absolute distance and calculates 
 	//array value according to defined function.
-	array.push_back(par->get_value(displacement));
+	array.push_back(par->get_value(displacement, rng));
       }    
 
     return Discrete(array);
@@ -335,6 +334,7 @@ namespace nest
 			if( rng->drand() < 
 			   probability_->get_value((*it_driver).get_position(),
 						   pool->at(i).get_position(),
+						   rng,
 			                           pool->at(i).get_extent()) )
 			  {
 			    if (!allow_multapses_)

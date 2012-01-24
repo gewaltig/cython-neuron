@@ -43,7 +43,13 @@ class FunctionDatum: public TypedDatum<&SLIInterpreter::Functiontype>
     {
       return new FunctionDatum(*this);
     }
-  
+
+  Datum * get_ptr()
+  {
+    Datum::addReference();
+    return this;
+  }
+    
   SLIFunction const & operator=(SLIFunction const &f)
     {
       std::cerr << "Warning: Definition of FunctionDatum ("<<name<<") changed!!\n";
@@ -55,7 +61,7 @@ class FunctionDatum: public TypedDatum<&SLIInterpreter::Functiontype>
 public:
   FunctionDatum(FunctionDatum const &fd)
     :TypedDatum<&SLIInterpreter::Functiontype>(fd),name(fd.name)
-    {}
+    {set_executable();}
   
   FunctionDatum(Name const &n, SLIFunction const *f)
     : TypedDatum<&SLIInterpreter::Functiontype>(), name(n)
@@ -63,8 +69,8 @@ public:
       //! Here, we shortcut the default action of the type object and directly
       //! place the function pointer in the datum's action field. Thus, we
       //! avoid an extra virtual function call.
-      assert(f != NULL);
       action=f;
+      set_executable();
     }
   
   

@@ -95,7 +95,6 @@ sli::pool & sli::pool::operator=(const sli::pool&p)
   el_size=p.el_size;
   instantiations=0;
   total=0;
-  capacity=0;
   chunks=0; 
   head=0;
   initialized_=false;
@@ -106,7 +105,6 @@ sli::pool & sli::pool::operator=(const sli::pool&p)
 void sli::pool::grow(size_t nelements)
 {
   chunk *n = new chunk(nelements*el_size);
-  capacity += nelements;
   total    += nelements;
 
   n->next = chunks;
@@ -129,6 +127,7 @@ void sli::pool::grow(void)
 
 void sli::pool::reserve(size_t n)
 {
-  if(capacity < n)
+    const size_t capacity=total-instantiations; 
+    if(capacity < n)
     grow(((n-capacity)/block_size+1)*block_size);
 }

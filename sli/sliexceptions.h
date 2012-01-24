@@ -102,6 +102,18 @@ public:
   {}
 };
 
+class DivisionByZero: public SLIException
+{
+ public:
+  virtual ~DivisionByZero() throw() {}
+  
+ DivisionByZero()
+   : SLIException("DivisionByZero")
+    {}
+  std::string message();
+
+};
+
 // -------------------- Type Mismatch -------------------------
   /**
    * Exception to be thrown if a given SLI type does not match the

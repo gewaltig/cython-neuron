@@ -50,8 +50,6 @@ libtopologymodule_la_SOURCES= \
 			octant.h \
 			walker.cpp \
 			walker.h \
-			binomial.cpp \
-			binomial.h \
 			layer_slice.h
 
 # do not change anything below this line ------------------------------

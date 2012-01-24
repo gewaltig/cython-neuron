@@ -29,13 +29,13 @@
 #include "dictdatum.h"
 
 #ifdef HAVE_MPI
-// do NOT include mpi.h in this header file, otherwise we
-// get into trouble on the BlueGene/L.
+// Do NOT include mpi.h in this header file, otherwise we get into
+// trouble on the Blue Gene/L. mpi.h is included in communicator.cpp
 
 #ifdef HAVE_MUSIC
 #include <music.hh>
 #include "music_event_handler.h"
-#endif /* #ifdef HAVE_MUSIC */
+#endif
 
 
 namespace nest
@@ -54,7 +54,7 @@ namespace nest
 #ifdef HAVE_MUSIC
       static MUSIC::Setup *music_setup;     //!< pointer to a MUSIC setup object
       static MUSIC::Runtime *music_runtime; //!< pointer to a MUSIC runtime object
-#endif /* #ifdef HAVE_MUSIC */
+#endif
 
       /**
        * Combined storage of GID and offset information for off-grid spikes.
@@ -124,7 +124,7 @@ namespace nest
        * channel comes in.
        */
       static void register_music_event_in_proxy(std::string portname, int channel, nest::Node *mp);
-#endif /* #ifdef HAVE_MUSIC */
+#endif
 
       static void init(int* argc, char** argv[]);
       static void finalize();
@@ -205,6 +205,7 @@ namespace nest
                                    std::vector<int>& displacements);
       static void communicate_CPEX(std::vector<int_t>&);
   };
+}
 
 #else /* #ifdef HAVE_MPI */
 
@@ -295,7 +296,11 @@ namespace nest
     return name;
   }
 
+}
 #endif /* #ifdef HAVE_MPI */
+
+namespace nest
+{
 
   inline int Communicator::get_rank()
   {

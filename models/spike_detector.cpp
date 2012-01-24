@@ -60,22 +60,14 @@ void nest::spike_detector::init_buffers_()
 
 void nest::spike_detector::calibrate()
 {
-  if (! user_set_precise_times_)
+  if (!user_set_precise_times_ && network()->get_off_grid_communication())
   {
-    DictionaryDatum d(new Dictionary);
-    (*d)[names::precise_times] = network()->get_off_grid_communication();
-
-    if (network()->get_off_grid_communication())
-    {      
-      (*d)[names::precision] = 15;
-
-      network()->message(SLIInterpreter::M_INFO, "spike_detector::calibrate",
-                         String::compose("Precise neuron models exist: the property precise_times "
-                                         "of the %1 with gid %2 has been set to true, precision has "
-                                         "been set to 15.", get_name(), get_gid()));
-    }
-
-    device_.set_status(d);
+    device_.set_precise(true, 15);
+      
+    network()->message(SLIInterpreter::M_INFO, "spike_detector::calibrate",
+		       String::compose("Precise neuron models exist: the property precise_times "
+				       "of the %1 with gid %2 has been set to true, precision has "
+				       "been set to 15.", get_name(), get_gid()));
   }
 
   device_.calibrate();
@@ -130,14 +122,10 @@ void nest::spike_detector::handle(SpikeEvent & e)
     assert(e.get_multiplicity() > 0);
 
     long_t dest_buffer;
-    if ( network()->get_model_of_gid(e.get_sender_gid())->has_proxies() )
-    {
+    if (network()->get_model_of_gid(e.get_sender_gid())->has_proxies())
       dest_buffer = network()->read_toggle();   // events from central queue
-    }
     else
-    {
       dest_buffer = network()->write_toggle();  // locally delivered events
-    }
 
     for (int_t i = 0; i < e.get_multiplicity(); ++i)
     {

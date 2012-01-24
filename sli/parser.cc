@@ -41,7 +41,6 @@ void Parser::init(std::istream &is)
     s=new Scanner(&is);
     
     arraytoken=ArrayDatum();
-    proctoken=LitprocedureDatum();
 }
 
 Parser::Parser(std::istream &is)
@@ -81,7 +80,8 @@ bool Parser::operator()(Token& t)
             
 	if (t.contains(s->BeginProcedureSymbol))
 	{
-	  ParseStack.push(proctoken);
+	  ParseStack.push(new LitprocedureDatum());
+	  ParseStack.top()->set_executable();
 	  result=scancontinue;
 	}
 	else if (t.contains(s->BeginArraySymbol))
@@ -91,7 +91,7 @@ bool Parser::operator()(Token& t)
 	  t.move(cb);
 	  result=tokencontinue;
 #else
-	  ParseStack.push(arraytoken);
+	  ParseStack.push(new ArrayDatum());
 	  result=scancontinue;
 #endif
 	}
@@ -158,6 +158,7 @@ bool Parser::operator()(Token& t)
 	      LitprocedureDatum *pp=
 		dynamic_cast<LitprocedureDatum*>(pt.datum());
 	      assert(pp!=NULL);
+	      pp->set_executable();
 	      pp->push_back(t);
 	    }
 	    ParseStack.push_move(pt);

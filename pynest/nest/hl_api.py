@@ -65,11 +65,11 @@ class NESTError(Exception):
 
 # -------------------- Helper functions
 
-
 def is_sequencetype(seq) :
     """Return True if the given object is a sequence type, False else"""
     
     return type(seq) in (types.TupleType, types.ListType)
+
 
 def is_iterabletype(seq) :
     """Return True if the given object is iterable, False else"""
@@ -81,9 +81,11 @@ def is_iterabletype(seq) :
 
     return True
 
+
 def is_sequence_of_nonneg_ints(seq):
     """Return True if the given object is a list or tuple of ints, False else"""
     return is_sequencetype(seq) and all([type(n) == type(0) and n >= 0 for n in seq])
+
 
 def raise_if_not_list_of_gids(seq, argname):
     """
@@ -94,6 +96,7 @@ def raise_if_not_list_of_gids(seq, argname):
     if not is_sequence_of_nonneg_ints(seq):
         raise NESTError(argname + " must be a list or tuple of GIDs")
  
+
 def broadcast(val, l, allowedtypes, name="val"):
 
     if type(val) in allowedtypes:
@@ -129,7 +132,6 @@ def flatten(x):
 
 
 # -------------------- Functions to get information on NEST
-
 
 def sysinfo():
     """Print information on the platform on which NEST was compiled."""
@@ -175,23 +177,31 @@ def help(obj=None, pager="less"):
         print
 	print "For more information visit http://www.nest-initiative.org."
 
+
 def get_verbosity():
     """Return verbosity level of NEST's messages."""
     
     sr('verbosity')
     return spp()
 
+
 def set_verbosity(level):
-    """Change verbosity level of NEST's messages."""
-    sps(level)
-    sr("setverbosity")
+    """
+    Change verbosity level for NEST's messages. level is a string and
+    can be one of M_FATAL, M_ERROR, M_WARNING, or M_INFO
+    """
+
+    sr("%s setverbosity" % level)
+
 
 def message(level,sender,text):
     """Print a message using NEST's message system."""
+
     sps(level)
     sps(sender)
     sps(text)
     sr('message')
+
 
 # -------------------- Functions for simulation control
 
@@ -289,7 +299,6 @@ def Install(module_name):
 
 # -------------------- Functions for parallel computing
 
-
 def Rank():
     """Return the MPI rank of the local process."""
 
@@ -310,7 +319,6 @@ def SetAcceptableLatency(port, latency):
 
 
 # -------------------- Functions for model handling
-
 
 def Models(mtype = "all", sel=None):
     """Return a list of all available models (neurons, devices and
@@ -502,7 +510,6 @@ def GetLID(gid) :
 
 
 # -------------------- Functions for connection handling
-        
 
 def FindConnections(source, target=None, synapse_type=None) :
     """Return an array of identifiers for connections that match the
@@ -685,18 +692,38 @@ def DivergentConnect(pre, post, weight=None, delay=None, model="static_synapse")
         delay = broadcast(delay, len(post), (float,), "delay")
         if len(delay) != len(post):
             raise NESTError("delay must be a float, or sequence of floats of length 1 or len(post)")
-
+        cmd='/%s DivergentConnect' % model
         for s in pre :
             sps(s)
             sps(post)
             sps(weight)
             sps(delay)
-            sr('/%s DivergentConnect' % model)
+            sr(cmd)
     
     else:
         raise NESTError("Both 'weight' and 'delay' have to be given.")
 
-
+def DataConnect(pre, params, model="static_synapse"):
+    """
+    Connect each neuron in pre according to the data in {params}.
+    params is a list of dictionaries, each containing at least the keys:
+    'target': [t1,...,tn]
+    'weight': [w1,...,wn]
+    'delay':[d1,...,dn]
+    The parameter lists should be numpy float arrays.
+    Otherwise, they will be converted, which takes time.
+    """
+    if not is_sequencetype(pre):
+        raise NESTError("'pre' must be a list of nodes.")
+    if not is_sequencetype(params):
+        raise NESTError("'params' must be a list of dictionaries.")
+    cmd='/%s DataConnect_' % model
+    
+    for s,p in zip(pre,params):
+        sps(s)
+        sps(p)
+        sr(cmd)
+    
 def RandomDivergentConnect(pre, post, n, weight=None, delay=None,
                            model="static_synapse", options=None):
     """Connect each neuron in pre to n randomly selected neurons from
@@ -746,9 +773,7 @@ def RandomDivergentConnect(pre, post, n, weight=None, delay=None,
         raise NESTError("Both 'weight' and 'delay' have to be given.")
 
 
-
 # -------------------- Functions for hierarchical networks
-
 
 def PrintNetwork(depth=1, subnet=None) :
     """Print the network tree up to depth, starting at subnet. if
@@ -770,6 +795,7 @@ def CurrentSubnet() :
 
 def ChangeSubnet(subnet) :
     """Make subnet the current subnet."""
+
     subnet = GetAddress(subnet)
     sps(subnet[0])
     sr("ChangeSubnet")
@@ -798,6 +824,7 @@ def GetChildren(gid):
     """
     Return the immediate children of subnet id.
     """
+
     if len(gid)>1 :
         raise NESTError("GetChildren() expects exactly one GID.")
     sps(gid[0])
@@ -861,6 +888,7 @@ def EndSubnet():
 def LayoutNetwork(model, dim, label=None, params=None) :
     """Create a subnetwork of dimension dim with nodes of type model
        and return a list of ids."""
+
     if type(model) == types.StringType:
         sps(dim)
         sr('/%s exch LayoutNetwork' % model)

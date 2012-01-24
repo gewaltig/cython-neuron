@@ -14,13 +14,13 @@
  *
  */
 
-/* 
+/*
     This file is part of NEST
 
     developermodule.cpp -- module providing unreleased developer modules
 
-    Author(s): 
-    Hans Ekkehard Plesser, 
+    Author(s):
+    Hans Ekkehard Plesser,
     based on work by M.O.Gewaltig, E. Mueller and M. Helias
 
     First Version: June 2006
@@ -53,12 +53,10 @@
 //
 // The following models are commented out for a reason! Please see the mail at:
 // http://ken.brainworks.uni-freiburg.de/cgi-bin/mailman/private/nest_developer/2008-July/001765.html
-// 
+//
 
 // Node headers
 //#include "ac_poisson_generator.h"
-#include "ppd_sup_generator.h"
-#include "gamma_sup_generator.h"
 
 // #include "iaf_psc_alpha_multisynapse.h"
 #include "iaf_psc_alpha_mod.h"
@@ -66,15 +64,17 @@
 #include "iaf_psc_alpha_dynth.h"
 #include "theta_neuron.h"
 #include "theta_neuron_ps.h"
-// #include "izhikevich.h"
+#include "izhikevich.h"
 
 #include "iaf_psc_delta_canon_cvv.h"
+#include "iaf_psc_delta_nodelay.h"
 #include "pif_psc_delta_canon_cvv.h"
 // #include "iaf_psc_delta_canon_stepcurr.h"
 // #include "iaf_psc_alpha_canon_nr.h"
 #include "mirollo_strogatz_ps.h"
-// #include "ginzburg_neuron.h"
 // #include "iaf_psc_exp_canon.h"
+
+#include "spike_dilutor.h"
 
 #ifdef HAVE_GSL
 #include "inh_gamma_generator.h"
@@ -118,6 +118,7 @@
 #include "stdp_connection_rsnn_spikepairing_hom.h"
 #include "stdp_connection_facetshw_hom.h"
 
+#include "lossy_connection.h"
 
 namespace nest
 {
@@ -128,8 +129,8 @@ namespace nest
      the following SLI datastructures: Name, Dictionary
   */
 
-  DeveloperModule::DeveloperModule(Network& net) 
-  { 
+  DeveloperModule::DeveloperModule(Network& net)
+  {
     assert(net_ == 0);
     net_ = &net;
   }
@@ -137,7 +138,7 @@ namespace nest
   DeveloperModule::~DeveloperModule()
   {
   }
-  
+
   const std::string DeveloperModule::name(void) const
   {
     return std::string("NEST Developer Models Module"); // Return name of the module
@@ -157,7 +158,7 @@ namespace nest
    [gid] w l m           RandomConnectSynfireInDegreeOutdegree -> ds dt
    [gid] w l m /synmodel RandomConnectSynfireInDegreeOutdegree -> ds dt
 
-   Parameters: 
+   Parameters:
    [gid]     - array of neurons to be wired
    w         - width of one chain
    l         - length of one chain
@@ -172,31 +173,31 @@ namespace nest
    RandomConnectSynfireInDegreeOutdegree connects a network (given as
    [gid]) to have the same indegree-outdegree distributions than a
    network of randomly embedded synfire chains. Synfire chains are NOT constructed,
-   only their synaptic distribution. Therefore the with and length of the 
+   only their synaptic distribution. Therefore the with and length of the
    (hypothetical) chain needs to be given. An estimate of in/out degree
    not machted is put on the stack.
-   
+
    Examples:
-   modeldict begin 
-   subnet Create /s Set 
-   s ChangeSubnet 
-   iaf_neuron 2000 Create 
+   modeldict begin
+   subnet Create /s Set
+   s ChangeSubnet
+   iaf_neuron 2000 Create
    [0] ChangeSubnet s GetNodes /neurons Set ;
-   neurons 100 20 50 RandomConnectSynfireInDegreeOutdegree 
+   neurons 100 20 50 RandomConnectSynfireInDegreeOutdegree
    /dt Set
    /ds Set
    (number of neurons with not enough sources for indegree: ) =only ds =
    (number of neurons with not enough targets for indegree: ) =only dt =
-   
+
    Author: Schrader, obtained from paranel
    SeeAlso: Connect
 */
   void DeveloperModule::RandomConnectSynfireInDegreeOutdegree_a_i_i_i_lFunction::execute(SLIInterpreter *i) const
-  { 
+  {
     i->assert_stack_load(5);
 
     TokenArray neuron_adr = getValue<TokenArray>(i->OStack.pick(4));
-    
+
     const long w = getValue<long>(i->OStack.pick(3));
     const long L = getValue<long>(i->OStack.pick(2));
     const long M = getValue<long>(i->OStack.pick(1));
@@ -209,7 +210,7 @@ namespace nest
 
     index source;
     index target;
-    const size_t n = neuron_adr.size(); 
+    const size_t n = neuron_adr.size();
     const double p = static_cast<double>(w*L)/n;
 
     librandom::RngPtr rng = get_network().get_grng();
@@ -219,10 +220,10 @@ namespace nest
     vector<long> outdegree(n);
 
     const int maxiter=50000;
-    
+
     for(index j=0;j<n;++j)
-    { 
-      indegree[j]  = w* bino.uldev(); 
+    {
+      indegree[j]  = w* bino.uldev();
       outdegree[j] =0;
     }
 
@@ -231,26 +232,26 @@ namespace nest
     {
       int j=1;
       int c=indegree[to];
-       
+
       while ( c>0 && j<maxiter)
       {
         int k=rng->ulrand(n);
-	
+
         if ( outdegree[k]<indegree[k] )
-        { 
+        {
           outdegree[k]++;
           c--;
-	   
+
           source = neuron_adr[k];
           target = neuron_adr[to];
-	   
+
           try
           {
             get_network().connect(source, target, synmodel_id);
           }
           catch(KernelException &e)
           {
-            i->message(SLIInterpreter::M_ERROR, 
+            i->message(SLIInterpreter::M_ERROR,
 		       "Connect", "Operation caused an error.");
             i->raiseerror(e.what());
             return;
@@ -260,7 +261,7 @@ namespace nest
             i->message(SLIInterpreter::M_ERROR,
 		       "Connect", "Operation caused an error.");
             return;
-          }		 
+          }
         }
         else
           j++;
@@ -268,27 +269,27 @@ namespace nest
       if (j==maxiter)
         jj++;
     }
-     
+
     long dt=0;
     for(size_t j=0;j<n;j++)
-    { 
+    {
       if ( outdegree[j]-indegree[j] < 0 )
         dt++;
     }
-     
+
     i->OStack.pop(5);
-    
+
     // number of neurons with not enough sources for indegree
     i->OStack.push(IntegerDatum(jj));
     // number of neurons with not enough targets for indegree
     i->OStack.push(IntegerDatum(dt));
-    
+
     i->EStack.pop();
   }
 #endif //HAVE_GSL
 
 
-/* 
+/*
 BeginDocumentation
 
    Name: RandomPopulationConnectD - Randomly connect a population of
@@ -298,22 +299,22 @@ BeginDocumentation
    Synopsis:
    source_array target_array N param_dict synapse_type RandomPopulationConnectD
 
-   Parameters: 
+   Parameters:
    source_array       - array containing the gids of the presynaptic populations
    target_array       - array containing the gids of the postsynaptic populations
    N                  - number of connections to be established
-   param_dict         - dictionary for discribing the parameter 
+   param_dict         - dictionary for discribing the parameter
                         distributions and the property switches of
 			the connection routine
    synapse_type       - synapse_type of the connection
-		 
+
    Options:
-   
-   Description: 
-   This connection routine randomly connects the pre- and 
+
+   Description:
+   This connection routine randomly connects the pre- and
    postsynaptic populations by randomly drawing N connections
    from the given populations. The parameters of the connection
-   are given in a specialized dictionary. 
+   are given in a specialized dictionary.
 
    Necessary entries are:
 
@@ -321,19 +322,19 @@ BeginDocumentation
 
    /!\ Currently this high-level connection routine can cope only with
    static synapses and tsodyks synapses. /!\
-  
+
   Author: Tobias Potjans, Markus Diesmann
   SeeAlso: RandomDivergentConnect, Connect
 */
    void DeveloperModule::RPopulationConnect_ia_ia_i_d_lFunction::execute(SLIInterpreter *i) const
    {
      i->assert_stack_load(5);
-     
+
      TokenArray source_adr = getValue<TokenArray>(i->OStack.pick(4));
      TokenArray target_adr = getValue<TokenArray>(i->OStack.pick(3));
      ulong_t N = (ulong_t) getValue<long_t>(i->OStack.pick(2));
      DictionaryDatum param_dict = getValue<DictionaryDatum>(i->OStack.pick(1));
-     
+
      const Name synmodel_name = getValue<std::string>(i->OStack.pick(0));
      const Token synmodel = get_network().get_synapsedict().lookup(synmodel_name);
      if ( synmodel.empty() )
@@ -343,7 +344,7 @@ BeginDocumentation
      int_t M = Communicator::get_num_virtual_processes();
      int_t proc = Communicator::get_rank();
 
-     long_t size_sources = source_adr.size();     
+     long_t size_sources = source_adr.size();
      long_t size_targets = target_adr.size();
      long_t last_gid_sources = source_adr[size_sources-1];
      long_t last_gid_targets = target_adr[size_targets-1];
@@ -366,7 +367,7 @@ BeginDocumentation
      bool exact_multinomial = param_dict->known("exact_multinomial") ? getValue<bool>(param_dict, "exact_multinomial") : true;
 
      if ((!static_type) && (!tsodyks_type))
-     { 
+     {
        i->message(SLIInterpreter::M_ERROR, "RandomPopulationConnectD", "static_type or tsodyks_type have to be set to true");
        throw BadProperty();
        return;
@@ -402,8 +403,8 @@ BeginDocumentation
 
      // 2. declarations and default value initialization
      double_t weight;
-     double_t weight_m; 
-     double_t weight_s; 
+     double_t weight_m;
+     double_t weight_s;
      bool insert_weights;
      double_t delay;
      double_t delay_m;
@@ -432,8 +433,8 @@ BeginDocumentation
      double_t u_s;
      double_t x_s;
      double_t y_s;
-     bool insert_u; 
-     bool insert_xy; 
+     bool insert_u;
+     bool insert_xy;
      //     ostreamPtr os_ntps;
      //ostreamPtr os_nspt;
      //ostreamPtr os_nspc;
@@ -448,7 +449,7 @@ BeginDocumentation
 
      weight_m = 0.0;
      weight_s = 0.0;
-     delay_m = res; 
+     delay_m = res;
      delay_s = 0.0;
      U_m = 0.0;
      U_s = 0.0;
@@ -469,7 +470,7 @@ BeginDocumentation
      insert_tau_psc = false;
      insert_u = false;
      insert_xy = false;
-     
+
      // 3. extraction of parameters from dictionary param_dict
      if ( param_dict->known("weight_m") )
      {
@@ -482,7 +483,7 @@ BeginDocumentation
        else
 	 weight = getValue<double_t>(param_dict, "weight_m");
      }
-     else 
+     else
        insert_weights = false;
 
      if ( param_dict->known("delay_m") )
@@ -496,15 +497,15 @@ BeginDocumentation
        else
 	 delay = getValue<double_t>(param_dict, "delay_m");
      }
-     else 
+     else
        insert_delays = false;
 
-     if (tsodyks_type) 
+     if (tsodyks_type)
      {
-       insert_U = param_dict->known("U_m"); 
-       insert_tau_rec = param_dict->known("tau_rec_m"); 
-       insert_tau_fac = param_dict->known("tau_fac_m"); 
-       insert_tau_psc = param_dict->known("tau_psc"); 
+       insert_U = param_dict->known("U_m");
+       insert_tau_rec = param_dict->known("tau_rec_m");
+       insert_tau_fac = param_dict->known("tau_fac_m");
+       insert_tau_psc = param_dict->known("tau_psc");
        if ( insert_U )
        {
 	 U_m = getValue<double_t>(param_dict, "U_m");
@@ -525,8 +526,8 @@ BeginDocumentation
 
        if (initialize_stp_synapse)
        {
-	 insert_u = param_dict->known("u_m"); 
-	 insert_xy = (param_dict->known("x_m") && param_dict->known("y_m")); 
+	 insert_u = param_dict->known("u_m");
+	 insert_xy = (param_dict->known("x_m") && param_dict->known("y_m"));
 
 	 if ( insert_u )
 	 {
@@ -543,7 +544,7 @@ BeginDocumentation
        }
      }
 
-     // drawing connection ids     
+     // drawing connection ids
 
      // unnormalized distributions of nodes on processes will be used
      // as probability distributions for drawing partitions of
@@ -553,7 +554,7 @@ BeginDocumentation
      // a generalization to create target_distribution would be a
      // function called locate_neurons that might be expanded to usage
      // of arrays as populations for now, we create the
-     // target_distribution here     
+     // target_distribution here
      int_t k;
      // correction for nodes not uniformly distributed
      // due to size_population%num_processes!=0
@@ -572,7 +573,7 @@ BeginDocumentation
        // fill with correct values
        first_gid_targets_distribution[ ( first_gid_targets + k ) % M ] = first_gid_targets + k;
      }
-    
+
      // We use the multinomial distribution to determine the number of
      // connections that will be made on one virtual process, i.e. we
      // partition the set of edges into n_vps subsets. The number of
@@ -592,12 +593,12 @@ BeginDocumentation
      {
        // get global rng that is tested for synchronization for all threads
        librandom::RngPtr grng = get_network().get_grng();
-     
+
        // begin code adapted from gsl 1.8 //
        double_t sum_dist = 0.0; // corresponds to sum_p
        //norm is equivalent to size_targets
        uint_t sum_partitions = 0; // corresponds to sum_n
-     
+
        for ( k = 0; k < M; k++ )
        {
 	 if (target_distribution[k] > 0)
@@ -634,7 +635,7 @@ BeginDocumentation
        int_t j;
 
        j = p * Communicator::get_num_processes() + proc;
-       
+
        if(get_network().is_local_vp(j))
        {
 	 rng = get_network().get_rng(get_network().vp_to_thread(j));
@@ -660,15 +661,15 @@ BeginDocumentation
 	   os_nspt.open(filename.str().c_str());
 	   if ( !os_nspt.good() )
 	   {
-	     Node::network()->message(SLIInterpreter::M_ERROR, 
-				    "RandomPopulationConnect", 
+	     Node::network()->message(SLIInterpreter::M_ERROR,
+				    "RandomPopulationConnect",
 				    "I/O error while opening file " + filename.str());
 	     if ( os_nspt.is_open() )
-	       os_nspt.close();                        
+	       os_nspt.close();
 	     filename.str().clear();
 	     throw IOError();
 	   }
-  
+
 	   nspt = vector<ulong_t>(target_distribution[j]);
 	 }
 	 if (num_syn_per_conn)
@@ -679,11 +680,11 @@ BeginDocumentation
 	   os_nspc.open(filename.str().c_str());
 	   if ( !os_nspc.good() )
 	   {
-	     Node::network()->message(SLIInterpreter::M_ERROR, 
-				      "RandomPopulationConnect", 
+	     Node::network()->message(SLIInterpreter::M_ERROR,
+				      "RandomPopulationConnect",
 				      "I/O error while opening file " + filename.str());
 	     if ( os_nspc.is_open() )
-	       os_nspc.close();                        
+	       os_nspc.close();
 	     filename.str().clear();
 	     throw IOError();
 	   }
@@ -695,7 +696,7 @@ BeginDocumentation
 	 }
 
 
-	 
+
 	 while( target_partitioning[j] > 0 )
 	 {
 	   // draw random numbers for source node from all source neurons
@@ -720,7 +721,7 @@ BeginDocumentation
 	     }
 	   }
 	   // map random number of source node to gid corresponding to
-	   // first_gid_sources 
+	   // first_gid_sources
 	   long_t source_gid = first_gid_sources + s_index;
 	   // map random number of target node to gid using the
 	   // first_gid_targets_distribution corresponding to the
@@ -736,9 +737,9 @@ BeginDocumentation
 	   // define connection parameter dict cpdict
 	   DictionaryDatum cpdd(new Dictionary());
 	   if (insert_weights)
-	   { 
-	     if (distribute_weights) 
-	     { 
+	   {
+	     if (distribute_weights)
+	     {
 	       do {
 		 weight = norm()*weight_s + weight_m;
 	       } while ((( weight_m >= 0.0 ) && ( weight < 0.0 )) || (( weight_m < 0.0 ) && ( weight > 0.0 )));
@@ -782,7 +783,7 @@ BeginDocumentation
 		 } while (tau_fac < 0.0);
 		 def<double_t>(cpdd, "tau_fac", tau_fac);
 	       }
-	     } 
+	     }
 	     else // don't distribute_stp_params
 	     {
 	       if (insert_U)
@@ -801,7 +802,7 @@ BeginDocumentation
 		 def<double_t>(cpdd, "tau_fac", tau_fac);
 	       }
 	     }
-	     if (insert_tau_psc) //not distributed for consistency 
+	     if (insert_tau_psc) //not distributed for consistency
 	                         //with neuron model, see warning above
 	     {
 	       def<double_t>(cpdd, "tau_psc", tau_psc);
@@ -821,7 +822,7 @@ BeginDocumentation
 		 }
 		 if (insert_xy)
 		 {
-		   do 
+		   do
 		   {
 		     do {
 		       x = x_s > 0.0 ? norm()*x_s + x_m : x_m;
@@ -832,7 +833,7 @@ BeginDocumentation
 		   } while ( x + y > 1.0 );
 		   def<double_t>(cpdd, "x", x);
 		   def<double_t>(cpdd, "y", y);
-		 } 
+		 }
 	       }
 	       else
 	       {
@@ -851,7 +852,7 @@ BeginDocumentation
 	       }
 	     }
 	   }
-	   
+
 	   // connect source and target with dictionary
 	   try
 	   {
@@ -881,19 +882,19 @@ BeginDocumentation
 	     i->raiseerror(e.what());
 	     return;
 	   }
-	   
+
 	   target_partitioning[j]--;
 	 }
 	 // write graph readout to file
 	 if (num_sources_per_target)
-	 { 
+	 {
 	   for ( size_t nspt_i = 0; nspt_i < nspt.size(); ++nspt_i )
 	   {
 	     os_nspt << nspt[nspt_i] << "\n";
 	   }
 	 }
 	 if (num_syn_per_conn)
-	 { 
+	 {
 	   std::vector<ulong_t> nspc_hist = std::vector<ulong_t>(0);
 	   for ( size_t nspc_i = 0; nspc_i < nspc.size(); ++nspc_i )
 	   {
@@ -926,11 +927,9 @@ BeginDocumentation
 
     // register models
 	//    register_model<ac_poisson_generator>(*net_, "ac_poisson_generator");
-    register_model<ppd_sup_generator>(*net_, "ppd_sup_generator");
-    register_model<gamma_sup_generator>(*net_, "gamma_sup_generator");
     register_model<environment>(*net_, "environment");
     register_model<environment_cliff>(*net_, "environment_cliff");
-   
+
     // register_model<iaf_psc_alpha_multisynapse>(*net_, "iaf_psc_alpha_multisynapse");
     register_model<iaf_psc_alpha_mod>(*net_, "iaf_psc_alpha_mod");
     register_model<iaf_psc_alpha_norec>(*net_, "iaf_psc_alpha_norec");
@@ -938,21 +937,24 @@ BeginDocumentation
     //register_model<iaf_psc_delta_cvv>(*net_, "iaf_psc_delta_cvv");
 
     register_model<iaf_psc_delta_canon_cvv>(*net_, "iaf_psc_delta_canon_cvv");
+    register_model<iaf_psc_delta_nodelay>(*net_, "iaf_psc_delta_nodelay");
     register_model<pif_psc_delta_canon_cvv>(*net_, "pif_psc_delta_canon_cvv");
+
 
     // register_model<iaf_psc_delta_canon_stepcurr>(*net_, "iaf_psc_delta_canon_stepcurr");
 
     register_model<theta_neuron>(*net_, "theta_neuron");
     register_model<theta_neuron_ps>(*net_, "theta_neuron_ps");
-    // register_model<izhikevich>(*net_, "izhikevich");
+    register_model<izhikevich>(*net_, "izhikevich");
     // register_model<iaf_psc_alpha_canon_nr>(*net_, "iaf_psc_alpha_canon_nr");
     register_model<mirollo_strogatz_ps>(*net_, "mirollo_strogatz_ps");
-    // register_model<ginzburg>(*net_, "ginzburg_neuron");
     // register_model<iaf_psc_exp_canon>(*net_, "iaf_psc_exp_canon");
 
-    i->createcommand("RandomPopulationConnect_ia_ia_i_d_l", 
+    register_model<spike_dilutor>(*net_, "spike_dilutor");
+
+    i->createcommand("RandomPopulationConnect_ia_ia_i_d_l",
 		     &rpopulationconnect_ia_ia_i_d_lfunction);
-  
+
 #ifdef HAVE_GSL
     i->createcommand("RandomConnectSynfireInDegreeOutdegree_a_i_i_i_l", &randomconnectsynfireindegreeoutdegree_a_i_i_i_lfunction);
 
@@ -1004,7 +1006,7 @@ BeginDocumentation
        new GenericConnectorModel< STDPTripletConnection, CommonSynapseProperties,
        SelectiveConnector<STDPTripletConnection, CommonSynapseProperties> >(*net_, "stdp_triplet_synapse_S") );
 
-    
+
 
     net_->register_synapse_prototype(
        new GenericConnectorModel< STDPConnectionHom, STDPHomCommonProperties,
@@ -1023,7 +1025,7 @@ BeginDocumentation
     register_prototype_connection<STDPTripletConnection>(*net_, "stdp_triplet_synapse");
 
     // register_prototype_connection_commonproperties<PolicyConnection, PolicyCommonProperties>(*net_, "policy_synapse");
-    
+
     // register_prototype_connection_commonproperties<STDPDopaConnection, STDPDopaCommonProperties>(*net_, "stdp_dopamine_synapse");
 
     // register_prototype_connection_commonproperties<DOPAMINE_TH_Connection, DOPAMINE_TH_CommonProperties>(*net_, "dopamine_th_synapse");
@@ -1036,7 +1038,8 @@ BeginDocumentation
     register_prototype_connection_commonproperties<STDPRSNNSpikePairingConnectionHom, STDPRSNNSpikePairingHomCommonProperties>(*net_, "stdp_rsnn_spikepairing_synapse_hom");
     register_prototype_connection_commonproperties<STDPFACETSHWConnectionHom, STDPFACETSHWHomCommonProperties>(*net_, "stdp_facetshw_synapse_hom");
 
+    register_prototype_connection<LossyConnection>(*net_, "lossy_synapse");
+
   }  // DeveloperModule::init()
 
 } // namespace nest
-

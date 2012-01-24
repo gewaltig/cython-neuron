@@ -82,7 +82,8 @@ namespace nest
     updateValue<std::vector<double_t> >(settings, "anchor", anchor_);
   }
 
-  double_t Parameters::get_value(const Position<double_t>&) const
+  double_t Parameters::get_value(const Position<double_t>&,
+				 librandom::RngPtr&) const
   {
     return k_;
   }
@@ -90,6 +91,7 @@ namespace nest
   double_t 
   Parameters::get_value(const Position<double_t>& driver,
 			const Position<double_t>& pool,
+			librandom::RngPtr& rng,
                         std::vector<double_t>* extent) const
   {
     Position<double_t> displacement = driver - pool;
@@ -108,7 +110,7 @@ namespace nest
       return 0.0;
     }
 
-    return bound(get_value(displacement));
+    return bound(get_value(displacement, rng));
   }
 
   double_t Parameters::bound(double_t value) const
@@ -210,7 +212,8 @@ namespace nest
 //       }
   }
 
-  double_t Gaussian::get_value(const Position<double_t>& pos) const
+  double_t Gaussian::get_value(const Position<double_t>& pos,
+			       librandom::RngPtr&) const
   {
     return c_ + p_center_*
       std::exp(-std::pow(pos.length() - mean_,2)/(2*std::pow(sigma_,2)));
@@ -260,7 +263,8 @@ namespace nest
       }
   }
 
-  double_t Gaussian2D::get_value(const Position<double_t>& pos) const
+  double_t Gaussian2D::get_value(const Position<double_t>& pos,
+				 librandom::RngPtr&) const
   {
     return c_ + 
       p_center_*std::exp(- (  (pos.get_x()-mean_x_)*(pos.get_x()-mean_x_)/(sigma_x_*sigma_x_)
@@ -291,7 +295,8 @@ namespace nest
     updateValue<double_t>(settings, "c", c_);
   }
 
-  double_t Linear::get_value(const Position<double_t>& pos) const
+  double_t Linear::get_value(const Position<double_t>& pos,
+			     librandom::RngPtr&) const
   {
     return a_*pos.length() + c_;
   }
@@ -317,7 +322,8 @@ namespace nest
     updateValue<double_t>(settings, "tau", tau_);
   }
   
-  double_t Exponential::get_value(const Position<double_t>& pos) const
+  double_t Exponential::get_value(const Position<double_t>& pos,
+				  librandom::RngPtr&) const
   {
     return c_ + a_*std::exp(-pos.length()/tau_);
   }
@@ -330,7 +336,6 @@ namespace nest
     range_(0.0),
     lower_(0.0)
   {
-    rng_ = NestModule::get_network().get_grng();
   }
   
   Uniform::Uniform(const DictionaryDatum& settings):
@@ -342,13 +347,12 @@ namespace nest
 	
     range_ = 
       getValue<double_t>(settings, "max") - lower_;
-
-    rng_ = NestModule::get_network().get_grng();
   }
   
-  double_t Uniform::get_value(const Position<double_t>&) const
+  double_t Uniform::get_value(const Position<double_t>&,
+			      librandom::RngPtr& rng) const
   {
-    return lower_ + rng_->drand()*range_;
+    return lower_ + rng->drand()*range_;
   }
   
   /***********************************************************************/
@@ -363,7 +367,8 @@ namespace nest
     values_(values)
   {}
 
-  double_t Discrete::get_value(const Position<double_t>& lid) const
+  double_t Discrete::get_value(const Position<double_t>& lid,
+			       librandom::RngPtr&) const
   {
     if(lid.get_x() < values_.size())
       {
@@ -376,9 +381,10 @@ namespace nest
   double_t 
   Discrete::get_value(const Position<double_t>&,
 		      const Position<double_t>& lid,
+		      librandom::RngPtr& rng,
 		      std::vector<double_t>* extent) const
   {
-    return bound(get_value(lid.get_x()));
+    return bound(get_value(lid.get_x(), rng));
   }
   
   /***********************************************************************/
@@ -408,6 +414,7 @@ namespace nest
 
   double_t Combination::get_value(const Position<double_t>& driver,
 				  const Position<double_t>& pool,
+				  librandom::RngPtr& rng,
 				  std::vector<double_t>* extent) const
   {
     double_t result = 0.0;
@@ -418,7 +425,7 @@ namespace nest
     for(std::vector<Parameters*>::const_iterator it = parameters_list_.begin();
 	it != parameters_list_.end(); ++it)
       {
-	double_t v = (*it)->get_value(driver, pool, extent);
+	double_t v = (*it)->get_value(driver, pool, rng, extent);
 	if(v != 0)
 	  {
 	    ++n;

@@ -1,5 +1,6 @@
 #include "walker.h"
 
+#include "nestmodule.h"
 #include "randomgen.h"
 
 #include <list>
@@ -43,9 +44,11 @@ namespace nest
     
     for(uint_t i = 0; i<pool->size(); ++i)
       {
+	librandom::RngPtr rng = NestModule::get_network().get_rng(pool->at(i).get_node()->get_thread());
 	probability_list.
 	  push_back(Walker::Pair(probability.get_value(driver.get_position(),
-						       pool->at(i).get_position()), 
+						       pool->at(i).get_position(),
+						       rng), 
 				 i));
       } 
 

@@ -97,7 +97,7 @@ void nest::ppd_sup_generator::Parameters_::set(const DictionaryDatum& d)
   if ( 1000.0 / rate_ <= dead_time_ )
     throw BadProperty("The inverse rate has to be larger than the dead time.");
   
-  long n_proc_l = 0;
+  long n_proc_l = n_proc_;
   updateValue<long_t>(d, names::n_proc, n_proc_l);
   if ( n_proc_l < 1 )
     throw BadProperty("The number of component processes cannot be smaller than one");

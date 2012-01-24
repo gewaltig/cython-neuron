@@ -155,6 +155,10 @@ namespace nest
       {
 	return new Volume(mask_dict);
       }
+    else if(mask_dict->known(Name("spherical")))
+      {
+	return new Spherical(mask_dict);
+      }
     else if(mask_dict->known(Name("grid")))
       {
 	// Fixed grid region.
@@ -680,6 +684,103 @@ namespace nest
 	return true;
       }
     return false;
+  }
+
+  /***********************************************************************/
+  /*                         SPHERICAL REGION                             */
+  /***********************************************************************/
+
+  Spherical::Spherical():
+    Volume(),
+    radius_(0.0),
+    center_(0,0,0)
+  {}
+
+  Spherical::Spherical(const Spherical& c):
+    Volume(c),
+    radius_(c.radius_),
+    center_(c.center_)
+  {}
+  
+  Spherical::Spherical(const double_t radius):
+    Volume(),
+    radius_(radius),
+    center_(0,0,0)
+  {
+    lower_left_ = Position<double_t>(-radius_, -radius_, -radius_);
+    upper_right_ = Position<double_t>(radius_, radius_, radius_);
+  }
+  
+  Spherical::Spherical(const DictionaryDatum& mask_dict):
+    Volume(),
+    center_(0,0,0)
+  {
+    radius_ = 
+      getValue<double_t>(getValue<DictionaryDatum>(mask_dict, 
+							 Name("spherical")), 
+			       "radius");
+
+    lower_left_ = Position<double_t>(-radius_, -radius_, -radius_);
+    upper_right_ = Position<double_t>(radius_, radius_, radius_);
+
+    std::vector<double_t> anchor;
+    if ( updateValue<std::vector<double_t> >(mask_dict, names::anchor, anchor) )
+    	set_anchor(anchor);
+  }
+
+  Volume* Spherical::copy() const
+  {
+    return new Spherical(*this);
+  }
+
+  void Spherical::set_anchor(const Position<double_t>& pos)
+  {
+    Region::set_anchor(pos);
+    center_ += pos;
+  }
+
+  bool Spherical::
+  within_range(const Position<double_t>& target) const
+  {
+    return (target - center_).length() <= radius_;
+  }
+
+  bool Spherical::
+  within_range(const Volume& reg) const
+  {
+    // Input region is fully within spherical region if all 
+    // eight corner points of input region are within spherical 
+    // region.
+    return within_range(reg.get_lower_left()) && 
+      within_range(Position<double_t>(reg.get_lower_left().get_x(),
+				      reg.get_upper_right().get_y(),
+				      reg.get_lower_left().get_z())) &&
+      within_range(Position<double_t>(reg.get_upper_right().get_x(),
+				      reg.get_lower_left().get_y(),
+				      reg.get_lower_left().get_z())) &&
+      within_range(Position<double_t>(reg.get_upper_right().get_x(),
+				      reg.get_upper_right().get_y(),
+				      reg.get_lower_left().get_z())) &&
+      within_range(Position<double_t>(reg.get_lower_left().get_x(),
+				      reg.get_lower_left().get_y(),
+				      reg.get_upper_right().get_z())) &&
+      within_range(Position<double_t>(reg.get_lower_left().get_x(),
+				      reg.get_upper_right().get_y(),
+				      reg.get_upper_right().get_z())) &&
+      within_range(Position<double_t>(reg.get_upper_right().get_x(),
+				      reg.get_lower_left().get_y(),
+				      reg.get_upper_right().get_z())) &&
+      within_range(reg.get_upper_right());
+  }
+
+  bool Spherical::
+  outside(const Volume& reg) const
+  {
+    // We only check if input region is outside minimum bounding box
+    // of spherical region. Add a complete check for a spherical 
+    // region if you find this worthwhile. Please don't forget to 
+    // account for all situations if you do this.
+    return Volume::outside(reg);
   }
 
   /***********************************************************************/

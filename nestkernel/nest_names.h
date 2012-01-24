@@ -91,6 +91,7 @@ namespace nest
     extern const Name c;
     extern const Name d;
     extern const Name U_m;
+    extern const Name consistent_integration;
 
     // Other adaptation
     extern const Name E_sfa;
@@ -258,7 +259,6 @@ namespace nest
     extern const Name vp;
     extern const Name local;
 
-
     // Parameters for MUSIC devices
     extern const Name connection_count;
     extern const Name index_map;
@@ -269,7 +269,6 @@ namespace nest
     extern const Name published;
 
     extern const Name theta; // Did not compile without (theta neuron problem)
-
   }
 }
 

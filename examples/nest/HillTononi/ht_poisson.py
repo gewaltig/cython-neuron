@@ -1,7 +1,7 @@
 """
 A small example using the ht_neuron.
 
-The neuron is bombarded with spike trains from four 
+The neuron is bombarded with spike trains from four
 Poisson generators, which are connected to the AMPA,
 NMDA, GABA_A, and GABA_B synapses, respectively.
 
@@ -19,7 +19,7 @@ nest.ResetKernel()
 # create neuron
 nrn = nest.Create('ht_neuron')
 
-# get receptor ID information, so we can connect to the 
+# get receptor ID information, so we can connect to the
 # different synapses
 receptors = nest.GetDefaults('ht_neuron')['receptor_types']
 
@@ -54,7 +54,7 @@ nest.Connect(mm, nrn)
 for n in xrange(10):
     nest.Simulate(100)
 
-# extract data from multimeter 
+# extract data from multimeter
 events = nest.GetStatus(mm)[0]['events']
 t = events['times'];  # time axis
 

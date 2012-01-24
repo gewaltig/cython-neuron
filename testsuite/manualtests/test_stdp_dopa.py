@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 # This file is part of NEST
 #
 # Copyright (C) 2010 by

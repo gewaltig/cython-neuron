@@ -36,7 +36,6 @@
 
 #include "sliconfig.h"
 #include "slicontrol.h"
-#include "callbackdatum.h"
 #include "namedatum.h"
 #include "booldatum.h"
 #include "arraydatum.h"
@@ -53,53 +52,44 @@
 #include "sliexceptions.h"
 
 
-// Setcallback takes a token from the OStack and installs it as
-// callback.
 /*BeginDocumentation
-Name: setcallback - install a callback object in the interpreter cycle
-Synopsis: obj setcallback -> -
+Name: backtrace_on - enable stack backtrace on error.
+Synopsis: backtrace_on -> -
 Description:
- A callback is an object which is executet after EACH interpreter cycle.
- Thus, the usual operation is interlaced with the execution if the callback.
- A callback can be used to observe/investigate the functioning of the
- interpreter.
- A callback can be removed with clearcallback.
-SeeAlso: clearcallback
 
+This functions enables a human readable backtrace of the execution
+stack. This is useful to locate where precisely an error occured. Note
+that this function also disables the interpreter's tail recursion
+optimization and will therefore impose a small performance
+penalty. The command backtrace_off disables the stack backtrace and
+re-enables tail recursion optimization.
+
+Example:
+
+SeeAlso:
+backtrace_off
 */
-void SetcallbackFunction::execute(SLIInterpreter *i) const
+void Backtrace_onFunction::execute(SLIInterpreter *i) const
 {
-  i->assert_stack_load(1);
-
-  CallbackDatum *cb=new CallbackDatum();
-  assert(cb != NULL);
-  
-  Token t(cb);
-  
-  cb->get().move(i->OStack.top()); // Move token into Callback Datum
-  i->OStack.pop();                 // Pop (now) empty token
-  i->ct.move(t);                   // Move datum into the interpreters
-  // callback datum
-  i->EStack.pop(); // never forget me!!
+  i->backtrace_on();
+  i->EStack.pop();
 }
 
 /*BeginDocumentation
-Name: clearcallback - clear the installed callback
-Synopsis: clearcallback -> -
+Name: backtrace_off - Disable the stack backtrace on error.
+Synopsis: backtrace_off -> -
+
 Description:
- A callback is an object which is executet after EACH interpreter cycle.
- Thus, the usual operation is interlaced with the execution if the callback.
- A callback can be used to observe/investigate the functioning of the
- interpreter.
- A callback can be set with setcallback.
-SeeAlso: setcallback
+This functions disables the backtrace of the execution
+stack and re-enables tail recursion optimization.
+
+SeeAlso: backtrace_on
 
 */
-void ClearcallbackFunction::execute(SLIInterpreter *i) const
+void Backtrace_offFunction::execute(SLIInterpreter *i) const
 {
-    i->EStack.pop(); // never forget me!!
-
-    i->ct.clear();
+  i->backtrace_off();
+  i->EStack.pop();
 }
 
 void OStackdumpFunction::execute(SLIInterpreter *i) const
@@ -128,7 +118,6 @@ SeeAlso: exit, repeat, for, forall, forallindexed, Map
 */
 void LoopFunction::execute(SLIInterpreter *i) const
 {
-    Token int_token(new IntegerDatum(0));
     if (i->OStack.load() ==0 )
       {
 	i->raiseerror(i->StackUnderflowError);
@@ -141,11 +130,10 @@ void LoopFunction::execute(SLIInterpreter *i) const
       }
 
     i->EStack.pop();
-
-    i->EStack.push(i->baselookup(i->mark_name));
+    i->EStack.push_by_ref(i->baselookup(i->mark_name));
     i->EStack.push_move(i->OStack.top());
-    i->EStack.push_move(int_token);
-    i->EStack.push(i->baselookup(i->iloop_name));
+    i->EStack.push_by_pointer(new IntegerDatum(0));
+    i->EStack.push_by_ref(i->baselookup(i->iloop_name));
     i->inc_call_depth();
     i->OStack.pop();
 }
@@ -160,12 +148,12 @@ Remarks: This command does not exit the SLI interpreter! Use quit instead.
 void ExitFunction::execute(SLIInterpreter *i) const
 {
 
-  // huhu
+    static Token mark = i->baselookup(i->mark_name);
+
     size_t n=1;
     size_t l=i->EStack.load();
-    Token mark = i->baselookup(i->mark_name);
     while( ( l > n ) && !( i->EStack.pick(n++) == mark) ) ;
-    if(n>= i->EStack.load())
+    if(n>= l)
     {
       i->raiseerror("EStackUnderflow");
       return;
@@ -194,23 +182,24 @@ void IfFunction::execute(SLIInterpreter *i) const
 {
         // OStack: bool proc
         //          1    0
+    static Token true_token(new BoolDatum(true));
 
-  assert(i->OStack.load()>=2);
-  
-  i->EStack.pop();
-
-  if(i->OStack.pick(1) == Token(true) )
+    if((i->OStack.load()>=2))
     {
-      if(i->step_mode())
+	i->EStack.pop();
+	if(i->OStack.pick(1) == true_token )
 	{
-	  std::cerr << "if:"
-		    << " Executing true branch."
-		    << std::endl;
+	    if(i->step_mode())
+	    {
+		std::cerr << "if:"
+			  << " Executing true branch."
+			  << std::endl;
+	    }
+	    i->EStack.push_move(i->OStack.top());
 	}
-      i->EStack.push_move(i->OStack.top());
+	i->OStack.pop(2);
     }
-  i->OStack.pop(2);
-  
+    else throw StackUnderflow(2,i->OStack.load());
 }
 
 /*BeginDocumentation
@@ -236,18 +225,14 @@ void IfelseFunction::execute(SLIInterpreter *i) const
 {
         // OStack: bool tproc fproc
         //          2    1      0
+    static Token true_token(new BoolDatum(true));
 
-  if(i->OStack.load()<3 )
-    {
-      i->message(SLIInterpreter::M_ERROR, "ifelse","Too few parameters supplied.");
-      i->message(SLIInterpreter::M_ERROR, "ifelse","Usage: boolean {proc1} {proc2} ifelse");
-      i->raiseerror(i->StackUnderflowError);
-      return;
-    }
+    if(i->OStack.load()<3 )
+	throw StackUnderflow(3,i->OStack.load());
 
     i->EStack.pop();
 
-    if(i->OStack.pick(2) == Token(true) )
+    if(i->OStack.pick(2) == true_token )
     {
       if(i->step_mode())
       {
@@ -293,25 +278,32 @@ SeeAlso: for, loop, exit
 */
 void RepeatFunction::execute(SLIInterpreter *i) const
 {
+
         // level  1  0
         // stack: n proc repeat
-    i->EStack.pop();
+    if(i->OStack.load()>=2)
+    {
+	i->EStack.pop();
 
-    ProcedureDatum *proc=
-        dynamic_cast<ProcedureDatum *>(i->OStack.top().datum());
-    assert(proc !=NULL);
-    Token int_token(new IntegerDatum(proc->size()));
-//    if(proc->size() >0)
-//    {
-      i->EStack.push(i->baselookup(i->mark_name));
-      i->EStack.push_move(i->OStack.pick(1));
-      i->EStack.push_move(i->OStack.pick(0));
-      i->EStack.push_move(int_token);
-      i->EStack.push(i->baselookup(i->irepeat_name));
-      i->inc_call_depth();
+	ProcedureDatum *proc=
+	    dynamic_cast<ProcedureDatum *>(i->OStack.top().datum());
+	if(proc !=NULL)
+	{
+	    IntegerDatum *id= dynamic_cast<IntegerDatum*>(i->OStack.pick(1).datum());
+	    if(id==0)
+		throw ArgumentType(1);
 
-//    }
-    i->OStack.pop(2);
+	    i->EStack.push_by_ref(i->baselookup(i->mark_name));
+	    i->EStack.push_move(i->OStack.pick(1));
+	    i->EStack.push_move(i->OStack.pick(0));
+	    i->EStack.push_by_pointer(new IntegerDatum(proc->size()));
+	    i->EStack.push_by_ref(i->baselookup(i->irepeat_name));
+	    i->inc_call_depth();
+	    i->OStack.pop(2);
+	}
+	else throw ArgumentType(0);
+    }
+    else throw StackUnderflow(2,i->OStack.load());
 }
 
 /*BeginDocumentation
@@ -344,12 +336,11 @@ SeeAlso: stop, raiseerror
 */
 void StoppedFunction::execute(SLIInterpreter *i) const
 {
-  i->assert_stack_load(1);
-  // ostack: proc
-  Token name_token(new NameDatum(i->istopped_name));
-  
+    if(i->OStack.load()==0)
+	throw StackUnderflow(1,i->OStack.load());
+
   i->EStack.pop();
-  i->EStack.push_move(name_token);
+  i->EStack.push_by_pointer(new NameDatum(i->istopped_name));
   i->EStack.push_move(i->OStack.top());
   i->OStack.pop();
 }
@@ -388,7 +379,7 @@ void StopFunction::execute(SLIInterpreter *i) const
     if(i->get_debug_mode() || i->show_backtrace())
     {
       if(i->show_backtrace() || ! found)
-	i->stack_backtrace(n);
+	i->stack_backtrace(l-1);
 
       std::cerr << "In stop: An error or stop was raised."
 		<<" Unrolling stack by " << n << " levels."
@@ -399,7 +390,7 @@ void StopFunction::execute(SLIInterpreter *i) const
 		    << "Stack unrolling will erase the execution stack." << std::endl
 		    << "Entering debug mode. Type '?' for help." << std::endl;
 	}
-
+      
       if(i->get_debug_mode())
 	{
 	  char c=i->debug_commandline(i->EStack.top());
@@ -596,21 +587,25 @@ void DefFunction::execute(SLIInterpreter *i) const
 {
         // Def should also check the "writeable" Flag of the
         // name!
+    if(i->OStack.load()<2)
+	throw StackUnderflow(2,i->OStack.load());
 
     LiteralDatum *nd=dynamic_cast<LiteralDatum *>(i->OStack.pick(1).datum());
-    assert(nd != NULL);
-    if(nd->writeable())
-    {
+    if(nd == NULL)
+	throw ArgumentType(1);
+
+    // if(nd->writeable())
+    // {
         i->def_move(*nd,i->OStack.top());
         i->OStack.pop(2);
         i->EStack.pop();
-    }
-    else   // Name was write Protected: OStack is left untouched!
-    {
-        Name myname(i->getcurrentname());
-        i->EStack.pop();
-        i->raiseerror(myname,i->WriteProtectedError);
-    }
+    // }
+    // else   // Name was write Protected: OStack is left untouched!
+    // {
+    //     Name myname(i->getcurrentname());
+    //     i->EStack.pop();
+    //     i->raiseerror(myname,i->WriteProtectedError);
+    // }
 
 }
 
@@ -639,21 +634,25 @@ SeeAlso: def, undef, begin, end
 */
 void SetFunction::execute(SLIInterpreter *i) const
 {
-  assert(i->OStack.load()>1);
+    if(i->OStack.load()<2)
+	throw StackUnderflow(2,i->OStack.load());
+
   LiteralDatum *nd=dynamic_cast<LiteralDatum *>(i->OStack.top().datum());
-  assert(nd != NULL);
-  if(nd->writeable())
-    {
+  if(nd ==0)
+      throw ArgumentType(0);
+
+  // if(nd->writeable())
+  //   {
       i->def_move(*nd,i->OStack.pick(1));
       i->OStack.pop(2);
       i->EStack.pop();
-    }
-  else   // Name was write Protected: OStack is left untouched!
-    {
-      Name myname(i->getcurrentname());
-      i->EStack.pop();
-      i->raiseerror(myname,i->WriteProtectedError);
-    }
+  //   }
+  // else   // Name was write Protected: OStack is left untouched!
+  //   {
+  //     Name myname(i->getcurrentname());
+  //     i->EStack.pop();
+  //     i->raiseerror(myname,i->WriteProtectedError);
+  //   }
 
 }
 
@@ -768,16 +767,13 @@ void ForFunction::execute(SLIInterpreter *i) const
         dynamic_cast<ProcedureDatum *>(i->OStack.top().datum());
     assert(proc !=NULL);
 
-    Token int_token(new IntegerDatum(proc->size()));
-
-    i->EStack.push(i->baselookup(i->mark_name));
+    i->EStack.push_by_ref(i->baselookup(i->mark_name));
     i->EStack.push_move(i->OStack.pick(2));      // increment
     i->EStack.push_move(i->OStack.pick(1));      // limit
     i->EStack.push_move(i->OStack.pick(3));      // initial as counter
     i->EStack.push_move(i->OStack.pick(0));      // procedure
-    i->EStack.push(int_token);
-//    i->EStack.push(i->baselookup(i->ifor_name)); // %for
-    i->EStack.push(Token(new FunctionDatum(i->ifor_name, &(i->iforfunction)))); // %for
+    i->EStack.push_by_pointer(new IntegerDatum(proc->size()));
+    i->EStack.push_by_ref(i->baselookup(i->ifor_name)); // %for
     i->inc_call_depth();
     i->OStack.pop(4);
 }
@@ -845,25 +841,45 @@ BeginDocumentation
 /******************************/
 void Forall_aFunction::execute(SLIInterpreter *i) const
 {
+    static Token mark(i->baselookup(i->mark_name));
+    static Token forall(i->baselookup(i->iforallarray_name));
+
+    ProcedureDatum *proc=
+        static_cast<ProcedureDatum *>(i->OStack.top().datum());
+    
+    i->EStack.pop();
+    i->EStack.push_by_ref(mark);
+    i->EStack.push_move(i->OStack.pick(1));        // push object
+    i->EStack.push_by_pointer(new IntegerDatum(0));          // push array counter
+    i->EStack.push_by_ref(i->OStack.pick(0));       // push procedure
+    i->EStack.push_by_pointer(new IntegerDatum(proc->size()));          // push procedure counter
+    i->EStack.push_by_ref(forall);
+    i->OStack.pop(2);
+    i->inc_call_depth();
+}
+
+
+/******************************/
+/* forall_iter                */
+/*  call: obj proc forall     */
+/*  pick   1    0             */
+/******************************/
+void Forall_iterFunction::execute(SLIInterpreter *i) const
+{
     i->EStack.pop();
     ProcedureDatum *proc=
         dynamic_cast<ProcedureDatum *>(i->OStack.top().datum());
     assert(proc !=NULL);
 
     i->EStack.push(i->baselookup(i->mark_name));
-    i->EStack.push_move(i->OStack.pick(1));        // push object
+    i->EStack.push_move(i->OStack.pick(1));        // push iterator
+    i->EStack.push_move(i->OStack.pick(0));        // push procedure
 
-    ArrayDatum  *ad= dynamic_cast<ArrayDatum *>(i->EStack.top().datum());
-    assert(ad !=NULL);
-
-    i->EStack.push(new IntegerDatum(ad->size())); // push limit
-    i->EStack.push(new IntegerDatum(0));          // push initial counter
-    i->EStack.push_move(i->OStack.pick(0));       // push procedure
-
-    i->EStack.push(i->baselookup(i->iforallarray_name));
+    i->EStack.push(i->baselookup(i->iforalliter_name));
     i->OStack.pop(2);
     i->inc_call_depth();
 }
+
 
 /*
 BeginDocumentation
@@ -1112,7 +1128,6 @@ void PrinterrorFunction::execute(SLIInterpreter *i) const
 void RaiseagainFunction::execute(SLIInterpreter *i) const
 {
     i->EStack.pop();
-
     i->raiseagain();
 }
 
@@ -1907,8 +1922,8 @@ const SetGuardFunction setguardfunction;
 const RemoveGuardFunction removeguardfunction;
 
 
-const SetcallbackFunction      setcallbackfunction;
-const ClearcallbackFunction    clearcallbackfunction;
+const Backtrace_onFunction      backtrace_onfunction;
+const Backtrace_offFunction    backtrace_offfunction;
 const OStackdumpFunction        ostackdumpfunction;
 const EStackdumpFunction        estackdumpfunction;
 const LoopFunction             loopfunction;
@@ -1931,6 +1946,7 @@ const LookupFunction           lookupfunction;
 
 const ForFunction              forfunction;
 const Forall_aFunction         forall_afunction;
+const Forall_iterFunction      forall_iterfunction;
 const Forallindexed_aFunction  forallindexed_afunction;
 const Forallindexed_sFunction  forallindexed_sfunction;
 const Forall_sFunction         forall_sfunction;
@@ -1997,8 +2013,8 @@ void  init_slicontrol(SLIInterpreter *i)
   i->def(i->newerror_name,    BoolDatum(false));
   i->def(i->recordstacks_name,BoolDatum(false));
 
-  i->createcommand("setcallback",&setcallbackfunction);
-  i->createcommand("clearcallback",&clearcallbackfunction);
+  i->createcommand("backtrace_on",&backtrace_onfunction);
+  i->createcommand("backtrace_off",&backtrace_offfunction);
   i->createcommand("estackdump",  &estackdumpfunction);
   i->createcommand("ostackdump",  &ostackdumpfunction);
   i->createcommand("loop",  &loopfunction);
@@ -2021,6 +2037,7 @@ void  init_slicontrol(SLIInterpreter *i)
   i->createcommand("lookup",&lookupfunction);
   i->createcommand("for",&forfunction);
   i->createcommand("forall_a",&forall_afunction);
+  i->createcommand("forall_iter",&forall_iterfunction);
   i->createcommand("forallindexed_a",&forallindexed_afunction);
   i->createcommand("forallindexed_s",&forallindexed_sfunction);
   i->createcommand("forall_s",&forall_sfunction);

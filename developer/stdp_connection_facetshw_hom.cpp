@@ -86,6 +86,7 @@ namespace nest
   void STDPFACETSHWHomCommonProperties::calc_readout_cycle_duration_()
   {
     readout_cycle_duration_ = int((no_synapses_ - 1.0) / synapses_per_driver_ + 1.0) * driver_readout_time_;
+    //std::cout << "stdp_connection_facetshw_hom::debug: readout cycle duration changed to " << readout_cycle_duration_ << std::endl;
   }
 
   void STDPFACETSHWHomCommonProperties::get_status(DictionaryDatum & d) const
@@ -117,9 +118,9 @@ namespace nest
       weight_per_lut_entry_ = Wmax_ / (lookuptable_causal_.size() - 1);
     }
 
-    //they should not be allowed to be changed!
-    //updateValue<double_t>(d, "weight_per_lut_entry", weight_per_lut_entry_);
-    //updateValue<double_t>(d, "readout_cycle_duration", readout_cycle_duration_);
+    //TP: they should not be allowed to be changed! But needed ofr CopyModel
+    updateValue<double_t>(d, "weight_per_lut_entry", weight_per_lut_entry_);
+    updateValue<double_t>(d, "readout_cycle_duration", readout_cycle_duration_);
 
     if(updateValue<long_t>(d, "no_synapses", no_synapses_)){
       calc_readout_cycle_duration_();
@@ -225,9 +226,9 @@ namespace nest
 
     updateValue<long_t>(d, "synapse_id", synapse_id_);
 
-    //they should not be allowed to be changed!
-    //updateValue<bool>(d, "init_flag", init_flag_);
-    //updateValue<double_t>(d, "next_readout_t", next_readout_time_);
+    //TP: they should not be allowed to be changed! But needed ofr CopyModel
+    updateValue<bool>(d, "init_flag", init_flag_);
+    updateValue<double_t>(d, "next_readout_time", next_readout_time_);
 
     //setting discrete_weight_ does not make sense, is temporary variable
   }

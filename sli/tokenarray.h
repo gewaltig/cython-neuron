@@ -164,9 +164,14 @@ public:
         return (*data)[i];
     }
 
-    const Token &get(size_t i) const
+    const Token &get(long i) const
     {
-        return (*data)[i];
+      return data->get(i);
+    }
+
+    bool index_is_valid(long i) const
+    {
+      return data->index_is_valid(i);
     }
 
     void rotate(Token *t1, Token *t2, Token *t3)
@@ -388,7 +393,8 @@ public:
   /** Exception classes */
   //  class TypeMismatch {};
   class OutOfRange {};
-  
+
+      
 };
 
 inline

@@ -54,6 +54,7 @@
 #include "parrot_neuron.h"
 #include "pp_psc_delta.h"
 #include "sli_neuron.h"
+#include "ginzburg_neuron.h"
 
 // Stimulation devices
 #include "ac_generator.h"
@@ -65,6 +66,8 @@
 #include "step_current_generator.h"
 #include "mip_generator.h"
 #include "smp_generator.h"
+#include "ppd_sup_generator.h"
+#include "gamma_sup_generator.h"
 
 // Recording devices
 #include "spike_detector.h"
@@ -86,6 +89,7 @@
 #include "static_connection_hom_wd.h"
 #include "cont_delay_connection.h"
 #include "tsodyks_connection.h"
+#include "tsodyks2_connection.h"
 #include "stdp_connection.h"
 #include "stdp_connection_hom.h"
 #include "stdp_pl_connection_hom.h"
@@ -143,7 +147,10 @@ namespace nest
     register_model<step_current_generator>(net_, "step_current_generator");
     register_model<mip_generator>(net_,          "mip_generator");
     register_model<smp_generator>(net_,          "smp_generator");
+    register_model<ppd_sup_generator>(net_,      "ppd_sup_generator");
+    register_model<gamma_sup_generator>(net_,    "gamma_sup_generator");
     register_model<sli_neuron>(net_,             "sli_neuron");
+    register_model<ginzburg>(net_,               "ginzburg_neuron");
 
     register_model<spike_detector>(net_,       "spike_detector");
     register_model<Multimeter>(net_,           "multimeter");
@@ -192,6 +199,7 @@ namespace nest
 
     register_prototype_connection<ContDelayConnection>(net_, "cont_delay_synapse");
     register_prototype_connection<TsodyksConnection>(net_,   "tsodyks_synapse");
+    register_prototype_connection<Tsodyks2Connection>(net_,   "tsodyks2_synapse");
     register_prototype_connection<STDPConnection>(net_,      "stdp_synapse");
     register_prototype_connection<HTConnection>(net_,        "ht_synapse");
 

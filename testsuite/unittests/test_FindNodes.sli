@@ -1,0 +1,54 @@
+/*
+ *  test_FindNodes.sli
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2012 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ *  Permission is granted to compile and modify
+ *  this file for non-commercial use.
+ *  See the file LICENSE for details.
+ *
+ */
+
+/* BeginDocumentation
+   Name: testsuite::test_FindNodes - sli script to test if FindNodes works as expected
+
+   Synopsis: (test_FindNodes) run
+
+   Description:
+
+   This test generates 10 iaf_neurons, 1 iaf_psc_alpha neuron and 10
+   iaf_psc_delta_neurons. It then uses FindNodes to retrieve these
+   different sets of neurons from the network.
+
+   SeeAlso: FindNodes
+
+   FirstVersion: January 2012
+   Author: Marc-Oliver Gewaltig
+ */
+
+/unittest (7488) require
+/unittest using
+
+/iaf_neuron 10 Create /n1 Set
+/iaf_psc_alpha 10 Create /n2 Set
+/iaf_psc_delta 10 Create /n3 Set
+
+/set1 [n1 ] Range def
+/set2 [n1 1 add n2 ] Range def
+/set3 [n2 1 add n3 ] Range def
+
+0 << /model /iaf_neuron >> FindNodes
+set1 eq assert_or_die
+
+0 << /model /iaf_psc_alpha >> FindNodes
+set2 eq assert_or_die
+
+0 << /model /iaf_psc_delta >> FindNodes
+set3 eq assert_or_die
+
+endusing

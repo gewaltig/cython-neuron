@@ -674,7 +674,6 @@ namespace nest
       return;
     
     nodes_vec_[n->get_thread()].push_back(n);
-    ++n_nodes_;
   }
 
   inline

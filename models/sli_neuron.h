@@ -90,7 +90,7 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_sli_neuron
   public:        
     
     typedef Node base;
-    
+      
     sli_neuron();
     sli_neuron(const sli_neuron&);
 
@@ -150,7 +150,8 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_sli_neuron
       RingBuffer ex_spikes_;
       RingBuffer in_spikes_;
       RingBuffer currents_;
-    
+
+
       /** Logger for all analog data. */
       UniversalDataLogger<sli_neuron> logger_;
     };
@@ -177,6 +178,19 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_sli_neuron
      * @{
      */   
     DictionaryDatum state_;
+    /** 
+     * These are pointers into the status dictionary and must be updated in
+     * calibrate.
+     */
+    Token *vm_t; //!< Points to V_m
+    Token *update_t; //!< points to update
+    Token *calibrate_t; //!< points to calibrate 
+    Token *in_spikes_t; //!< number of excitatory spikes during the time slice 
+    Token *ex_spikes_t; //!< number of inhibitory spikes during the sime slice
+    Token *currents_t;  //!< external current
+    Token *last_spike_t; //!< time of last spike
+    Token *out_events_t; //!< Events produced by the neuron
+    Token *spike_t;//< Boolean for fast spike initiation
     Buffers_        B_;
 
     //! Mapping of recordables names to access functions

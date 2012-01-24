@@ -80,6 +80,12 @@ class GenericConnectorBase : public Connector
    * Register a new connection at the sender side.
    */ 
   void register_connection(Node&, Node&, ConnectionT&, port);
+ 
+ /**
+   * Register many connections in bulk. 
+   * The dictionary contains all parameters as array.
+   */ 
+  void register_connections(DictionaryDatum&);
 
   /**
    * Return a list of ports

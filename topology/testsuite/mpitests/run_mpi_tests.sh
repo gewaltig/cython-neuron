@@ -26,4 +26,10 @@ do
   cd ..
 done
 
+# remove output
+rm -rf conv div
+
+
+# run regression test for #516 --- will hang on failure
+mpirun -np 6 python ticket-516.py
   

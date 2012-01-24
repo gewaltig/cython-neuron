@@ -66,6 +66,7 @@ nest::iaf_psc_delta_canon::Parameters_::Parameters_()
 
 nest::iaf_psc_delta_canon::State_::State_()
   : U_(0.0), //  or U_ = U_reset_;
+    I_(0.), 
     last_spike_step_(-1),
     last_spike_offset_(0.0),
     is_refractory_(false),
@@ -200,6 +201,7 @@ void nest::iaf_psc_delta_canon::init_buffers_()
 {
   B_.events_.resize();
   B_.events_.clear(); 
+  B_.currents_.clear();
   B_.logger_.reset();
 }
 
@@ -289,7 +291,12 @@ void iaf_psc_delta_canon::update(Time const & origin,
 
            particularly when U_ * exp_t_ is close to -I_contrib_.
 	*/ 
-	S_.U_ = V_.I_contrib_ + V_.expm1_t_ * S_.U_ + S_.U_;
+
+
+	// contribution of the stepwise constant current
+	double_t I_contrib_t = - S_.I_ * P_.tau_m_ / P_.c_m_ * V_.expm1_t_;
+ 
+	S_.U_ = V_.I_contrib_ + I_contrib_t + V_.expm1_t_ * S_.U_ + S_.U_;
 
 	S_.U_ = S_.U_ < P_.U_min_ ? P_.U_min_ : S_.U_;  // lower bound on potential
 	if ( S_.U_ >= P_.U_th_ )
@@ -390,6 +397,9 @@ void iaf_psc_delta_canon::update(Time const & origin,
 
     // voltage logging
     B_.logger_.record_data(origin.get_steps()+lag);
+
+    S_.I_ = B_.currents_.get_value(lag);
+
   }  
 
 }                           
@@ -401,7 +411,8 @@ void nest::iaf_psc_delta_canon::propagate_(const double_t dt)
 
   // see comment on regular update above
   const double expm1_dt = numerics::expm1(-dt/P_.tau_m_); 
-  S_.U_ = - V_.v_inf_ * expm1_dt + S_.U_ * expm1_dt + S_.U_;
+  const double_t v_inf = V_.v_inf_ + S_.I_ * P_.tau_m_ / P_.c_m_;
+  S_.U_ = - v_inf * expm1_dt + S_.U_ * expm1_dt + S_.U_;
 
   return;
 }
@@ -412,7 +423,8 @@ void nest::iaf_psc_delta_canon::emit_spike_(Time const &origin, const long_t lag
   assert(S_.U_ >= P_.U_th_);  // ensure we are superthreshold
  
   // compute time since threhold crossing
-  double_t dt = - P_.tau_m_ * std::log((V_.v_inf_ - S_.U_) / (V_.v_inf_ - P_.U_th_));
+  double_t v_inf = V_.v_inf_ + S_.I_ * P_.tau_m_ / P_.c_m_;
+  double_t dt = - P_.tau_m_ * std::log((v_inf - S_.U_) / (v_inf - P_.U_th_));
 
   // set stamp and offset for spike
   set_spiketime(Time::step(origin.get_steps() + lag + 1));
@@ -463,6 +475,19 @@ void iaf_psc_delta_canon::handle(SpikeEvent & e)
   B_.events_.add_spike(e.get_rel_delivery_steps(network()->get_slice_origin()), 
 		    Tdeliver, e.get_offset(), e.get_weight() * e.get_multiplicity());
 }
+
+void iaf_psc_delta_canon::handle(CurrentEvent& e)
+{
+  assert(e.get_delay() > 0);
+
+  const double_t c=e.get_current();
+  const double_t w=e.get_weight();
+
+  // add stepwise constant current; MH 2009-10-14
+  B_.currents_.add_value(e.get_rel_delivery_steps(network()->get_slice_origin()), 
+			 w*c);
+}
+
 
 void nest::iaf_psc_delta_canon::handle(DataLoggingRequest& e)
 {

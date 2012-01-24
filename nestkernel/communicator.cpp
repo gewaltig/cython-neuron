@@ -745,16 +745,13 @@ bool nest::Communicator::grng_synchrony(unsigned long process_rnd_number)
   if (num_processes_ > 1)
   {
     std::vector<unsigned long> rnd_numbers(num_processes_);
-    MPI_Gather(&process_rnd_number, 1, MPI_UNSIGNED_LONG, &rnd_numbers[0], 1, MPI_UNSIGNED_LONG, 0, comm);
+    MPI_Allgather(&process_rnd_number, 1, MPI_UNSIGNED_LONG, &rnd_numbers[0], 1, MPI_UNSIGNED_LONG, comm);
     // compare all rnd numbers
-    if (rank_ == 0)
+    for(uint_t i = 1; i < rnd_numbers.size(); ++i)
     {
-      for(uint_t i = 1; i < rnd_numbers.size(); ++i)
+      if (rnd_numbers[i-1] != rnd_numbers[i])
       {
-	if (rnd_numbers[i-1] != rnd_numbers[i])
-	{
-	  return false;
-	}
+	return false;
       }
     }
   }

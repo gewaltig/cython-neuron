@@ -526,12 +526,84 @@ namespace nest{
      * @returns true if minimum bounding box of input volume is outside 
      *               of calling volume.
      */
+    using Region::outside;
     bool outside(const Volume& reg) const;
 
   protected:
 
   private:
 
+  };
+
+  /**
+   * The Spherical class defines a spherical region in a 3D space. The
+   * class inherits from the Volume class, and the minimum bounding
+   * box of the spherical region can be retrieved from this base class.
+   * The spherical region is identified by the sphere center and radius.
+   */  
+  class Spherical: public Volume
+  {
+  public:
+    /**
+     * Default constructor.
+     */
+    Spherical();
+
+    /**
+     * @param radius of the spherical region.
+     */
+    Spherical(const double_t);
+
+    /**
+     * Constructor accepting an input dictionary. The input dictionary
+     * should contain the sub-dictionary "spherical". The "spherical"
+     * dictionary should contain the element "radius".
+     * @param dict dictionary.
+     */
+    Spherical(const DictionaryDatum& dict);
+
+    Spherical(const Spherical&);
+
+    virtual ~Spherical(){}
+
+    /**
+     * @returns a copy of the calling object.
+     */
+    virtual Volume* copy() const;
+
+    /**
+     * See Region::set_anchor(..).
+     */
+    virtual void set_anchor(const Position<double_t>& pos);
+
+    /**
+     * @param target input position
+     * @returns true if input position is within spherical region.
+     */
+    virtual bool within_range(const Position<double_t>& target) const;
+
+    /**
+     * @returns true if input region is completely inside region.
+     */
+    using Region::within_range;
+    virtual bool within_range(const Volume& reg) const;
+
+    /**
+     * See Region::outside(..).
+     */
+    virtual bool outside(const Volume& reg) const;
+
+    virtual Position<double_t> get_center() const
+      {return center_;}
+
+  protected:
+    // Class variables
+    double_t radius_;
+
+    // Derived value showing the center of the region.
+    // Depends upon the lower left and upper right corner
+    // points.
+    Position<double_t> center_;
   };
 
   // Experimental combination region:

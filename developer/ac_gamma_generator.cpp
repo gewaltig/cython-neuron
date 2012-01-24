@@ -151,7 +151,7 @@ nest::ac_gamma_generator::ac_gamma_generator()
 
 nest::ac_gamma_generator::ac_gamma_generator(const ac_gamma_generator&n)
   : Node(n),
-    device_(),
+    device_(n.device_),
     P_(n.P_),
     S_(n.S_),
     B_(n.B_, *this)

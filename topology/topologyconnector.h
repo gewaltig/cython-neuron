@@ -28,7 +28,6 @@
 #include "nodewrapper.h"
 #include "parameters.h"
 #include "walker.h"
-#include "binomial.h"
 
 /** @file topologyconnector.h
  *  Implements the TopologyConnector structure.
@@ -285,14 +284,18 @@ namespace nest
 			      NodeWrapper& source)
   {
     // Reverses target and source position in input parameter list.
+    librandom::RngPtr rng = net_.get_rng(target.get_node()->get_thread());
+
     // Retrieve correct weight and delay and create connection.
-    TopologyConnector::connect(*(source.get_node()), 
-			       *(target.get_node()), 
+    TopologyConnector::connect(*(source.get_node()),
+			       *(target.get_node()),
 			       weight_->get_value(target.get_position(),
 						  source.get_position(),
-				                  source.get_extent()), 
+				                  rng,
+				                  source.get_extent()),
 			       delay_->get_value(target.get_position(),
 						 source.get_position(),
+						 rng,
 				                 source.get_extent()));
   }
 
@@ -343,15 +346,19 @@ namespace nest
     if(target.get_node()->is_proxy())
       return;
 
+    librandom::RngPtr rng = net_.get_rng(target.get_node()->get_thread());
+
     // Reverses target and source position in input parameter list.
     // Retrieve correct weight and delay and create connection.
-    TopologyConnector::connect(*(source.get_node()), 
-			       *(target.get_node()), 
+    TopologyConnector::connect(*(source.get_node()),
+			       *(target.get_node()),
 			       weight_->get_value(source.get_position(),
 						  target.get_position(),
-				                  target.get_extent()), 
+				                  rng,
+						  target.get_extent()),
 			       delay_->get_value(source.get_position(),
 						 target.get_position(),
+						 rng,
 				                 target.get_extent()));
   }
 

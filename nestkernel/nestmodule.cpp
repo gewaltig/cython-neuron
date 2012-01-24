@@ -8,7 +8,7 @@
  *
  *  See the file AUTHORS for details.
  *
- *   First Version: April 2002
+ *  First Version: April 2002
  *
  *  Permission is granted to compile and modify
  *  this file for non-commercial use.
@@ -565,12 +565,11 @@ namespace nest
     NodeList localnodes(*subnet);
     ArrayDatum result;
 
-    if ( include_remote )
+    if (include_remote)
     {
       vector<index> gids;
       nest::Communicator::communicate(localnodes, gids);
       result.reserve(gids.size());
-
       for(vector<index>::iterator n = gids.begin(); n != gids.end(); ++n)
         result.push_back(new IntegerDatum(*n));
     }
@@ -845,6 +844,18 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     i->EStack.pop();
   }
 
+  void NestModule::Connect_i_i_iFunction::execute(SLIInterpreter *i) const
+  {
+      long &source = static_cast<IntegerDatum *>(i->OStack.pick(2).datum())->get();
+      long &target = static_cast<IntegerDatum *>(i->OStack.pick(1).datum())->get();
+      long &synmodel_id = static_cast<IntegerDatum *>(i->OStack.pick(0).datum())->get();
+
+      get_network().connect(source, target, synmodel_id);
+      
+      i->OStack.pop(3);
+      i->EStack.pop();
+  }
+
   // Connect for gid gid weight delay
   // See lib/sli/nest-init.sli for details
   void NestModule::Connect_i_i_d_d_lFunction::execute(SLIInterpreter *i) const
@@ -861,6 +872,24 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     if ( synmodel.empty() )
       throw UnknownSynapseType(synmodel_name.toString());
     const index synmodel_id = static_cast<index>(synmodel);
+
+    get_network().connect(source, target, weight, delay, synmodel_id);
+    
+    i->OStack.pop(5);
+    i->EStack.pop();
+  }
+
+ // Connect for gid gid weight delay syn_id
+  // See lib/sli/nest-init.sli for details
+  void NestModule::Connect_i_i_d_d_iFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(5);
+
+    index source = getValue<long>(i->OStack.pick(4));
+    index target = getValue<long>(i->OStack.pick(3));
+    double_t weight = getValue<double_t>(i->OStack.pick(2));
+    double_t delay  = getValue<double_t>(i->OStack.pick(1));
+    index synmodel_id = getValue<long>(i->OStack.pick(0));
 
     get_network().connect(source, target, weight, delay, synmodel_id);
     
@@ -901,6 +930,57 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     }
 
     i->OStack.pop(4);
+    i->EStack.pop();
+  }
+
+  /* BeginDocumentation
+     Name: DataConnect - Connect many neurons from data.
+
+     Synopsis: 
+     source dict model  DataConnect -> -
+     source - GID of the source neuron
+     dict   - dictionary with connection parameters
+     model  - the synapse model
+
+     Description:
+     Connects the source neuron to targets according to the data in dict, using the synapse 'model'.
+     Dict is a parameter dictionary that must contain at least the following fields:
+     /target
+     /weight
+     /delay
+     Other depend on the synapse model. The values in the dictionaries are arrays of equal size, specifying the parameters for the
+     respective connection. The arrays should all be of type DoubleVectorDatum (numpy.array(dtype=float)). Other array types will be
+     converted and a warning is issued.
+
+     Author: Marc-Oliver Gewaltig
+     FirstVersion: August 2011
+     SeeAlso: Connect, DivergentConnect
+  */
+  void NestModule::DataConnect_i_dict_iFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(3);
+     
+    index source = getValue<long>(i->OStack.pick(2));
+    DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(1));
+    const Name synmodel_name = getValue<std::string>(i->OStack.pick(0));
+    const Token synmodel = get_network().get_synapsedict().lookup(synmodel_name);
+    if ( synmodel.empty() )
+      throw UnknownSynapseType(synmodel_name.toString());
+    const index synmodel_id = static_cast<index>(synmodel);
+
+    get_network().divergent_connect(source, params,synmodel_id);
+      // dict access control only if we actually made a connection
+    std::string missed;
+    if ( !params->all_accessed(missed) )
+      {
+	if ( get_network().dict_miss_is_error() )
+	  throw UnaccessedDictionaryEntry(missed);
+	else
+	  get_network().message(SLIInterpreter::M_WARNING, "Connect", 
+				("The following synapse parameters are unused: " + missed).c_str());
+      }
+
+    i->OStack.pop(3);
     i->EStack.pop();
   }
 
@@ -1111,7 +1191,8 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     i->OStack.pop(5);
     i->EStack.pop();
   }
-  
+    
+
      
   // Documentation can be found in lib/sli/nest-init.sli near definition
   // of the trie for RandomConvergentConnect.
@@ -1700,8 +1781,11 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     i->createcommand("Create_l_i", &create_l_ifunction);
    
     i->createcommand("Connect_i_i_l", &connect_i_i_lfunction);
+    i->createcommand("Connect_i_i_i", &connect_i_i_ifunction);
     i->createcommand("Connect_i_i_d_d_l", &connect_i_i_d_d_lfunction);
+    i->createcommand("Connect_i_i_d_d_i", &connect_i_i_d_d_ifunction);
     i->createcommand("Connect_i_i_D_l", &connect_i_i_D_lfunction);
+    i->createcommand("DataConnect_", &dataconnect_i_dict_ifunction);
 
     i->createcommand("SubnetConnect_i_i_i_l", &subnetconnect_i_i_i_lfunction);
    

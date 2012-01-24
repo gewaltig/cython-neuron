@@ -73,7 +73,8 @@ namespace nest{
      *          position
      */
     virtual double_t 
-      get_value(const Position<double_t>& pos) const;
+      get_value(const Position<double_t>& pos,
+                librandom::RngPtr& rng) const;
 
     /**
      * Calculates the relative position between the driver and the
@@ -90,6 +91,7 @@ namespace nest{
     virtual double_t 
       get_value(const Position<double_t>& driver,
 		const Position<double_t>& pool,
+		librandom::RngPtr& rng,
 	        std::vector<double_t>* extent=0) const;
       
     /**
@@ -153,7 +155,8 @@ namespace nest{
     using Parameters::get_value;
 
     double_t 
-      get_value(const Position<double_t>& pos) const;
+      get_value(const Position<double_t>& pos,
+                librandom::RngPtr& rng) const;
 
   private:
     //Member variables
@@ -188,7 +191,8 @@ namespace nest{
     using Parameters::get_value;
 
     double_t 
-      get_value(const Position<double_t>& pos) const;
+      get_value(const Position<double_t>& pos,
+                librandom::RngPtr& rng) const;
 
   private:
     //Member variables
@@ -217,7 +221,8 @@ namespace nest{
     using Parameters::get_value;
 
     double_t 
-      get_value(const Position<double_t>& pos) const;
+      get_value(const Position<double_t>& pos,
+                librandom::RngPtr& rng) const;
 
   private:
     //Member variables
@@ -240,7 +245,8 @@ namespace nest{
     using Parameters::get_value;
 
     double_t 
-      get_value(const Position<double_t>& pos) const;
+      get_value(const Position<double_t>& pos,
+                librandom::RngPtr& rng) const;
 
   private:
     //Member variables
@@ -264,14 +270,13 @@ namespace nest{
     using Parameters::get_value;
 
     double_t 
-      get_value(const Position<double_t>&) const;
+      get_value(const Position<double_t>&,
+                librandom::RngPtr& rng) const;
 
   private:
     //Member variables
     double_t range_;
     double_t lower_;
-
-    librandom::RngPtr rng_;
   };
 
   /**
@@ -300,11 +305,13 @@ namespace nest{
      *          selected position.
      */
     double_t 
-      get_value(const Position<double_t>& lid) const;
+      get_value(const Position<double_t>& lid,
+                librandom::RngPtr& rng) const;
 
     double_t 
       get_value(const Position<double_t>&,
 		const Position<double_t>& lid,
+                librandom::RngPtr& rng,
 	        std::vector<double_t>* extent=0) const;
     
   private:
@@ -332,6 +339,7 @@ namespace nest{
     double_t 
       get_value(const Position<double_t>& driver,
 		const Position<double_t>& pool,
+                librandom::RngPtr& rng,
 	        std::vector<double_t>* extent=0) const;
     
   private:

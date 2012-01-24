@@ -199,7 +199,7 @@ nest::ac_poisson_generator::ac_poisson_generator()
 
 nest::ac_poisson_generator::ac_poisson_generator(const ac_poisson_generator&n)
   : Node(n),
-    device_(),
+    device_(n.device_),
     P_(n.P_),
     S_(n.S_),
     B_(n.B_)

@@ -86,13 +86,10 @@ void AggregateDatum<TokenArray,&SLIInterpreter::Proceduretype>::list(std::ostrea
 {
   int lc=0;
 
-  if(line==lc)
-    out << "-->" << prefix << '{' << std::endl;
-  else
-    out << "   " << prefix << '{' << std::endl;
     
   prefix="   "+prefix;
-  
+
+  out << prefix << '{' << std::endl;  
   Token *i = this->begin();
 
   while(i!= this->end())

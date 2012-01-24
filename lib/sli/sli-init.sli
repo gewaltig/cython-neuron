@@ -505,7 +505,7 @@ SeeAlso: over, index
 /ptimes
 {
   pclocks pclockspersec cvd div
-} bind def
+} def
 
 /* BeginDocumentation
  Name: realtime - returns realtime 
@@ -522,7 +522,7 @@ SeeAlso: over, index
 /realtime
 {
   ptimes 0 get 
-} bind def  
+} def  
 
 /* BeginDocumentation
  Name: usertime - returns usertime for current process 
@@ -756,9 +756,16 @@ BeginDocumentation
 % * Prints the contents of the given dictionary
 % * This one is documented in slidict.cc
 
-/info trie [/dictionarytype]
+/info trie 
+[/dictionarytype]
 {
   cout exch info_d
+} bind addtotrie
+[/trietype]
+{
+  cout 
+(This type trie contains the following overloaded functions:\n\n) <- 
+  exch trieinfo_os_t
 } bind addtotrie def
 
 %%
@@ -1678,7 +1685,7 @@ SeeAlso: nestrc
        (           -- N E S T 2 beta --) <- endl
    } ifelse
    () =
-   (  Copyright 1995-2009 The NEST Initiative) <- endl 
+   (  Copyright 1995-2011 The NEST Initiative) <- endl 
    (   Version ) <- 
    prgmajor <- (.) <- prgminor <- (-) <- prgpatch <-
    ( ) <- built <- endl endl ;
@@ -1708,7 +1715,7 @@ SeeAlso: nestrc
    {
        (NEST v) <-
    } ifelse
-   version <- ( (C) 1995-2008 The NEST Initiative) <- endl ;
+   version <- ( (C) 1995-2011 The NEST Initiative) <- endl ;
    end     
 } def
 

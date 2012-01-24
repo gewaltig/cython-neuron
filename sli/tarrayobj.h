@@ -24,7 +24,7 @@
 #include <cstddef>
 #include "token.h"
 
-#define ARRAY_ALLOC_SIZE 128
+#define ARRAY_ALLOC_SIZE 64
 
 class Token;
 
@@ -48,7 +48,6 @@ class TokenArrayObj
             :p(NULL),begin_of_free_storage(NULL),
              end_of_free_storage(NULL),
              alloc_block_size(ARRAY_ALLOC_SIZE), 
-//	     homogeneous(true),
 	     refs(1)
     {};
     
@@ -82,6 +81,17 @@ class TokenArrayObj
     const Token & operator[](size_t i) const
     { return p[i]; }
 
+    const Token & get(long i) const
+    {
+      return *(p+i);
+      //      return p[i];
+    }
+
+    bool index_is_valid(long i) const
+    {
+      return (p+i) < begin_of_free_storage;
+    }
+
   void rotate(Token *, Token *, Token *);
 
 
@@ -97,23 +107,53 @@ class TokenArrayObj
     void resize(size_t, size_t, const Token & = Token());
     void resize(size_t, const Token & = Token());
 
+    void reserve_token(size_t n)
+    {
+      if(capacity()<size()+1+n)
+      	reserve(size()+n);
+    }
         // Insertion, deletion
     void push_back(const Token &t)
     {
       if(capacity()<size()+1)
-	reserve(size()+alloc_block_size);
-      *begin_of_free_storage++ = t;
+      	reserve(size()+alloc_block_size);
+      (begin_of_free_storage++)->init_by_copy(t);
     }
 
     void push_back_move(Token &t)
     {
       if(capacity()<size()+1)
-	reserve(size()+alloc_block_size);
-
-      begin_of_free_storage->move(t);
-      ++begin_of_free_storage;
+      	reserve(size()+alloc_block_size);
+      
+      (begin_of_free_storage++)->init_move(t);
+      //      ++begin_of_free_storage;
     }
 
+    /**
+     * Push back a reference.  This function expects that enough space
+     * on the stack has been reserved and that the token points to a
+     * valid datum object.
+     */
+    void push_back_by_ref(const Token &t)
+    {
+      if(capacity()<size()+1)
+      	reserve(size()+alloc_block_size);
+      (begin_of_free_storage++)->init_by_ref(t);
+    }
+
+    /**
+     * Push back a datum pointer.  This function assumes that enough
+     * space on the stack has been reserved.  This function expects a
+     * valid datum pointer and increases the reference count of the
+     * datum.
+     */
+    void push_back_by_pointer(Datum *rhs)
+    {
+      if(capacity()<size()+1)
+      	reserve(size()+alloc_block_size);
+      begin_of_free_storage->init_by_pointer(rhs);
+      ++begin_of_free_storage;
+    }
 
     void assign_move(Token *tp, Token &t)
     {
@@ -122,9 +162,7 @@ class TokenArrayObj
 
     void pop_back(void)
     {
-//    assert(size()>0);
       (--begin_of_free_storage)->clear();
-
     }
 
   // Erase the range given by the iterators.

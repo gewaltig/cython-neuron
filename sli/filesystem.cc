@@ -13,7 +13,7 @@
  *  See the file LICENSE for details.
  *
  */
-
+#include <cassert>
 #include "filesystem.h"
 #include "arraydatum.h"
 #include "stringdatum.h"

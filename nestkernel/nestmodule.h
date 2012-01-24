@@ -293,17 +293,35 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } create_l_ifunction;
 
+     class DataConnect_i_dict_iFunction: public SLIFunction
+     {
+      public:
+       void execute(SLIInterpreter *) const;
+     } dataconnect_i_dict_ifunction;
+
      class Connect_i_i_lFunction: public SLIFunction
      {
       public:
        void execute(SLIInterpreter *) const;
      } connect_i_i_lfunction;
 
+     class Connect_i_i_iFunction: public SLIFunction
+     {
+      public:
+       void execute(SLIInterpreter *) const;
+     } connect_i_i_ifunction;
+
      class Connect_i_i_d_d_lFunction: public SLIFunction
      {
       public:
        void execute(SLIInterpreter *) const;
      } connect_i_i_d_d_lfunction;
+
+     class Connect_i_i_d_d_iFunction: public SLIFunction
+     {
+      public:
+       void execute(SLIInterpreter *) const;
+     } connect_i_i_d_d_ifunction;
 
      class Connect_i_i_D_lFunction: public SLIFunction
      {
