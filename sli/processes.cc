@@ -83,6 +83,18 @@
   extern char **environ;
 #endif
 
+// This may differ on other Blue Gene/P systems and was only tested on
+// the JUGENE system at the Research Center Juelich
+#ifdef IS_BLUEGENE_P
+// For Kernel_GetMemorySize
+#include <spi/bgp_SPI.h>
+// For getrusage
+#include <sys/resource.h>
+#include <common/bgp_personality.h>
+#include <common/bgp_personality_inlines.h>
+#include <spi/kernel_interface.h>
+#endif
+
 // definition of static variables and functions declared in processes.h:
 pid_t Processes::children_group = 0;
 std::vector<std::string> *Processes::envstrings = NULL;
@@ -249,6 +261,10 @@ void Processes::init(SLIInterpreter *i)
   i->createcommand("ctermid",& ctermidfunction);
   i->createcommand("isatty_os",& isatty_osfunction);
   i->createcommand("isatty_is",& isatty_isfunction);
+
+#ifdef IS_BLUEGENE_P
+  i->createcommand("BGPMemInfo", &bgpmeminfofunction);
+#endif
 
   // copy the process environment into our private memory space:
   // Message output stream is now decided by the message level.
@@ -1013,6 +1029,37 @@ void Processes::Isatty_isFunction::execute(SLIInterpreter *i) const
   i->EStack.pop();
 }
 
+#ifdef IS_BLUEGENE_P
+/* BeginDocumentation
+   Name BGPMemInfo - Reports memory usage on Blue Gene/P system
+   Description:
+   BGPMemInfo returns a dictionary with the heap and stack memory
+   usage of a process in Bytes. This function has only been tested
+   on JUGENEm the Blue Gene/P at the Research Center in Juelich.
+   Synopsis:
+   MemoryInfo --> -
+   Availability: NEST
+   Author: Jochen Martin Eppler
+*/
+void NestModule::BGPMemInfoFunction::execute(SLIInterpreter *i) const
+{
+  uint32_t heap_memory = 0;
+  Kernel_GetMemorySize(KERNEL_MEMSIZE_HEAP, &heap_memory);
+  uint32_t stack_memory = 0;
+  Kernel_GetMemorySize(KERNEL_MEMSIZE_STACK, &stack_memory);
+
+  DictionaryDatum dict(new Dictionary);
+  (*dict)["heap"] = heap_memory;
+  (*dict)["stack"] = stack_memory;
+
+  struct rusage usage;
+  if (getrusage(RUSAGE_SELF, &usage) == 0)
+    (*dict)["ru_maxrss"] = usage.ru_maxrss;
+  
+  i->OStack.push(dict);
+  i->EStack.pop();
+}
+#endif
 
 #ifdef _SYNOD__SET_POSIX_SOURCE
 #undef _SYNOD__SET_POSIX_SOURCE

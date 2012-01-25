@@ -1507,6 +1507,16 @@ or via MacPorts. procfs must be mounted at /proc.
   ifelse 
 } def
 
+/memory_thisjob_bluegenep
+{
+  % Blue Gene/P version, requires the function BGPMemInfo from NestModule
+
+  BGPMemInfo dup
+  /heap get exch
+  /stack get
+  add
+}
+
 /hardware_memory_thisjob
 {
     (/proc/) getPID cvs join (/status) join ifstream

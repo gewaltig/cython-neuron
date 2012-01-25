@@ -39,14 +39,6 @@
 #include "communicator.h"
 #include "genericmodel.h"
 
-#ifdef IS_BLUEGENE_P
-#include <sys/resource.h>
-#include <common/bgp_personality.h>
-#include <common/bgp_personality_inlines.h>
-#include <spi/kernel_interface.h>
-#endif
-
-
 extern int SLIsignalflag;
 
 namespace nest
@@ -1332,28 +1324,6 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
   }
 
   /* BeginDocumentation
-     Name BGPMemInfo - Reports memory usage on Blue Gene/P system
-     Description:
-     BGPMemInfo gives the maximum memory usage of a process in kBytes.
-     This function has only been tested with the environment on the
-     FZJ Blue Gene/P, JUGENE.
-     Synopsis:
-     MemoryInfo -> -
-     Availability: NEST
-     Author: Tobias C Potjans
-   */
-#ifdef IS_BLUEGENE_P
-  void NestModule::BGPMemInfoFunction::execute(SLIInterpreter *i) const
-  {
-    struct rusage usage;
-    if (getrusage(RUSAGE_SELF, &usage) != 0)
-      return;
-    i->OStack.push(usage.ru_maxrss);
-    i->EStack.pop();
-  }
-#endif
-
-  /* BeginDocumentation
      Name: PrintNetwork - Print network tree in readable form.
      Description:
      Synopsis: 
@@ -1802,9 +1772,6 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     i->createcommand("NetworkDimensions_a",&networkdimensions_afunction);
    
     i->createcommand("MemoryInfo", &memoryinfofunction);
-#ifdef IS_BLUEGENE_P
-    i->createcommand("BGPMemInfo", &bgpmeminfofunction);
-#endif
    
     i->createcommand("PrintNetwork", &printnetworkfunction);
     
