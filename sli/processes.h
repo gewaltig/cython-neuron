@@ -315,6 +315,13 @@ class Processes: public SLIModule
     void execute(SLIInterpreter *) const; // This is all we need.
   };
 
+#ifdef IS_BLUEGENE_P
+  class BGPMemInfoFunction: public SLIFunction
+  {
+    void execute(SLIInterpreter *) const;
+  };
+#endif
+
   // Module contains -one- instantiation of each new function-class:
 
 public:
@@ -339,7 +346,9 @@ public:
   Isatty_osFunction isatty_osfunction;
   Isatty_isFunction isatty_isfunction;
 
-  // ---------------------------------------------------------------
+#ifdef IS_BLUEGENE_P
+  BGPMemInfoFunction bgpmeminfofunction;
+#endif
 
 };
 

@@ -1041,7 +1041,7 @@ void Processes::Isatty_isFunction::execute(SLIInterpreter *i) const
    Availability: NEST
    Author: Jochen Martin Eppler
 */
-void NestModule::BGPMemInfoFunction::execute(SLIInterpreter *i) const
+void Processes::BGPMemInfoFunction::execute(SLIInterpreter *i) const
 {
   uint32_t heap_memory = 0;
   Kernel_GetMemorySize(KERNEL_MEMSIZE_HEAP, &heap_memory);
