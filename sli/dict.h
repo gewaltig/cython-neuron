@@ -66,8 +66,8 @@ class Dictionary :private TokenMap
   };
   
 public:
- Dictionary(const Token &t = Token()) : VoidToken(t){}
- Dictionary(const Dictionary &d) : TokenMap(d), VoidToken(d.VoidToken), refs_on_dictstack_(0) {}
+  Dictionary(const Token &t = Token()) : VoidToken(t){}
+  Dictionary(const Dictionary &d) : TokenMap(d), VoidToken(d.VoidToken), refs_on_dictstack_(0) {}
   ~Dictionary();
   
   using TokenMap::erase;
