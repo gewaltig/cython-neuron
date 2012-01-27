@@ -44,14 +44,14 @@
 #ifdef IS_BLUEGENE_P
 extern "C"
 {
-// For Kernel_GetMemorySize
-#include <spi/bgp_SPI.h>
+  long get_heap_mem_bgp();
+  long get_stack_mem_bgp();
+}
 // For getrusage
 #include <sys/resource.h>
 #include <common/bgp_personality.h>
 #include <common/bgp_personality_inlines.h>
 #include <spi/kernel_interface.h>
-}
 #endif
 
 extern int SLIsignalflag;
@@ -1351,10 +1351,8 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
   */
   void NestModule::MemoryThisjobBgpFunction::execute(SLIInterpreter *i) const
   {
-    uint32_t heap_memory = 0;
-    Kernel_GetMemorySize(KERNEL_MEMSIZE_HEAP, &heap_memory);
-    uint32_t stack_memory = 0;
-    Kernel_GetMemorySize(KERNEL_MEMSIZE_STACK, &stack_memory);
+    long heap_memory = get_heap_mem_bgp();
+    long stack_memory = get_stack_mem_bgp();
     
     DictionaryDatum dict(new Dictionary);
     (*dict)["heap"] = heap_memory;
