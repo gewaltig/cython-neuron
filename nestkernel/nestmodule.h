@@ -388,6 +388,13 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } memoryinfofunction;
 
+#ifdef IS_BLUEGENE_P
+     class MemoryThisjobBgpFunction: public SLIFunction
+     {
+       void execute(SLIInterpreter *) const;
+     } memorythisjobbgpfunction;
+#endif
+
      class PrintNetworkFunction : public SLIFunction
      {
        void execute(SLIInterpreter *) const;
