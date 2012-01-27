@@ -1556,7 +1556,6 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
 #endif
 
     librandom::RngPtr rng = get_rng(tid);
-
     
     for (size_t i=0; i < target_ids.size(); i++)
     {      
@@ -1586,7 +1585,9 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
       if (! (ws.size() == n || ws.size() == 0) && (ws.size() == ds.size()))
       {
 	message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights and delays must be lists of size n.");
-	throw DimensionMismatch();
+	// TODO10k: Does not compile on JUGENE: "throw" is not allowed in a structured block.
+	//          This means we need to find a different way to throw in an OpenMP block.
+	//	throw DimensionMismatch();
       }
           
       vector<Node*> chosen_sources(n);
