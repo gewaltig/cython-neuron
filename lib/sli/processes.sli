@@ -1511,11 +1511,11 @@ or via MacPorts. procfs must be mounted at /proc.
 {
   % Blue Gene/P version, requires the function BGPMemInfo from NestModule
 
-  BGPMemInfo dup
-  /heap get exch
-  /stack get
+  memory_thisjob_bgp /mem Set
+  mem /heap get
+  mem /stack get
   add
-}
+} def
 
 /hardware_memory_thisjob
 {
