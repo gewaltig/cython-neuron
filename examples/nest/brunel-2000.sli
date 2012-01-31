@@ -73,7 +73,7 @@
 % When using MPI, the mpirun call determines the number
 % of MPI processes (=program instances). The number of threads
 % per process is total_num_virtual_procs / # MPI processes.
-/total_num_virtual_procs 1 def
+/total_num_virtual_procs 4 def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %       NO USER-SERVICABLE PARTS BELOW
@@ -179,7 +179,6 @@ M_WARNING setverbosity
     /total_num_virtual_procs total_num_virtual_procs
     /print_time true
     /overwrite_files true
- /overwrite_files true
 >> SetStatus
 
  tic % start timer on construction
