@@ -166,7 +166,6 @@ namespace nest{
     void set_customdict(DictionaryDatum const dict);
     
     std::string print_network(int , int, std::string = "");
-    void get_dimensions(std::vector<int>&) const;
 
     bool get_children_on_same_vp() const;
     void set_children_on_same_vp(bool);
@@ -202,6 +201,8 @@ namespace nest{
     thread children_vp_;
     
   private:
+    void get_dimensions_(std::vector<int>&) const;
+
     std::string     label_;      //!< user-defined label for this node.
     DictionaryDatum customdict_; //!< user-defined dictionary for this node.
     // note that DictionaryDatum is a pointer and must be initialized in the constructor.

@@ -84,7 +84,7 @@ void nest::Subnet::get_status(DictionaryDatum& dict) const
   (*dict)["children_on_same_vp"]=children_on_same_vp_; 
 }
 
-void nest::Subnet::get_dimensions(std::vector<int> & dim) const
+void nest::Subnet::get_dimensions_(std::vector<int> & dim) const
 {
   dim.push_back(next_lid_);
   if(nodes_.empty())
@@ -108,7 +108,7 @@ void nest::Subnet::get_dimensions(std::vector<int> & dim) const
       if(homog)
 	{
 	  Subnet *c=dynamic_cast<Subnet *>(nodes_.at(0));
-	  c->get_dimensions(dim);
+	  c->get_dimensions_(dim);
 	}
     }
 }
@@ -142,7 +142,7 @@ std::string nest::Subnet::print_network(int max_depth, int level, std::string pr
   }
 
   std::vector<int> dim;
-  get_dimensions(dim);
+  get_dimensions_(dim);
 
   out << " dim=[";
   for(size_t k = 0; k < dim.size() - 1; ++k)
