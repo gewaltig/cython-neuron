@@ -71,7 +71,8 @@ namespace nest
 	selector.slice_node(subnet, *it);
 	//	selector(subnet, *it, slice_depth, modeltype);
 
-	nodes.push_back(new Subnet(subnet));
+	assert(false && "TODO: Replace nodes.push_back");
+	//nodes.push_back(new Subnet(subnet));
       }
 
     return std::vector<Node*>(nodes.begin(), nodes.end());

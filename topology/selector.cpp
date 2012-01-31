@@ -121,7 +121,8 @@ namespace nest{
 	    // of the node so we should not use the Subnet 
 	    // function add_node(..) to add the node pointer 
 	    // (push_back() suffice).
-	    subnet.push_back(node);
+	    assert(false && "TODO: Replace subnet.push_back");
+	    // subnet.push_back(node);
 	  }
       }
   }

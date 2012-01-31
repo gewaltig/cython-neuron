@@ -82,8 +82,6 @@ namespace nest{
     bool   empty() const;
     void   reserve(size_t);
 
-    void push_back(Node*);
-    
     /**
      * Add a local node to the subnet.
      * This function adds a node to the subnet and returns its local id.
@@ -243,16 +241,6 @@ namespace nest{
     next_lid_++;
     return lid;
   }
-
-
-  inline
-  void Subnet::push_back(Node *n)
-  {
-    nodes_.push_back(n);
-    last_mid_ = n->get_model_id();
-    next_lid_++;
-  }
-  
   
   /** Index child node (with range check).
    * \throws std::out_of_range (implemented via \c std::vector)
