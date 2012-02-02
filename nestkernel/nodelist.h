@@ -62,7 +62,6 @@ namespace nest{
 
     iterator begin() const;
     iterator end()   const;
-    iterator lend()   const;
 
     bool   empty()   const;
     size_t size()    const;
@@ -99,12 +98,6 @@ namespace nest{
   {
     Subnet *p=root_->get_parent();
     return iterator(p == NULL ? root_->end() : p->begin()+root_->get_lid());
-  }
-
-  inline
-  NodeList::iterator NodeList::lend() const
-  {
-    return iterator(root_->begin());
   }
 
   inline
