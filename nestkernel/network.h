@@ -1094,7 +1094,7 @@ SeeAlso: Simulate, Node
   void Network::send_local(thread t, Node& source, Event& e)
   {
     index sgid = source.get_gid();
-    //std::cout << "Network::send_local " << sgid << " " << e.get_sender().get_gid() << std::endl;
+    e.set_sender_gid(sgid);
     connection_manager_.send(t, sgid, e);
   }
 
