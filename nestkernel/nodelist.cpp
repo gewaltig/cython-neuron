@@ -18,7 +18,7 @@
 
 namespace nest{
 
-  NodeList::iterator NodeList::begin() const
+  LocalNodeList::iterator LocalNodeList::begin() const
   {
     if (empty())
       return end();
@@ -26,11 +26,11 @@ namespace nest{
     Subnet *r=root_;
     vector<Node*>::iterator n;
 
-    while( r!=NULL && !r->empty() )
+    while( r != NULL && !r->local_empty() )
     {
-      n=r->begin(); //!< Move down in tree
-      if( (r=dynamic_cast<Subnet*>(*n)) == NULL)
-	break;
+      n = r->local_begin(); //!< Move down in tree
+      if ( (r=dynamic_cast<Subnet*>(*n)) == NULL )
+	     break;
     }
     /** We have reached the end of tree */
     return iterator(n);
@@ -49,7 +49,7 @@ namespace nest{
    * supply a chached-iterator, which does this work only once.
    */
     
-  NodeList::iterator NodeList::iterator::operator++()
+  LocalNodeList::iterator LocalNodeList::iterator::operator++()
   {
     /**
      * We must assume that this operator is not called on end(). For
@@ -75,13 +75,13 @@ namespace nest{
     /** Goto right neighbor */
     ++p_;
     
-    if(p_ != c->end())
+    if(p_ != c->local_end())
     {
       Subnet *r=dynamic_cast<Subnet *>(*p_);
 
-      while(r != NULL && ! r->empty())
+      while(r != NULL && ! r->local_empty())
       {
-	p_=r->begin();
+	p_=r->local_begin();
 	r=dynamic_cast<Subnet *>(*p_);
       }
       
@@ -99,7 +99,7 @@ namespace nest{
        * there is no right neighbor. Thus, we
        * have reached the end.
        */
-      p_=c->end();
+      p_=c->local_end();
       return *this;
     }
     /**
@@ -111,16 +111,16 @@ namespace nest{
     /** 
      * Compute the iterator which points to c
      */
-    p_= p->begin()+c->get_lid();
+    p_= p->local_begin()+c->get_lid();
     return *this;
   }
 
-  void NodeList::set_root(Subnet &r)
+  void LocalNodeList::set_root(Subnet &r)
   {
     root_=&r;
   }
 
-  Subnet & NodeList::get_root() const
+  Subnet & LocalNodeList::get_root() const
   {
     assert(root_ != NULL);
     return *root_;

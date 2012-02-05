@@ -24,7 +24,7 @@ namespace nest{
     // A LeafList is empty, if all members of the NodeList are
     // not leaves.
 
-    for (NodeList::iterator i=NodeList::begin(); i!=NodeList::end(); ++i)
+    for (LocalNodeList::iterator i=LocalNodeList::begin(); i!=LocalNodeList::end(); ++i)
       {
         if (is_leaf_(*i))
           return false;
@@ -38,7 +38,7 @@ namespace nest{
     // in the NodeList which are leaves.
     
     size_t count=0;
-    for (NodeList::iterator i=NodeList::begin(); i!=NodeList::end(); ++i)
+    for (LocalNodeList::iterator i=LocalNodeList::begin(); i!=LocalNodeList::end(); ++i)
       {
         if (is_leaf_(*i))
           ++count;
@@ -50,7 +50,7 @@ namespace nest{
   LeafList::iterator LeafList::begin() const
   { // we traverse the NodeList, and return the first element that is
     // a leaf, or end() if none exitsts.
-    for (NodeList::iterator i=NodeList::begin(); i!=NodeList::end(); ++i)
+    for (LocalNodeList::iterator i=LocalNodeList::begin(); i!=LocalNodeList::end(); ++i)
       {
         if (is_leaf_(*i))
           return iterator(i, *this);
@@ -77,9 +77,9 @@ namespace nest{
     // we use NodeList::operator++ for this, and call it until it
     // returns an element that is a leaf, or end()
     
-    NodeList::iterator i;
+    LocalNodeList::iterator i;
 
-    do i=NodeList::iterator::operator++();
+    do i=LocalNodeList::iterator::operator++();
     while ( (i != the_container_.end()) && !LeafList::is_leaf_(*i) );
     
     return iterator(i, the_container_);

@@ -74,12 +74,22 @@ namespace nest{
 
     bool has_proxies() const;
           
+    /** Index local child node (with range check).
+     * \note Index is neither lid nor gid.
+     * \throws std::out_of_range (implemented via \c std::vector)
+     */
     Node * at(index) const;
+
+    /** Index local child node (without range check).
+     * @note Index is neither lid nor gid.
+     */
     Node * operator[](index) const;
 
-    size_t size() const;
-    size_t local_size() const;
-    bool   empty() const;
+    size_t global_size() const;  //!< Returns total number of children.
+    size_t local_size() const; //!< Returns number of childern in local process.
+    bool   global_empty() const; //!< returns true if subnet is empty *globally*
+    bool   local_empty() const; //!< returns true if subnet has no local nodes
+
     void   reserve(size_t);
 
     /**
@@ -96,24 +106,24 @@ namespace nest{
     index add_remote_node(index mid);
 
     /**
-     * Return iterator to the first child node.
+     * Return iterator to the first local child node.
      */
-    vector<Node*>::iterator begin();
+    vector<Node*>::iterator local_begin();
 
     /**
-     * Return iterator to the end of the child-list.
+     * Return iterator to the end of the local child-list.
      */
-    vector<Node*>::iterator end();
+    vector<Node*>::iterator local_end();
 
     /**
-     * Return const iterator to the first child node.
+     * Return const iterator to the first local child node.
      */
-    vector<Node*>::const_iterator begin() const;
+    vector<Node*>::const_iterator local_begin() const;
 
     /**
-     * Return const iterator to the end of the child-list.
+     * Return const iterator to the end of the local child-list.
      */
-    vector<Node*>::const_iterator end() const;
+    vector<Node*>::const_iterator local_end() const;
 
     /**
      * Return the subnets's user label.
@@ -242,17 +252,12 @@ namespace nest{
     return lid;
   }
   
-  /** Index child node (with range check).
-   * \throws std::out_of_range (implemented via \c std::vector)
-   */
   inline
-    Node* Subnet::at(index i) const
+  Node* Subnet::at(index i) const
   {
     return nodes_.at(i); //with range check
   }
 
-  /** Index child node (without range check).
-   */
   inline
   Node* Subnet::operator [](index i) const
   {
@@ -260,37 +265,43 @@ namespace nest{
   }
 
   inline
-  vector<Node*>::iterator Subnet::begin()
+  vector<Node*>::iterator Subnet::local_begin()
   {
     return nodes_.begin();
   }
 
   inline
-  vector<Node*>::iterator Subnet::end()
+  vector<Node*>::iterator Subnet::local_end()
   {
     return nodes_.end();
   }
 
   inline
-  vector<Node*>::const_iterator Subnet::begin() const
+  vector<Node*>::const_iterator Subnet::local_begin() const
   {
     return nodes_.begin();
   }
 
   inline
-  vector<Node*>::const_iterator Subnet::end() const
+  vector<Node*>::const_iterator Subnet::local_end() const
   {
     return nodes_.end();
   }
 
   inline
-  bool Subnet::empty() const
+  bool Subnet::local_empty() const
   {
     return nodes_.empty();
   }
 
   inline
-  size_t Subnet::size() const
+  bool Subnet::global_empty() const
+  {
+    return next_lid_ == 0;
+  }
+
+  inline
+  size_t Subnet::global_size() const
   {
     return next_lid_;
   }

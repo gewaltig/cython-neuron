@@ -569,7 +569,7 @@ namespace nest
     if (subnet==NULL)
       throw SubnetExpected();
  
-    NodeList localnodes(*subnet);
+    LocalNodeList localnodes(*subnet);
     ArrayDatum result;
 
     if (include_remote)
@@ -583,7 +583,7 @@ namespace nest
     else
     {
       result.reserve(localnodes.size());
-      for(NodeList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
+      for(LocalNodeList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
         result.push_back(new IntegerDatum((*n)->get_gid()));
     }
           
@@ -630,7 +630,7 @@ namespace nest
     else
     {
       result.reserve(subnet->size());
-      for(vector<Node *>::iterator n = subnet->begin(); n != subnet->end(); ++n)
+      for(vector<Node *>::iterator n = subnet->local_begin(); n != subnet->local_end(); ++n)
         result.push_back(new IntegerDatum((*n)->get_gid()));
     }
 
@@ -665,7 +665,7 @@ namespace nest
     else
     {
       result.reserve(localnodes.size());
-      for(NodeList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
+      for(LocalNodeList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
         result.push_back(new IntegerDatum((*n)->get_gid()));
     }
      
@@ -989,84 +989,6 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
 
     i->OStack.pop(3);
     i->EStack.pop();
-  }
-
-  /* BeginDocumentation
-     Name: SubnetConnect - Connect a source subnet to a target subnet.
-
-     Synopsis: 
-     sources targets radius           SubnetConnect -> -
-     sources targets radius /synmodel SubnetConnect -> -
-
-     Options:
-     If not given, the synapse model is taken from the Options dictionary
-     of the Connect command.
-
-     Description:
-     Connect every node in a source subnet to a selection of nodes in a 
-     target subnet.
-
-     Goes through every target node and connects it to source nodes.
-     Source nodes connected is in the within the range 'radius' from
-     target.
-     
-     Uses two for-loops. The outer for-loop shifts the connection
-     process from one row to the next. The inner for-loop goes through
-     all the columns for every row. Every target node gets connected
-     to source nodes defined by the scope list. The scope is being
-     reset at the beginning of every row, and is being shifted to the
-     right as the for-loops traverse the columns.
-     
-     Nodes outside the boundaries of the source subnet are given the
-     value false in the scope list. The nodes in the scope list gets
-     connected to the target by use of the function
-     convergent_connect.
-
-     Author: Kittel Austvoll, Hans Ekkehard Plesser
-     FirstVersion: 24.10.2006
-     SeeAlso: Connect
-  */
-  void NestModule::SubnetConnect_i_i_i_lFunction::execute(SLIInterpreter *i) const
-  {
-    i->assert_stack_load(4);
-     
-    index node_id = getValue<long>(i->OStack.pick(3));
-    Subnet *sources=dynamic_cast<Subnet *>(get_network().get_node(node_id));
-     
-    if (sources==NULL)
-    {
-      i->message(SLIInterpreter::M_ERROR, "SubnetConnect","Input sources must be a subnet.");
-      throw SubnetExpected();
-    }
-
-    node_id = getValue<long>(i->OStack.pick(2));
-    Subnet *targets=dynamic_cast<Subnet *>(get_network().get_node(node_id));
-
-    if (targets==NULL)
-    {
-      i->message(SLIInterpreter::M_ERROR, "SubnetConnect","Input targets must be a subnet.");
-      throw SubnetExpected();
-    }
- 
-    long radius = getValue<long>(i->OStack.pick(1));
-
-    if(radius<0)
-    {
-      i->message(SLIInterpreter::M_ERROR, "SubnetConnect","Radius must be a positive integer.");
-      throw RangeCheck();
-    }
-
-    const Name synmodel_name = getValue<std::string>(i->OStack.pick(0));
-
-    const Token synmodel = get_network().get_synapsedict().lookup(synmodel_name);
-    if ( synmodel.empty() )
-      throw UnknownSynapseType(synmodel_name.toString());
-    const index synmodel_id = static_cast<index>(synmodel);
-     
-    get_network().subnet_connect(*sources, *targets, radius, synmodel_id);
-     
-    i->OStack.pop(4);
-    i->EStack.pop(); 
   }
 
   /* BeginDocumentation
@@ -1801,8 +1723,6 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     i->createcommand("Connect_i_i_D_l", &connect_i_i_D_lfunction);
     i->createcommand("DataConnect_", &dataconnect_i_dict_ifunction);
 
-    i->createcommand("SubnetConnect_i_i_i_l", &subnetconnect_i_i_i_lfunction);
-   
     i->createcommand("DivergentConnect_i_ia_a_a_l", &divergentconnect_i_ia_a_a_lfunction);
     i->createcommand("RandomDivergentConnect_i_i_ia_da_da_b_b_l", &rdivergentconnect_i_i_ia_da_da_b_b_lfunction);
     

@@ -278,7 +278,7 @@ SeeAlso: Simulate, Node
      */ 
     bool connect(index s, index r, DictionaryDatum& d, index syn);
 
-    void subnet_connect(Subnet &, Subnet &, int, index syn);
+    // void subnet_connect(Subnet &, Subnet &, int, index syn);
 
     void divergent_connect(index s, const TokenArray r, const TokenArray weights, const TokenArray delays, index syn);
     /**

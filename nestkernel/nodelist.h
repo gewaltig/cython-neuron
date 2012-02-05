@@ -23,23 +23,25 @@
 namespace nest{
 
   /** 
-   * List interface to network tree.  class NodeList is an adaptor
-   * class which turns a Network object into a list.  Class NodeList
+   * List interface to network tree.  class LocalNodeList is an adaptor
+   * class which turns a Network object into a list.  Class LocalNodeList
    * also provides an iterator which can be used to traverse the
    * network tree in post-order.  This iterator is not used during
    * Network update, since it is not thread safe.
    * For a list interface that only accesses the leaves of a network
-   * tree, excluding the intermediate subnets, see class LeafList
+   * tree, excluding the intermediate subnets, see class LocalLeafList
    * and its iterator.
+   * LocalNodeList iterates only over local nodes.
+   * @see GlobalNodeList
    */
 
-  class NodeList
+  class LocalNodeList
   {
   public:
 
     class iterator
     {
-      friend class NodeList;
+      friend class LocalNodeList;
     public:
       iterator():p_(){}
     private:
@@ -57,15 +59,14 @@ namespace nest{
       vector<Node *>::iterator p_;  //!< iterator to the current node
     };
 
-    NodeList():root_(NULL){}
-    explicit NodeList(Subnet &c):root_(&c){};
+    LocalNodeList():root_(NULL){}
+    explicit LocalNodeList(Subnet &c):root_(&c){};
 
     iterator begin() const;
     iterator end()   const;
 
-    bool   empty()   const;
-    size_t size()    const;
-    size_t local_size()    const;
+    bool   empty()   const; //!< Returns true if no local nodes
+    size_t size()    const; //!< Number of (local) nodes in list
 
     Subnet& get_root() const;
     void set_root(Subnet &);
@@ -76,50 +77,45 @@ namespace nest{
   };
 
   inline 
-  bool NodeList::empty() const
+  bool LocalNodeList::empty() const
   {
-    return root_->empty();
+    return root_->local_empty();
   }
 
   inline
-  size_t NodeList::size() const
-  {
-    return root_->size();
-  }
-
-  inline
-  size_t NodeList::local_size() const
+  size_t LocalNodeList::size() const
   {
     return root_->local_size();
   }
 
   inline
-  NodeList::iterator NodeList::end() const
+  LocalNodeList::iterator LocalNodeList::end() const
   {
     Subnet *p=root_->get_parent();
-    return iterator(p == NULL ? root_->end() : p->begin()+root_->get_lid());
+    return iterator(p == NULL ? root_->local_end()
+    			              : p->local_begin()+root_->get_lid());
   }
 
   inline
-  bool NodeList::iterator::operator==(const iterator&i) const
+  bool LocalNodeList::iterator::operator==(const iterator&i) const
   {
-    return p_==i.p_;
+    return p_ == i.p_;
   }
 
   inline
-  bool NodeList::iterator::operator!=(const iterator&i) const
+  bool LocalNodeList::iterator::operator!=(const iterator&i) const
   {
-    return p_!=i.p_;
+    return p_ != i.p_;
   }
 
   inline
-  Node* NodeList::iterator::operator*()
+  Node* LocalNodeList::iterator::operator*()
   {
     return *p_;
   }
 
   inline
-  Node const * NodeList::iterator::operator*() const
+  Node const * LocalNodeList::iterator::operator*() const
   {
     return *p_;
   }

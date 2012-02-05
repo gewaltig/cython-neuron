@@ -301,22 +301,6 @@ def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-/SubnetConnect_main trie
-[/integertype /integertype /integertype /literaltype]
-  /SubnetConnect_i_i_i_l load addtotrie
-def
-
-/SubnetConnect [/literaltype] {
-  SubnetConnect_main  
-} def
-
-/SubnetConnect [/anytype] {
-  /Connect /synapse_model GetOption
-  SubnetConnect_main
-} def
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 /DivergentConnect_i_ia_l [/integertype /arraytype /literaltype]
 {
   [] [] % put empty arrays for weights and delays on the stack

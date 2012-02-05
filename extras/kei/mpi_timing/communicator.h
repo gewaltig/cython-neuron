@@ -41,7 +41,7 @@
 namespace nest
 {
   class Network;
-  class NodeList;
+  class LocalNodeList;
 
   class Communicator
   {
@@ -135,7 +135,7 @@ namespace nest
                               std::vector<OffGridSpike>& recv_buffer, 
                               std::vector<int>& displacements);
       static void communicate(std::vector<int_t>&);
-      static void communicate(const NodeList& local_nodes, std::vector<index>& gids);
+      static void communicate(const LocalNodeList& local_nodes, std::vector<index>& gids);
       static void communicate_connector_properties(DictionaryDatum& dict);
       
       static void synchronize();
@@ -211,7 +211,7 @@ namespace nest
 namespace nest
 {
   class Network;
-  class NodeList;
+  class LocalNodeList;
 
   class Communicator
   {
@@ -246,7 +246,7 @@ namespace nest
                               std::vector<OffGridSpike>& recv_buffer, 
                               std::vector<int>& displacements);
       static void communicate(std::vector<int_t>&) {}
-      static void communicate(const NodeList& local_nodes, std::vector<index>& gids);      
+      static void communicate(const LocalNodeList& local_nodes, std::vector<index>& gids);      
       static void communicate_connector_properties(DictionaryDatum&) {}
       
       static void synchronize() {}

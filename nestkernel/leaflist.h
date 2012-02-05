@@ -34,19 +34,19 @@ namespace nest{
    * subnets, see class NodeList and its iterator.
    */
 
-  class LeafList: public NodeList
+  class LeafList: public LocalNodeList
   {
   public:
 
 
-    class iterator: public NodeList::iterator
+    class iterator: public LocalNodeList::iterator
     {
       friend class LeafList;
       
     public:
-      iterator(): NodeList::iterator(), the_container_(LeafList()) {}
+      iterator(): LocalNodeList::iterator(), the_container_(LeafList()) {}
     private:
-      iterator(NodeList::iterator const &p, LeafList const &c): NodeList::iterator(p), the_container_(c) {}
+      iterator(LocalNodeList::iterator const &p, LeafList const &c): LocalNodeList::iterator(p), the_container_(c) {}
 
     public:
       iterator operator++();
@@ -71,8 +71,8 @@ namespace nest{
     //
     friend class iterator;
 
-    LeafList(): NodeList() {}
-    explicit LeafList(Subnet &c): NodeList(c) {};
+    LeafList(): LocalNodeList() {}
+    explicit LeafList(Subnet &c): LocalNodeList(c) {};
 
     iterator begin()  const; //!< iterator to the first leaf
     iterator end()    const;
@@ -101,7 +101,7 @@ namespace nest{
   inline
     LeafList::iterator LeafList::end() const
     {
-      return iterator(NodeList::end(), *this);
+      return iterator(LocalNodeList::end(), *this);
     }
   
 }

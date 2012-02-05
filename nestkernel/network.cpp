@@ -1032,7 +1032,7 @@ void Network::divergent_connect(index source_id, const TokenArray target_ids, co
   {
     message(SLIInterpreter::M_INFO, "DivergentConnect", "Source ID is a subnet; I will iterate it.");
     
-    NodeList source_nodes(*source_comp);
+    LocalNodeList source_nodes(*source_comp);
     vector<index> source_gids;
     nest::Communicator::communicate(source_nodes,source_gids);
 
@@ -1167,8 +1167,8 @@ void Network::divergent_connect(index source_id, DictionaryDatum pars, index syn
   {
     message(SLIInterpreter::M_INFO, "DivergentConnect", "Source ID is a subnet; I will iterate it.");
     
-    NodeList source_nodes(*source_comp);
-    for(NodeList::iterator src=source_nodes.begin(); src!= source_nodes.end(); ++src)
+    LocalNodeList source_nodes(*source_comp);
+    for(LocalNodeList::iterator src=source_nodes.begin(); src!= source_nodes.end(); ++src)
       divergent_connect((*src)->get_gid(), pars, syn);
 
     return;
@@ -1243,7 +1243,7 @@ void Network::random_divergent_connect(index source_id, const TokenArray target_
   {
     message(SLIInterpreter::M_INFO, "RandomDivergentConnect", "Source ID is a subnet; I will iterate it.");
     
-    NodeList source_nodes(*source_comp);
+    LocalNodeList source_nodes(*source_comp);
     vector<index> source_gids;
     nest::Communicator::communicate(source_nodes,source_gids);
 
@@ -1307,7 +1307,7 @@ void Network::convergent_connect(const TokenArray source_ids, index target_id, c
   {
     message(SLIInterpreter::M_INFO, "ConvergentConnect", "Target node is a subnet; I will iterate it.");
     
-    NodeList target_nodes(*target_comp);
+    LocalNodeList target_nodes(*target_comp);
     vector<index> target_gids;
     nest::Communicator::communicate(target_nodes,target_gids);
     for(vector<index>::iterator tgt = target_gids.begin(); tgt != target_gids.end(); ++tgt)
@@ -1469,7 +1469,7 @@ void Network::random_convergent_connect(const TokenArray source_ids, index targe
   {
     message(SLIInterpreter::M_INFO, "RandomConvergentConnect","Target ID is a subnet; I will iterate it.");
     
-    NodeList target_nodes(*target_comp);
+    LocalNodeList target_nodes(*target_comp);
     vector<index> target_gids;
     nest::Communicator::communicate(target_nodes,target_gids);
     
@@ -1635,6 +1635,7 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
 
 // -----------------------------------------------------------------------------
 
+/*
 void Network::subnet_connect(Subnet &sources, Subnet &targets, int radius, index syn)
 {
   vector<Node*>::const_iterator it_target_row;
@@ -1762,6 +1763,7 @@ void Network::subnet_connect(Subnet &sources, Subnet &targets, int radius, index
     }
   }
 }
+*/
 
 void Network::message(int level, const char from[], const char text[])
 {

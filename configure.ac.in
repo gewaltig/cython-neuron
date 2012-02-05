@@ -768,7 +768,7 @@ fi
 # - SLI_NONPUBLIC_DYNMODULES
 #      dynamically linked, automatically loaded, not included in release
 
-SLI_PUBLIC_MODULES="models precise topology"
+SLI_PUBLIC_MODULES="models precise"
 SLI_NONPUBLIC_MODULES=""
 
 SLI_PUBLIC_DYNMODULES=""

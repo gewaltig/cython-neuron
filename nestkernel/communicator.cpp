@@ -872,17 +872,17 @@ void nest::Communicator::communicate_connector_properties(DictionaryDatum& dict)
     }
 }
 
-void nest::Communicator::communicate(const NodeList& local_nodes, vector<index>& gids)
+void nest::Communicator::communicate(const LocalNodeList& local_nodes, vector<index>& gids)
 {
   size_t np = Communicator::num_processes_;
 
   if ( np > 1 )
   {
-    size_t n_locals = local_nodes.local_size();
+    size_t n_locals = local_nodes.size();
     vector<long_t> localgids;
     localgids.reserve(n_locals);
   
-    for ( NodeList::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+    for ( LocalNodeList::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
       localgids.push_back((*n)->get_gid());
 
     //get size of buffers
@@ -912,7 +912,7 @@ void nest::Communicator::communicate(const NodeList& local_nodes, vector<index>&
   }
   else
   {
-    for ( NodeList::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+    for ( LocalNodeList::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
       gids.push_back((*n)->get_gid());
     std::sort(gids.begin(),gids.end());
   }
@@ -980,12 +980,12 @@ void nest::Communicator::communicate (std::vector<OffGridSpike>& send_buffer,
   recv_buffer.swap(send_buffer);
 }
 
-void nest::Communicator::communicate(const NodeList& local_nodes, std::vector<index>& gids)
+void nest::Communicator::communicate(const LocalNodeList& local_nodes, std::vector<index>& gids)
 {
   size_t n_locals = local_nodes.size();
   std::vector<index> localgids;
   localgids.reserve(n_locals);
-  for(NodeList::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n)
+  for(LocalNodeList::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n)
     localgids.push_back((*n)->get_gid());
     
   std::sort(localgids.begin(),localgids.end());
