@@ -184,6 +184,7 @@ void nest::UniversalDataLogger<HostNode>::DataLogger_::handle(HostNode& host,
   next_rec_[rt] = 0;
 
   reply.set_sender(host);
+  reply.set_sender_gid(host.get_gid());
   reply.set_receiver(request.get_sender());
   reply.set_port(request.get_port());
 
