@@ -1622,9 +1622,9 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
     } // of for all targets
 
     
-    std::cerr << "A thread's diary " << std::endl;
-    std::cerr << "I am thread " << tid << " and was working on " << nrn_counter << " neurons." << std::endl;
-    std::cerr << "I am thread " << tid << " and created " << syn_counter << " synapses." << std::endl;
+//    std::cerr << "A thread's diary " << std::endl;
+//    std::cerr << "I am thread " << tid << " and was working on " << nrn_counter << " neurons." << std::endl;
+//    std::cerr << "I am thread " << tid << " and created " << syn_counter << " synapses." << std::endl;
     
 
   } // of omp parallel
