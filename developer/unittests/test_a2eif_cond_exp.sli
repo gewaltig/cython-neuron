@@ -56,10 +56,10 @@ ResetKernel
 
 0.1 /h Set
 
-[0] << 
+0 << 
       /local_num_threads 1 
       /resolution h
-    >> SetStatus
+  >> SetStatus
 
 /a2eif_cond_exp Create /neuron Set
 neuron << 

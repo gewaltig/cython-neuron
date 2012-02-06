@@ -79,7 +79,7 @@
 % if precise_times is set to false
 {
   ResetKernel
-  [0] << 
+  0 << 
       /local_num_threads 1
       /resolution 0.1
   >> SetStatus
@@ -102,7 +102,7 @@ fail_or_die
 %
 {
   ResetKernel
-  [0] << 
+  0 << 
       /local_num_threads 1
       /resolution 0.1
   >> SetStatus

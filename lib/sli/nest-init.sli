@@ -117,7 +117,7 @@ def
 def
 
 /GetResolution {
-    [0] GetStatus /resolution get
+    0 GetStatus /resolution get
 } def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
