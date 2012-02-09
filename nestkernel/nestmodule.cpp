@@ -675,40 +675,6 @@ namespace nest
   }
 
   /* BeginDocumentation      
-     Name: GetGID - Return the global ID of a node
-     
-     Synopsis: [address] GetGID -> gid
-   
-     Parameters:
-     [address] - address of the node
-     gid       - Global id of a node
-
-     Description:
-     This function returns the global node ID which belongs to the
-     specified network address.
-
-     SeeAlso: GetAddress
-  */
-  /*
-  void NestModule::GetGIDFunction::execute(SLIInterpreter *i) const
-  {
-    i->assert_stack_load(1);
-
-    TokenArray node_adr;
-
-    node_adr = getValue<TokenArray>(i->OStack.pick(0));
-    index gid = get_network().get_gid(node_adr);
-
-    i->OStack.pop();
-    i->OStack.push(node->get_gid());
-    i->EStack.pop();
-  }
-  */
-  void NestModule::GetGIDFunction::execute(SLIInterpreter *i) const
-  {
-    assert(false);
-  }
-  /* BeginDocumentation      
      Name: GetLID - Return the local ID of a node
    
      Synopsis: GID GetLID -> lid
@@ -740,34 +706,6 @@ namespace nest
     assert(false);
   }
 
-  /* BeginDocumentation
-     Name: GetAddress - Return the address of a node
-     Synopsis: gid GetAddress -> [adr]
-     Parameterrs:
-     gid   - Global id of a node
-     [adr] - address of the node
-
-     Description:
-     This function returns the network address which belongs to
-     the specified  node gid (global id).
-  */
-    /*
-  void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
-  {
-    i->assert_stack_load(1);
-
-    long gid  =  i->OStack.pick(0);
-    ArrayDatum node_adr(get_network().get_adr(gid));
-     
-    i->OStack.pop();
-    i->OStack.push(node_adr);
-    i->EStack.pop();
-  }
-    */
-void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
-  {
-    assert(false);
-  }
 
   /* BeginDocumentation
      Name: ResetKernel - Put the simulation kernel back to its initial state.
@@ -1695,9 +1633,7 @@ void NestModule::GetAddressFunction::execute(SLIInterpreter *i) const
     i->createcommand("GetLeaves_i_b",   &getleaves_i_bfunction);
     i->createcommand("GetChildren_i_b", &getchildren_i_bfunction);
 
-    i->createcommand("GetGID",       &getgidfunction);
     i->createcommand("GetLID",       &getlidfunction);
-    i->createcommand("GetAddress",   &getaddressfunction);
 
     i->createcommand("SetStatus_id", &setstatus_idfunction);
     i->createcommand("SetStatus_CD", &setstatus_CDfunction);

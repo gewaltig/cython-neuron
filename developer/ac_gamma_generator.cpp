@@ -82,11 +82,17 @@ nest::ac_gamma_generator::State_::State_()
 
 
 nest::ac_gamma_generator::Buffers_::Buffers_(ac_gamma_generator& n)
-  : logger_(n)
+  : logger_(n),
+    Lambda_hist_(0.0),
+    Lambda_t0_(n.S_.last_spike_),
+    P_prev_(n.P_)   // when creating Buffer, base on current parameters
 {}
 
-nest::ac_gamma_generator::Buffers_::Buffers_(const Buffers_&, ac_gamma_generator& n)
-  : logger_(n)
+nest::ac_gamma_generator::Buffers_::Buffers_(const Buffers_& b, ac_gamma_generator& n)
+  : logger_(n),
+    Lambda_hist_(b.Lambda_hist_),
+    Lambda_t0_(b.Lambda_t0_),
+    P_prev_(b.P_prev_)
 {}
 
 /* ----------------------------------------------------------------
@@ -116,9 +122,10 @@ void nest::ac_gamma_generator::Parameters_::set(const DictionaryDatum& d)
 
   if ( updateValue<double_t>(d, "order", order_) )
   {
-	  if ( order_ < 1.0 )
+    if ( order_ < 1.0 )
 	  {
-	    throw KernelException("ac_gamma_generator::get_status: The gamma order must be at least 1.");
+	    throw KernelException("ac_gamma_generator::get_status: "
+				  "The gamma order must be at least 1.");
 	  }
   }
 
@@ -130,7 +137,8 @@ void nest::ac_gamma_generator::Parameters_::set(const DictionaryDatum& d)
 
   if ( dc_ < 0.0 || dc_ < ac_ )
   {
-    throw KernelException("ac_gamma_generator::set_status: Amplitudes must fulfill ac_ >= dc_ >= 0.");
+    throw KernelException("ac_gamma_generator::set_status: "
+			  "Amplitudes must fulfill ac_ >= dc_ >= 0.");
   }
 }
 
@@ -185,11 +193,24 @@ void nest::ac_gamma_generator::init_buffers_()
   device_.init_buffers();
   B_.logger_.reset();
 
-  // thread number cannot change once nodes are created, so we can
-  // place this check here.
-  //  if ( network()->get_num_threads() > 1 || network()->get_num_processes() > 1 ) {
-  //    throw BadProperty("ac_gamma_generator is presently not suitable" +
-  //                       " for parallel simulation.");
+  B_.Lambda_hist_ = 0.0;
+  B_.Lambda_t0_ = network()->get_time();
+  B_.P_prev_ = P_;  
+}
+
+// ----------------------------------------------------
+
+inline
+nest::double_t nest::ac_gamma_generator::deltaLambda_(const Parameters_& p, 
+						double_t t_a, 
+						double_t t_b)
+{
+  double_t deltaLambda = p.order_ * p.dc_ * (t_b - t_a);
+  if ( std::abs(p.ac_) > 0 && std::abs(p.om_) > 0 )
+    deltaLambda += - p.order_ * p.ac_ / p.om_
+  		      * (  std::cos(p.om_ * t_b + p.phi_) 
+	         	 - std::cos(p.om_ * t_a + p.phi_) );
+  return deltaLambda;
 }
 
 // ----------------------------------------------------
@@ -198,6 +219,13 @@ void nest::ac_gamma_generator::calibrate()
 {
   B_.logger_.init();  // ensures initialization in case mm connected after Simulate
   device_.calibrate();
+
+  // compute Lambda since last spike or change of parameters
+  B_.Lambda_hist_ += deltaLambda_(B_.P_prev_, 
+				  B_.Lambda_t0_.get_ms(), 
+				  network()->get_time().get_ms());
+  B_.Lambda_t0_ = network()->get_time();
+  B_.P_prev_ = P_;
 }
 
 
@@ -217,17 +245,13 @@ void nest::ac_gamma_generator::update(Time const& origin,
 
   for ( long_t lag = from ; lag < to ; ++lag )
   {
-    // times in seconds
-    const double_t t = Time(Time::step(start+lag)).get_ms();
-    const double_t tl= (S_.last_spike_-Time::step(1)).get_ms();
-
-    // compute hazard---this should be done more efficiently
-    const double_t lambda = P_.dc_ + P_.ac_ * std::sin(P_.om_ * t + P_.phi_);
-    const double_t Lambda = std::abs(P_.ac_) > 0 && std::abs(P_.om_) > 0
-    		? P_.order_ * ( P_.dc_ * (t-tl) - P_.ac_ / P_.om_
-    			  * ( std::cos(P_.om_ * t + P_.phi_) - std::cos(P_.om_ * tl + P_.phi_) ))
-    		: P_.order_ * P_.dc_ * (t-tl);
-
+    // Compute hazard
+    // Note: We compute Lambda for the entire interval since the last spike/
+    //       parameter change each time for better accuracy.
+    const double_t t_a = B_.Lambda_t0_.get_ms();
+    const double_t t_b = Time(Time::step(start+lag+1)).get_ms();
+    const double_t lambda = P_.dc_ + P_.ac_ * std::sin(P_.om_ * t_b + P_.phi_);
+    const double_t Lambda = B_.Lambda_hist_ + deltaLambda_(P_, t_a, t_b);
     const double_t haz = P_.order_ * lambda * std::pow(Lambda, P_.order_-1)
     		* std::exp(-Lambda) / gsl_sf_gamma_inc(P_.order_, Lambda);
 
@@ -245,6 +269,8 @@ void nest::ac_gamma_generator::update(Time const& origin,
       SpikeEvent se;
       network()->send(*this, se, lag);
       S_.last_spike_ = Time::step(origin.get_steps()+lag+1);
+      B_.Lambda_hist_ = 0.0;
+      B_.Lambda_t0_ = S_.last_spike_;
     }
   }
 }                       

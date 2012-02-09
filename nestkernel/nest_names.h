@@ -93,6 +93,21 @@ namespace nest
     extern const Name U_m;
     extern const Name consistent_integration;
 
+    // Tsodyks2_connection
+    extern const Name dU; //!< Unit increment of the utilization for a facilitating synapse [0...1]
+    extern const Name u;  //!< probability of release [0...1]
+    extern const Name x; //!< current scaling factor of the synaptic weight [0...1]
+    extern const Name tau_rec; //!< time constant for recovery (ms)
+    extern const Name tau_fac; //!< facilitation time constant (ms)
+
+    // Same as aboce, but for property arrays.
+    extern const Name dUs; //!< Unit increment of the utilization for a facilitating synapse [0...1]
+    extern const Name us;  //!< probability of release [0...1]
+    extern const Name xs; //!< current scaling factor of the synaptic weight [0...1]
+    extern const Name tau_recs; //!< time constant for recovery (ms)
+    extern const Name tau_facs; //!< facilitation time constant (ms)
+
+
     // Other adaptation
     extern const Name E_sfa;
     extern const Name E_rr;

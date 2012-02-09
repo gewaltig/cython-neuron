@@ -223,20 +223,14 @@ def
    Synopsis:
    sgid   tgid                          Connect -> -
    sgid   tgid                /synmodel Connect -> -
-   [sadr] [tadr]                        Connect -> -
-   [sadr] [tadr]              /synmodel Connect -> -
    sgid   tgid   weight delay           Connect -> -
    sgid   tgid   weight delay /synmodel Connect -> -
-   [sadr] [tadr] weight delay           Connect -> -
-   [sadr] [tadr] weight delay /synmodel Connect -> -
    sgid   tgid   params                 Connect -> -
    sgid   tgid   params       /synmodel Connect -> -
-   [sadr] [tadr] params                 Connect -> -
-   [sadr] [tadr] params       /synmodel Connect -> -
 
    Parameters:
-   [sadr], sgid - Address/global id of the source node.
-   [tadr], tgid - Address/global id of the target node.
+   sgid         - Global id of the source node.
+   tgid         - Global id of the target node.
    weight       - The weight of the connection
    delay        - The transmission delay of the connection (in ms)
    params       - A complete parameter dictionary for the connection
@@ -262,29 +256,11 @@ def
   /synapse_model /static_synapse
 >> Options
 
-/Connect_a_a_l {
-   3 1 roll GetGID exch GetGID exch 3 -1 roll Connect_i_i_l
-} bind def
-
-/Connect_a_a_d_d_l {
-   5 3 roll GetGID exch GetGID exch 5 -3 roll Connect_i_i_d_d_l
-} bind def
-
-/Connect_a_a_D_l {
-   4 2 roll GetGID exch GetGID exch 4 -2 roll Connect_i_i_D_l
-} bind def
-
 /Connect_main trie
-[/arraytype /arraytype /literaltype]
-    /Connect_a_a_l load addtotrie
 [/integertype /integertype /literaltype]
     /Connect_i_i_l load addtotrie
-[/arraytype /arraytype /doubletype /doubletype /literaltype]
-    /Connect_a_a_d_d_l load addtotrie
 [/integertype /integertype /doubletype /doubletype /literaltype]
     /Connect_i_i_d_d_l load addtotrie
-[/arraytype /arraytype /dictionarytype /literaltype]
-    /Connect_a_a_D_l load addtotrie
 [/integertype /integertype /dictionarytype /literaltype]
     /Connect_i_i_D_l load addtotrie
 def
@@ -1179,10 +1155,8 @@ def
 /* BeginDocumentation
    Name: GetNodes - Return IDs of all nodes of a subnet.
    Synopsis:
-     [adr] GetNodes -> [gid1 ... gidn]
      gid   GetNodes -> [gid1 ... gidn]
    Parameters:
-     [adr]   - address of a subnet
      gid     - id of a subnet
      [gid..] - Array with the global ids of all child nodes.
    Description:
@@ -1199,17 +1173,14 @@ def
 
 /GetNodes trie
 [/integertype] { false GetNodes_i_b } bind addtotrie
-[/arraytype]   { GetGID false GetNodes_i_b } bind addtotrie
 def
 
 
 /* BeginDocumentation
    Name: GetLocalNodes - Return IDs of all local nodes of a subnet.
    Synopsis:
-     [adr] GetLocalNodes -> [gid1 ... gidn]
      gid   GetLocalNodes -> [gid1 ... gidn]
    Parameters:
-     [adr]   - address of a subnet
      gid     - id of a subnet
      [gid..] - Array with the global ids of all local child nodes.
    Description:
@@ -1222,7 +1193,6 @@ def
 */
 /GetLocalNodes trie
 [/integertype] { true GetNodes_i_b } bind addtotrie
-[/arraytype]   { GetGID true GetNodes_i_b } bind addtotrie
 def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1230,10 +1200,8 @@ def
 /* BeginDocumentation
    Name: GetChildren - Return IDs of all immediate child nodes of a subnet.
    Synopsis:
-   [adr] GetChildren -> [gid1 ... gidn]
    gid   GetChildren -> [gid1 ... gidn]
    Parameters:
-   [adr]   - address of a subnet
    gid     - id of a subnet
    [gid..] - Array with the global ids of all child nodes.
 
@@ -1247,16 +1215,13 @@ def
 
 /GetChildren trie
 [/integertype] { false GetChildren_i_b } bind addtotrie
-[/arraytype]   { GetGID false GetChildren_i_b } bind addtotrie
 def
 
 /* BeginDocumentation
    Name: GetLocalChildren - Return IDs of all immediate local child nodes of a subnet.
    Synopsis:
-   [adr] GetLocalChildren -> [gid1 ... gidn]
    gid   GetLocalChildren -> [gid1 ... gidn]
    Parameters:
-   [adr]   - address of a subnet
    gid     - id of a subnet
    [gid..] - Array with the global ids of all local child nodes.
 
@@ -1271,7 +1236,6 @@ def
 
 /GetLocalChildren trie
 [/integertype] { true GetChildren_i_b } bind addtotrie
-[/arraytype]   { GetGID true GetChildren_i_b } bind addtotrie
 def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1279,10 +1243,8 @@ def
 /* BeginDocumentation
    Name: GetLeaves - Return IDs of all leaves of a subnet.
    Synopsis:
-   [adr] GetLeaves -> [gid1 ... gidn]
    gid   GetLeaves -> [gid1 ... gidn]
    Parameters:
-   [adr]   - address of a subnet
    gid     - id of a subnet
    [gid..] - Array with the global ids of all leaf nodes.
 
@@ -1306,16 +1268,13 @@ def
 
 /GetLeaves trie
 [/integertype] { false GetLeaves_i_b } bind addtotrie
-[/arraytype]  { GetGID false GetLeaves_i_b } bind addtotrie
 def
 
 /* BeginDocumentation
    Name: GetLocalLeaves - Return IDs of all local leaves of a subnet.
    Synopsis:
-   [adr] GetLocalLeaves -> [gid1 ... gidn]
    gid   GetLocalLeaves -> [gid1 ... gidn]
    Parameters:
-   [adr]   - address of a subnet
    gid     - id of a subnet
    [gid..] - Array with the global ids of all local leaf nodes.
 
@@ -1330,7 +1289,6 @@ def
 
 /GetLocalLeaves trie
 [/integertype] { true GetLeaves_i_b } bind addtotrie
-[/arraytype]  { GetGID true GetLeaves_i_b } bind addtotrie
 def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1430,11 +1388,6 @@ SeeAlso: GetLeaves, GetNodes, GetChildren
 */
 /GetNetwork trie
 [/integertype /integertype] /GetNetwork_i_i load addtotrie
-[/arraytype /integertype]
-{
-   exch_ GetGID exch_
-   GetNetwork_i_i
-} bind addtotrie
 def
 
   /* BeginDocumentation

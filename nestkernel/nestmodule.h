@@ -209,18 +209,6 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } getchildren_i_bfunction;
 
-     class GetAddressFunction: public SLIFunction
-     { 
-      public:
-       void execute(SLIInterpreter *) const;
-     } getaddressfunction;
-
-     class GetGIDFunction: public SLIFunction
-     { 
-      public:
-       void execute(SLIInterpreter *) const;
-     } getgidfunction;
-     
      class GetLIDFunction: public SLIFunction
      { 
       public:

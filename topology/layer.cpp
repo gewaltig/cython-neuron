@@ -58,6 +58,9 @@ namespace nest
     // added by manipulating this class. 
     Selector selector(layer_connection_dict);
 
+    assert(false && "TODO: Re-write slice_layer");
+
+    /*
     Subnet nodes;
 
     // Retrieve nodes at selected depth level.
@@ -76,6 +79,8 @@ namespace nest
       }
 
     return std::vector<Node*>(nodes.begin(), nodes.end());
+    */
+
   }
 
   void Layer::set_status(const DictionaryDatum& layer_dict)
@@ -210,17 +215,22 @@ namespace nest
     assert(subnet != 0);
     // Slicing of layer before calling ConnectLayer function
     // assures that the subnet isn't nested.
-    return std::vector<Node*>(subnet->begin(), subnet->end());
+
+    assert(false && "TODO: rewrite Layer::get_nodes");
+    // return std::vector<Node*>(subnet->begin(), subnet->end());
   }
 
   void Layer::dump_nodes(std::ostream& out) const
   {
+	assert(false && "TODO: rewrite Layer::dump_nodes");
+	/*
     for ( std::vector<Node*>::const_iterator it = begin(); it != end() ; ++it)
     {
       out << (*it)->get_gid() << ' ';
       Layer::get_position(**it).print(out);
       out << '\n';
     }
+    */
   }
 
   bool Layer::edge_wrap_is_set() const

@@ -77,7 +77,7 @@ vm << /withtime true /to_memory true  /time_in_steps true /interval h >> SetStat
 
 
 /spike_detector Create /sd Set
-sd << /withtime true /to_memory true /withpath true /time_in_steps true >> SetStatus
+sd << /withtime true /to_memory true /time_in_steps true >> SetStatus
 
 vm neuron 1.0 h Connect
 neuron sd 1.0 h Connect

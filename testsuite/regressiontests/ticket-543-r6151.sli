@@ -1,0 +1,40 @@
+
+% draft test, will be "testified" right away
+% this test will work with r6151
+
+modeldict using
+/s1 subnet Create def
+s1 ChangeSubnet
+/s2 subnet Create def
+s2 ChangeSubnet
+/s3 subnet Create def
+s3 ChangeSubnet
+/source_neuron iaf_neuron Create def
+
+0 ChangeSubnet
+/target_neuron iaf_neuron Create def
+endusing
+
+s1 [target_neuron] DivergentConnect
+
+source_neuron GetStatus /connections get /targets get ==
+
+% << /source source_neuron >> FindConnections { /target get } Map ==
+
+false {
+ResetKernel
+/s1 /subnet Create def
+s1 ChangeSubnet
+/s2 /subnet Create def
+s2 ChangeSubnet
+/s3 /subnet Create def
+s3 ChangeSubnet
+/target_neuron /iaf_neuron Create def
+
+0 ChangeSubnet
+/source_neuron /iaf_neuron Create def
+
+[source_neuron] s1 ConvergentConnect
+
+<< /source source_neuron >> FindConnections { /target get } Map ==
+} if

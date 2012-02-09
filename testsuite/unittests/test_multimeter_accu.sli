@@ -80,7 +80,7 @@ def
   << >> begin
     /mm /multimeter << /to_accumulator true >> Create def
     /mms mm GetStatus def
-    true [ /to_file /to_screen /to_memory /withgid /withpath /withweight ]
+    true [ /to_file /to_screen /to_memory /withgid /withweight ]
   { mms exch get not and } Fold    
   end
 } assert_or_die

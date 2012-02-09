@@ -78,7 +78,20 @@ namespace nest
     const Name c("c");
     const Name d("d");
     const Name U_m("U_m");
-    const Name consistent_integration("consistent_integration");
+      const Name consistent_integration("consistent_integration");
+
+    // Tsodyks2_connection
+      const Name dU("U"); //!< Unit increment of the utilization for a facilitating synapse [0...1]
+      const Name u("u");  //!< probability of release [0...1]
+      const Name x("x"); //!< current scaling factor of the synaptic weight [0...1]
+      const Name tau_rec("tau_rec"); //!< time constant for recovery (ms)
+      const Name tau_fac("tau_fac"); //!< facilitation time constant (ms)
+
+      const Name dUs("Us"); //!< Unit increment of the utilization for a facilitating synapse [0...1]
+      const Name us("us");  //!< probability of release [0...1]
+      const Name xs("xs"); //!< current scaling factor of the synaptic weight [0...1]
+      const Name tau_recs("tau_recs"); //!< time constant for recovery (ms)
+      const Name tau_facs("tau_facs"); //!< facilitation time constant (ms)
 
     // Other Adaptation
     const Name E_sfa("E_sfa");

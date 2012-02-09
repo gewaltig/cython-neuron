@@ -523,96 +523,6 @@ void Network::go_to(index n)
     throw SubnetExpected();
 }
 
-// void Network::go_to(const TokenArray p)
-// {
-//   std::vector<size_t> adr;
-//   p.toVector(adr);
-//   go_to(adr);
-// }
-
-// void Network::go_to(vector<size_t> const &p)
-// {
-//   if(Subnet *target=dynamic_cast<Subnet*>(get_node(p)))
-//     current_ = target;
-//   else
-//     throw SubnetExpected();
-// }
-
-
-//  Node* Network::get_node(const TokenArray p, thread thr) const
-//  {
-//    std::vector<size_t> adr;
-//    p.toVector(adr);
-//    return get_node(adr, thr);
-//  }
-//  
-//  // TODO AM: this routine still has to be converted
-//  Node* Network::get_node(vector<size_t> const &p, thread thr) const
-//  {
-//    assert(root_ != NULL);
-//    Subnet *position = current_;
-//  
-//    Node *new_position = position;
-//    
-//    // First, we determine the global ID of the node. Then, we use the
-//    // thread to determine the correct pointer.
-//  
-//    for(size_t i=0; i< p.size(); ++i)
-//    {
-//      // Any entry in an address will jump to the root node.
-//      if(p[i]==0)
-//      {
-//        new_position = root_;
-//        position = dynamic_cast<Subnet*>(new_position);
-//        // move directly to next vector element 
-//        continue;
-//      }
-//  
-//      /* Range checking:
-//         Since indices in address arrays start with one, 
-//         we have to use an offset of 1 with respect to
-//         the standard c/c++ indices.
-//         Accordingly, the correct range for SLI indices is
-//         1...size().
-//         If the range is violated, we throw an UnknownNode 
-//         exception.
-//      */
-//     
-//      if(p[i]<1 || p[i]>(*position).size())
-//        throw UnknownNode();
-//      
-//      // The following access is safe, since the range has been
-//      // checked above.
-//      new_position=(*position)[p[i] -1];
-//  
-//      // If the following happens, there is a "hole" in the Network tree, 
-//      // however, this case can occur if a Node has been deleted.
-//      // Thus, we must handle this case gracefully and just throw an 
-//      // UnknownNode exception.
-//      if(new_position == 0)
-//        throw UnknownNode();
-//        
-//      if(Subnet *pos=dynamic_cast<Subnet*>(new_position))
-//        position=pos;
-//      else if(i < p.size() - 1)
-//        throw UnknownNode();
-//    }
-//  
-//    assert(new_position != 0);
-//    index gid = new_position->get_gid();
-//  
-//    //std::cout << "gid of new position " << gid << std::endl;
-//  
-//    if(thr > 0 && (*nodes_[gid]).size() > 0)
-//    {
-//      assert(thr < (thread)(*nodes_[gid]).size());
-//      return (*nodes_[gid])[thr];
-//    }
-//  
-//    return new_position;
-//  }
-
-
 Node* Network::get_node(index n, thread thr) //no_p
 {
   if (!is_local_gid(n))
@@ -635,21 +545,6 @@ const SiblingContainer* Network::get_thread_siblings(index n) const
   assert(siblings != 0);
 
   return siblings;
-}
-
-vector<size_t> Network::get_adr(Node const* node) const
-{
-  std::vector<size_t> adr;
-  while(node != 0)
-  {
-    if(node->get_parent())
-      adr.push_back(node->get_lid()+1);
-    else
-      adr.push_back(0); // root node has index 0 by definition
-    node = node->get_parent();
-  }
-  std::reverse(adr.begin(),adr.end());
-  return adr;
 }
 
 bool Network::model_in_use(index i)

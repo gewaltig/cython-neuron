@@ -42,7 +42,7 @@ namespace nest
     extern const Name center;
     extern const Name edge_wrap;
     extern const Name anchor;
-    extern const Name x;
+    //    extern const Name x; // this name is already defined in nest_names
     extern const Name y;
     extern const Name positions;
     extern const Name topology;

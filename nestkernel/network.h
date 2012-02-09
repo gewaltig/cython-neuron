@@ -323,23 +323,6 @@ SeeAlso: Simulate, Node
      */
     void  go_to(index);
 
-    /**
-     * Change current working node. The specified node must
-     * exist and be a subnet.
-     * @throws nest::IllegalOperation  Target is no subnet.
-     * @throws nest::UnknownNode       Target does not exist in the network.
-     */
-    void  go_to(std::vector<size_t> const &);
-
-    /**
-     * Change current working node. The specified node must
-     * exist and be a subnet.
-     * @throws nest::IllegalOperation  Target is no subnet.
-     * @throws TypeMismatch            Array is not a flat & homogeneous array of integers.
-     * @throws nest::UnknownNode       Target does not exist in the network.
-     */
-    void  go_to(const TokenArray);
-
     void simulate(Time const &);
     /**
      * Resume the simulation after it was terminated.
@@ -505,44 +488,6 @@ SeeAlso: Simulate, Node
      * @defgroup net_access Network access
      * Functions to access network nodes.
      */
-
-    /**
-     * Return addess array of the specified Node.
-     * @param p Pointer to the specified Node.
-     * @ingroup net_access
-     */
-    std::vector<size_t> get_adr(Node const *p) const;
-
-    /**
-     * Return addess array of the specified Node.
-     * @param i Index of the specified Node.
-     *
-     * @ingroup net_access
-     */
-    std::vector<size_t> get_adr(index i);
-
-    /**
-     * Return pointer of the specified Node.
-     * @param a C++ vector with the address array of the Node.
-     * @param thr global thread index of the Node.
-     *
-     * @throws nest::UnknownNode       Target does not exist in the network.
-     *
-     * @ingroup net_access
-     */
-    Node* get_node(std::vector<size_t> const &a, thread thr = 0) const;
-
-    /**
-     * Return pointer of the specified Node.
-     * @param a SLI Array with the address array of the Node.
-     * @param thr global thread index of the Node.
-     *
-     * @throws TypeMismatch            Array is not a flat & homogeneous array of integers.
-     * @throws nest::UnknownNode       Target does not exist in the network.
-     *
-     * @ingroup net_access
-     */
-    Node* get_node(const TokenArray a, thread thr = 0) const;
 
     /**
      * Return pointer of the specified Node.
@@ -832,12 +777,6 @@ SeeAlso: Simulate, Node
     Token t = interpreter_.baselookup(Name("statusdict"));
     DictionaryDatum statusdict = getValue<DictionaryDatum>(t);
     return getValue<long>(statusdict, "exitcode");
-  }
-
-  inline
-  std::vector<size_t> Network::get_adr(index n)
-  {
-    return get_adr(get_node(n));
   }
 
   inline

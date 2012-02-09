@@ -44,7 +44,6 @@ nest::RecordingDevice::Parameters_::Parameters_(const std::string& file_ext,
     time_in_steps_(false),
     precise_times_(false),
     withgid_(withgid),
-    withpath_(false),
     withtime_(withtime),
     withweight_(false),
     precision_(3),
@@ -79,7 +78,6 @@ void nest::RecordingDevice::Parameters_::get(const RecordingDevice& rd,
 
   (*d)[names::withtime] = withtime_;
   (*d)[names::withgid]  = withgid_;
-  (*d)[names::withpath] = withpath_;
   (*d)[names::withweight] = withweight_;
 
   (*d)[names::time_in_steps]  = time_in_steps_;
@@ -122,13 +120,12 @@ void nest::RecordingDevice::Parameters_::get(const RecordingDevice& rd,
 }
 
 void nest::RecordingDevice::Parameters_::set(const RecordingDevice& rd,
-                                             const Buffers_& B,
+                                             const Buffers_&,
                                              const DictionaryDatum& d)
 {
   updateValue<std::string>(d, names::label, label_);
   updateValue<bool>(d, names::withgid, withgid_);
   updateValue<bool>(d, names::withtime, withtime_);
-  updateValue<bool>(d, names::withpath, withpath_);
   updateValue<bool>(d, names::withweight, withweight_);
   updateValue<bool>(d, names::time_in_steps, time_in_steps_);
   if ( rd.mode_ == RecordingDevice::SPIKE_DETECTOR )
@@ -198,12 +195,12 @@ void nest::RecordingDevice::Parameters_::set(const RecordingDevice& rd,
     NestModule::get_network().message(SLIInterpreter::M_INFO, "RecordingDevice::set_status",
                                    "Data will be recorded to file and to memory.");
 
-  if ( to_accumulator_ && ( to_file_ || to_screen_ || to_memory_ || withgid_ || withpath_ || withweight_ ) )
+  if ( to_accumulator_ && ( to_file_ || to_screen_ || to_memory_ || withgid_ || withweight_ ) )
   {
-      to_file_ = to_screen_ = to_memory_ = withgid_ = withpath_ = withweight_ = false;
+      to_file_ = to_screen_ = to_memory_ = withgid_ = withweight_ = false;
       Node::network()->message(SLIInterpreter::M_WARNING, "RecordingDevice::set_status()",
                                "Accumulator mode selected. All incompatible properties "
-                               "(to_file, to_screen, to_memory, withgid, withpath, withweight) "
+                               "(to_file, to_screen, to_memory, withgid, withweight) "
                                "have been set to false.");
   }
 }
@@ -224,7 +221,7 @@ void nest::RecordingDevice::State_::get(DictionaryDatum& d, const Parameters_& p
   else
     dict = getValue<DictionaryDatum>(d, names::events);
 
-  if ( p.withgid_ || p.withpath_ )
+  if ( p.withgid_ )
   {
     assert(not p.to_accumulator_);
     initialize_property_intvector(dict, names::senders);
@@ -544,14 +541,6 @@ void nest::RecordingDevice::print_id_(std::ostream& os, index gid)
 {
   if ( P_.withgid_ )
     os << gid << '\t';
-
-  if ( P_.withpath_ )
-  {
-    const std::vector<size_t> ta = Node::network()->get_adr(gid);
-    for ( size_t j = 0 ; j < ta.size() ; ++j )
-      os << ta[j] << ' ';
-    os << '\t';
-  }
 }
 
 void nest::RecordingDevice::print_time_(std::ostream& os, const Time& t, double offs)
@@ -580,7 +569,7 @@ void nest::RecordingDevice::print_weight_(std::ostream& os, double weight)
 
 void nest::RecordingDevice::store_data_(index sender, const Time& t, double offs, double weight)
 {
-  if ( P_.withgid_ || P_.withpath_ )
+  if ( P_.withgid_ )
     S_.event_senders_.push_back(sender);
 
   if ( P_.withtime_ )

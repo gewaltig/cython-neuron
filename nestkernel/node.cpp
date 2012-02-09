@@ -121,7 +121,6 @@ namespace nest {
     assert(dict.valid());
     if(parent_ != NULL)
       {
-	(*dict)[names::address] = Token(net_->get_adr(this));
 	(*dict)[names::global_id] = get_gid();
 	(*dict)[names::local_id] = get_lid()+1;
 	(*dict)[names::parent] = (parent_ != 0) ?parent_->get_gid():0;

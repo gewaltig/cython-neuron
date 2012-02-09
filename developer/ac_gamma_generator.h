@@ -166,6 +166,9 @@ namespace nest{
       Buffers_(ac_gamma_generator&);
       Buffers_(const Buffers_&, ac_gamma_generator&);
       UniversalDataLogger<ac_gamma_generator> logger_;
+      double_t Lambda_hist_;   //!< integral over lambda(t) from S_.last_spike_ to Lamdba_t0_
+      Time Lambda_t0_; //!< time to which Lamdba_hist_ is integrated
+      Parameters_ P_prev_;  //!< parameter values prior to last SetStatus
     };
 
     // ------------------------------------------------------------
@@ -175,7 +178,8 @@ namespace nest{
 
     double_t get_rate_() const { return 1000.0 * S_.rate_; }
 
-    // ------------------------------------------------------------
+    // compute deltaLambda for given parameters from ta to tb
+    double_t deltaLambda_(const Parameters_&, double_t, double_t);
 
     StimulatingDevice<SpikeEvent> device_;
     static RecordablesMap<ac_gamma_generator> recordablesMap_;

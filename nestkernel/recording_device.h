@@ -129,9 +129,6 @@ namespace nest {
     The following parameters control how output is formatted:
     /withtime      - boolean value which specifies whether the network time should be 
                      recorded (default: true).
-    /withpath      - boolean value which specifies whether the address of the observed node(s)
-                     should be recorded (default: false). Note: when recording to memory, /withpath
-                     will have the same effect as /withgid.
     /withgid       - boolean value which specifies whether the global id of the observed node(s)
                      should be recorded (default: false).
     /withweight    - boolean value which specifies whether the weight of the event should be
@@ -384,7 +381,6 @@ namespace nest {
       bool time_in_steps_; //!< true if time is printed in steps, not ms.
       bool precise_times_; //!< true if time is computed including offset
       bool withgid_;       //!< true if element GID is to be printed, default
-      bool withpath_;      //!< true if element address is to be printed
       bool withtime_;      //!< true if time of event is to be printed, default
       bool withweight_;    //!< true if weight of event is to be printed
 

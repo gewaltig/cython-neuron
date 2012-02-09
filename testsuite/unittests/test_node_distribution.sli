@@ -72,10 +72,8 @@ forall
   /spike_detector Create /sd Set
   sd << /withgid true /withtime true /to_screen false >> SetStatus
 
-%[0] 2 PrintNetwork
-
-[1 1] sd GetAddress Connect
-[2 1] sd GetAddress Connect
+sn1 GetNodes 0 get sd Connect
+sn2 GetNodes 0 get sd Connect
 
 40 Simulate
 

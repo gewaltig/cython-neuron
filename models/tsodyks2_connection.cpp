@@ -17,6 +17,7 @@
 #include "tsodyks2_connection.h"
 #include "network.h"
 #include "connector_model.h"
+#include "nest_names.h"
 
 namespace nest
 {
@@ -25,7 +26,7 @@ namespace nest
     ConnectionHetWD(),
     U_(0.5),
     u_(U_),
-    x_(U_), // Since u_ is the maximal probability, x_ should be <= u_
+    x_(U_),
     tau_rec_(800.0),
     tau_fac_(0.0)
   {
@@ -35,11 +36,11 @@ namespace nest
   {
     ConnectionHetWD::get_status(d);
 
-    def<double_t>(d, "U", U_);
-    def<double_t>(d, "u", u_);
-    def<double_t>(d, "tau_rec", tau_rec_);
-    def<double_t>(d, "tau_fac", tau_fac_);
-    def<double_t>(d, "x", x_);
+    def<double_t>(d, names::dU, U_);
+    def<double_t>(d, names::u, u_);
+    def<double_t>(d, names::tau_rec, tau_rec_);
+    def<double_t>(d, names::tau_fac, tau_fac_);
+    def<double_t>(d, names::x, x_);
     
   }
   
@@ -47,11 +48,11 @@ namespace nest
   {
     ConnectionHetWD::set_status(d, cm);
     
-    updateValue<double_t>(d, "U", U_);
-    updateValue<double_t>(d, "u", u_);
-    updateValue<double_t>(d, "tau_rec", tau_rec_);
-    updateValue<double_t>(d, "tau_fac", tau_fac_);
-    updateValue<double_t>(d, "x", x_);
+    updateValue<double_t>(d, names::dU, U_);
+    updateValue<double_t>(d, names::u, u_);
+    updateValue<double_t>(d, names::tau_rec, tau_rec_);
+    updateValue<double_t>(d, names::tau_fac, tau_fac_);
+    updateValue<double_t>(d, names::x, x_);
   }
 
   /**
@@ -62,21 +63,22 @@ namespace nest
   {
     ConnectionHetWD::set_status(d, p, cm);
 
-    set_property<double_t>(d, "Us", p, U_);
-    set_property<double_t>(d, "us", p, u_);
-    set_property<double_t>(d, "xs", p, x_);
-    set_property<double_t>(d, "tau_recs", p, tau_rec_);
+    set_property<double_t>(d, names::dUs, p, U_);
+    set_property<double_t>(d, names::us, p, u_);
+    set_property<double_t>(d, names::xs, p, x_);
+    set_property<double_t>(d, names::tau_recs, p, tau_rec_);
+    set_property<double_t>(d, names::tau_facs, p, tau_fac_);
   }
 
   void Tsodyks2Connection::initialize_property_arrays(DictionaryDatum & d) const
   {
     ConnectionHetWD::initialize_property_arrays(d);
 
-    initialize_property_array(d, "Us"); 
-    initialize_property_array(d, "us"); 
-    initialize_property_array(d, "tau_recs");  
-    initialize_property_array(d, "tau_facs");  
-    initialize_property_array(d, "xs"); 
+    initialize_property_array(d, names::dUs); 
+    initialize_property_array(d, names::us); 
+    initialize_property_array(d, names::tau_recs);  
+    initialize_property_array(d, names::tau_facs);  
+    initialize_property_array(d, names::xs); 
   }
 
   /**
@@ -87,11 +89,11 @@ namespace nest
   {
     ConnectionHetWD::append_properties(d);
 
-    append_property<double_t>(d, "Us", U_); 
-    append_property<double_t>(d, "us", u_); 
-    append_property<double_t>(d, "tau_recs", tau_rec_);  
-    append_property<double_t>(d, "tau_facs", tau_fac_);  
-    append_property<double_t>(d, "xs", x_); 
+    append_property<double_t>(d, names::dUs, U_); 
+    append_property<double_t>(d, names::us, u_); 
+    append_property<double_t>(d, names::tau_recs, tau_rec_);  
+    append_property<double_t>(d, names::tau_facs, tau_fac_);  
+    append_property<double_t>(d, names::xs, x_); 
   }
 
 } // of namespace nest
