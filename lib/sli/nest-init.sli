@@ -537,14 +537,19 @@ Synopsis:
 [sources] target n init_dict          /synmodel RandomConvergentConnect -> -
 [sources] target n [weights] [delays]           RandomConvergentConnect -> -
 [sources] target n [weights] [delays] /synmodel RandomConvergentConnect -> -
+[sources] [targets] [ns] [weightss] [delayss] /synmodel RandomConvergentConnect -> -
+[sources] [targets] n /synmodel RandomConvergentConnect -> -
 
 Parameters:
 [sources] - array of (global IDs of) potential source nodes
 target    - GID of target node
+[targets] - array of (global IDs of) target nodes
 n         - number of connections to be established
 init_dict - dictionary used to initialize each of the established connections
 weights   - A list of weights of size n
 delays    - A list of delays of size n
+weightss  - A list of lists of weights of size length(targets) x size n
+delayss   - A list of lists delays of size length(targets) x size n 
 /synmodel - The synapse model for the connection (see Options below)
 
 Options:
@@ -710,6 +715,34 @@ bind def
   RandomConvergentConnect_ia_i_i_da_da_b_b_l_wrapper
 } bind def
 
+/RandomConvergentConnect_ia_ia_ia_daa_daa_l
+{
+  /RandomConvergentConnect /allow_multapses GetOption
+  /RandomConvergentConnect /allow_autapses GetOption
+  3 2 roll
+  RandomConvergentConnect_ia_ia_ia_daa_daa_b_b_l
+} bind def
+
+/RandomConvergentConnect_ia_ia_i_l
+{
+  % construct an array of size(targets) entries all of which have value given by third argument
+  3 2 roll
+  size [1] exch LayoutArray
+  4 -1 roll
+  LayoutArray
+  3 2 roll
+  
+  [ ] % weights empty
+  [ ] % delays empty
+  3 2 roll
+  
+  /RandomConvergentConnect /allow_multapses GetOption
+  /RandomConvergentConnect /allow_autapses GetOption
+  3 2 roll
+
+  RandomConvergentConnect_ia_ia_ia_daa_daa_b_b_l
+} bind def
+
 % all calls without init_dict are forwarded to C++
 /RandomConvergentConnect_main trie
 [/arraytype /integertype /integertype /literaltype]
@@ -722,6 +755,10 @@ bind def
   /RandomConvergentConnect_ia_i_i_da_da_l load addtotrie
 [/arraytype /integertype /integertype /arraytype /arraytype /booltype /booltype /literaltype]
   /RandomConvergentConnect_ia_i_i_da_da_b_b_l_wrapper load addtotrie
+[/arraytype /arraytype /arraytype /arraytype /arraytype /literaltype]
+  /RandomConvergentConnect_ia_ia_ia_daa_daa_l load addtotrie
+[/arraytype /arraytype /integertype /literaltype]
+  /RandomConvergentConnect_ia_ia_i_l load addtotrie
 def
 
 /RandomConvergentConnect trie 

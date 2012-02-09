@@ -1438,6 +1438,7 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
     throw DimensionMismatch();
   }
 
+  bool abort = false;
 
 #pragma omp parallel
   {
@@ -1452,7 +1453,7 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
 
     librandom::RngPtr rng = get_rng(tid);
     
-    for (size_t i=0; i < target_ids.size(); i++)
+    for (size_t i=0; i < target_ids.size() && !abort; i++)
     {      
       index target_id = target_ids.get(i);
 
@@ -1473,17 +1474,25 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
       const size_t n = nid.get();
       //const size_t n = getValue<long>(ns[i]);
 
-      TokenArray ws = getValue<TokenArray>(weights.get(i));
-      TokenArray ds = getValue<TokenArray>(delays.get(i));
+      TokenArray ws;
+      TokenArray ds;      
+      if (weights.size() > 0)
+      {
+	 ws = getValue<TokenArray>(weights.get(i));
+	 ds = getValue<TokenArray>(delays.get(i));
+      }
 
       // check if we have consistent lists for weights and delays
-      if (! (ws.size() == n || ws.size() == 0) && (ws.size() == ds.size()))
+      // use flush to ensure consistent view of variable abort across threads
+      // see http://www.thinkingparallel.com/2007/06/29/breaking-out-of-loops-in-openmp/
+      // and http://publib.boulder.ibm.com/infocenter/comphelp/v8v101/index.jsp?topic=%2Fcom.ibm.xlcpp8a.doc%2Fcompiler%2Fref%2Fruompflu.htm
+#pragma omp flush (abort) 
+      if (! (ws.size() == n || ws.size() == 0) && (ws.size() == ds.size()) && !abort)
       {
-	message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights and delays must be lists of size n.");
-	// TODO10k: Does not compile on JUGENE: "throw" is not allowed in a structured block.
-	//          This means we need to find a different way to throw in an OpenMP block.
-	//	throw DimensionMismatch();
+	abort = true;
+#pragma omp flush (abort)
       }
+
           
       vector<Node*> chosen_sources(n);
       vector<index> chosen_source_ids(n);
@@ -1516,13 +1525,20 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
     
     } // of for all targets
 
-    
-//    std::cerr << "A thread's diary " << std::endl;
-//    std::cerr << "I am thread " << tid << " and was working on " << nrn_counter << " neurons." << std::endl;
-//    std::cerr << "I am thread " << tid << " and created " << syn_counter << " synapses." << std::endl;
+    //    std::cerr << "A thread's diary " << std::endl;
+    //    std::cerr << "I am thread " << tid << " and was working on " << nrn_counter << " neurons." << std::endl;
+    //    std::cerr << "I am thread " << tid << " and created " << syn_counter << " synapses." << std::endl;
     
 
   } // of omp parallel
+
+  if (abort)
+  {
+    message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights and delays must be lists of size n.");
+    // on JUGENE: "throw" is not allowed in a structured block.
+    throw DimensionMismatch();
+  }
+  
 
 }
 
