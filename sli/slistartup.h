@@ -75,6 +75,9 @@ class SLIStartup: public SLIModule
   Name pointersize_name;
   Name architecturedict_name;
 
+  Name platform_name;
+  Name threading_name;
+
   Name have_mpi_name;
   Name ismpi_name;
   Name have_gsl_name;
