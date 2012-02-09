@@ -17,6 +17,7 @@
 #include "leaflist.h"
 #include "nodelist.h"
 
+#ifdef UNDEFINEDSTUFF
 namespace nest{
 
   bool LeafList::empty() const
@@ -31,21 +32,6 @@ namespace nest{
       }
     return true;
   }
-
-  size_t LeafList::size() const
-  {
-    // The size of the LeafList is the number of elements
-    // in the NodeList which are leaves.
-    
-    size_t count=0;
-    for (LocalNodeList::iterator i=LocalNodeList::begin(); i!=LocalNodeList::end(); ++i)
-      {
-        if (is_leaf_(*i))
-          ++count;
-      }
-    return count;
-  }
-  
 
   LeafList::iterator LeafList::begin() const
   { // we traverse the NodeList, and return the first element that is
@@ -79,7 +65,8 @@ namespace nest{
     
     LocalNodeList::iterator i;
 
-    do i=LocalNodeList::iterator::operator++();
+    do
+      ++i;
     while ( (i != the_container_.end()) && !LeafList::is_leaf_(*i) );
     
     return iterator(i, the_container_);
@@ -88,5 +75,5 @@ namespace nest{
 
 }
 	
-	
+#endif
 	

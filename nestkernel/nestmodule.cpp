@@ -650,9 +650,11 @@ namespace nest
     if (subnet == NULL)
       throw SubnetExpected();
  
-    LeafList localnodes(*subnet);
-    ArrayDatum result;
+    assert(false && "GetLeaves currently off.");
 
+    //LeafList localnodes(*subnet);
+    ArrayDatum result;
+/*
     if ( include_remote )
     {
       vector<index> gids;
@@ -664,11 +666,10 @@ namespace nest
     }
     else
     {
-      result.reserve(localnodes.size());
       for(LocalNodeList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
         result.push_back(new IntegerDatum((*n)->get_gid()));
     }
-     
+  */
     i->OStack.pop(2);
     i->OStack.push(result);
     i->EStack.pop();

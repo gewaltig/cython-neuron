@@ -3,7 +3,7 @@
  *
  *  This file is part of NEST
  *
- *  Copyright (C) 2004 by
+ *  Copyright (C) 2004-2012 by
  *  The NEST Initiative
  *
  *  See the file AUTHORS for details.
@@ -22,102 +22,113 @@
 
 namespace nest{
 
-  /** 
-   * List interface to network tree.  class LocalNodeList is an adaptor
-   * class which turns a Network object into a list.  Class LocalNodeList
-   * also provides an iterator which can be used to traverse the
-   * network tree in post-order.  This iterator is not used during
-   * Network update, since it is not thread safe.
-   * For a list interface that only accesses the leaves of a network
-   * tree, excluding the intermediate subnets, see class LocalLeafList
-   * and its iterator.
-   * LocalNodeList iterates only over local nodes.
-   * @see GlobalNodeList
-   */
+/**
+ * List interface to network tree.
+ *
+ * LocalNodeList is an adaptor class which provides and iterator
+ * interface to a subnet. The iterator traverses all underlying
+ * subnets recursively in depth-first (post-order) order. This
+ * iterator traverses only local nodes.
+ *
+ * This iterator is not used during Network update, since it is not
+ * thread safe.
+ *
+ * For a list interface that only accesses the leaves of a network
+ * tree, excluding the intermediate subnets, see class LocalLeafList
+ * and its iterator.
+ * LocalNodeList iterates only over local nodes.
+ * @see GlobalNodeList
+ */
 
-  class LocalNodeList
+class LocalNodeList
+{
+public:
+
+  class iterator
   {
-  public:
-
-    class iterator
-    {
-      friend class LocalNodeList;
-    public:
-      iterator():p_(){}
-    private:
-      iterator(vector<Node*>::iterator const &p):p_(p){}
-    public:
-      iterator operator++();
-
-      Node*    operator*();
-      Node const*  operator*() const;
-
-      bool operator==(const iterator&) const;
-      bool operator!=(const iterator&) const;
-
-    private:
-      vector<Node *>::iterator p_;  //!< iterator to the current node
-    };
-
-    LocalNodeList():root_(NULL){}
-    explicit LocalNodeList(Subnet &c):root_(&c){};
-
-    iterator begin() const;
-    iterator end()   const;
-
-    bool   empty()   const; //!< Returns true if no local nodes
-    size_t size()    const; //!< Number of (local) nodes in list
-
-    Subnet& get_root() const;
-    void set_root(Subnet &);
+    friend class LocalNodeList;
 
   private:
-    Subnet *root_;  //!< root of the network
+    //! Create iterator from pointer to Node in subnet
+    iterator(std::vector<Node*>::iterator const &node,
+             std::vector<Node*>::iterator const &list_end) :
+      current_node_(node), list_end_(list_end) {}
 
+  public:
+    iterator operator++();
+
+    Node*        operator*();
+    Node const*  operator*() const;
+
+    bool operator==(const iterator&) const;
+    bool operator!=(const iterator&) const;
+
+  private:
+    //! iterator to the current node in subnet
+    vector<Node *>::iterator current_node_;
+    vector<Node *>::iterator list_end_;
   };
 
-  inline 
-  bool LocalNodeList::empty() const
-  {
-    return root_->local_empty();
-  }
+  explicit LocalNodeList(Subnet &subnet) : subnet_(subnet) {}
 
-  inline
-  size_t LocalNodeList::size() const
-  {
-    return root_->local_size();
-  }
+  /**
+   * Return iterator pointing to first node in subnet.
+   *
+   * Depth-first/post-order traversal means the first node is
+   * the leftmost, bottommost node.
+   */
+  iterator begin() const;
 
-  inline
-  LocalNodeList::iterator LocalNodeList::end() const
-  {
-    Subnet *p=root_->get_parent();
-    return iterator(p == NULL ? root_->local_end()
-    			              : p->local_begin()+root_->get_lid());
-  }
+  /**
+   * Return iterator pointing to node past last node.
+   */
+  iterator end()   const;
 
-  inline
-  bool LocalNodeList::iterator::operator==(const iterator&i) const
-  {
-    return p_ == i.p_;
-  }
+  bool   empty()   const; //!< Returns true if no local nodes
+  size_t size()    const; //!< Number of (local) nodes in list
 
-  inline
-  bool LocalNodeList::iterator::operator!=(const iterator&i) const
-  {
-    return p_ != i.p_;
-  }
+  Subnet& get_subnet() const; //!< Return subnet wrapped by LocalNodeList
 
-  inline
-  Node* LocalNodeList::iterator::operator*()
-  {
-    return *p_;
-  }
+private:
+  Subnet& subnet_;  //!< root of the network
 
-  inline
-  Node const * LocalNodeList::iterator::operator*() const
-  {
-    return *p_;
-  }
+};
+
+inline
+bool LocalNodeList::empty() const
+{
+  return subnet_.local_empty();
+}
+
+inline
+size_t LocalNodeList::size() const
+{
+  return subnet_.local_size();
+}
+
+inline
+bool LocalNodeList::iterator::operator==(const iterator& i) const
+{
+  return current_node_ == i.current_node_;
+}
+
+inline
+bool LocalNodeList::iterator::operator!=(const iterator& i) const
+{
+  return current_node_ != i.current_node_;
+}
+
+inline
+Node* LocalNodeList::iterator::operator*()
+{
+  return *current_node_;
+}
+
+inline
+Node const * LocalNodeList::iterator::operator*() const
+{
+  return *current_node_;
+}
+
 }
 #endif
