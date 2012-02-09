@@ -74,17 +74,6 @@ namespace nest{
 
     bool has_proxies() const;
           
-    /** Index local child node (with range check).
-     * \note Index is neither lid nor gid.
-     * \throws std::out_of_range (implemented via \c std::vector)
-     */
-    Node * at(index) const;
-
-    /** Index local child node (without range check).
-     * @note Index is neither lid nor gid.
-     */
-    Node * operator[](index) const;
-
     size_t global_size() const;  //!< Returns total number of children.
     size_t local_size() const; //!< Returns number of childern in local process.
     bool   global_empty() const; //!< returns true if subnet is empty *globally*
@@ -252,18 +241,6 @@ namespace nest{
     return lid;
   }
   
-  inline
-  Node* Subnet::at(index i) const
-  {
-    return nodes_.at(i); //with range check
-  }
-
-  inline
-  Node* Subnet::operator [](index i) const
-  {
-    return nodes_[i]; //without range check
-  }
-
   inline
   vector<Node*>::iterator Subnet::local_begin()
   {
