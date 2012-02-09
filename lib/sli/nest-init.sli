@@ -1422,3 +1422,9 @@ def
 [/integertype /integertype] { true TimeCommunication_i_i_b } bind addtotrie
 def
 
+
+% can only be defined here because on bg processes.sli is not included
+statusdict /platform get (bg/p) eq
+{
+ /memory_thisjob {memory_thisjob_bgp} def
+} if
