@@ -221,6 +221,13 @@ namespace nest {
     index get_lid() const;
 
     /**
+     * Return the index to the node in the node array of the parent subnet.
+     * @note Since subnets no longer store non-local nodes, LIDs are no
+     *       longer identical to these indices.
+     */
+    index get_subnet_index() const;
+
+    /**
      * Return model ID of the node.
      * Returns the model ID of the model for this node.
      * Model IDs start with 0, Subnet always having ID 0.
@@ -713,6 +720,7 @@ namespace nest {
     void  set_lid_(index);         //!< Set local id, relative to the parent subnet
     void  set_parent_(Subnet *);   //!< Set pointer to parent subnet.
     void  set_gid_(index);         //!< Set global node id
+    void  set_subnet_index_(index);//!< Index into node array in subnet
 
     /** Return a new dictionary datum .
      *   
@@ -772,6 +780,7 @@ namespace nest {
    private:
     index    gid_;           //!< Global element id (within network).
     index    lid_;           //!< Local element id (within parent).
+    index    subnet_index_;  //!< Index of node in parent's node array
     
     /**
      * Model ID.
@@ -878,6 +887,12 @@ namespace nest {
   }
 
   inline
+  index Node::get_subnet_index() const
+  {
+    return subnet_index_;
+  }
+
+  inline
   void Node::set_gid_(index i)
   {
     gid_=i;
@@ -887,6 +902,12 @@ namespace nest {
   void Node::set_lid_(index i)
   {
     lid_=i;
+  }
+
+  inline
+  void Node::set_subnet_index_(index i)
+  {
+    subnet_index_ = i;
   }
 
   inline

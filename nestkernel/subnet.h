@@ -118,8 +118,8 @@ namespace nest{
      * Return the subnets's user label.
      * Each subnet can be given a user-defined string as a label, which
      * may be used to give a symbolic name to the node. From the SLI
-     * level, the FindNodes command may be used to find a subnet's
-     * addess from it's label.
+     * level, the GetNodes command may be used to find a subnet's
+     * GID from its label.
      */
     std::string get_label() const;
     
@@ -127,22 +127,10 @@ namespace nest{
      * Set the subnet's user label.
      * Each subnet can be given a user-defined string as a label, which
      * may be used to give a symbolic name to the node. From the SLI
-     * level, the FindNodes command may be used to find a subnet's
-     * addess from it's label. This sets the label for all nodes on the
-     * same level (i.e. for all threads) simulataneously
+     * level, the GetNodes command may be used to find a subnet's
+     * GID from its label.
      */
     void set_label(std::string const);
-
-    
-    /**
-     * Set the subnet's user label.
-     * Each subnet can be given a user-defined string as a label, which
-     * may be used to give a symbolic name to the node. From the SLI
-     * level, the FindNodes command may be used to find a subnet's
-     * addess from it's label. This does not set the label for the nodes
-     * on other threads.
-     */
-    void set_label_non_recursive(std::string const);
 
     /**
      * Set the subnet's custom dictionary.
@@ -170,7 +158,7 @@ namespace nest{
     thread get_children_vp() const;
     void set_children_vp(thread);
     
-    virtual bool allow_entry() const;
+    bool allow_entry() const;
 
   protected:
     void init_node_(const Node&) {}
@@ -187,7 +175,7 @@ namespace nest{
      * vector may be NULL. Note that all code must handle
      * this case gracefully.
      */
-    vector<Node *> nodes_;       //!< Pointer to child nodes.
+    vector<Node *> nodes_;
 
     /**
      * flag indicating if all children of this subnet have to
@@ -220,6 +208,7 @@ namespace nest{
       if (mid != last_mid_)
 	homogeneous_ = false;
     n->set_lid_(next_lid_);
+    n->set_subnet_index_(nodes_.size());
     nodes_.push_back(n);
     n->set_parent_(this);
     next_lid_++;

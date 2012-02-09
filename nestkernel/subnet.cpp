@@ -93,23 +93,24 @@ void nest::Subnet::get_dimensions_(std::vector<int> & dim) const
     {
       bool homog=true;
       for(size_t i=0; i< nodes_.size()-1; ++i)
-	{
-	  Subnet *c1=dynamic_cast<Subnet *>(nodes_.at(i));
-	  Subnet *c2=dynamic_cast<Subnet *>(nodes_.at(i+1));
+      {
+    	Subnet *c1=dynamic_cast<Subnet *>(nodes_.at(i));
+    	Subnet *c2=dynamic_cast<Subnet *>(nodes_.at(i+1));
 
-	  if(c1->size() != c2->size())
+	    if(c1->size() != c2->size())
 	    {
 	      homog=false;
 	      continue;
 	    }
-	}
+	  }
+
       // If homog is true, all child-subnets have the same size
       // and we go one level deeper.
       if(homog)
-	{
-	  Subnet *c=dynamic_cast<Subnet *>(nodes_.at(0));
-	  c->get_dimensions_(dim);
-	}
+	  {
+	    Subnet *c=dynamic_cast<Subnet *>(nodes_.at(0));
+	    c->get_dimensions_(dim);
+	  }
     }
 }
 
@@ -253,13 +254,8 @@ void nest::Subnet::set_label(std::string const l)
     Node* n = network()->get_node(get_gid(), t);
     Subnet* c = dynamic_cast<Subnet*>(n);
     assert(c);
-    c->set_label_non_recursive(l);
+    c->label_ = l;
   }
-}
-
-void nest::Subnet::set_label_non_recursive(std::string const l)
-{
-  label_=l;
 }
 
 bool nest::Subnet::allow_entry() const
