@@ -878,16 +878,14 @@ void nest::Communicator::communicate(const LocalNodeList& local_nodes, vector<in
 
   if ( np > 1 )
   {
-    size_t n_locals = local_nodes.size();
     vector<long_t> localgids;
-    localgids.reserve(n_locals);
-  
+
     for ( LocalNodeList::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
       localgids.push_back((*n)->get_gid());
 
     //get size of buffers
     std::vector<nest::int_t> n_gids(np);
-    n_gids[Communicator::rank_] = n_locals;
+    n_gids[Communicator::rank_] = localgids.size();
     communicate(n_gids);
       
     // Set up displacements vector.

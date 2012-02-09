@@ -40,95 +40,145 @@ namespace nest{
  * @see GlobalNodeList
  */
 
-class LocalNodeList
+template <typename ListIterator>
+class NodeList
 {
 public:
+  typedef ListIterator iterator;
 
-  class iterator
-  {
-    friend class LocalNodeList;
-
-  private:
-    //! Create iterator from pointer to Node in subnet
-    iterator(std::vector<Node*>::iterator const &node,
-             std::vector<Node*>::iterator const &list_end) :
-      current_node_(node), list_end_(list_end) {}
-
-  public:
-    iterator operator++();
-
-    Node*        operator*();
-    Node const*  operator*() const;
-
-    bool operator==(const iterator&) const;
-    bool operator!=(const iterator&) const;
-
-  private:
-    //! iterator to the current node in subnet
-    vector<Node *>::iterator current_node_;
-    vector<Node *>::iterator list_end_;
-  };
-
-  explicit LocalNodeList(Subnet &subnet) : subnet_(subnet) {}
+  explicit NodeList(Subnet &subnet) : subnet_(subnet) {}
 
   /**
    * Return iterator pointing to first node in subnet.
-   *
-   * Depth-first/post-order traversal means the first node is
-   * the leftmost, bottommost node.
+   * @node Must be specialized by derived class.
    */
-  iterator begin() const;
+  iterator begin() const { assert(false);
+                           return end(); }
 
   /**
    * Return iterator pointing to node past last node.
    */
-  iterator end()   const;
+  iterator end() const { return iterator(subnet_.local_end(),
+                                         subnet_.local_end()); }
 
-  bool   empty()   const; //!< Returns true if no local nodes
-  size_t size()    const; //!< Number of (local) nodes in list
+  //! Returns true if no local nodes
+  bool empty() const { return subnet_.local_empty(); }
 
-  Subnet& get_subnet() const; //!< Return subnet wrapped by LocalNodeList
+  //! Returns subnet wrapped by NodeList
+  Subnet& get_subnet() const { return subnet_; }
 
 private:
   Subnet& subnet_;  //!< root of the network
+};
+
+// ----------------------------------------------------------------------------
+
+class LocalNodeListIterator
+{
+  friend class NodeList<LocalNodeListIterator>;
+  friend class LocalLeafListIterator;
+
+  private:
+   //! Create iterator from pointer to Node in subnet
+   LocalNodeListIterator(std::vector<Node*>::iterator const &node,
+                         std::vector<Node*>::iterator const &list_end) :
+     current_node_(node), list_end_(list_end) {}
+   bool is_end_() const { return current_node_ == list_end_; }
+
+ public:
+   LocalNodeListIterator operator++();
+
+   Node*        operator*() { return *current_node_; }
+   Node const*  operator*() const { return *current_node_; }
+
+   bool operator==(const LocalNodeListIterator& i) const { return current_node_ == i.current_node_; }
+   bool operator!=(const LocalNodeListIterator& i) const { return not ( *this == i ); }
+
+ private:
+   //! iterator to the current node in subnet
+   vector<Node *>::iterator current_node_;
+   vector<Node *>::iterator list_end_;
 
 };
 
-inline
-bool LocalNodeList::empty() const
-{
-  return subnet_.local_empty();
-}
+template <>
+NodeList<LocalNodeListIterator>::iterator
+  NodeList<LocalNodeListIterator>::begin() const;
 
-inline
-size_t LocalNodeList::size() const
-{
-  return subnet_.local_size();
-}
+typedef NodeList<LocalNodeListIterator> LocalNodeList;
 
-inline
-bool LocalNodeList::iterator::operator==(const iterator& i) const
-{
-  return current_node_ == i.current_node_;
-}
+// ----------------------------------------------------------------------------
 
-inline
-bool LocalNodeList::iterator::operator!=(const iterator& i) const
+class LocalChildListIterator
 {
-  return current_node_ != i.current_node_;
-}
+  friend class NodeList<LocalChildListIterator>;
 
-inline
-Node* LocalNodeList::iterator::operator*()
-{
-  return *current_node_;
-}
+  private:
+   //! Create iterator from pointer to Node in subnet
+   LocalChildListIterator(std::vector<Node*>::iterator const &node,
+                          std::vector<Node*>::iterator const &list_end) :
+     current_node_(node), list_end_(list_end) {}
 
-inline
-Node const * LocalNodeList::iterator::operator*() const
+ public:
+   LocalChildListIterator operator++();
+
+   Node*        operator*() { return *current_node_; }
+   Node const*  operator*() const { return *current_node_; }
+
+   bool operator==(const LocalChildListIterator& i) const { return current_node_ == i.current_node_; }
+   bool operator!=(const LocalChildListIterator& i) const { return not ( *this == i ); }
+
+ private:
+   //! iterator to the current node in subnet
+   vector<Node *>::iterator current_node_;
+   vector<Node *>::iterator list_end_;
+};
+
+template <>
+NodeList<LocalChildListIterator>::iterator
+  NodeList<LocalChildListIterator>::begin() const;
+
+typedef NodeList<LocalChildListIterator> LocalChildList;
+
+// ----------------------------------------------------------------------------
+
+class LocalLeafListIterator
 {
-  return *current_node_;
-}
+  friend class NodeList<LocalLeafListIterator>;
+
+  private:
+   //! Create iterator from pointer to Node in subnet
+   LocalLeafListIterator(std::vector<Node*>::iterator const &node,
+                          std::vector<Node*>::iterator const &list_end) :
+     base_it_(node, list_end)
+   {
+     while ( not base_it_.is_end_() && not is_leaf_(*base_it_) )
+       ++base_it_;
+   }
+
+ public:
+   LocalLeafListIterator operator++();
+
+   Node*        operator*() { return *base_it_; }
+   Node const*  operator*() const { return *base_it_; }
+
+   bool operator==(const LocalLeafListIterator& i) const { return base_it_ == i.base_it_; }
+   bool operator!=(const LocalLeafListIterator& i) const { return not ( *this == i ); }
+
+ private:
+   LocalNodeListIterator base_it_;  //<! we use this one for the basic iteration
+
+   static bool is_leaf_(Node *n)  { return not dynamic_cast<Subnet*>(n); }
+
+};
+
+template <>
+NodeList<LocalLeafListIterator>::iterator
+  NodeList<LocalLeafListIterator>::begin() const;
+
+typedef NodeList<LocalLeafListIterator> LocalLeafList;
+
+
 
 }
 #endif

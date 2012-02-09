@@ -23,7 +23,6 @@
 #include "nest.h"
 #include "network.h"
 #include "nodelist.h"
-#include "leaflist.h"
 #include "interpret.h"
 #include "node.h"
 #include "subnet.h"
@@ -582,7 +581,6 @@ namespace nest
     }
     else
     {
-      result.reserve(localnodes.size());
       for(LocalNodeList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
         result.push_back(new IntegerDatum((*n)->get_gid()));
     }
@@ -650,15 +648,14 @@ namespace nest
     if (subnet == NULL)
       throw SubnetExpected();
  
-    assert(false && "GetLeaves currently off.");
-
-    //LeafList localnodes(*subnet);
+    LocalLeafList localnodes(*subnet);
     ArrayDatum result;
-/*
+
     if ( include_remote )
     {
+      assert(false && "Remote leaves collection not implemented.");
       vector<index> gids;
-      nest::Communicator::communicate(localnodes, gids);
+      //nest::Communicator::communicate(localnodes, gids);
       result.reserve(gids.size());
 
       for(vector<index>::iterator n = gids.begin(); n != gids.end(); ++n)
@@ -666,10 +663,10 @@ namespace nest
     }
     else
     {
-      for(LocalNodeList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
+      for(LocalLeafList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
         result.push_back(new IntegerDatum((*n)->get_gid()));
     }
-  */
+
     i->OStack.pop(2);
     i->OStack.push(result);
     i->EStack.pop();

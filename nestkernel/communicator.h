@@ -27,6 +27,7 @@
 #include <limits>
 
 #include "dictdatum.h"
+#include "nodelist.h"
 
 #ifdef HAVE_MPI
 // Do NOT include mpi.h in this header file, otherwise we get into
@@ -41,7 +42,7 @@
 namespace nest
 {
   class Network;
-  class LocalNodeList;
+ // class LocalNodeList;
 
   class Communicator
   {
