@@ -52,6 +52,9 @@ class StatusTestCase(unittest.TestCase):
 
         models = nest.Models()
 
+        # sli_neuron does not work under PyNEST
+        models.remove('sli_neuron')
+
         for m in models:        
             if nest.GetDefaults(m).has_key('V_m'):
                 nest.ResetKernel()
@@ -76,6 +79,9 @@ class StatusTestCase(unittest.TestCase):
 
         models = nest.Models()
 
+        # sli_neuron does not work under PyNEST
+        models.remove('sli_neuron')
+
         for m in models:        
             if nest.GetDefaults(m).has_key('V_m'):
                 nest.ResetKernel()
@@ -93,6 +99,9 @@ class StatusTestCase(unittest.TestCase):
 
         models = nest.Models()
 
+        # sli_neuron does not work under PyNEST
+        models.remove('sli_neuron')
+
         for m in models:        
             if nest.GetDefaults(m).has_key('V_m'):
                 nest.ResetKernel()
@@ -105,6 +114,9 @@ class StatusTestCase(unittest.TestCase):
         """SetStatus with list"""
 
         models = nest.Models()
+
+        # sli_neuron does not work under PyNEST
+        models.remove('sli_neuron')
 
         for m in models:        
             if nest.GetDefaults(m).has_key('V_m'):
@@ -119,6 +131,9 @@ class StatusTestCase(unittest.TestCase):
 
         models = nest.Models()
         
+        # sli_neuron does not work under PyNEST
+        models.remove('sli_neuron')
+
         for m in models:        
             if nest.GetDefaults(m).has_key('V_m'):
                 nest.ResetKernel()
@@ -131,6 +146,9 @@ class StatusTestCase(unittest.TestCase):
         """SetStatus of reversal and threshold potential """
 
         models = nest.Models()
+
+        # sli_neuron does not work under PyNEST
+        models.remove('sli_neuron')
 
         for m in models:
             if nest.GetDefaults(m).has_key('V_th') and nest.GetDefaults(m).has_key('E_L') and m != 'a2eif_cond_exp_HW' and m != 'mat2_psc_exp':

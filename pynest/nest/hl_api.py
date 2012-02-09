@@ -16,37 +16,12 @@ rules:
 
 4. Commands that return a GID must return it as list of GID(s).
 
-5. Commands that expect or return node addresses must indicate this in
-   their name, e.g. GetAddress(list) expects a list of GIDs and
-   returns a list of addresses.
-
-6. Like GIDs, addresses must also appear only in lists. Thus,
-   addresses and GIDs can be easily disambiguated:
-   
-   List of GIDs: [1,2,3,4]
-   List of addresses: [[1,2],[3,4]]
-
-7. When possible, loops over nodes should be propagated down to the
+5. When possible, loops over nodes should be propagated down to the
    SLI level.  This minimizes the number of Python<->SLI conversions
    and increases performance.  Loops in SLI are also faster than in
-   Python. Example:
-
-   instead of
-   
-   GetAddress(nodes):
-     GetOneAddress(n):
-        slipush(n)
-        slirun("GetAddress")
-     return map(GetOneAddress,nodes)
-
-   write
-
-   GetAddress(nodes):
-     slipush(nodes)
-     slirun("{GetAddress} map")
-     return slipop()
-     
-8. If you have a good reason, you may deviate from these guidelines.
+   Python. 
+        
+6. If you have a *very* good reason, you may deviate from these guidelines.
 
 Authors: Jochen Eppler, Marc-Oliver Gewaltig, Moritz Helias, Eilif Mueller
 """
@@ -256,7 +231,6 @@ def GetKernelStatus(keys = None):
     sr('/subnet GetDefaults')
     subnetdefaults = spp()
 
-    subnetdefaults["address"] = None
     subnetdefaults["frozen"] = None
     subnetdefaults["global_id"] = None
     subnetdefaults["local"] = None
@@ -413,8 +387,8 @@ def Create(model, n=1, params=None):
 
         
 def SetStatus(nodes, params, val=None) :
-    """ Set the parameters of nodes (identified by global ids or
-    addresses) or connections (identified by handles as returned by
+    """ Set the parameters of nodes (identified by global ids)
+    or connections (identified by handles as returned by
     FindConnections()) to params, which may be a single dictionary or
     a list of dictionaries. If val is given, params has to be the name
     of an attribute, which is set to val on the nodes/connections. val
@@ -447,7 +421,7 @@ def SetStatus(nodes, params, val=None) :
 
 def GetStatus(nodes, keys=None) :
     """Return the parameter dictionaries of the given list of nodes
-    (identified by global ids or addresses) or connections (identified
+    (identified by global ids) or connections (identified
     by handles as returned by FindConnections()). If keys is given, a
     list of values is returned instead. keys may also be a list, in
     which case the returned list contains lists of values."""
@@ -474,22 +448,6 @@ def GetStatus(nodes, keys=None) :
    
     sr(cmd)
 
-    return spp()
-
-
-def GetAddress(gids) :
-    """Return the addresses of one or more nodes."""
-
-    sps(gids)
-    sr("{GetAddress} Map")
-    return spp()
-
-
-def GetGID(addresses) :
-    """Return the global ids of one or more nodes."""
-
-    sps(addresses)
-    sr("{GetGID} Map")
     return spp()
 
 
@@ -783,7 +741,7 @@ def PrintNetwork(depth=1, subnet=None) :
         subnet = CurrentSubnet()
 
     sps(subnet[0])
-    sr("GetAddress %i PrintNetwork" % depth)
+    sr("%i PrintNetwork" % depth)
 
 
 def CurrentSubnet() :
@@ -796,7 +754,6 @@ def CurrentSubnet() :
 def ChangeSubnet(subnet) :
     """Make subnet the current subnet."""
 
-    subnet = GetAddress(subnet)
     sps(subnet[0])
     sr("ChangeSubnet")
 
@@ -845,18 +802,6 @@ def GetNetwork(gid, depth):
     sps(depth)
     sr("GetNetwork")
     return spp()
-
-
-def GetNodeAt(gidlist,adr):
-    """
-    For each subnet in gidlist, get the gid of the node at position adr.
-    """
-    def get_node(subnet, adr):
-        if type(subnet) == types.IntType:
-            subnet= GetAddress([subnet])
-        return GetGID([subnet[0]+adr])[0]
-    
-    return map(lambda n: get_node(n,adr),flatten(gidlist))
 
 
 def BeginSubnet(label=None, params=None):

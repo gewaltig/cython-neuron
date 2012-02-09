@@ -59,18 +59,6 @@ class NetworkTestCase(unittest.TestCase):
        self.assertEqual(len(nest.GetNetwork(sn1,2)[1]), len(nest.GetNetwork(sn2,1)))
 
 
-   def test_GetAddres_subnet(self):
-      """Subnets"""
-
-      nest.ResetKernel()
-      for i in range(10):
-         nest.BeginSubnet(str(i))
-
-      self.assertEqual(nest.CurrentSubnet(),[10])
-      n=nest.Create('iaf_neuron')
-      self.assertEqual(nest.GetAddress(n),[[0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
-      
-
 def suite():
 
     suite = unittest.makeSuite(NetworkTestCase,'test')
