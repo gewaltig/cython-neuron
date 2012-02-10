@@ -161,8 +161,11 @@ public:
    * Collect GIDs for all nodes in a given node list across processes.
    * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
    */
-  template <typename NodeListType>
-  static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes);
+   template <typename NodeListType>
+      static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes);
+   template <typename NodeListType>
+      static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, 
+				DictionaryDatum params, bool remote);
 
   static void communicate_connector_properties(DictionaryDatum& dict);
 
@@ -276,12 +279,15 @@ public:
                           std::vector<int>& displacements);
   static void communicate(std::vector<int_t>&) {}
 
-  /**
+   /**
    * Collect GIDs for all nodes in a given node list across processes.
    * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
    */
-  template <typename NodeListType>
-  static void communicate(const NodeListType& local_nodes, std::vector<index>& gids);
+   template <typename NodeListType>
+      static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes);
+   template <typename NodeListType>
+      static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, 
+				DictionaryDatum params, bool remote);
 
   static void communicate_connector_properties(DictionaryDatum&) {}
 

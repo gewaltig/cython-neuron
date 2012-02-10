@@ -1130,7 +1130,7 @@ def
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /* BeginDocumentation
-   Name: SubsetQ - Test if one dictinary is a subset of another
+   Name: SubsetQ - Test if one dictionary is a subset of another
 
    Synopsis:
    dict1 dict2 SubsetQ -> bool
@@ -1176,180 +1176,167 @@ def
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /* BeginDocumentation
-   Name: GetNodes - Return IDs of all nodes of a subnet.
+   Name: GetGlobalNodes - Return IDs of all nodes of a subnet that fulfill the
+         conditions given in the dictionary, or all nodes if no dictionary given.
    Synopsis:
-     gid   GetNodes -> [gid1 ... gidn]
+     gid [<<dict>>]  GetGlobalNodes -> [gid1 ... gidn]
    Parameters:
-     gid     - id of a subnet
-     [gid..] - Array with the global ids of all child nodes.
+     gid      - id of a subnet
+     <<dict>> - Dictionary of selection properties
+     [gid..]  - Array with the global ids of all child nodes.
    Description:
    This function recursively traverses a subnet and returns the global
-   ids of all child nodes in post-order.
+   ids of all child nodes in increasing order of gid. If a dictionary
+   is provided, only those nodes which fulfill the given criteria are
+   returned.
 
    The returned Nodes include the intermediate subnets. For a variant
-   of this command that excludes the subnets, see "GetLeaves".
+   of this command that excludes the subnets, see "GetGlobalLeaves".
 
-   Author: Marc-Oliver Gewaltig
+   Author: Marc-Oliver Gewaltig, Abigail Morrison
 
-   SeeAlso: GetLocalNodes, GetLeaves, GetChildren
+   SeeAlso: GetLocalNodes, GetGlobalLeaves, GetGlobalChildren
 */
 
-/GetNodes trie
-[/integertype] { false GetNodes_i_b } bind addtotrie
+/GetGlobalNodes trie
+[/integertype /dictionarytype] { false GetNodes_i_D_b } bind addtotrie
+[/integertype] { << >> false GetNodes_i_D_b } bind addtotrie
 def
 
 
 /* BeginDocumentation
-   Name: GetLocalNodes - Return IDs of all local nodes of a subnet.
+   Name: GetLocalNodes - Return IDs of all local nodes of a subnet that fulfill the
+         conditions given in the dictionary, or all nodes if no dictionary given.
    Synopsis:
      gid   GetLocalNodes -> [gid1 ... gidn]
    Parameters:
      gid     - id of a subnet
+     <<dict>> - Dictionary of selection properties	
      [gid..] - Array with the global ids of all local child nodes.
    Description:
-   This function is equivalent to GetNodes, but returns only those
+   This function is equivalent to GetGlobalNodes, but returns only those
    nodes that are local to the MPI process executing the command.
 
-   Author: Hans Ekkehard Plesser
+   Author: Hans Ekkehard Plesser, Abigail Morrison
 
-   SeeAlso: GetNodes, GetLocalLeaves, GetLocalChildren
+   SeeAlso: GetGlobalNodes, GetLocalLeaves, GetLocalChildren
 */
 /GetLocalNodes trie
-[/integertype] { true GetNodes_i_b } bind addtotrie
+[/integertype /dictionarytype] { true GetNodes_i_D_b } bind addtotrie
+[/integertype] { << >> true GetNodes_i_D_b} bind addtotrie
 def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /* BeginDocumentation
-   Name: GetChildren - Return IDs of all immediate child nodes of a subnet.
+   Name: GetGlobalChildren - Return IDs of all immediate child nodes of a subnet
+         that fulfill the conditions given in the dictionary, or all nodes if no 
+	 dictionary given.
    Synopsis:
-   gid   GetChildren -> [gid1 ... gidn]
+   gid   GetGlobalChildren -> [gid1 ... gidn]
+
    Parameters:
    gid     - id of a subnet
+   <<dict>> - Dictionary of selection properties	
    [gid..] - Array with the global ids of all child nodes.
 
    Description:
-   This function returns the ids of all children of a subnet.
+   This function returns the ids of all children of a subnet in increasing order  
+   of gid. If a dictionary is provided, only those nodes which fulfill the given 
+   criteria are returned.
 
-   Author: Marc-Oliver Gewaltig.
+   Author: Marc-Oliver Gewaltig, Abigail Morrison
 
-   SeeAlso: GetLocalChildren, GetNodes, GetLeaves
+   SeeAlso: GetLocalChildren, GetGlobalNodes, GetGlobalLeaves
 */
 
-/GetChildren trie
-[/integertype] { false GetChildren_i_b } bind addtotrie
+/GetGlobalChildren trie
+[/integertype /dictionarytype] { false GetChildren_i_D_b } bind addtotrie
+[/integertype] { << >> false GetChildren_i_D_b} bind addtotrie
 def
 
 /* BeginDocumentation
-   Name: GetLocalChildren - Return IDs of all immediate local child nodes of a subnet.
+   Name: GetLocalChildren - Return IDs of all immediate local child nodes of a subnet 
+   	 that fulfill the conditions given in the dictionary, or all children if no 
+	 dictionary given.
    Synopsis:
    gid   GetLocalChildren -> [gid1 ... gidn]
    Parameters:
    gid     - id of a subnet
+   <<dict>> - Dictionary of selection properties	
    [gid..] - Array with the global ids of all local child nodes.
 
    Description:
-   This function returns the ids of all children of a subnet belonging
-   to the MPI process executing the command.
+   This function is equivalent to GetGlobalChildren, but returns only the ids of all 
+   children of a subnet belonging to the MPI process executing the command.
 
-   Author: Hans Ekkehard Plesser.
+   Author: Hans Ekkehard Plesser, Abigail Morrison
 
-   SeeAlso: GetChildren, GetLocalNodes, GetLocalLeaves
+   SeeAlso: GetGlobalChildren, GetLocalNodes, GetLocalLeaves
 */
 
 /GetLocalChildren trie
-[/integertype] { true GetChildren_i_b } bind addtotrie
+[/integertype /dictionarytype] { true GetChildren_i_D_b } bind addtotrie
+[/integertype] { << >> true GetChildren_i_D_b } bind addtotrie
 def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /* BeginDocumentation
-   Name: GetLeaves - Return IDs of all leaves of a subnet.
+   Name: GetGlobalLeaves - Return IDs of all leaves of a subnet that fulfill the 
+   	 conditions given in the dictionary, or all leaves if no dictionary given.
    Synopsis:
-   gid   GetLeaves -> [gid1 ... gidn]
+   gid   GetGlobalLeaves -> [gid1 ... gidn]
    Parameters:
    gid     - id of a subnet
+   <<dict>> - Dictionary of selection properties	
    [gid..] - Array with the global ids of all leaf nodes.
 
    Description:
    This function recursively traverses a subnet and returns the global
-   ids of all leaf nodes in post-order. Note that this is the standard
-   NEST counting order for traversing multidimensional (nested)
-   subnets, for example, those that were created using
-   "LayoutNetwork".  (E.g. twodimensional layers).
+   ids of all leaf nodes in increasing order of gid.  If a dictionary is provided, 
+   only those nodes which fulfill the given criteria are returned.
 
    The returned nodes DO NOT include the intermediate subnets. For a
    variant of this command that also returns the subnets, see
-   "GetNodes".
+   "GetGlobalNodes".
 
-   Author: Ruediger Kupper
+   Author: Ruediger Kupper, Abigail Morrison
 
    FirstVersion: 12.3.2003
 
-   SeeAlso: GetLocalLeaves, GetNodes, GetChildren
+   SeeAlso: GetLocalLeaves, GetGlobalNodes, GetGlobalChildren
 */
 
-/GetLeaves trie
-[/integertype] { false GetLeaves_i_b } bind addtotrie
+/GetGlobalLeaves trie
+[/integertype /dictionarytype] { false GetLeaves_i_D_b } bind addtotrie
+[/integertype] { << >> false GetLeaves_i_D_b } bind addtotrie
 def
 
 /* BeginDocumentation
-   Name: GetLocalLeaves - Return IDs of all local leaves of a subnet.
+   Name: GetLocalLeaves - Return IDs of all local leaves of a subnet that fulfill the 
+   	 conditions given in the dictionary, or all leaves if no dictionary given.
    Synopsis:
    gid   GetLocalLeaves -> [gid1 ... gidn]
    Parameters:
    gid     - id of a subnet
+   <<dict>> - Dictionary of selection properties	
    [gid..] - Array with the global ids of all local leaf nodes.
 
    Description:
-   This function does the same as GetLeaves, but returns only the
+   This function does the same as GetGlobalLeaves, but returns only the
    nodes local to the MPI process executing the program.
 
-   Author: Hans Ekkehard Plesser
+   Author: Hans Ekkehard Plesser, Abigail Morrison
 
-   SeeAlso: GetLeaves, GetLocalNodes, GetLocalChildren
+   SeeAlso: GetGlobalLeaves, GetLocalNodes, GetLocalChildren
 */
 
 /GetLocalLeaves trie
-[/integertype] { true GetLeaves_i_b } bind addtotrie
+[/integertype /dictionarytype] { true GetLeaves_i_D_b } bind addtotrie
+[/integertype] { << >> GetLeaves_i_D_b } bind addtotrie
 def
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-/* BeginDocumentation
-   Name: FindNodes - Find all nodes with a certain property.
-
-   Synopsis:
-   gid <<dict>> FindNodes -> [adr1 ... adrn]
-
-   Parameters:
-   gid      - Global address of the subnet to search in
-   <<dict>> - Dictionary with desired properties.
-
-   Description:
-   Iterates through the specified subnet and compares the status dictionary of
-   each child with the specified property list. The return value is an array
-   with the GIDs of all nodes which matched the list of properties.
-
-   SeeAlso: SubsetQ
-*/
-
-/FindNodes
-[/integertype /dictionarytype]
-{
-   << >> begin
-  /properties Set
-  [
-     exch % get gid on top
-     GetChildren
-     {
-       dup
-       GetStatus properties SubsetQ not
-       { pop } if
-     } forall
-  ]
-  end
-} bind def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

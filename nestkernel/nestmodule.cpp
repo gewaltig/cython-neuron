@@ -558,12 +558,13 @@ namespace nest
     i->EStack.pop();
   }
 
-  void NestModule::GetNodes_i_bFunction::execute(SLIInterpreter *i) const
+  void NestModule::GetNodes_i_D_bFunction::execute(SLIInterpreter *i) const
   {
-    i->assert_stack_load(2);
+    i->assert_stack_load(3);
 
     const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
-    const index node_id        = getValue<long>(i->OStack.pick(1));
+    const DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(1));
+    const index node_id        = getValue<long>(i->OStack.pick(2));
 
     Subnet *subnet = dynamic_cast<Subnet *>(get_network().get_node(node_id));     
     if (subnet==NULL)
@@ -572,31 +573,24 @@ namespace nest
     LocalNodeList localnodes(*subnet);
     ArrayDatum result;
 
-    if ( include_remote )
-    {
-      vector<Communicator::NodeAddressingData> globalnodes;
-      nest::Communicator::communicate(localnodes, globalnodes);
-      result.reserve(globalnodes.size());
-      for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
-        result.push_back(new IntegerDatum(n->get_gid()));
-    }
-    else
-    {
-      for(LocalNodeList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
-        result.push_back(new IntegerDatum((*n)->get_gid()));
-    }
+    vector<Communicator::NodeAddressingData> globalnodes;
+    nest::Communicator::communicate(localnodes, globalnodes, params, include_remote);
+    result.reserve(globalnodes.size());
+    for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
+      result.push_back(new IntegerDatum(n->get_gid()));
           
-    i->OStack.pop(2);
+    i->OStack.pop(3);
     i->OStack.push(result);
     i->EStack.pop();
   }
 
-  void NestModule::GetChildren_i_bFunction::execute(SLIInterpreter *i) const
+  void NestModule::GetChildren_i_D_bFunction::execute(SLIInterpreter *i) const
   {
-    i->assert_stack_load(2);
+    i->assert_stack_load(3);
 
     const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
-    const index node_id        = getValue<long>(i->OStack.pick(1));
+    const DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(1));
+    const index node_id        = getValue<long>(i->OStack.pick(2));
 
     Subnet *subnet = dynamic_cast<Subnet *>(get_network().get_node(node_id));     
     if (subnet == NULL)
@@ -605,32 +599,24 @@ namespace nest
     LocalChildList local_children(*subnet);
     ArrayDatum result;
 
-    if ( include_remote )
-    {
-      vector<Communicator::NodeAddressingData> global_children;
-      nest::Communicator::communicate(local_children, global_children);
-      result.reserve(global_children.size());
-      for(vector<Communicator::NodeAddressingData>::iterator n = global_children.begin(); n != global_children.end(); ++n)
-        result.push_back(new IntegerDatum(n->get_gid()));
-    }
-    else
-    {
-      for ( LocalChildList::iterator n = local_children.begin() ;
-            n != local_children.end() ; ++n )
-        result.push_back(new IntegerDatum((*n)->get_gid()));
-    }
-
-    i->OStack.pop(2);
+    vector<Communicator::NodeAddressingData> global_children;
+    nest::Communicator::communicate(local_children, global_children, params, include_remote);
+    result.reserve(global_children.size());
+    for(vector<Communicator::NodeAddressingData>::iterator n = global_children.begin(); n != global_children.end(); ++n)
+      result.push_back(new IntegerDatum(n->get_gid()));
+    
+    i->OStack.pop(3);
     i->OStack.push(result);
     i->EStack.pop();
   }
 
-  void NestModule::GetLeaves_i_bFunction::execute(SLIInterpreter *i) const
+  void NestModule::GetLeaves_i_D_bFunction::execute(SLIInterpreter *i) const
   {
-    i->assert_stack_load(2);
+    i->assert_stack_load(3);
 
     const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
-    const index node_id        = getValue<long>(i->OStack.pick(1));
+     const DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(1));
+    const index node_id        = getValue<long>(i->OStack.pick(2));
 
     Subnet *subnet = dynamic_cast<Subnet *>(get_network().get_node(node_id));     
     if (subnet == NULL)
@@ -639,22 +625,14 @@ namespace nest
     LocalLeafList localnodes(*subnet);
     ArrayDatum result;
 
-    if ( include_remote )
-    {
-      vector<Communicator::NodeAddressingData> global_nodes;
-      nest::Communicator::communicate(localnodes, global_nodes);
-      result.reserve(global_nodes.size());
+    vector<Communicator::NodeAddressingData> global_nodes;
+    nest::Communicator::communicate(localnodes, global_nodes, params, include_remote);
+    result.reserve(global_nodes.size());
 
-      for(vector<Communicator::NodeAddressingData>::iterator n = global_nodes.begin(); n != global_nodes.end(); ++n)
-        result.push_back(new IntegerDatum(n->get_gid()));
-    }
-    else
-    {
-      for ( LocalLeafList::iterator n = localnodes.begin() ; n != localnodes.end() ; ++n )
-        result.push_back(new IntegerDatum((*n)->get_gid()));
-    }
+    for(vector<Communicator::NodeAddressingData>::iterator n = global_nodes.begin(); n != global_nodes.end(); ++n)
+      result.push_back(new IntegerDatum(n->get_gid()));
 
-    i->OStack.pop(2);
+    i->OStack.pop(3);
     i->OStack.push(result);
     i->EStack.pop();
   }
@@ -1516,9 +1494,9 @@ namespace nest
     // register interface functions with interpreter
     i->createcommand("ChangeSubnet",    &changesubnet_ifunction);
     i->createcommand("CurrentSubnet",   &currentsubnetfunction);
-    i->createcommand("GetNodes_i_b",    &getnodes_i_bfunction);
-    i->createcommand("GetLeaves_i_b",   &getleaves_i_bfunction);
-    i->createcommand("GetChildren_i_b", &getchildren_i_bfunction);
+    i->createcommand("GetNodes_i_D_b",    &getnodes_i_D_bfunction);
+    i->createcommand("GetLeaves_i_D_b",   &getleaves_i_D_bfunction);
+    i->createcommand("GetChildren_i_D_b", &getchildren_i_D_bfunction);
 
     i->createcommand("SetStatus_id", &setstatus_idfunction);
     i->createcommand("SetStatus_CD", &setstatus_CDfunction);

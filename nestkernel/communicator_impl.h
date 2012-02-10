@@ -60,74 +60,164 @@ void nest::Communicator::communicate_Allgatherv(std::vector<T>& send_buffer,
 }
 
 template <typename NodeListType>
-void nest::Communicator::communicate(const NodeListType& local_nodes,
-                                     vector<NodeAddressingData>& all_nodes)
-{
-  size_t np = Communicator::num_processes_;
-
-  if ( np > 1 )
+    void Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes)
   {
-    vector<long_t> localnodes;
-
-    for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
-    {
-      localnodes.push_back((*n)->get_gid());
-      localnodes.push_back(((*n)->get_parent())->get_gid());
-      localnodes.push_back((*n)->get_vp());
-    }
-
-    //get size of buffers
-    std::vector<nest::int_t> n_nodes(np);
-    n_nodes[Communicator::rank_] = localnodes.size();
-    communicate(n_nodes);
-
-    // Set up displacements vector.
-    std::vector<int> displacements(np,0);
-
-    for ( size_t i = 1; i < np; ++i )
-      displacements.at(i) = displacements.at(i-1)+n_nodes.at(i-1);
-
-    // Calculate sum of global connections.
-    size_t n_globals =
-        std::accumulate(n_nodes.begin(),n_nodes.end(), 0);
-    assert(n_globals % 3 == 0);
-    vector<long_t> globalnodes;
-    if (n_globals != 0)
-    {
-      globalnodes.resize(n_globals,0L);
-      communicate_Allgatherv<nest::long_t>(localnodes, globalnodes, displacements, n_nodes);
-    }
-    //Create unflattened vector
-    for ( size_t i = 0; i < n_globals -2; i +=3)
-      all_nodes.push_back(NodeAddressingData(globalnodes[i],globalnodes[i+1],globalnodes[i+2]));
-
-    //get rid of any multiple entries
-    std::sort(all_nodes.begin(), all_nodes.end());
-    vector<NodeAddressingData>::iterator it;
-    it = unique(all_nodes.begin(), all_nodes.end());
-    all_nodes.resize(it - all_nodes.begin());
+    DictionaryDatum dict = DictionaryDatum(new Dictionary);
+    communicate(local_nodes, all_nodes, dict, true);
   }
-  else
-  {
-    for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
-      all_nodes.push_back(NodeAddressingData((*n)->get_gid(), ((*n)->get_parent())->get_gid(), (*n)->get_vp()));
-    std::sort(all_nodes.begin(),all_nodes.end());
-  }
-}
 
-#else
 
 template <typename NodeListType>
-void nest::Communicator::communicate(const NodeListType& local_nodes, std::vector<index>& gids)
-{
-  std::vector<index> localgids;
-  for ( typename NodeListType::iterator n = local_nodes.begin() ; n != local_nodes.end() ; ++n)
-    localgids.push_back((*n)->get_gid());
+    void Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes, 
+				   DictionaryDatum params, bool remote)
+  {
+    size_t np = Communicator::num_processes_;
 
-  std::sort(localgids.begin(),localgids.end());
-  gids.resize(localgids.size(),0);
-  gids.swap(localgids);
+    if ( np > 1 && remote)
+    {
+      vector<long_t> localnodes;
+      if (params->empty())
+	{
+	  for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+	    {
+	      localnodes.push_back((*n)->get_gid());
+	      localnodes.push_back(((*n)->get_parent())->get_gid());
+	      localnodes.push_back((*n)->get_vp());
+	    }
+	} else {
+	  for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+	    {
+	      //select those nodes fulfilling the key/value pairs of the dictionary
+	      bool match = true;
+	      DictionaryDatum node_status = DictionaryDatum(new Dictionary);
+	      (*n)->get_status(node_status);
+	      for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
+		{
+		  std::cout << i->first << " " << i->second << std::endl;
+		  const Token token = node_status->lookup(i->first);
+		  std::cout << token << std::endl;
+		  if ((token == params->getvoid()) || (token != i->second))
+		    {
+		      match = false;
+		      break;
+		    }
+		}
+		  if (match)
+		    {
+		      localnodes.push_back((*n)->get_gid());
+		      localnodes.push_back(((*n)->get_parent())->get_gid());
+		      localnodes.push_back((*n)->get_vp());
+		    }
+	    }
+	}
+
+      //get size of buffers
+      std::vector<nest::int_t> n_nodes(np);
+      n_nodes[Communicator::rank_] = localnodes.size();
+      communicate(n_nodes);
+
+      // Set up displacements vector.
+      std::vector<int> displacements(np,0);
+
+      for ( size_t i = 1; i < np; ++i )
+        displacements.at(i) = displacements.at(i-1)+n_nodes.at(i-1);
+
+      // Calculate sum of global connections.
+      size_t n_globals =
+        std::accumulate(n_nodes.begin(),n_nodes.end(), 0);
+      assert(n_globals % 3 == 0);   
+      vector<long_t> globalnodes;
+      if (n_globals != 0)
+      {
+        globalnodes.resize(n_globals,0L);
+        communicate_Allgatherv<nest::long_t>(localnodes, globalnodes, displacements, n_nodes);
+      }
+      //Create unflattened vector
+      for ( size_t i = 0; i < n_globals -2; i +=3)
+	all_nodes.push_back(NodeAddressingData(globalnodes[i],globalnodes[i+1],globalnodes[i+2]));
+      
+      //get rid of any multiple entries
+      std::sort(all_nodes.begin(), all_nodes.end());
+      vector<NodeAddressingData>::iterator it;
+      it = unique(all_nodes.begin(), all_nodes.end());
+      all_nodes.resize(it - all_nodes.begin());
+    }
+    else   //on one proc or not including remote nodes
+    {
+      if (params->empty())
+	{
+	  for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+	    all_nodes.push_back(NodeAddressingData((*n)->get_gid(), ((*n)->get_parent())->get_gid(), (*n)->get_vp()));
+	}
+      else {
+	//select those nodes fulfilling the key/value pairs of the dictionary
+	for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+	  {
+	    bool match = true;
+	    DictionaryDatum node_status = DictionaryDatum(new Dictionary);
+	    (*n)->get_status(node_status);
+	    node_status->info(std::cout);
+	    for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
+	      {
+		std::cout << i->first << " " << i->second << std::endl;
+		const Token token = node_status->lookup(i->first);
+		std::cout << token << std::endl;
+		if ((token == params->getvoid()) || (token !=i->second))
+		    {
+		      match = false;
+		      break;
+		    }
+	      }
+	    if (match)
+	      all_nodes.push_back(NodeAddressingData((*n)->get_gid(), ((*n)->get_parent())->get_gid(), (*n)->get_vp()));
+	  }
+      }
+      std::sort(all_nodes.begin(),all_nodes.end());
+    }
+  }
 }
 
+
+#else //HAVE_MPI
+
+  template <typename NodeListType>
+    void Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes)
+  {
+    DictionaryDatum dict = DictionaryDatum(new Dictionary);
+    communicate(local_nodes, all_nodes, dict, true);
+  }
+
+  template <typename NodeListType>
+    void Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes,
+				    DictionaryDatum params, bool remote)
+  {
+
+    if (params->empty())
+	{
+	  for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+	    all_nodes.push_back(NodeAddressingData((*n)->get_gid(), ((*n)->get_parent())->get_gid(), (*n)->get_vp()));
+	}
+      else {
+	//select those nodes fulfilling the key/value pairs of the dictionary
+	for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+	  {
+	    bool match = true;
+	    DictionaryDatum node_status = DictionaryDatum(new Dictionary);
+	    (*n)->get_status(node_status);
+	    for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
+	      {
+		const Token token = node_status->lookup(i->first);
+		if ((token == params->getvoid()) || (token != params->lookup(i->first)))
+		    {
+		      match = false;
+		      break;
+		    }
+	      }
+	    if (match)
+	      all_nodes.push_back(NodeAddressingData((*n)->get_gid(), ((*n)->get_parent())->get_gid(), (*n)->get_vp()));
+	  }
+      }
+     std::sort(all_nodes.begin(),all_nodes.end());
+  }
 
 #endif
