@@ -75,17 +75,16 @@ namespace nest {
   /* BeginDocumentation
      Name: Node - General properties of all nodes.
      Parameters:
-     address    arraytype   - The fully qualified address of the node in the network tree (cf. global_id, local_id)
      frozen     booltype    - Whether the node is updated during simulation
-     global_id  integertype - The global id of the node (cf. address, local_id)
+     global_id  integertype - The global id of the node (cf. local_id)
      local      booltype    - Whether the node is available on the local process
-     local_id   integertype - The id of the node in the current  (cf. address, global_id)
+     local_id   integertype - The id of the node in the current  (cf. global_id)
      model      literaltype - The model type the node was created from 
      parent     integertype - The global id of the parent subnet
      state      integertype - The state of the node (see the help on elementstates for details)
      thread     integertype - The id of the thread the node is assigned to (valid locally)
      vp         integertype - The id of the virtual process the node is assigned to (valid globally)
-     SeeAlso: GetStatus, SetStatus, elementstates, GetAddress, GetGID
+     SeeAlso: GetStatus, SetStatus, elementstates
    */
   
   

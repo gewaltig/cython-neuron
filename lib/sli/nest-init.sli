@@ -48,24 +48,11 @@ statusdict /prgdocdir get (/examples/FacetsBenchmarks) join addpath
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-/ChangeSubnet_a
-{
-  GetGID ChangeSubnet_i
-} def
-
-/ChangeSubnet trie
-[/arraytype] /ChangeSubnet_a load addtotrie
-[/integertype] /ChangeSubnet_i load addtotrie
-def
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 % add new functions to trie if it exists, else create new
 /SetStatus dup lookup not
 {
   trie
 } if
-[/arraytype /dictionarytype] { exch GetGID exch SetStatus_id } addtotrie
 [/integertype /dictionarytype] /SetStatus_id load addtotrie
 [/connectiontype /dictionarytype] /SetStatus_CD load addtotrie
 def
@@ -75,7 +62,6 @@ def
 {
   trie
 } if
-[/arraytype]  { GetGID GetStatus_i } addtotrie
 [/integertype] /GetStatus_i load addtotrie
 [/connectiontype] /GetStatus_C load addtotrie
 def

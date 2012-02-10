@@ -669,8 +669,6 @@ namespace nest
 
      Description:
      This function returns the local node ID of a node within its parent subnet.
-
-     SeeAlso: GetAddress, GetGID
   */
   /*
   void NestModule::GetLIDFunction::execute(SLIInterpreter *i) const
@@ -1597,7 +1595,6 @@ namespace nest
   }
 #endif
 
-
   void NestModule::init(SLIInterpreter *i)
   {
     ConnectionType.settypename("connectiontype");
@@ -1611,7 +1608,7 @@ namespace nest
     net_->calibrate_clock();
       
     // register interface functions with interpreter
-    i->createcommand("ChangeSubnet_i",  &changesubnet_ifunction);
+    i->createcommand("ChangeSubnet",    &changesubnet_ifunction);
     i->createcommand("CurrentSubnet",   &currentsubnetfunction);
     i->createcommand("GetNodes_i_b",    &getnodes_i_bfunction);
     i->createcommand("GetLeaves_i_b",   &getleaves_i_bfunction);
