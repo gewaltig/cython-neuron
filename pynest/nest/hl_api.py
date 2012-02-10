@@ -455,9 +455,6 @@ def GetLID(gid) :
     """
     Return the local id of a node with gid.
     GetLID(gid) -> lid
-    Example:
-      gid=GetGID([[1,2,n]])
-      GetLID(gid) -> n
     """
     if len(gid) > 1:
         raise NESTError("Can only return the local ID of one node.")
@@ -747,7 +744,7 @@ def PrintNetwork(depth=1, subnet=None) :
 def CurrentSubnet() :
     """Returns the global id of the current subnet."""
 
-    sr("CurrentSubnet GetGID")
+    sr("CurrentSubnet")
     return [spp()]
 
 
