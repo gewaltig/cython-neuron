@@ -927,10 +927,10 @@ void Network::divergent_connect(index source_id, const TokenArray target_ids, co
   {
     message(SLIInterpreter::M_INFO, "DivergentConnect", "Source ID is a subnet; I will iterate it.");
     
-    LocalNodeList source_nodes(*source_comp);
+    // collect all leaves in source subnet, then divergent-connect each leaf
+    LocalLeafList source_nodes(*source_comp);
     vector<index> source_gids;
     nest::Communicator::communicate(source_nodes,source_gids);
-
     for(vector<index>::iterator src=source_gids.begin(); src!= source_gids.end(); ++src)
       divergent_connect(*src, target_ids, weights, delays, syn);
 
@@ -1062,9 +1062,12 @@ void Network::divergent_connect(index source_id, DictionaryDatum pars, index syn
   {
     message(SLIInterpreter::M_INFO, "DivergentConnect", "Source ID is a subnet; I will iterate it.");
     
-    LocalNodeList source_nodes(*source_comp);
-    for(LocalNodeList::iterator src=source_nodes.begin(); src!= source_nodes.end(); ++src)
-      divergent_connect((*src)->get_gid(), pars, syn);
+    // collect all leaves in source subnet, then divergent-connect each leaf
+    LocalLeafList source_nodes(*source_comp);
+    vector<index> source_gids;
+    nest::Communicator::communicate(source_nodes,source_gids);
+    for(vector<index>::iterator src=source_gids.begin(); src!= source_gids.end(); ++src)
+       divergent_connect(*src, pars, syn);
 
     return;
   }
@@ -1138,7 +1141,8 @@ void Network::random_divergent_connect(index source_id, const TokenArray target_
   {
     message(SLIInterpreter::M_INFO, "RandomDivergentConnect", "Source ID is a subnet; I will iterate it.");
     
-    LocalNodeList source_nodes(*source_comp);
+    // collect all leaves in source subnet, then divergent-connect each leaf
+    LocalLeafList source_nodes(*source_comp);
     vector<index> source_gids;
     nest::Communicator::communicate(source_nodes,source_gids);
 
@@ -1201,23 +1205,14 @@ void Network::convergent_connect(const TokenArray source_ids, index target_id, c
   if(target_comp != 0)
   {
     message(SLIInterpreter::M_INFO, "ConvergentConnect", "Target node is a subnet; I will iterate it.");
-    
-    LocalNodeList target_nodes(*target_comp);
-    vector<index> target_gids;
-    nest::Communicator::communicate(target_nodes,target_gids);
-    for(vector<index>::iterator tgt = target_gids.begin(); tgt != target_gids.end(); ++tgt)
-      convergent_connect(source_ids, *tgt, weights, delays, syn);
+
+    // we only iterate over local leaves, as remote targets are ignored anyways
+    LocalLeafList target_nodes(*target_comp);
+    for ( LocalLeafList::iterator tgt = target_nodes.begin(); tgt != target_nodes.end(); ++tgt)
+      convergent_connect(source_ids, (*tgt)->get_gid(), weights, delays, syn);
 
     return;
   }
-
-  // We retrieve pointers for all sources, this implicitly checks if they
-  // exist and throws UnknownNode if not.
-   
-  //std::vector<Node*> sources(source_ids.size());
-//for (index i = 0; i < source_ids.size(); ++i)
-    //    sources[i] = get_node(getValue<long>(source_ids[i]));
-  //sources[i] = get_node(getValue<long>(source_ids.get(i)));
 
   for(index i = 0; i < source_ids.size(); ++i)
   {
@@ -1364,12 +1359,11 @@ void Network::random_convergent_connect(const TokenArray source_ids, index targe
   {
     message(SLIInterpreter::M_INFO, "RandomConvergentConnect","Target ID is a subnet; I will iterate it.");
     
-    LocalNodeList target_nodes(*target_comp);
-    vector<index> target_gids;
-    nest::Communicator::communicate(target_nodes,target_gids);
-    
-    for(vector<index>::iterator tgt = target_gids.begin(); tgt != target_gids.end(); ++tgt)
-      random_convergent_connect(source_ids, *tgt, n, weights, delays, allow_multapses, allow_autapses, syn);
+    // we only consider local leaves as targets,
+    LocalLeafList target_nodes(*target_comp);
+    for ( LocalLeafList::iterator tgt = target_nodes.begin(); tgt != target_nodes.end(); ++tgt)
+      random_convergent_connect(source_ids, (*tgt)->get_gid(), n, weights, delays,
+                                allow_multapses, allow_autapses, syn);
 
     return;
   }
@@ -1542,139 +1536,6 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
 
 }
 
-
-
-// -----------------------------------------------------------------------------
-
-/*
-void Network::subnet_connect(Subnet &sources, Subnet &targets, int radius, index syn)
-{
-  vector<Node*>::const_iterator it_target_row;
-  for(it_target_row = targets.begin(); it_target_row != targets.end(); ++it_target_row)
-  {
-    std::deque<index> scope;
-    std::deque<bool> scopemiss;
-
-    int row = (*it_target_row)->get_lid();
-
-    Node* nodetemp = targets.at(row);
-    Subnet* ct = dynamic_cast<Subnet *>(nodetemp);
-    if(ct==0)
-    {
-      message(SLIInterpreter::M_ERROR, "SubnetConnect", "targets subnetwork must be subnet.");
-      continue;
-    }
-      
-    //Traverse the target columns for given row.
-    vector<Node*>::const_iterator it_target_col;
-    for(it_target_col=ct->begin(); it_target_col!=ct->end(); ++it_target_col)
-    {
-      int column= (*it_target_col)->get_lid();
-
-      if(column==0)
-      {
-	//Reset scope for beginning of row
-	for(int n=-radius; n<=radius; ++n)
-	{
-	  for(int k=-radius; k<=radius; ++k)
-	  { 
-	    //Test if source boundary has been crossed
-	    if(n>=0&&row+k>=0&&row+k<(int_t)sources.size())
-	    {
-	      Node* nodetemp =sources.at(row+k);
-	      Subnet* cn = dynamic_cast<Subnet *>(nodetemp);
-	      if(cn==0)
-	      {
-		message(SLIInterpreter::M_ERROR, "SubnetConnect", "targets subnetwork must be subnet.");
-		continue;
-	      }
-	      //Insert source node id in scope.
-	      if(n<(int_t)cn->size()&&cn->at(n) != NULL)
-	      {
-		scope.push_back(cn->at(n)->get_gid());
-		scopemiss.push_back(false);
-	      }
-	      else
-	      {
-		scope.push_back(0);
-		scopemiss.push_back(true);
-	      }
-	    }
-	    else 		  
-	    {
-	      scope.push_back(0);
-	      scopemiss.push_back(true);
-	    }
-	  } 
-	}
-	  
-	std::vector<index> scope_out;
-	      
-	for(int i=0; i<(int_t)scope.size(); ++i)
-	{
-	  if(scopemiss[i]!=true)		
-	    scope_out.push_back(scope[i]);
-	}
-	      
-	TokenArray scope_final(*(new vector<index>(scope_out.begin(), scope_out.end())));
-        TokenArray weights, delays;
-
-	convergent_connect(scope_final, ct->at(column)->get_gid(), weights, delays, syn);
-      }
-      else
-      {
-	//Adjust scope (shift rightwards).
-	for(int k=-radius; k<=radius; ++k)
-	{	   
-	  //Boundary test
-	  if(row+k>=0&&row+k<(int_t)sources.size())
-	  {
-	    Node* nodetemp =sources.at(row+k);
-	    Subnet* cn = dynamic_cast<Subnet *>(nodetemp);
-	    if(cn==0)
-	    {
-	      message(SLIInterpreter::M_ERROR, "SubnetConnect", "targets subnetwork must be subnet.");
-	      continue;
-	    }
-	    //Insert source node id in scope.
-	    if(column+radius<(int_t)cn->size()&&cn->at(column+radius) != NULL)
-	    {
-	      scope.push_back(cn->at(column+radius)->get_gid());
-	      scopemiss.push_back(false);
-	    }
-		      
-	    else
-	    {
-	      scope.push_back(0);
-	      scopemiss.push_back(true);
-	    }
-	  }
-	  else 	
-	  {	  
-	    scope.push_back(0);
-	    scopemiss.push_back(true);
-	  }
-		  
-	  scope.pop_front();
-	  scopemiss.pop_front();
-	}
-	      
-	std::vector<index> scope_out;
-
-	for(int i=0; i<(int_t)scope.size(); ++i)
-	{
-	  if(scopemiss[i]!=true)		
-	    scope_out.push_back(scope[i]);
-	}
-	      
-	TokenArray scope_final(*(new vector<index>(scope_out.begin(), scope_out.end())));
-        TokenArray weights, delays;
-	convergent_connect(scope_final, ct->at(column)->get_gid(), weights, delays, syn);
-      }
-    }
-  }
-}
-*/
 
 void Network::message(int level, const char from[], const char text[])
 {

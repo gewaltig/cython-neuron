@@ -571,7 +571,7 @@ namespace nest
     LocalNodeList localnodes(*subnet);
     ArrayDatum result;
 
-    if (include_remote)
+    if ( include_remote )
     {
       vector<index> gids;
       nest::Communicator::communicate(localnodes, gids);
@@ -606,25 +606,11 @@ namespace nest
 
     if ( include_remote )
     {
-      // TODO: Currently, there is no way in the 10kproject branch to
-      // collect only the direct children of a subnet from local and
-      // remote machines, so this branch stays unimplemented for
-      // now. The nicest way to implement it would be to write a class
-      // ChildList in the spirit of LeafList and Node list that has a
-      // operator++(), which only iterates over the direct
-      // children. This branch would then use the communicate function
-      // as GetNodes and GetLeafs does in order to collect the gids
-      // from local and remote machines.
-      //
-      // Once this is implemented, we can think about unifying the
-      // three functions GetLeaves, GetNodes, and GetChildren, as they
-      // are essentially the same and only differ by their use of a
-      // LeafList, NodeList and ChildList, respectively.
-
-      i->message(SLIInterpreter::M_FATAL, "GetChildren_i_bFunction",
-                 "The GetChildren variant that includes local and remote nodes "
-                 "is not implemented yet for the 10kproject branch. Please see "
-                 "the comment in nestmodule.cpp for how this could be solved.");
+      vector<index> gids;
+      nest::Communicator::communicate(local_children, gids);
+      result.reserve(gids.size());
+      for(vector<index>::iterator n = gids.begin(); n != gids.end(); ++n)
+        result.push_back(new IntegerDatum(*n));
     }
     else
     {
@@ -654,9 +640,8 @@ namespace nest
 
     if ( include_remote )
     {
-      assert(false && "Remote leaves collection not implemented.");
       vector<index> gids;
-      //nest::Communicator::communicate(localnodes, gids);
+      nest::Communicator::communicate(localnodes, gids);
       result.reserve(gids.size());
 
       for(vector<index>::iterator n = gids.begin(); n != gids.end(); ++n)

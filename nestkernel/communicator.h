@@ -136,7 +136,14 @@ namespace nest
                               std::vector<OffGridSpike>& recv_buffer, 
                               std::vector<int>& displacements);
       static void communicate(std::vector<int_t>&);
-      static void communicate(const LocalNodeList& local_nodes, std::vector<index>& gids);
+
+      /**
+       * Collect GIDs for all nodes in a given node list across processes.
+       * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
+       */
+      template <typename NodeListType>
+      static void communicate(const NodeListType& local_nodes, std::vector<index>& gids);
+
       static void communicate_connector_properties(DictionaryDatum& dict);
       
       static void synchronize();
@@ -206,6 +213,52 @@ namespace nest
                                    std::vector<int>& displacements);
       static void communicate_CPEX(std::vector<int_t>&);
   };
+
+  template <typename NodeListType>
+  void Communicator::communicate(const NodeListType& local_nodes, vector<index>& gids)
+  {
+    size_t np = Communicator::num_processes_;
+
+    if ( np > 1 )
+    {
+      vector<long_t> localgids;
+
+      for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+        localgids.push_back((*n)->get_gid());
+
+      //get size of buffers
+      std::vector<nest::int_t> n_gids(np);
+      n_gids[Communicator::rank_] = localgids.size();
+      communicate(n_gids);
+
+      // Set up displacements vector.
+      std::vector<int> displacements(np,0);
+
+      for ( size_t i = 1; i < np; ++i )
+        displacements.at(i) = displacements.at(i-1)+n_gids.at(i-1);
+
+      // Calculate sum of global connections.
+      nest::int_t n_globals =
+        std::accumulate(n_gids.begin(),n_gids.end(), 0);
+      vector<long_t> globalgids;
+      if (n_globals != 0)
+      {
+        globalgids.resize(n_globals,0L);
+        communicate_Allgatherv<nest::long_t>(localgids, globalgids, displacements, n_gids);
+      }
+      //get rid of any multiple entries
+      std::insert_iterator<vector<index> > ins(gids, gids.begin());
+      std::sort(globalgids.begin(),globalgids.end());
+      std::unique_copy(globalgids.begin(),globalgids.end(),ins);
+    }
+    else
+    {
+      for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+        gids.push_back((*n)->get_gid());
+      std::sort(gids.begin(),gids.end());
+    }
+  }
+
 }
 
 #else /* #ifdef HAVE_MPI */
@@ -247,7 +300,14 @@ namespace nest
                               std::vector<OffGridSpike>& recv_buffer, 
                               std::vector<int>& displacements);
       static void communicate(std::vector<int_t>&) {}
-      static void communicate(const LocalNodeList& local_nodes, std::vector<index>& gids);      
+
+      /**
+       * Collect GIDs for all nodes in a given node list across processes.
+       * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
+       */
+      template <typename NodeListType>
+      static void communicate(const NodeListType& local_nodes, std::vector<index>& gids);
+
       static void communicate_connector_properties(DictionaryDatum&) {}
       
       static void synchronize() {}
@@ -294,6 +354,18 @@ namespace nest
     name[1023] = '\0';
     gethostname(name, 1023);
     return name;
+  }
+
+  template <typename NodeListType>
+  void Communicator::communicate(const NodeListType& local_nodes, std::vector<index>& gids)
+  {
+    std::vector<index> localgids;
+    for ( typename NodeListType::iterator n = local_nodes.begin() ; n != local_nodes.end() ; ++n)
+      localgids.push_back((*n)->get_gid());
+
+    std::sort(localgids.begin(),localgids.end());
+    gids.resize(localgids.size(),0);
+    gids.swap(localgids);
   }
 
 }
