@@ -213,7 +213,6 @@ namespace nest
 namespace nest
 {
   class Network;
-  class LocalNodeList;
 
   class Communicator
   {

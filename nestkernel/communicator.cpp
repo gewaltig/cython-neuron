@@ -980,9 +980,7 @@ void nest::Communicator::communicate (std::vector<OffGridSpike>& send_buffer,
 
 void nest::Communicator::communicate(const LocalNodeList& local_nodes, std::vector<index>& gids)
 {
-  size_t n_locals = local_nodes.size();
   std::vector<index> localgids;
-  localgids.reserve(n_locals);
   for(LocalNodeList::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n)
     localgids.push_back((*n)->get_gid());
     

@@ -601,6 +601,7 @@ namespace nest
     if (subnet == NULL)
       throw SubnetExpected();
  
+    LocalChildList local_children(*subnet);
     ArrayDatum result;
 
     if ( include_remote )
@@ -627,8 +628,8 @@ namespace nest
     }
     else
     {
-      result.reserve(subnet->size());
-      for(vector<Node *>::iterator n = subnet->local_begin(); n != subnet->local_end(); ++n)
+      for ( LocalChildList::iterator n = local_children.begin() ;
+            n != local_children.end() ; ++n )
         result.push_back(new IntegerDatum((*n)->get_gid()));
     }
 
@@ -663,7 +664,7 @@ namespace nest
     }
     else
     {
-      for(LocalLeafList::iterator n = localnodes.begin(); n != localnodes.end(); ++n)
+      for ( LocalLeafList::iterator n = localnodes.begin() ; n != localnodes.end() ; ++n )
         result.push_back(new IntegerDatum((*n)->get_gid()));
     }
 

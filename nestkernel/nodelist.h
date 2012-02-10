@@ -82,7 +82,7 @@ class LocalNodeListIterator
    //! Create iterator from pointer to Node in subnet
    LocalNodeListIterator(std::vector<Node*>::iterator const &node,
                          std::vector<Node*>::iterator const &list_end) :
-     current_node_(node), list_end_(list_end) {}
+      current_node_(node), list_end_(list_end) {}
    bool is_end_() const { return current_node_ == list_end_; }
 
  public:

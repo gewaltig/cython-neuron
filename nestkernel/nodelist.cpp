@@ -100,18 +100,17 @@ namespace nest
     }
     else if ( current_node_ == list_end_ )
       return *this;   // we are at end of subnet
-    
-    // current_node_ is not a valid right neighbor, nor the end of
-    // the subnet, so we need to move up
+
+    // If we get here, current_node_ is equal to the sentinel at the end of
+    // the current_subnet nodelist. Since it is different from list_end_, we
+    // know it is not the the sentinel at the end of the top-level subnet.
+    // Thus current_subnet must have a parent, and we need to ascend to that
+    // parent. We find the iterator to the current_subnet in the parent nodelist
+    // by index arithmetic.
     Subnet* parent = current_subnet->get_parent();
     assert(parent);
-    
-    // We now need to find the iterator to the parent, within the node
-    // vector of the parent's parent.
-    Subnet* grandparent = parent->get_parent();
-    assert(grandparent);
-    current_node_ = grandparent->local_begin() + parent->get_subnet_index();
-    assert(*current_node_ == parent);  // make sure we got iterator to correct node
+    current_node_ = parent->local_begin() + current_subnet->get_subnet_index();
+    assert(*current_node_ == current_subnet);  // make sure we got iterator to correct node
 
     return *this;
   }
