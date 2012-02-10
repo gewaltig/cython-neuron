@@ -60,7 +60,7 @@ void nest::Communicator::communicate_Allgatherv(std::vector<T>& send_buffer,
 }
 
 template <typename NodeListType>
-    void Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes)
+void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes)
   {
     DictionaryDatum dict = DictionaryDatum(new Dictionary);
     communicate(local_nodes, all_nodes, dict, true);
@@ -68,7 +68,7 @@ template <typename NodeListType>
 
 
 template <typename NodeListType>
-    void Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes, 
+void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes, 
 				   DictionaryDatum params, bool remote)
   {
     size_t np = Communicator::num_processes_;
@@ -90,6 +90,7 @@ template <typename NodeListType>
 	      //select those nodes fulfilling the key/value pairs of the dictionary
 	      bool match = true;
 	      DictionaryDatum node_status = DictionaryDatum(new Dictionary);
+	      //to do: need to get the status from the network, not the node!
 	      (*n)->get_status(node_status);
 	      for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
 		{
@@ -175,20 +176,20 @@ template <typename NodeListType>
       std::sort(all_nodes.begin(),all_nodes.end());
     }
   }
-}
+
 
 
 #else //HAVE_MPI
 
   template <typename NodeListType>
-    void Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes)
+  void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes)
   {
     DictionaryDatum dict = DictionaryDatum(new Dictionary);
     communicate(local_nodes, all_nodes, dict, true);
   }
 
   template <typename NodeListType>
-    void Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes,
+  void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes,
 				    DictionaryDatum params, bool remote)
   {
 
