@@ -2067,6 +2067,7 @@ void  init_slicontrol(SLIInterpreter *i)
   i->createcommand("raiseerror",&raiseerrorfunction);
   i->createcommand("print_error",&printerrorfunction);
   i->createcommand("raiseagain",&raiseagainfunction);
+  i->createcommand("cycles",&cyclesfunction);
   i->createcommand("code_accessed",&codeaccessedfunction);
   i->createcommand("code_executed",&codeexecutedfunction);
   i->createcommand("exec",&execfunction);
