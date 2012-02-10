@@ -49,6 +49,9 @@ void ProceduretypeFunction::execute(SLIInterpreter *i) const
 // wen don't have to look it up each time.
     static Token iiterate(i->Iiterate());
 
+    i->code_accessed = 
+            static_cast<ProcedureDatum *>(i->EStack.top().datum())->size();
+
     i->EStack.push_by_pointer(new IntegerDatum(0));
     i->EStack.push_by_ref(iiterate);
     i->inc_call_depth();

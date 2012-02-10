@@ -77,6 +77,9 @@ void IiterateFunction::execute(SLIInterpreter *i) const
    {
        const Token &t=pd->get(pos);
        ++pos;
+  
+       i->code_executed++;   // code coverage 
+
        if( t->is_executable())
        {
 	   i->EStack.push(t);

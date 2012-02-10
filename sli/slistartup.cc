@@ -350,6 +350,7 @@ void SLIStartup::init(SLIInterpreter *i)
   statusdict->insert(hostcpu_name,Token(new StringDatum(SLI_HOSTCPU)));
 
 
+
 //expose platform model for code branches without assuming configure leads to a unique setting
 {
   std::string platform;

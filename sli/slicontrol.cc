@@ -1143,6 +1143,27 @@ void CyclesFunction::execute(SLIInterpreter *i) const
     i->OStack.push(cycles);
 }
 
+void CodeAccessedFunction::execute(SLIInterpreter *i) const
+{
+    i->EStack.pop();
+    Token c(new IntegerDatum(i->code_accessed));
+
+    i->OStack.push(c);
+}
+
+void CodeExecutedFunction::execute(SLIInterpreter *i) const
+{
+    i->EStack.pop();
+    Token c(new IntegerDatum(i->code_executed));
+
+    i->OStack.push(c);
+}
+
+
+
+
+
+
 /*BeginDocumentation
 Name: quit - leave the SLI interpreter, optionally return exit code
 
@@ -1955,6 +1976,8 @@ const PrinterrorFunction       printerrorfunction;
 const RaiseagainFunction       raiseagainfunction;
 
 const CyclesFunction           cyclesfunction;
+const CodeAccessedFunction     codeaccessedfunction;
+const CodeExecutedFunction     codeexecutedfunction;
 const ExecFunction             execfunction;
 const TypeinfoFunction         typeinfofunction;
 const SwitchFunction           switchfunction;
@@ -2044,7 +2067,8 @@ void  init_slicontrol(SLIInterpreter *i)
   i->createcommand("raiseerror",&raiseerrorfunction);
   i->createcommand("print_error",&printerrorfunction);
   i->createcommand("raiseagain",&raiseagainfunction);
-  i->createcommand("cycles",&cyclesfunction);
+  i->createcommand("code_accessed",&cyclesfunction);
+  i->createcommand("code_executed",&cyclesfunction);
   i->createcommand("exec",&execfunction);
   i->createcommand("typeinfo",&typeinfofunction);
   i->createcommand("switch",&switchfunction);

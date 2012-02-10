@@ -254,6 +254,20 @@ CyclesFunction() {}
     void execute(SLIInterpreter *) const;
 };
 
+class CodeAccessedFunction: public SLIFunction
+{
+public:
+CodeAccessedFunction() {}
+    void execute(SLIInterpreter *) const;
+};
+
+class CodeExecutedFunction: public SLIFunction
+{
+public:
+CodeExecutedFunction() {}
+    void execute(SLIInterpreter *) const;
+};
+
 class ExecFunction: public SLIFunction
 {
 public:

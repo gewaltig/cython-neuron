@@ -80,6 +80,8 @@ class SLIInterpreter
   bool            cycle_guard;
   unsigned long   cycle_restriction; 
 
+
+
   int             verbositylevel;
   void inittypes(void);
   void initdictionaries(void);
@@ -87,6 +89,9 @@ class SLIInterpreter
   void initexternals(void);
   
 public:
+    unsigned long   code_accessed;  // for code coverage analysis.
+    unsigned long   code_executed;  // ration should be coverage
+
 
     Dictionary *statusdict;
     Dictionary *errordict;
