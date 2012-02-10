@@ -353,12 +353,6 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } resetnetworkfunction;
 
-     class NetworkDimensions_aFunction: public SLIFunction
-     { 
-      public:
-       void execute(SLIInterpreter *) const;
-     } networkdimensions_afunction;
-  
      class MemoryInfoFunction: public SLIFunction
      {
        void execute(SLIInterpreter *) const;

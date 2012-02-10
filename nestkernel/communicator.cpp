@@ -3,7 +3,7 @@
  *
  *  This file is part of NEST
  *
- *  Copyright (C) 2004 by
+ *  Copyright (C) 2004-2012 by
  *  The NEST Initiative
  *
  *  See the file AUTHORS for details.
@@ -30,6 +30,7 @@
 #include <sys/times.h>
 #include <sys/resource.h>
 #include "communicator.h"
+#include "communicator_impl.h"
 #include "network.h"
 
 #include "dictutils.h"
@@ -51,25 +52,6 @@ MUSIC::Setup *nest::Communicator::music_setup=0;
 MUSIC::Runtime *nest::Communicator::music_runtime=0;
 #endif /* #ifdef HAVE_MUSIC */
 
-/* ------------------------------------------------------
-   The following datatypes are defined here locally in the .cpp
-   file instead of as static class members, to avoid inclusion
-   of mpi.h in the .h file. This is necessary, because on
-   BlueGene/L mpi.h MUST be included FIRST. Having mpi.h in
-   the .h file would lead to requirements on include-order
-   throughout the NEST code base and is not acceptable.
-   Reported by Mikael Djurfeldt.
-   Hans Ekkehard Plesser, 2010-01-28
-*/
-template <typename T>
-struct MPI_Type { static MPI_Datatype type; };
-    
-template<> MPI_Datatype MPI_Type<nest::int_t>::type = MPI_INT;
-template<> MPI_Datatype MPI_Type<nest::double_t>::type = MPI_DOUBLE;
-template<> MPI_Datatype MPI_Type<nest::long_t>::type = MPI_LONG;
-
-MPI_Datatype MPI_OFFGRID_SPIKE = 0;
-
 // Variable to hold the MPI communicator to use.
 #ifdef HAVE_MUSIC
 MPI::Intracomm comm=0;
@@ -77,6 +59,11 @@ MPI::Intracomm comm=0;
 MPI_Comm comm=0;
 #endif /* #ifdef HAVE_MUSIC */
 
+template<> MPI_Datatype MPI_Type<nest::int_t>::type = MPI_INT;
+template<> MPI_Datatype MPI_Type<nest::double_t>::type = MPI_DOUBLE;
+template<> MPI_Datatype MPI_Type<nest::long_t>::type = MPI_LONG;
+
+MPI_Datatype MPI_OFFGRID_SPIKE = 0;
 
 /* ------------------------------------------------------ */
 
@@ -410,17 +397,6 @@ void nest::Communicator::communicate_CPEX (std::vector<uint_t>& send_buffer,
       send_buffer_size_ = max_recv_count;
       recv_buffer_size_ = send_buffer_size_ * num_processes_;
     }
-}
-
-template <typename T>
-void nest::Communicator::communicate_Allgatherv(std::vector<T>& send_buffer, 
-						std::vector<T>& recv_buffer, 
-						std::vector<int>& displacements,
-						std::vector<int>& recv_counts)
-{  
-  //attempt Allgather
-  MPI_Allgatherv(&send_buffer[0], send_buffer.size(), MPI_Type<T>::type, 
-		 &recv_buffer[0], &recv_counts[0], &displacements[0], MPI_Type<T>::type, comm);
 }
 
 template <typename T>

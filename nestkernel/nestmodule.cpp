@@ -36,6 +36,7 @@
 #include "random_datums.h"
 #include "connectiondatum.h"
 #include "communicator.h"
+#include "communicator_impl.h"
 #include "genericmodel.h"
 
 // This may differ on other Blue Gene/P systems and was only tested on
@@ -1065,71 +1066,6 @@ namespace nest
     i->EStack.pop();     
   }
 
-
-  /* BeginDocumentation
-     Name: NetworkDimensions - Determine dimensions of a subnet
-
-     Synopsis:
-     [sourcelayeradr] NetworkDimensions -> [height width]
-
-     Description:
-     NetworkDimensions corresponds to the command LayoutNetwork
-     in the same way as the command
-     Dimensions corresponds to the command LayoutArray.
-     NetworkDimensions takes the address of a subnet tree and returns a list with
-     dimensions [d1 d2 ... dn] where di gives the dimension of the
-     subnet tree at level i.
-     The length of the dimensions-list corresponds to the Depth of
-     the subnet tree.
-     
-     Note:
-     NetworkDimensions assumes that the subnet tree is hyper-rectangular
-     (rectangle, cuboid, ...), i.e., all subnets at a given level
-     have the same number of nodes.
-     NetworkDimensions does not check, if the subnet tree really is
-     hyper-rectangular. It will not fail if this is not the case. Instead,
-     the dimensions that are returned correspond to the number of
-     nodes in the first subnet in each level.
-
-     Alternatives: NetworkDimensions_a (undocumented) -> behaviour and synopsis are the same.
-     Availability: NEST
-     Author: Rüdiger Kupper
-     SeeAlso: LayoutNetwork, Dimensions
-  */
-  void NestModule::NetworkDimensions_aFunction::execute(SLIInterpreter *i) const
-  {
-    i->assert_stack_load(1);
-  
-    TokenArray subnet_adr = getValue<TokenArray>(i->OStack.pick(0));
-    Subnet  *subnet_ptr; //!< pointer to source layer
-
-// TODO: convert this function to take the gid instead of an address
-//    subnet_ptr = dynamic_cast<Subnet*>(get_network().get_node(subnet_adr));
-    if (subnet_ptr == NULL)
-        throw SubnetExpected();
-    
-    // determine dimensions:
-    TokenArray result;
-    index sh;  //!< number of nodes of subnet
-  
-    // stopping conditions for loop:
-    // 1. the next level node is not a subnet (non-empty subnet)
-    // 2. there is no next level (empty subnet)
-    do
-    {
-      sh = subnet_ptr->size();
-      result.push_back(new IntegerDatum(sh));
-      if (sh == 0) break;
-      subnet_ptr = dynamic_cast<Subnet*>((*subnet_ptr)[0]);
-    }
-    while ( subnet_ptr );
-
-    i->OStack.pop(1);
-    i->OStack.push(ArrayDatum(result));
-
-    i->EStack.pop();
-  }
-
   /* BeginDocumentation
      Name: MemoryInfo - Report current memory usage.
      Description:
@@ -1617,9 +1553,7 @@ namespace nest
    
     i->createcommand("ResetNetwork",&resetnetworkfunction);
     i->createcommand("ResetKernel",&resetkernelfunction);
-   
-    i->createcommand("NetworkDimensions_a",&networkdimensions_afunction);
-   
+
     i->createcommand("MemoryInfo", &memoryinfofunction);
 
 #ifdef IS_BLUEGENE_P

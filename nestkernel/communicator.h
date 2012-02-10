@@ -3,7 +3,7 @@
  *
  *  This file is part of NEST
  *
- *  Copyright (C) 2004 by
+ *  Copyright (C) 2004-2012 by
  *  The NEST Initiative
  *
  *  See the file AUTHORS for details.
@@ -32,7 +32,7 @@
 
 #ifdef HAVE_MPI
 // Do NOT include mpi.h in this header file, otherwise we get into
-// trouble on the Blue Gene/L. mpi.h is included in communicator.cpp
+// trouble on the Blue Gene/L. mpi.h is included in communicator_impl.h
 
 #ifdef HAVE_MUSIC
 #include <music.hh>
@@ -42,252 +42,197 @@
 
 namespace nest
 {
-  class Network;
- // class LocalNodeList;
+class Network;
+// class LocalNodeList;
 
-  class Communicator
-  {
-    friend class Network;
+class Communicator
+{
+  friend class Network;
 
-    public:
-      Communicator () {}
-      ~Communicator () {}
-
-#ifdef HAVE_MUSIC
-      static MUSIC::Setup *music_setup;     //!< pointer to a MUSIC setup object
-      static MUSIC::Runtime *music_runtime; //!< pointer to a MUSIC runtime object
-#endif
-
-      /**
-       * Combined storage of GID and offset information for off-grid spikes.
-       *
-       * @note This class actually stores the GID as @c double_t internally.
-       *       This is done so that the user-defined MPI type MPI_OFFGRID_SPIKE,
-       *       which we use to communicate off-grid spikes, is homogeneous.
-       *       Otherwise, OpenMPI spends extreme amounts of time on packing
-       *       and unpacking the data, see #458.
-       */
-      class OffGridSpike {
-      public:
-	//! We defined this type explicitly, so that the assert function below always tests the correct type.
-	typedef uint_t gid_external_type;
-
-        OffGridSpike() : 
-          gid_(0), offset_(0.0) {}
-        OffGridSpike(gid_external_type gidv, double_t offsetv) :
-          gid_(gidv), offset_(offsetv) {}
-
-	uint_t   get_gid()    const  { return static_cast<gid_external_type>(gid_   ); }
-	void     set_gid(gid_external_type gid) { gid_ = static_cast<double_t>(gid  ); }
-	double_t get_offset() const  { return offset_; }
-
-      private:
-
-	friend class Communicator; //void Communicator::init(int*, char**);
-
-        double_t  gid_;     //!< GID of neuron that spiked
-        double_t  offset_;  //!< offset of spike from grid
-
-	//! This function asserts that doubles can hold GIDs without loss
-	static void assert_datatype_compatibility()
-	{
-	  assert(std::numeric_limits<double_t         >::digits > 
-		 std::numeric_limits<gid_external_type>::digits);
-	  
-	  // the next one is doubling up, better be safe than sorry
-	  const gid_external_type maxgid = std::numeric_limits<gid_external_type>::max();
-	  OffGridSpike ogs(maxgid, 0.0);
-	  assert(maxgid == ogs.get_gid());
-	}
-	
-      };
-
-      class NodeAddressingData {
-      public:
-          NodeAddressingData() :
-             gid_(0), parent_gid_(0), vp_(0) {}
-          NodeAddressingData(uint_t gid, uint_t parent_gid, uint_t vp) :
-	     gid_(gid), parent_gid_(parent_gid), vp_(vp) {}
-	
-	  uint_t get_gid() const {return gid_;}
-	  uint_t get_parent_gid() const {return parent_gid_;}
-	  uint_t get_vp() const {return vp_;}
-	  bool operator< (const NodeAddressingData &other) const {return this->gid_ < other.gid_;}
-	  bool operator== (const NodeAddressingData &other) const {return this->gid_ == other.gid_;}
-      private:
-	  friend class Communicator;
-	  uint_t gid_;                 //!< GID of neuron
-	  uint_t parent_gid_;          //!< GID of neuron's parent
-	  uint_t vp_;                  //!< virtual process of neuron
-      };
+public:
+  Communicator () {}
+  ~Communicator () {}
 
 #ifdef HAVE_MUSIC
-      /**
-       * Enter the runtime mode. This must be done before simulating. After having entered runtime mode
-       * ports cannot be published anymore.
-       * \param h_min_delay is the length of a time slice, after which commmunication should take place.
-       */
-      static void enter_runtime(double_t h_min_delay);
-  
-      static MUSIC::Setup* get_music_setup();
-      static MUSIC::Runtime* get_music_runtime();
-  
-      /**
-       * Advance the time of music by num_steps simulation steps.
-       * \param num_steps number of simulation steps, the time to propagate.
-       * /TODO: put this into scheduler.
-       */
-      static void advance_music_time(long_t num_steps);
-  
-      /**
-       * Register a music_event_in_proxy for a given port and a given channel.
-       * As a consequence, the proxy will be informed, whenever an event over this port and
-       * channel comes in.
-       */
-      static void register_music_event_in_proxy(std::string portname, int channel, nest::Node *mp);
+  static MUSIC::Setup *music_setup;     //!< pointer to a MUSIC setup object
+  static MUSIC::Runtime *music_runtime; //!< pointer to a MUSIC runtime object
 #endif
 
-      static void init(int* argc, char** argv[]);
-      static void finalize();
-      static void communicate(std::vector<uint_t>& send_buffer, 
-                              std::vector<uint_t>& recv_buffer, 
-                              std::vector<int>& displacements);
-      static void communicate(std::vector<OffGridSpike>& send_buffer, 
-                              std::vector<OffGridSpike>& recv_buffer, 
-                              std::vector<int>& displacements);
-      static void communicate(std::vector<int_t>&);
+  /**
+   * Combined storage of GID and offset information for off-grid spikes.
+   *
+   * @note This class actually stores the GID as @c double_t internally.
+   *       This is done so that the user-defined MPI type MPI_OFFGRID_SPIKE,
+   *       which we use to communicate off-grid spikes, is homogeneous.
+   *       Otherwise, OpenMPI spends extreme amounts of time on packing
+   *       and unpacking the data, see #458.
+   */
+  class OffGridSpike {
+  public:
+    //! We defined this type explicitly, so that the assert function below always tests the correct type.
+    typedef uint_t gid_external_type;
 
-      /**
-       * Collect GIDs for all nodes in a given node list across processes.
-       * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
-       */
-      template <typename NodeListType>
-	static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes);
+    OffGridSpike() :
+      gid_(0), offset_(0.0) {}
+    OffGridSpike(gid_external_type gidv, double_t offsetv) :
+      gid_(gidv), offset_(offsetv) {}
 
-      static void communicate_connector_properties(DictionaryDatum& dict);
-      
-      static void synchronize();
-      static void test_link(int, int);
-      static void test_links();
-      
-      static bool grng_synchrony(unsigned long);
-      static double_t time_communicate(int num_bytes, int samples=1000); 
-      static double_t time_communicate_offgrid(int num_bytes, int samples=1000); 
+    uint_t   get_gid()    const  { return static_cast<gid_external_type>(gid_   ); }
+    void     set_gid(gid_external_type gid) { gid_ = static_cast<double_t>(gid  ); }
+    double_t get_offset() const  { return offset_; }
 
-      static std::string get_processor_name();
+  private:
 
-      static int get_rank();
-      static int get_num_processes();
-      static void set_num_processes(int);
-      static int get_num_virtual_processes();
-      static int get_send_buffer_size();
-      static int get_recv_buffer_size();
-      static bool get_use_Allgather();
-      static bool get_initialized();
+    friend class Communicator; //void Communicator::init(int*, char**);
 
-      static void set_num_threads(thread num_threads);
-      static void set_buffer_sizes(int send_buffer_size, int recv_buffer_size);
-      static void set_use_Allgather(bool use_Allgather);
+    double_t  gid_;     //!< GID of neuron that spiked
+    double_t  offset_;  //!< offset of spike from grid
 
-    private:
+    //! This function asserts that doubles can hold GIDs without loss
+    static void assert_datatype_compatibility()
+    {
+      assert(std::numeric_limits<double_t         >::digits >
+      std::numeric_limits<gid_external_type>::digits);
 
-      static Network* net_;          //!< Pointer to the Network class
-      
-      static int rank_;              //!< the rank of the machine
-      static int num_processes_;     //!< the number of mpi-processes
-      static int n_vps_;             //!< the number of virtual processes
-      static int send_buffer_size_;  //!< expected size of send buffer
-      static int recv_buffer_size_;  //!< size of receive buffer
-      static bool initialized_;      //!< whether MPI is initialized
-      static bool use_Allgather_;    //!< using Allgather communication
-    
-      static std::vector<int> comm_step_;  //!< array containing communication partner for each step.
-      static uint_t COMM_OVERFLOW_ERROR;
+      // the next one is doubling up, better be safe than sorry
+      const gid_external_type maxgid = std::numeric_limits<gid_external_type>::max();
+      OffGridSpike ogs(maxgid, 0.0);
+      assert(maxgid == ogs.get_gid());
+    }
 
-      static void init_communication();
-
-      static void communicate_Allgather(std::vector<uint_t>& send_buffer, 
-                                        std::vector<uint_t>& recv_buffer, 
-                                        std::vector<int>& displacements);
-      static void communicate_Allgather(std::vector<OffGridSpike>& send_buffer, 
-                                        std::vector<OffGridSpike>& recv_buffer, 
-                                        std::vector<int>& displacements);
-      static void communicate_Allgather(std::vector<int_t>&);
-      
-      template <typename T>
-      static void communicate_Allgatherv(std::vector<T>& send_buffer, 
-                                         std::vector<T>& recv_buffer, 
-                                         std::vector<int>& displacements,
-                                         std::vector<int>& recv_counts);
-      
-      template <typename T>
-      static void communicate_Allgather(std::vector<T>& send_buffer, 
-                                        std::vector<T>& recv_buffer, 
-                                        std::vector<int>& displacements);
-    
-      static void communicate_CPEX(std::vector<uint_t>& send_buffer, 
-                                   std::vector<uint_t>& recv_buffer, 
-                                   std::vector<int>& displacements);
-      static void communicate_CPEX(std::vector<OffGridSpike>& send_buffer, 
-                                   std::vector<OffGridSpike>& recv_buffer, 
-                                   std::vector<int>& displacements);
-      static void communicate_CPEX(std::vector<int_t>&);
   };
 
+  class NodeAddressingData {
+  public:
+    NodeAddressingData() :
+      gid_(0), parent_gid_(0), vp_(0) {}
+    NodeAddressingData(uint_t gid, uint_t parent_gid, uint_t vp) :
+      gid_(gid), parent_gid_(parent_gid), vp_(vp) {}
+
+    uint_t get_gid() const {return gid_;}
+    uint_t get_parent_gid() const {return parent_gid_;}
+    uint_t get_vp() const {return vp_;}
+    bool operator< (const NodeAddressingData &other) const {return this->gid_ < other.gid_;}
+    bool operator== (const NodeAddressingData &other) const {return this->gid_ == other.gid_;}
+  private:
+    friend class Communicator;
+    uint_t gid_;                 //!< GID of neuron
+    uint_t parent_gid_;          //!< GID of neuron's parent
+    uint_t vp_;                  //!< virtual process of neuron
+  };
+
+#ifdef HAVE_MUSIC
+  /**
+   * Enter the runtime mode. This must be done before simulating. After having entered runtime mode
+   * ports cannot be published anymore.
+   * \param h_min_delay is the length of a time slice, after which commmunication should take place.
+   */
+  static void enter_runtime(double_t h_min_delay);
+
+  static MUSIC::Setup* get_music_setup();
+  static MUSIC::Runtime* get_music_runtime();
+
+  /**
+   * Advance the time of music by num_steps simulation steps.
+   * \param num_steps number of simulation steps, the time to propagate.
+   * /TODO: put this into scheduler.
+   */
+  static void advance_music_time(long_t num_steps);
+
+  /**
+   * Register a music_event_in_proxy for a given port and a given channel.
+   * As a consequence, the proxy will be informed, whenever an event over this port and
+   * channel comes in.
+   */
+  static void register_music_event_in_proxy(std::string portname, int channel, nest::Node *mp);
+#endif
+
+  static void init(int* argc, char** argv[]);
+  static void finalize();
+  static void communicate(std::vector<uint_t>& send_buffer,
+                          std::vector<uint_t>& recv_buffer,
+                          std::vector<int>& displacements);
+  static void communicate(std::vector<OffGridSpike>& send_buffer,
+                          std::vector<OffGridSpike>& recv_buffer,
+                          std::vector<int>& displacements);
+  static void communicate(std::vector<int_t>&);
+
+  /**
+   * Collect GIDs for all nodes in a given node list across processes.
+   * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
+   */
   template <typename NodeListType>
-  void Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes)
-  {
-    size_t np = Communicator::num_processes_;
+  static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes);
 
-    if ( np > 1 )
-    {
-      vector<long_t> localnodes;
+  static void communicate_connector_properties(DictionaryDatum& dict);
 
-      for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
-	{
-	  localnodes.push_back((*n)->get_gid());
-	  localnodes.push_back(((*n)->get_parent())->get_gid());
-	  localnodes.push_back((*n)->get_vp());
-	}
+  static void synchronize();
+  static void test_link(int, int);
+  static void test_links();
 
-      //get size of buffers
-      std::vector<nest::int_t> n_nodes(np);
-      n_nodes[Communicator::rank_] = localnodes.size();
-      communicate(n_nodes);
+  static bool grng_synchrony(unsigned long);
+  static double_t time_communicate(int num_bytes, int samples=1000);
+  static double_t time_communicate_offgrid(int num_bytes, int samples=1000);
 
-      // Set up displacements vector.
-      std::vector<int> displacements(np,0);
+  static std::string get_processor_name();
 
-      for ( size_t i = 1; i < np; ++i )
-        displacements.at(i) = displacements.at(i-1)+n_nodes.at(i-1);
+  static int get_rank();
+  static int get_num_processes();
+  static void set_num_processes(int);
+  static int get_num_virtual_processes();
+  static int get_send_buffer_size();
+  static int get_recv_buffer_size();
+  static bool get_use_Allgather();
+  static bool get_initialized();
 
-      // Calculate sum of global connections.
-      size_t n_globals =
-        std::accumulate(n_nodes.begin(),n_nodes.end(), 0);
-      assert(n_globals % 3 == 0);   
-      vector<long_t> globalnodes;
-      if (n_globals != 0)
-      {
-        globalnodes.resize(n_globals,0L);
-        communicate_Allgatherv<nest::long_t>(localnodes, globalnodes, displacements, n_nodes);
-      }
-      //Create unflattened vector
-      for ( size_t i = 0; i < n_globals -2; i +=3)
-	all_nodes.push_back(NodeAddressingData(globalnodes[i],globalnodes[i+1],globalnodes[i+2]));
-      
-      //get rid of any multiple entries
-      std::sort(all_nodes.begin(), all_nodes.end());
-      vector<NodeAddressingData>::iterator it;
-      it = unique(all_nodes.begin(), all_nodes.end());
-      all_nodes.resize(it - all_nodes.begin());
-    }
-    else
-    {
-      for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
-	all_nodes.push_back(NodeAddressingData((*n)->get_gid(), ((*n)->get_parent())->get_gid(), (*n)->get_vp()));
-        std::sort(all_nodes.begin(),all_nodes.end());
-    }
-  }
+  static void set_num_threads(thread num_threads);
+  static void set_buffer_sizes(int send_buffer_size, int recv_buffer_size);
+  static void set_use_Allgather(bool use_Allgather);
+
+private:
+
+  static Network* net_;          //!< Pointer to the Network class
+
+  static int rank_;              //!< the rank of the machine
+  static int num_processes_;     //!< the number of mpi-processes
+  static int n_vps_;             //!< the number of virtual processes
+  static int send_buffer_size_;  //!< expected size of send buffer
+  static int recv_buffer_size_;  //!< size of receive buffer
+  static bool initialized_;      //!< whether MPI is initialized
+  static bool use_Allgather_;    //!< using Allgather communication
+
+  static std::vector<int> comm_step_;  //!< array containing communication partner for each step.
+  static uint_t COMM_OVERFLOW_ERROR;
+
+  static void init_communication();
+
+  static void communicate_Allgather(std::vector<uint_t>& send_buffer,
+                                    std::vector<uint_t>& recv_buffer,
+                                    std::vector<int>& displacements);
+  static void communicate_Allgather(std::vector<OffGridSpike>& send_buffer,
+                                    std::vector<OffGridSpike>& recv_buffer,
+                                    std::vector<int>& displacements);
+  static void communicate_Allgather(std::vector<int_t>&);
+
+  template <typename T>
+  static void communicate_Allgatherv(std::vector<T>& send_buffer,
+                                     std::vector<T>& recv_buffer,
+                                     std::vector<int>& displacements,
+                                     std::vector<int>& recv_counts);
+
+  template <typename T>
+  static void communicate_Allgather(std::vector<T>& send_buffer,
+                                    std::vector<T>& recv_buffer,
+                                    std::vector<int>& displacements);
+
+  static void communicate_CPEX(std::vector<uint_t>& send_buffer,
+                               std::vector<uint_t>& recv_buffer,
+                               std::vector<int>& displacements);
+  static void communicate_CPEX(std::vector<OffGridSpike>& send_buffer,
+                               std::vector<OffGridSpike>& recv_buffer,
+                               std::vector<int>& displacements);
+  static void communicate_CPEX(std::vector<int_t>&);
+};
 
 }
 
@@ -295,108 +240,96 @@ namespace nest
 
 namespace nest
 {
-  class Network;
+class Network;
 
-  class Communicator
-  {
-    friend class Network;
+class Communicator
+{
+  friend class Network;
 
-    public:
-      Communicator() {}
-      ~Communicator() {}
+public:
+  Communicator() {}
+  ~Communicator() {}
 
-      class OffGridSpike {
-      public:
-        OffGridSpike() : 
-          gid_(0), offset_(0.0) {}
-        OffGridSpike(uint_t gidv, double_t offsetv) :
-          gid_(gidv), offset_(offsetv) {}
+  class OffGridSpike {
+  public:
+    OffGridSpike() :
+      gid_(0), offset_(0.0) {}
+    OffGridSpike(uint_t gidv, double_t offsetv) :
+      gid_(gidv), offset_(offsetv) {}
 
-	uint_t   get_gid()    const  { return static_cast<uint_t  >(gid_   ); }
-	void     set_gid(uint_t gid) { gid_ = static_cast<double_t>(gid    ); }
-	double_t get_offset() const  { return offset_; }
+    uint_t   get_gid()    const  { return static_cast<uint_t  >(gid_   ); }
+    void     set_gid(uint_t gid) { gid_ = static_cast<double_t>(gid    ); }
+    double_t get_offset() const  { return offset_; }
 
-      private:
+  private:
 
-	friend class Communicator; //void Communicator::init(int*, char**);
+    friend class Communicator; //void Communicator::init(int*, char**);
 
-        double_t  gid_;     //!< GID of neuron that spiked
-        double_t  offset_;  //!< offset of spike from grid
-      };
-
-      static void communicate(std::vector<uint_t>& send_buffer, std::vector<uint_t>& recv_buffer, 
-                              std::vector<int>& displacements);
-      static void communicate(std::vector<OffGridSpike>& send_buffer, 
-                              std::vector<OffGridSpike>& recv_buffer, 
-                              std::vector<int>& displacements);
-      static void communicate(std::vector<int_t>&) {}
-
-      /**
-       * Collect GIDs for all nodes in a given node list across processes.
-       * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
-       */
-      template <typename NodeListType>
-      static void communicate(const NodeListType& local_nodes, std::vector<index>& gids);
-
-      static void communicate_connector_properties(DictionaryDatum&) {}
-      
-      static void synchronize() {}
-      
-      /* replaced u_long with unsigned long since u_long is not known when
-         mpi.h is not available. This is a rather ugly fix. 
-         HEP 2007-03-09
-      */
-      static bool grng_synchrony(unsigned long) {return true;}
-      static double_t time_communicate(int, int){return 0.0;} 
-      static double_t time_communicate_offgrid(int, int){return 0.0;} 
-
-      static std::string get_processor_name();
-    
-      static int get_rank();
-      static int get_num_processes();
-      static void set_num_processes(int);
-      static int get_num_virtual_processes();
-      static int get_send_buffer_size();
-      static int get_recv_buffer_size();
-      static bool get_use_Allgather();
-      static bool get_initialized();
-    
-      static void set_num_threads(thread num_threads);
-      static void set_buffer_sizes(int send_buffer_size, int recv_buffer_size);
-      static void set_use_Allgather(bool use_Allgather);
-    
-    private:
-    
-      static Network* net_;          //!< Pointer to the Network class
-
-      static int rank_;              //!< the rank of the machine
-      static int num_processes_;     //!< the number of mpi-processes
-      static int n_vps_;             //!< the number of virtual processes
-      static int send_buffer_size_;  //!< expected size of send buffer
-      static int recv_buffer_size_;  //!< size of receive buffer
-      static bool initialized_;      //!< whether MPI is initialized
-      static bool use_Allgather_;    //!< using Allgather communication
+    double_t  gid_;     //!< GID of neuron that spiked
+    double_t  offset_;  //!< offset of spike from grid
   };
 
-  inline std::string Communicator::get_processor_name()
-  {
-    char name[1024];
-    name[1023] = '\0';
-    gethostname(name, 1023);
-    return name;
-  }
+  static void communicate(std::vector<uint_t>& send_buffer, std::vector<uint_t>& recv_buffer,
+                          std::vector<int>& displacements);
+  static void communicate(std::vector<OffGridSpike>& send_buffer,
+                          std::vector<OffGridSpike>& recv_buffer,
+                          std::vector<int>& displacements);
+  static void communicate(std::vector<int_t>&) {}
 
+  /**
+   * Collect GIDs for all nodes in a given node list across processes.
+   * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
+   */
   template <typename NodeListType>
-  void Communicator::communicate(const NodeListType& local_nodes, std::vector<index>& gids)
-  {
-    std::vector<index> localgids;
-    for ( typename NodeListType::iterator n = local_nodes.begin() ; n != local_nodes.end() ; ++n)
-      localgids.push_back((*n)->get_gid());
+  static void communicate(const NodeListType& local_nodes, std::vector<index>& gids);
 
-    std::sort(localgids.begin(),localgids.end());
-    gids.resize(localgids.size(),0);
-    gids.swap(localgids);
-  }
+  static void communicate_connector_properties(DictionaryDatum&) {}
+
+  static void synchronize() {}
+
+  /* replaced u_long with unsigned long since u_long is not known when
+         mpi.h is not available. This is a rather ugly fix. 
+         HEP 2007-03-09
+   */
+  static bool grng_synchrony(unsigned long) {return true;}
+  static double_t time_communicate(int, int){return 0.0;}
+  static double_t time_communicate_offgrid(int, int){return 0.0;}
+
+  static std::string get_processor_name();
+
+  static int get_rank();
+  static int get_num_processes();
+  static void set_num_processes(int);
+  static int get_num_virtual_processes();
+  static int get_send_buffer_size();
+  static int get_recv_buffer_size();
+  static bool get_use_Allgather();
+  static bool get_initialized();
+
+  static void set_num_threads(thread num_threads);
+  static void set_buffer_sizes(int send_buffer_size, int recv_buffer_size);
+  static void set_use_Allgather(bool use_Allgather);
+
+private:
+
+  static Network* net_;          //!< Pointer to the Network class
+
+  static int rank_;              //!< the rank of the machine
+  static int num_processes_;     //!< the number of mpi-processes
+  static int n_vps_;             //!< the number of virtual processes
+  static int send_buffer_size_;  //!< expected size of send buffer
+  static int recv_buffer_size_;  //!< size of receive buffer
+  static bool initialized_;      //!< whether MPI is initialized
+  static bool use_Allgather_;    //!< using Allgather communication
+};
+
+inline std::string Communicator::get_processor_name()
+{
+  char name[1024];
+  name[1023] = '\0';
+  gethostname(name, 1023);
+  return name;
+}
 
 }
 #endif /* #ifdef HAVE_MPI */
@@ -404,62 +337,62 @@ namespace nest
 namespace nest
 {
 
-  inline int Communicator::get_rank()
-  {
-    return rank_;
-  }
+inline int Communicator::get_rank()
+{
+  return rank_;
+}
 
-  inline int Communicator::get_num_processes()
-  {
-    return num_processes_;
-  }
+inline int Communicator::get_num_processes()
+{
+  return num_processes_;
+}
 
-  inline void Communicator::set_num_processes(int np)
-  {
-    num_processes_ = np;
-  }
+inline void Communicator::set_num_processes(int np)
+{
+  num_processes_ = np;
+}
 
-  inline int Communicator::get_num_virtual_processes()
-  {
-    return n_vps_;
-  }
+inline int Communicator::get_num_virtual_processes()
+{
+  return n_vps_;
+}
 
-  inline int Communicator::get_send_buffer_size()
-  {
-    return send_buffer_size_;
-  }
-  
-  inline int Communicator::get_recv_buffer_size()
-  {
-    return recv_buffer_size_;
-  }
+inline int Communicator::get_send_buffer_size()
+{
+  return send_buffer_size_;
+}
 
-  inline bool Communicator::get_use_Allgather()
-  {
-    return use_Allgather_;
-  }
+inline int Communicator::get_recv_buffer_size()
+{
+  return recv_buffer_size_;
+}
 
-  inline bool Communicator::get_initialized()
-  {
-    return initialized_;
-  }
+inline bool Communicator::get_use_Allgather()
+{
+  return use_Allgather_;
+}
 
-  inline void Communicator::set_num_threads(thread num_threads)
-  {
-    n_vps_ = num_processes_ * num_threads;
-  }
+inline bool Communicator::get_initialized()
+{
+  return initialized_;
+}
 
-  inline void Communicator::set_buffer_sizes(int send_buffer_size, int recv_buffer_size)
-  {
-    send_buffer_size_ = send_buffer_size;
-    recv_buffer_size_ = recv_buffer_size;
-  }
+inline void Communicator::set_num_threads(thread num_threads)
+{
+  n_vps_ = num_processes_ * num_threads;
+}
 
-  inline void Communicator::set_use_Allgather(bool use_Allgather)
-  {
-    use_Allgather_ = use_Allgather;
-  }
-  
+inline void Communicator::set_buffer_sizes(int send_buffer_size, int recv_buffer_size)
+{
+  send_buffer_size_ = send_buffer_size;
+  recv_buffer_size_ = recv_buffer_size;
+}
+
+inline void Communicator::set_use_Allgather(bool use_Allgather)
+{
+  use_Allgather_ = use_Allgather;
+}
+
 } // namespace nest
 
 #endif /* #ifndef COMMUNICATOR_H */
