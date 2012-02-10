@@ -19,6 +19,7 @@
 
 #include <vector>
 #include <cassert>
+#include <numeric>
 
 #include "config.h"
 #include "nest.h"
