@@ -102,6 +102,25 @@ namespace nest
 	
       };
 
+      class NodeAddressingData {
+      public:
+          NodeAddressingData() :
+             gid_(0), parent_gid_(0), vp_(0) {}
+          NodeAddressingData(uint_t gid, uint_t parent_gid, uint_t vp) :
+	     gid_(gid), parent_gid_(parent_gid), vp_(vp) {}
+	
+	  uint_t get_gid() const {return gid_;}
+	  uint_t get_parent_gid() const {return parent_gid_;}
+	  uint_t get_vp() const {return vp_;}
+	  bool operator< (const NodeAddressingData &other) const {return this->gid_ < other.gid_;}
+	  bool operator== (const NodeAddressingData &other) const {return this->gid_ == other.gid_;}
+      private:
+	  friend class Communicator;
+	  uint_t gid_;                 //!< GID of neuron
+	  uint_t parent_gid_;          //!< GID of neuron's parent
+	  uint_t vp_;                  //!< virtual process of neuron
+      };
+
 #ifdef HAVE_MUSIC
       /**
        * Enter the runtime mode. This must be done before simulating. After having entered runtime mode
@@ -143,7 +162,7 @@ namespace nest
        * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
        */
       template <typename NodeListType>
-      static void communicate(const NodeListType& local_nodes, std::vector<index>& gids);
+	static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes);
 
       static void communicate_connector_properties(DictionaryDatum& dict);
       
@@ -216,47 +235,57 @@ namespace nest
   };
 
   template <typename NodeListType>
-  void Communicator::communicate(const NodeListType& local_nodes, vector<index>& gids)
+  void Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes)
   {
     size_t np = Communicator::num_processes_;
 
     if ( np > 1 )
     {
-      vector<long_t> localgids;
+      vector<long_t> localnodes;
 
       for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
-        localgids.push_back((*n)->get_gid());
+	{
+	  localnodes.push_back((*n)->get_gid());
+	  localnodes.push_back(((*n)->get_parent())->get_gid());
+	  localnodes.push_back((*n)->get_vp());
+	}
 
       //get size of buffers
-      std::vector<nest::int_t> n_gids(np);
-      n_gids[Communicator::rank_] = localgids.size();
-      communicate(n_gids);
+      std::vector<nest::int_t> n_nodes(np);
+      n_nodes[Communicator::rank_] = localnodes.size();
+      communicate(n_nodes);
 
       // Set up displacements vector.
       std::vector<int> displacements(np,0);
 
       for ( size_t i = 1; i < np; ++i )
-        displacements.at(i) = displacements.at(i-1)+n_gids.at(i-1);
+        displacements.at(i) = displacements.at(i-1)+n_nodes.at(i-1);
 
       // Calculate sum of global connections.
-      nest::int_t n_globals =
-        std::accumulate(n_gids.begin(),n_gids.end(), 0);
-      vector<long_t> globalgids;
+      size_t n_globals =
+        std::accumulate(n_nodes.begin(),n_nodes.end(), 0);
+      assert(n_globals % 3 == 0);   
+      vector<long_t> globalnodes;
       if (n_globals != 0)
       {
-        globalgids.resize(n_globals,0L);
-        communicate_Allgatherv<nest::long_t>(localgids, globalgids, displacements, n_gids);
+        globalnodes.resize(n_globals,0L);
+        communicate_Allgatherv<nest::long_t>(localnodes, globalnodes, displacements, n_nodes);
       }
+      //Create unflattened vector
+      for ( size_t i = 0; i < n_globals -2; i +=3)
+	all_nodes.push_back(NodeAddressingData(globalnodes[i],globalnodes[i+1],globalnodes[i+2]));
+      
       //get rid of any multiple entries
-      std::insert_iterator<vector<index> > ins(gids, gids.begin());
-      std::sort(globalgids.begin(),globalgids.end());
-      std::unique_copy(globalgids.begin(),globalgids.end(),ins);
+      std::sort(all_nodes.begin(), all_nodes.end());
+      vector<NodeAddressingData>::iterator it;
+      it = unique(all_nodes.begin(), all_nodes.end());
+      all_nodes.resize(it - all_nodes.begin());
     }
     else
     {
       for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
-        gids.push_back((*n)->get_gid());
-      std::sort(gids.begin(),gids.end());
+	all_nodes.push_back(NodeAddressingData((*n)->get_gid(), ((*n)->get_parent())->get_gid(), (*n)->get_vp()));
+        std::sort(all_nodes.begin(),all_nodes.end());
     }
   }
 

@@ -928,11 +928,11 @@ void Network::divergent_connect(index source_id, const TokenArray target_ids, co
     message(SLIInterpreter::M_INFO, "DivergentConnect", "Source ID is a subnet; I will iterate it.");
     
     // collect all leaves in source subnet, then divergent-connect each leaf
-    LocalLeafList source_nodes(*source_comp);
-    vector<index> source_gids;
-    nest::Communicator::communicate(source_nodes,source_gids);
-    for(vector<index>::iterator src=source_gids.begin(); src!= source_gids.end(); ++src)
-      divergent_connect(*src, target_ids, weights, delays, syn);
+    LocalLeafList local_sources(*source_comp);
+    vector<Communicator::NodeAddressingData> global_sources;
+    nest::Communicator::communicate(local_sources,global_sources);
+    for(vector<Communicator::NodeAddressingData>::iterator src=global_sources.begin(); src!= global_sources.end(); ++src)
+      divergent_connect(src->get_gid(), target_ids, weights, delays, syn);
 
     return;
   }
@@ -1063,11 +1063,11 @@ void Network::divergent_connect(index source_id, DictionaryDatum pars, index syn
     message(SLIInterpreter::M_INFO, "DivergentConnect", "Source ID is a subnet; I will iterate it.");
     
     // collect all leaves in source subnet, then divergent-connect each leaf
-    LocalLeafList source_nodes(*source_comp);
-    vector<index> source_gids;
-    nest::Communicator::communicate(source_nodes,source_gids);
-    for(vector<index>::iterator src=source_gids.begin(); src!= source_gids.end(); ++src)
-       divergent_connect(*src, pars, syn);
+    LocalLeafList local_sources(*source_comp);
+    vector<Communicator::NodeAddressingData> global_sources;
+    nest::Communicator::communicate(local_sources,global_sources);
+    for(vector<Communicator::NodeAddressingData>::iterator src=global_sources.begin(); src!= global_sources.end(); ++src)
+      divergent_connect(src->get_gid(), pars, syn);
 
     return;
   }
@@ -1142,12 +1142,12 @@ void Network::random_divergent_connect(index source_id, const TokenArray target_
     message(SLIInterpreter::M_INFO, "RandomDivergentConnect", "Source ID is a subnet; I will iterate it.");
     
     // collect all leaves in source subnet, then divergent-connect each leaf
-    LocalLeafList source_nodes(*source_comp);
-    vector<index> source_gids;
-    nest::Communicator::communicate(source_nodes,source_gids);
+    LocalLeafList local_sources(*source_comp);
+    vector<Communicator::NodeAddressingData> global_sources;
+    nest::Communicator::communicate(local_sources,global_sources);
 
-    for(vector<index>::iterator src=source_gids.begin(); src!= source_gids.end(); ++src)
-      random_divergent_connect(*src,target_ids, n, weights, delays, allow_multapses, allow_autapses, syn);
+    for(vector<Communicator::NodeAddressingData>::iterator src=global_sources.begin(); src!= global_sources.end(); ++src)
+      random_divergent_connect(src->get_gid(),target_ids, n, weights, delays, allow_multapses, allow_autapses, syn);
 
     return;
   }

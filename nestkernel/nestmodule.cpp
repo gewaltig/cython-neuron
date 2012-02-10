@@ -573,11 +573,11 @@ namespace nest
 
     if ( include_remote )
     {
-      vector<index> gids;
-      nest::Communicator::communicate(localnodes, gids);
-      result.reserve(gids.size());
-      for(vector<index>::iterator n = gids.begin(); n != gids.end(); ++n)
-        result.push_back(new IntegerDatum(*n));
+      vector<Communicator::NodeAddressingData> globalnodes;
+      nest::Communicator::communicate(localnodes, globalnodes);
+      result.reserve(globalnodes.size());
+      for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
+        result.push_back(new IntegerDatum(n->get_gid()));
     }
     else
     {
@@ -606,11 +606,11 @@ namespace nest
 
     if ( include_remote )
     {
-      vector<index> gids;
-      nest::Communicator::communicate(local_children, gids);
-      result.reserve(gids.size());
-      for(vector<index>::iterator n = gids.begin(); n != gids.end(); ++n)
-        result.push_back(new IntegerDatum(*n));
+      vector<Communicator::NodeAddressingData> global_children;
+      nest::Communicator::communicate(local_children, global_children);
+      result.reserve(global_children.size());
+      for(vector<Communicator::NodeAddressingData>::iterator n = global_children.begin(); n != global_children.end(); ++n)
+        result.push_back(new IntegerDatum(n->get_gid()));
     }
     else
     {
@@ -640,12 +640,12 @@ namespace nest
 
     if ( include_remote )
     {
-      vector<index> gids;
-      nest::Communicator::communicate(localnodes, gids);
-      result.reserve(gids.size());
+      vector<Communicator::NodeAddressingData> global_nodes;
+      nest::Communicator::communicate(localnodes, global_nodes);
+      result.reserve(global_nodes.size());
 
-      for(vector<index>::iterator n = gids.begin(); n != gids.end(); ++n)
-        result.push_back(new IntegerDatum(*n));
+      for(vector<Communicator::NodeAddressingData>::iterator n = global_nodes.begin(); n != global_nodes.end(); ++n)
+        result.push_back(new IntegerDatum(n->get_gid()));
     }
     else
     {
@@ -656,36 +656,6 @@ namespace nest
     i->OStack.pop(2);
     i->OStack.push(result);
     i->EStack.pop();
-  }
-
-  /* BeginDocumentation      
-     Name: GetLID - Return the local ID of a node
-   
-     Synopsis: GID GetLID -> lid
-   
-     Parameters:
-     gid       - Global id of a node
-     lid       - Local if of the node
-
-     Description:
-     This function returns the local node ID of a node within its parent subnet.
-  */
-  /*
-  void NestModule::GetLIDFunction::execute(SLIInterpreter *i) const
-  {
-    i->assert_stack_load(1);
-
-    long gid  =  i->OStack.pick(0);
-    index lid = get_network().get_lid(gid);
-     
-    i->OStack.pop();
-    i->OStack.push(lid+1);
-    i->EStack.pop();
-  }
-  */
-  void NestModule::GetLIDFunction::execute(SLIInterpreter *i) const
-  {
-    assert(false);
   }
 
 
@@ -1613,8 +1583,6 @@ namespace nest
     i->createcommand("GetNodes_i_b",    &getnodes_i_bfunction);
     i->createcommand("GetLeaves_i_b",   &getleaves_i_bfunction);
     i->createcommand("GetChildren_i_b", &getchildren_i_bfunction);
-
-    i->createcommand("GetLID",       &getlidfunction);
 
     i->createcommand("SetStatus_id", &setstatus_idfunction);
     i->createcommand("SetStatus_CD", &setstatus_CDfunction);
