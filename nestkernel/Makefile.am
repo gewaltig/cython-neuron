@@ -29,7 +29,7 @@ libnest_la_SOURCES=\
 		recordables_map.h\
 		archiving_node.h archiving_node.cpp\
 		common_synapse_properties.h common_synapse_properties.cpp\
-		communicator.h communicator.cpp\
+		communicator.h communicator_impl.h communicator.cpp\
 		sibling_container.h sibling_container.cpp\
 		subnet.h subnet.cpp\
 		connection.h connection.cpp\

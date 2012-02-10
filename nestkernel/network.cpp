@@ -35,6 +35,8 @@
 #include "nestmodule.h"
 #include "sibling_container.h"
 
+#include "communicator_impl.h"
+
 #include <cmath>
 #include <set>
 #ifdef _OPENMP
