@@ -41,7 +41,7 @@ M_ERROR setverbosity
   /source_neuron /iaf_neuron Create def
   0 ChangeSubnet
   /target_neuron /iaf_neuron Create def
-  [0 1] GetGID [target_neuron] DivergentConnect
+  source_neuron [target_neuron] DivergentConnect
   << /source source_neuron >> FindConnections { /target get } Map
 } def
 
@@ -51,7 +51,7 @@ M_ERROR setverbosity
   /target_neuron /iaf_neuron Create def
   0 ChangeSubnet
   /source_neuron /iaf_neuron Create def
-  [source_neuron] [0 1] GetGID ConvergentConnect 
+  [source_neuron] target_neuron ConvergentConnect 
   << /source source_neuron >> FindConnections { /target get } Map
 } def
 
@@ -62,7 +62,7 @@ M_ERROR setverbosity
   /source_neuron /iaf_neuron Create def
   0 ChangeSubnet
   /target_neuron /iaf_neuron Create def
-  [0 1] GetGID num_conns [target_neuron] RandomDivergentConnect
+  source_neuron num_conns [target_neuron] RandomDivergentConnect
   << /source source_neuron >> FindConnections { /target get } Map 
 } def
 
@@ -73,7 +73,7 @@ M_ERROR setverbosity
   /target_neuron /iaf_neuron Create def
   0 ChangeSubnet
   /source_neuron /iaf_neuron Create def
-  [source_neuron] num_conns [0 1] GetGID RandomConvergentConnect 
+  [source_neuron] target_neuron num_conns RandomConvergentConnect 
   << /source source_neuron >> FindConnections { /target get } Map 
 } def
 
