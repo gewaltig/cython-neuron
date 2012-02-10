@@ -42,6 +42,9 @@ class StatusTestCase(unittest.TestCase):
 
         models = nest.Models()
         
+        # sli_neuron does not work under PyNEST
+        models.remove('sli_neuron')
+
         for model in models:
             nest.ResetKernel()
             d = nest.GetDefaults(model)        

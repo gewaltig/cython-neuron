@@ -283,6 +283,12 @@ else
   echo "  for Python. See the file README for details."
 fi
 
+# show PyNEST failure number explicitly
+numfailed_text="Failed: $numfailed"
+if [ $pynest_numfailed -gt 0 ]; then
+  numfailed_text="${numfailed_text} (${pynest_numfailed} PyNEST)"
+fi
+
 echo
 echo "NEST Testsuite Summary"
 echo "----------------------"
@@ -290,7 +296,7 @@ echo "  NEST Executable: "`which nest`
 echo "  SLI Executable : "`which sli`
 echo "  Total number of tests: $numtests"
 echo "     Passed: $numpassed"
-echo "     Failed: $numfailed"
+echo "     $numfailed_text"
 echo
 
 if [ $numfailed -gt 0 ]; then

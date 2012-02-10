@@ -68,15 +68,14 @@ namespace nest
     // Selected nodes are inserted into a new subnet structure
     // (i.e. nested subnet structures are flattened). 
     for(std::vector<Node*>::const_iterator it=begin(); it != end(); ++it)
-      {
-	Subnet subnet;
+    {
+	  Subnet subnet;
 
-	selector.slice_node(subnet, *it);
+	  selector.slice_node(subnet, *it);
 	//	selector(subnet, *it, slice_depth, modeltype);
 
-	assert(false && "TODO: Replace nodes.push_back");
-	//nodes.push_back(new Subnet(subnet));
-      }
+	  nodes.push_back(new Subnet(subnet));
+    }
 
     return std::vector<Node*>(nodes.begin(), nodes.end());
     */
