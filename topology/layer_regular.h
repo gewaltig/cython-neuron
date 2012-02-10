@@ -27,9 +27,9 @@
 #include <vector>
 
 #include "subnet.h"
-#include "leaflist.h"
 #include "iostreamdatum.h"
 #include "nest.h"
+#include "nodelist.h"
 
 #include "layer.h"
 #include "position.h"

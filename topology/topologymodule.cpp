@@ -39,7 +39,7 @@
 #include "tokenarray.h"
 #include "integerdatum.h"
 #include "stringdatum.h"
-#include "leaflist.h"
+#include "nodelist.h"
 
 #include "layer_regular.h"
 #include "layer_unrestricted.h"

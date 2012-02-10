@@ -50,7 +50,6 @@ libnest_la_SOURCES=\
 		genericmodel.h\
 		get_mem_bgp.c\
 		histentry.h histentry.cpp\
-		leaflist.h leaflist.cpp\
 		model.h model.cpp\
 		nest.h\
 		nest_names.cpp nest_names.h\
