@@ -97,11 +97,6 @@ def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-/NetworkDimensions trie
-[/arraytype]
-  /NetworkDimensions_a load addtotrie
-def
-
 /GetResolution {
     0 GetStatus /resolution get
 } def
