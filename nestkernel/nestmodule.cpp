@@ -574,7 +574,11 @@ namespace nest
     ArrayDatum result;
 
     vector<Communicator::NodeAddressingData> globalnodes;
-    nest::Communicator::communicate(localnodes, globalnodes, params, include_remote);
+    if (params->empty())
+      nest::Communicator::communicate(localnodes,globalnodes,include_remote);
+    else
+      nest::Communicator::communicate(localnodes, globalnodes, get_network(), params, include_remote);
+
     result.reserve(globalnodes.size());
     for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
       result.push_back(new IntegerDatum(n->get_gid()));
@@ -596,13 +600,16 @@ namespace nest
     if (subnet == NULL)
       throw SubnetExpected();
  
-    LocalChildList local_children(*subnet);
+    LocalChildList localnodes(*subnet);
     ArrayDatum result;
 
-    vector<Communicator::NodeAddressingData> global_children;
-    nest::Communicator::communicate(local_children, global_children, params, include_remote);
-    result.reserve(global_children.size());
-    for(vector<Communicator::NodeAddressingData>::iterator n = global_children.begin(); n != global_children.end(); ++n)
+    vector<Communicator::NodeAddressingData> globalnodes;
+    if (params->empty())
+       nest::Communicator::communicate(localnodes,globalnodes,include_remote);
+    else
+      nest::Communicator::communicate(localnodes, globalnodes, get_network(), params, include_remote);
+    result.reserve(globalnodes.size());
+    for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
       result.push_back(new IntegerDatum(n->get_gid()));
     
     i->OStack.pop(3);
@@ -615,7 +622,7 @@ namespace nest
     i->assert_stack_load(3);
 
     const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
-     const DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(1));
+    const DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(1));
     const index node_id        = getValue<long>(i->OStack.pick(2));
 
     Subnet *subnet = dynamic_cast<Subnet *>(get_network().get_node(node_id));     
@@ -625,11 +632,14 @@ namespace nest
     LocalLeafList localnodes(*subnet);
     ArrayDatum result;
 
-    vector<Communicator::NodeAddressingData> global_nodes;
-    nest::Communicator::communicate(localnodes, global_nodes, params, include_remote);
-    result.reserve(global_nodes.size());
+    vector<Communicator::NodeAddressingData> globalnodes;
+    if (params->empty())
+      nest::Communicator::communicate(localnodes,globalnodes,include_remote);
+    else
+      nest::Communicator::communicate(localnodes, globalnodes, get_network(), params, include_remote);
+    result.reserve(globalnodes.size());
 
-    for(vector<Communicator::NodeAddressingData>::iterator n = global_nodes.begin(); n != global_nodes.end(); ++n)
+    for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
       result.push_back(new IntegerDatum(n->get_gid()));
 
     i->OStack.pop(3);

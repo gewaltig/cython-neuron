@@ -162,10 +162,10 @@ public:
    * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
    */
    template <typename NodeListType>
-      static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes);
+     static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, bool remote);
    template <typename NodeListType>
       static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, 
-				DictionaryDatum params, bool remote);
+			      Network& net, DictionaryDatum params, bool remote);
 
   static void communicate_connector_properties(DictionaryDatum& dict);
 
@@ -287,7 +287,7 @@ public:
       static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes);
    template <typename NodeListType>
       static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, 
-				DictionaryDatum params, bool remote);
+			      Network& net, DictionaryDatum params, bool remote);
 
   static void communicate_connector_properties(DictionaryDatum&) {}
 

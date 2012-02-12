@@ -15,6 +15,7 @@
  */
 
 #include "communicator.h"
+#include "network.h"
 
 #include "config.h"
 
@@ -60,16 +61,62 @@ void nest::Communicator::communicate_Allgatherv(std::vector<T>& send_buffer,
 }
 
 template <typename NodeListType>
-void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes)
+void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes, bool remote=true)
   {
-    DictionaryDatum dict = DictionaryDatum(new Dictionary);
-    communicate(local_nodes, all_nodes, dict, true);
+    size_t np = Communicator::num_processes_;
+    if (np > 1 && remote)
+      {
+	vector<long_t> localnodes;
+	for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+	  {
+	    localnodes.push_back((*n)->get_gid());
+	    localnodes.push_back(((*n)->get_parent())->get_gid());
+	    localnodes.push_back((*n)->get_vp());
+	  }
+	//get size of buffers
+	std::vector<nest::int_t> n_nodes(np);
+	n_nodes[Communicator::rank_] = localnodes.size();
+	communicate(n_nodes);
+
+	// Set up displacements vector.
+	std::vector<int> displacements(np,0);
+
+	for ( size_t i = 1; i < np; ++i )
+	  displacements.at(i) = displacements.at(i-1)+n_nodes.at(i-1);
+
+	// Calculate sum of global connections.
+	size_t n_globals =
+	  std::accumulate(n_nodes.begin(),n_nodes.end(), 0);
+	assert(n_globals % 3 == 0);   
+	vector<long_t> globalnodes;
+	if (n_globals != 0)
+	  {
+	    globalnodes.resize(n_globals,0L);
+	    communicate_Allgatherv<nest::long_t>(localnodes, globalnodes, displacements, n_nodes);
+	  }
+
+	//Create unflattened vector
+	for ( size_t i = 0; i < n_globals -2; i +=3)
+	  all_nodes.push_back(NodeAddressingData(globalnodes[i],globalnodes[i+1],globalnodes[i+2]));
+      
+	//get rid of any multiple entries
+	std::sort(all_nodes.begin(), all_nodes.end());
+	vector<NodeAddressingData>::iterator it;
+	it = unique(all_nodes.begin(), all_nodes.end());
+	all_nodes.resize(it - all_nodes.begin());
+      }
+    else   //on one proc or not including remote nodes
+      {
+	for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+	    all_nodes.push_back(NodeAddressingData((*n)->get_gid(), ((*n)->get_parent())->get_gid(), (*n)->get_vp()));
+	std::sort(all_nodes.begin(),all_nodes.end());
+      }
   }
 
 
 template <typename NodeListType>
 void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes, 
-				   DictionaryDatum params, bool remote)
+				     Network& net, DictionaryDatum params, bool remote)
   {
     size_t np = Communicator::num_processes_;
 
@@ -89,9 +136,8 @@ void nest::Communicator::communicate(const NodeListType& local_nodes, vector<Nod
 	    {
 	      //select those nodes fulfilling the key/value pairs of the dictionary
 	      bool match = true;
-	      DictionaryDatum node_status = DictionaryDatum(new Dictionary);
-	      //to do: need to get the status from the network, not the node!
-	      (*n)->get_status(node_status);
+	      index gid = (*n)->get_gid();
+	      DictionaryDatum node_status = net.get_status(gid);
 	      for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
 		{
 		  std::cout << i->first << " " << i->second << std::endl;
@@ -105,7 +151,7 @@ void nest::Communicator::communicate(const NodeListType& local_nodes, vector<Nod
 		}
 		  if (match)
 		    {
-		      localnodes.push_back((*n)->get_gid());
+		      localnodes.push_back(gid);
 		      localnodes.push_back(((*n)->get_parent())->get_gid());
 		      localnodes.push_back((*n)->get_vp());
 		    }
@@ -155,8 +201,8 @@ void nest::Communicator::communicate(const NodeListType& local_nodes, vector<Nod
 	for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
 	  {
 	    bool match = true;
-	    DictionaryDatum node_status = DictionaryDatum(new Dictionary);
-	    (*n)->get_status(node_status);
+	    index gid = (*n)->get_gid();
+	    DictionaryDatum node_status = net.get_status(gid);
 	    node_status->info(std::cout);
 	    for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
 	      {
