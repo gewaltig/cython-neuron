@@ -283,14 +283,14 @@ ArrayDatum ConnectionManager::find_connections(DictionaryDatum params)
 {
   ArrayDatum connectome;
   
-  long source=0L;
+  ulong_t source=0L;
   bool have_source = updateValue<long>(params, names::source, source);
   if (have_source)
     net_.get_node(source); // This throws if the node does not exist
   else
     throw UndefinedName(names::source.toString());
   
-  long target=0L;
+  ulong_t target=0L;
   bool have_target = updateValue<long>(params, names::target, target);
   if (have_target)
     net_.get_node(target); // This throws if the node does not exist

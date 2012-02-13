@@ -315,7 +315,7 @@ index Network::add_node(index mod, long_t n)   //no_p
   assert(current_ != 0);
   assert(root_ != 0);
 
-  if(mod >= (long_t)models_.size() || mod < 0)
+  if(mod >= models_.size())
     throw UnknownModelID(mod);
 
   if (n < 1)
