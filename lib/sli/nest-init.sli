@@ -1329,7 +1329,7 @@ def
 
 /GetLocalLeaves trie
 [/integertype /dictionarytype] { true GetLeaves_i_D_b } bind addtotrie
-[/integertype] { << >> GetLeaves_i_D_b } bind addtotrie
+[/integertype] { << >> true GetLeaves_i_D_b } bind addtotrie
 def
 
 
