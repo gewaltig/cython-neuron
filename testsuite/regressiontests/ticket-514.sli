@@ -24,7 +24,7 @@
     pg << /rate 1000. >> SetStatus
 
     /iaf_psc_delta [1000] LayoutNetwork /net Set
-    /neurons net GetNodes def
+    /neurons net GetLocalLeaves def
           
     pg neurons DivergentConnect
 
