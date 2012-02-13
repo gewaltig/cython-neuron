@@ -42,17 +42,33 @@
 // This may differ on other Blue Gene/P systems and was only tested on
 // the JUGENE system at the Research Center Juelich
 #ifdef IS_BLUEGENE_P
+
+#include <spi/bgp_SPI.h>
+
 extern "C"
 {
-  long get_heap_mem_bgp();
-  long get_stack_mem_bgp();
-}
+  long get_heap_mem_bgp()
+  {
+    uint32_t heap_memory = 0;
+    Kernel_GetMemorySize(KERNEL_MEMSIZE_HEAP, &heap_memory);
+    return (long)heap_memory;
+  }
+
+  long get_stack_mem_bgp()
+  {
+    uint32_t stack_memory = 0;
+    Kernel_GetMemorySize(KERNEL_MEMSIZE_STACK, &stack_memory);
+    return (long)stack_memory;
+  }
+
 // For getrusage
 #include <sys/resource.h>
 #include <common/bgp_personality.h>
 #include <common/bgp_personality_inlines.h>
 #include <spi/kernel_interface.h>
-#endif
+}
+
+#endif /* #ifdef IS_BLUEGENE_P */
 
 extern int SLIsignalflag;
 

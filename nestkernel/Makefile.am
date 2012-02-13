@@ -48,7 +48,6 @@ libnest_la_SOURCES=\
 		generic_connector.h\
 		generic_connector_model.h\
 		genericmodel.h\
-		get_mem_bgp.c\
 		histentry.h histentry.cpp\
 		model.h model.cpp\
 		nest.h\
