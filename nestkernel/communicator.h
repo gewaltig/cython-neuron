@@ -307,11 +307,10 @@ public:
    * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
    */
    template <typename NodeListType>
-
-     static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, bool);
+     static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, bool remote = false);
    template <typename NodeListType>
       static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, 
-            Network& net, DictionaryDatum params, bool);
+            Network& net, DictionaryDatum params, bool remote = false);
 
   static void communicate_connector_properties(DictionaryDatum&) {}
 
