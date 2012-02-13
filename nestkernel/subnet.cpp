@@ -78,7 +78,7 @@ void nest::Subnet::set_status(const DictionaryDatum& dict)
 
 void nest::Subnet::get_status(DictionaryDatum& dict) const
 {
-  (*dict)["number_of_children"]= size();
+  (*dict)["number_of_children"]= global_size();
   (*dict)["label"]=label_;
   (*dict)["customdict"]=customdict_;
   (*dict)["children_on_same_vp"]=children_on_same_vp_; 
@@ -97,7 +97,7 @@ void nest::Subnet::get_dimensions_(std::vector<int> & dim) const
     	Subnet *c1=dynamic_cast<Subnet *>(nodes_.at(i));
     	Subnet *c2=dynamic_cast<Subnet *>(nodes_.at(i+1));
 
-	    if(c1->size() != c2->size())
+	    if(c1->global_size() != c2->global_size())
 	    {
 	      homog=false;
 	      continue;
