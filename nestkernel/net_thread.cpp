@@ -120,7 +120,7 @@ int nest::Thread::join()
 
 // global thread handler function.
 extern "C"
-void* nest_thread_handler(void *t)
+void* nest_thread_handler(void*)
 {
   return NULL;
 }

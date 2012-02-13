@@ -63,7 +63,7 @@ void nest::Communicator::communicate_Allgatherv(std::vector<T>& send_buffer,
 template <typename NodeListType>
 void nest::Communicator::communicate(const NodeListType& local_nodes,
                                      vector<NodeAddressingData>& all_nodes,
-                                     bool remote=true)
+                                     bool remote = true)
 {
   size_t np = Communicator::num_processes_;
   if (np > 1 && remote)
@@ -228,7 +228,7 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
 #else //HAVE_MPI
 
 template <typename NodeListType>
-void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes, bool remote = false)
+void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes, bool)
 {
   for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
         all_nodes.push_back(NodeAddressingData((*n)->get_gid(), ((*n)->get_parent())->get_gid(), (*n)->get_vp()));
@@ -237,7 +237,7 @@ void nest::Communicator::communicate(const NodeListType& local_nodes, vector<Nod
 
 template <typename NodeListType>
 void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes,
-                                     Network& net, DictionaryDatum params, bool remote=false)
+                                     Network& net, DictionaryDatum params, bool)
 {
 
   if (params->empty())

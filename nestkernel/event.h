@@ -238,7 +238,7 @@ namespace nest{
     void set_stamp(Time const &);
     
   protected:
-
+    index sender_gid_; //!< GID of sender or -1.
     /*
      * The original formulation used references to Nodes as
      * members, however, in order to avoid the reference of reference
@@ -249,7 +249,7 @@ namespace nest{
     Node * sender_; //!< Pointer to sender or NULL.
     Node * receiver_; //!< Pointer to receiver or NULL.
 
-    index sender_gid_; //!< GID of sender or -1.
+    
     
     /**
      * Sender port number.  
