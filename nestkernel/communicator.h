@@ -307,6 +307,7 @@ public:
    * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
    */
    template <typename NodeListType>
+
      static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, bool);
    template <typename NodeListType>
       static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, 

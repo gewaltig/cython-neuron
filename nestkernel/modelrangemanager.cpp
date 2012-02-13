@@ -29,10 +29,10 @@ namespace nest {
   // member functions of modelrangemanager
 
 Modelrangemanager::Modelrangemanager() :
-  range_idx_(0), first_gid_(0), last_gid_(0), range_misses_(0)
+  range_idx_(0), first_gid_(0), last_gid_(0)
   { } 
 
-void Modelrangemanager::add_range(long_t model, index first_gid, index last_gid)
+void Modelrangemanager::add_range(index model, index first_gid, index last_gid)
 {
   if (!modelranges_.empty())
   {
@@ -70,7 +70,6 @@ void Modelrangemanager::add_range(long_t model, index first_gid, index last_gid)
       right = range_idx_;
       range_idx_ -= (range_idx_ - left)/2;
     }
-    range_misses_++;
     assert(left+1 < right);
   }
 
@@ -96,14 +95,6 @@ void Modelrangemanager::clear()
 {
   modelranges_.clear();
   range_idx_ = 0;
-}
-
-// TODO: just for debug purposes, can be removed later. AM 13/2/2010
-void Modelrangemanager::print() const
-{
-  std::cout << "Total model id search steps: " << range_misses_ << std::endl;
-  for (std::vector<modelrange>::const_iterator it = modelranges_.begin(); it != modelranges_.end(); it++)
-    std::cout << it->get_model_id() << "\t" << it->get_first_gid() << "\t" << it->get_last_gid() << "\n";
 }
 
 }

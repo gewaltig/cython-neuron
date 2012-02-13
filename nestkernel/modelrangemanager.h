@@ -34,7 +34,7 @@ namespace nest {
   {
   public:
     Modelrangemanager();
-    void add_range(long_t model, index first_gid, index last_gid);
+    void add_range(index model, index first_gid, index last_gid);
     bool is_in_range(index gid) const {return ((gid <= last_gid_) && (gid >= first_gid_));}
     long_t get_model_id(index gid);
     bool model_in_use(index i) const;
@@ -46,8 +46,6 @@ namespace nest {
     uint_t range_idx_;
     index first_gid_;
     index last_gid_;
-    //just for debug purposes, can be removed later
-    int range_misses_;
   };
 }
 #endif

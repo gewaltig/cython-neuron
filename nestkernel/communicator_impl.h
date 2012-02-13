@@ -145,9 +145,7 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
         DictionaryDatum node_status = net.get_status(gid);
         for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
         {
-          std::cout << i->first << " " << i->second << std::endl;
           const Token token = node_status->lookup(i->first);
-          std::cout << token << std::endl;
           if ((token == params->getvoid()) || (token != i->second))
           {
             match = false;
@@ -208,12 +206,9 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
         bool match = true;
         index gid = (*n)->get_gid();
         DictionaryDatum node_status = net.get_status(gid);
-        node_status->info(std::cout);
         for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
         {
-          std::cout << i->first << " " << i->second << std::endl;
           const Token token = node_status->lookup(i->first);
-          std::cout << token << std::endl;
           if ((token == params->getvoid()) || (token !=i->second))
           {
             match = false;
@@ -233,8 +228,7 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
 #else //HAVE_MPI
 
 template <typename NodeListType>
-void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes,
-                                     bool remote=true)
+void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes, bool remote = false)
 {
   for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
         all_nodes.push_back(NodeAddressingData((*n)->get_gid(), ((*n)->get_parent())->get_gid(), (*n)->get_vp()));
@@ -243,7 +237,7 @@ void nest::Communicator::communicate(const NodeListType& local_nodes, vector<Nod
 
 template <typename NodeListType>
 void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes,
-                                     Network& net, DictionaryDatum params, bool remote=true)
+                                     Network& net, DictionaryDatum params, bool remote=false)
 {
 
   if (params->empty())

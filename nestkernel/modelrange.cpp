@@ -25,7 +25,7 @@
 
   // member functions of modelrange
 
-nest::modelrange::modelrange(long_t model, index first_gid, index last_gid) :
+nest::modelrange::modelrange(index model, index first_gid, index last_gid) :
   model_(model), first_gid_(first_gid), last_gid_(last_gid)
   { } 
 

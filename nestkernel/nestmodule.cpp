@@ -551,7 +551,7 @@ namespace nest
       throw  UnknownModelName(modname);
        
     // create
-    const long model_id = static_cast<long>(model);
+    const index model_id = static_cast<index>(model);
     const long last_node_id = get_network().add_node(model_id, n_nodes);
     i->OStack.pop(2);
     i->OStack.push(last_node_id);

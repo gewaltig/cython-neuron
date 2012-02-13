@@ -310,7 +310,7 @@ int Network::get_model_id(const char name[]) const
 }
 
 
-index Network::add_node(long_t mod, long_t n)   //no_p
+index Network::add_node(index mod, long_t n)   //no_p
 {
   assert(current_ != 0);
   assert(root_ != 0);
@@ -605,11 +605,6 @@ void Network::print(index p, int depth)
     std::cout << target->print_network(depth + 1, 0);
   else
     throw SubnetExpected();
-}
-
-void Network::print_model_ranges()
-{
-  node_model_ids_.print();
 }
 
 void Network::set_status(index gid, const DictionaryDatum& d)

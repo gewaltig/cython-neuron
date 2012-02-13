@@ -31,15 +31,15 @@ namespace nest {
   class modelrange
   {
     public:
-    modelrange(long_t model, index first_gid, index last_gid);    
+    modelrange(index model, index first_gid, index last_gid);    
     bool is_in_range(index gid) const {return ((gid >=first_gid_) && (gid <=last_gid_));}
-    long_t get_model_id() const {return model_;}
+    index get_model_id() const {return model_;}
     index get_first_gid() const {return first_gid_;}
     index get_last_gid() const {return last_gid_;}
     void extend_range(index new_last_gid);
 
     private:
-    long_t model_;
+    index model_;
     index first_gid_;
     index last_gid_;
   };

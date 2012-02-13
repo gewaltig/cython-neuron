@@ -228,7 +228,7 @@ SeeAlso: Simulate, Node
      * specified.
      * @throws nest::UnknownModelID
      */
-    index add_node(long_t m, long_t n = 1);
+    index add_node(index m, long_t n = 1);
 
     /**
      * Set the state (observable dynamic variables) of a node to model defaults.
@@ -354,8 +354,6 @@ SeeAlso: Simulate, Node
 
     void print(index, int);
 
-    //debug modelrangemanager
-    void print_model_ranges();
     /**
      * Standard routine for sending events. This method decides if
      * the event has to be delivered locally or globally. It exists
