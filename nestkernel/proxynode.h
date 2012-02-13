@@ -44,6 +44,14 @@ Author: June 2005, Jochen Martin Eppler
     proxynode() : Node() {set(frozen);}
     
     /**
+     * Construct proxy node for internal use from
+     * @param GID of represented node
+     * @param GID of parent of represented node
+     * @param model id of represented node
+     */
+    proxynode(index, index, index);
+
+    /**
      * Import sets of overloaded virtual functions.
      * We need to explicitly include sets of overloaded
      * virtual functions into the current scope.
