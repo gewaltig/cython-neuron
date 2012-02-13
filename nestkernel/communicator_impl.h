@@ -233,15 +233,17 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
 #else //HAVE_MPI
 
 template <typename NodeListType>
-void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes)
+void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes,
+                                     bool remote=true)
 {
-  DictionaryDatum dict = DictionaryDatum(new Dictionary);
-  communicate(local_nodes, all_nodes, dict, true);
+  for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
+        all_nodes.push_back(NodeAddressingData((*n)->get_gid(), ((*n)->get_parent())->get_gid(), (*n)->get_vp()));
+  std::sort(all_nodes.begin(),all_nodes.end());
 }
 
 template <typename NodeListType>
 void nest::Communicator::communicate(const NodeListType& local_nodes, vector<NodeAddressingData>& all_nodes,
-                                     DictionaryDatum params, bool remote)
+                                     Network& net, DictionaryDatum params, bool remote=true)
 {
 
   if (params->empty())
@@ -254,8 +256,9 @@ void nest::Communicator::communicate(const NodeListType& local_nodes, vector<Nod
     for ( typename NodeListType::iterator n = local_nodes.begin(); n != local_nodes.end(); ++n )
     {
       bool match = true;
-      DictionaryDatum node_status = DictionaryDatum(new Dictionary);
-      (*n)->get_status(node_status);
+      index gid = (*n)->get_gid();
+      DictionaryDatum node_status = net.get_status(gid);
+      node_status->info(std::cout);
       for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
       {
         const Token token = node_status->lookup(i->first);

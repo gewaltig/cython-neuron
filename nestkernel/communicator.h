@@ -272,6 +272,25 @@ public:
     double_t  offset_;  //!< offset of spike from grid
   };
 
+  class NodeAddressingData {
+  public:
+    NodeAddressingData() :
+      gid_(0), parent_gid_(0), vp_(0) {}
+    NodeAddressingData(uint_t gid, uint_t parent_gid, uint_t vp) :
+      gid_(gid), parent_gid_(parent_gid), vp_(vp) {}
+
+    uint_t get_gid() const {return gid_;}
+    uint_t get_parent_gid() const {return parent_gid_;}
+    uint_t get_vp() const {return vp_;}
+    bool operator< (const NodeAddressingData &other) const {return this->gid_ < other.gid_;}
+    bool operator== (const NodeAddressingData &other) const {return this->gid_ == other.gid_;}
+  private:
+    friend class Communicator;
+    uint_t gid_;                 //!< GID of neuron
+    uint_t parent_gid_;          //!< GID of neuron's parent
+    uint_t vp_;                  //!< virtual process of neuron
+  };
+
   static void communicate(std::vector<uint_t>& send_buffer, std::vector<uint_t>& recv_buffer,
                           std::vector<int>& displacements);
   static void communicate(std::vector<OffGridSpike>& send_buffer,
@@ -283,11 +302,15 @@ public:
    * Collect GIDs for all nodes in a given node list across processes.
    * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
    */
+  /**
+   * Collect GIDs for all nodes in a given node list across processes.
+   * The NodeListType should be one of LocalNodeList, LocalLeafList, LocalChildList.
+   */
    template <typename NodeListType>
-      static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes);
+     static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, bool);
    template <typename NodeListType>
       static void communicate(const NodeListType& local_nodes, std::vector<NodeAddressingData>& all_nodes, 
-			      Network& net, DictionaryDatum params, bool remote);
+            Network& net, DictionaryDatum params, bool);
 
   static void communicate_connector_properties(DictionaryDatum&) {}
 
