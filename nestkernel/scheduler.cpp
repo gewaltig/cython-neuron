@@ -838,8 +838,8 @@ void nest::Scheduler::prepare_nodes()
     {
       if (net_.is_local_gid(n) && net_.nodes_[n] != 0)
       {
-	if ((*net_.nodes_[n]).size() > 0)
-	  prepare_node_((*net_.nodes_[n])[t]);
+	if ((*net_.nodes_[n]).num_thread_siblings_() > 0)
+	  prepare_node_((*net_.nodes_[n]).get_thread_sibling_(t));
 	else
 	{
 	  Node* node = net_.get_node(n, t);
@@ -867,8 +867,8 @@ void nest::Scheduler::finalize_nodes()
      {
        if ( net_.is_local_gid(n) && net_.nodes_[n]!=0 )
        {
-         if ((*net_.nodes_[n]).size() > 0)
-           (*net_.nodes_[n])[t]->finalize();
+         if ((*net_.nodes_[n]).num_thread_siblings_() > 0)
+           (*net_.nodes_[n]).get_thread_sibling_(t)->finalize();
          else
          {
            Node* node = net_.get_node(n, t);

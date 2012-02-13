@@ -215,6 +215,11 @@ SeeAlso: Simulate, Node
     Model * get_model_of_gid(index);
 
     /**
+     * Return the Model ID for a given GID.
+     */
+    index get_model_id_of_gid(index);
+
+    /**
      * Add a number of nodes to the network.
      * This function creates n Node objects of Model m and adds them
      * to the Network at the current position.
@@ -1088,8 +1093,14 @@ SeeAlso: Simulate, Node
   inline 
   Model* Network::get_model_of_gid(index gid)
   {
+     return models_[get_model_id_of_gid(gid)];
+  }
+
+  inline
+  index Network::get_model_id_of_gid(index gid)
+  {
     if (node_model_ids_.is_in_range(gid))
-      return models_[node_model_ids_.get_model_id(gid)];
+      return node_model_ids_.get_model_id(gid);
     else
       throw UnknownNode(gid);
   }

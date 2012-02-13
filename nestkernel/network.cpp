@@ -47,15 +47,15 @@ namespace nest {
 
 
 Network::Network(SLIInterpreter &i)
-    : scheduler_(*this),
-      interpreter_(i),
-      connection_manager_(*this),
-      root_(0),
-      current_(0),
-      data_path_(),
-      data_prefix_(),
-      overwrite_files_(false),
-      dict_miss_is_error_(true)
+: scheduler_(*this),
+  interpreter_(i),
+  connection_manager_(*this),
+  root_(0),
+  current_(0),
+  data_path_(),
+  data_prefix_(),
+  overwrite_files_(false),
+  dict_miss_is_error_(true)
 {
   Node::net_ = this;
   Communicator::net_ = this;
@@ -89,7 +89,7 @@ Network::~Network()
     if ((*i).first != 0)
       delete (*i).first;
 }
-  
+
 void Network::init_()
 {
   /*
@@ -119,7 +119,7 @@ void Network::init_()
     root_container->push_back(newnode);
   }
 
-  current_ = root_ = static_cast<Subnet *>((*root_container)[0]);
+  current_ = root_ = static_cast<Subnet *>((*root_container).get_thread_sibling_(0));
 
   /**
     Build modeldict and list of models from clean prototypes.
@@ -133,10 +133,10 @@ void Network::init_()
     @todo THIS IS A WORK-AROUND. The model name/model id setup, and the 
     initialization of models must be revised in connection with with the
     Network/Scheduler refactoring (#150).
-  */
+   */
   models_.clear();
   modeldict_->clear();
-  
+
   // Re-create the model list from the clean prototypes
   for(index i = 0; i < pristine_models_.size(); ++i)
     if (pristine_models_[i].first != 0)
@@ -195,8 +195,8 @@ void Network::destruct_nodes_()
     if ( nodes_.test(n) )
     {
       assert(nodes_[n] != 0);
-      for(size_t t = 0; t < (*nodes_[n]).size(); ++t)
-	(*nodes_[n])[t]->~Node();
+      for(size_t t = 0; t < (*nodes_[n]).num_thread_siblings_(); ++t)
+        (*nodes_[n]).get_thread_sibling_(t)->~Node();
       (*nodes_[n]).~Node();
     }
 
@@ -253,7 +253,7 @@ void Network::reset_network()
 {
   if ( !scheduler_.get_simulated() )
     return;  // nothing to do
-  
+
   /* Reinitialize state on all nodes, force init_buffers() on next
      Simulate Finding all nodes is non-trivial:
      - Nodes with proxies are found in nodes_. This is also true for
@@ -266,10 +266,10 @@ void Network::reset_network()
      a Node if it's model id is -1, which indicates that it is a
      container.  Subnets are not iterated, since their nodes are
      registered in nodes_ directly.
-  */
+   */
   for(size_t n = 0; n < nodes_.size(); ++n)
   {
-    if ( (*nodes_[n]).size() == 0 )  // not a SiblingContainer
+    if ( (*nodes_[n]).num_thread_siblings_() == 0 )  // not a SiblingContainer
     {
       (*nodes_[n]).init_state();
       (*nodes_[n]).unset(Node::buffers_initialized);
@@ -287,10 +287,10 @@ void Network::reset_network()
       }
     }
   }
-  
+
   // clear global spike buffers
   scheduler_.clear_pending_spikes();
-  
+
   // ConnectionManager doesn't support resetting dynamic synapses yet
   message(SLIInterpreter::M_WARNING, "ResetNetwork", 
           "Synapses with internal dynamics (facilitation, STDP) are not reset.\n"
@@ -329,7 +329,7 @@ index Network::add_node(long_t mod, long_t n)   //no_p
 
   Model* model = models_[mod];
   assert(model != 0);
-  
+
   /* current_ points to the instance of the current subnet on thread 0.
      The following code makes subnet a pointer to the wrapper container
      containing the instances of the current subnet on all threads.
@@ -337,10 +337,11 @@ index Network::add_node(long_t mod, long_t n)   //no_p
   index subnet_gid = current_->get_gid();
   assert ( nodes_.test(subnet_gid) );
 
-  SiblingContainer* subnet = dynamic_cast<SiblingContainer *>(&(*nodes_[subnet_gid]));
-  assert(subnet != 0);
-  assert(subnet->size() == static_cast<size_t>(n_threads));
-  assert((*subnet)[0] == current_);
+  SiblingContainer* subnet_container =
+      dynamic_cast<SiblingContainer *>(&(*nodes_[subnet_gid]));
+  assert(subnet_container != 0);
+  assert(subnet_container->num_thread_siblings_() == static_cast<size_t>(n_threads));
+  assert(subnet_container->get_thread_sibling_(0) == current_);
 
   if ((max_gid > nodes_.max_size()) || (max_gid<min_gid))
   {
@@ -372,18 +373,18 @@ index Network::add_node(long_t mod, long_t n)   //no_p
       if(is_local_vp(vp))
       {
         Node *newnode = 0;
-	newnode = model->allocate(t);
-	newnode->set_gid_(gid);
-	newnode->set_model_id(mod);
-	newnode->set_thread(t);
-	newnode->set_vp(vp);
+        newnode = model->allocate(t);
+        newnode->set_gid_(gid);
+        newnode->set_model_id(mod);
+        newnode->set_thread(t);
+        newnode->set_vp(vp);
 
-	nodes_[gid] = newnode;        // put into local nodes list
-	current_->add_node(newnode);  // and into current subnet, thread 0.
+        nodes_[gid] = newnode;        // put into local nodes list
+        current_->add_node(newnode);  // and into current subnet, thread 0.
       }
       else
-	current_->add_remote_node(mod);
-     }
+        current_->add_remote_node(mod);
+    }
   } 
   else if (!model->one_node_per_process())
   {
@@ -412,15 +413,15 @@ index Network::add_node(long_t mod, long_t n)   //no_p
     // The allocation of the wrapper containers is spread over threads
     // to balance memory load.
     size_t container_per_thread = n / n_threads + 1;
-    
+
     // since we create the n nodes on each thread, we reserve the full load.
     for(thread t = 0; t < n_threads; ++t)
     {
       model->reserve(t,n);
       siblingcontainer_model->reserve(t, container_per_thread);
-      static_cast<Subnet *>((*subnet)[t])->reserve(n);
+      static_cast<Subnet *>(subnet_container->get_thread_sibling_(t))->reserve(n);
     }
-    
+
     // The following loop creates n nodes. For each node, a wrapper is created
     // and filled with one instance per thread, in total n * n_thread nodes in
     // n wrappers. 
@@ -445,7 +446,7 @@ index Network::add_node(long_t mod, long_t n)   //no_p
         newnode->set_model_id(mod);
         newnode->set_thread(t);
         newnode->set_vp(thread_to_vp(t));
-        
+
         // If the instance is a Subnet, set child-vp-assignment policies.
         Subnet* newsubnet = 0;
         if ((newsubnet = dynamic_cast<Subnet*>(newnode)) != 0)
@@ -458,12 +459,12 @@ index Network::add_node(long_t mod, long_t n)   //no_p
           else
             newsubnet->set_children_vp(suggest_vp(gid));
         }
-        
+
         // Register instance with wrapper
         container->push_back(newnode); 
-        
+
         // Register instance with per-thread instance of enclosing subnet.
-        static_cast<Subnet*>((*subnet)[t])->add_node(newnode); 
+        static_cast<Subnet*>(subnet_container->get_thread_sibling_(t))->add_node(newnode);
       }
     }
   }
@@ -481,12 +482,12 @@ index Network::add_node(long_t mod, long_t n)   //no_p
 
       // Register instance with wrapper
       nodes_[gid] = newnode;
-      
+
       // and into current subnet, thread 0.
       current_->add_node(newnode);
     }
   }
-  
+
   //set off-grid spike communication if necessary
   if (model->is_off_grid())
   {
@@ -530,18 +531,18 @@ Node* Network::get_node(index n, thread thr) //no_p
   if (!is_local_gid(n))
     return proxy_nodes_[node_model_ids_.get_model_id(n)];
 
-  if ((*nodes_[n]).size() == 0)
+  if ((*nodes_[n]).num_thread_siblings_() == 0)
     return nodes_[n];
 
-  if (thr < 0 || thr >= (thread)(*nodes_[n]).size())
+  if (thr < 0 || thr >= (thread)(*nodes_[n]).num_thread_siblings_())
     throw UnknownNode();
 
-  return (*nodes_[n])[thr];
+  return (*nodes_[n]).get_thread_sibling_(thr);
 }
 
 const SiblingContainer* Network::get_thread_siblings(index n) const
 {
-  if(nodes_[n]->size() == 0)
+  if(nodes_[n]->num_thread_siblings_() == 0)
     throw NoThreadSiblingsAvailable(n);
   const SiblingContainer* siblings = dynamic_cast<SiblingContainer*>(nodes_[n]);
   assert(siblings != 0);
@@ -573,14 +574,14 @@ void Network::memory_info()
     idx[i] = i;
 
   std::sort(idx.begin(), idx.end(), ModelComp(models_));
-  
+
   std::string sep("--------------------------------------------------");
-  
+
   std::cout << sep << std::endl;
   std::cout << std::setw(25) << "Name"
-            << std::setw(13) << "Capacity"
-            << std::setw(13) << "Available"
-            << std::endl;
+      << std::setw(13) << "Capacity"
+      << std::setw(13) << "Available"
+      << std::endl;
   std::cout << sep << std::endl;
 
   for (index i = 0; i < models_.size(); ++i)
@@ -588,9 +589,9 @@ void Network::memory_info()
     Model * mod = models_[idx[i]];
     if (mod->mem_capacity() != 0)
       std::cout << std::setw(25) << mod->get_name()
-                << std::setw(13) << mod->mem_capacity() * mod->get_element_size()
-                << std::setw(13) << mod->mem_available() * mod->get_element_size()
-                << std::endl;
+      << std::setw(13) << mod->mem_capacity() * mod->get_element_size()
+      << std::setw(13) << mod->mem_available() * mod->get_element_size()
+      << std::endl;
   }
 
   std::cout << sep << std::endl;
@@ -618,32 +619,29 @@ void Network::set_status(index gid, const DictionaryDatum& d)
   {
     if ( is_local_gid(gid) )
     {
-      //int_t lid = node_locs_[gid];
-      //if (lid == -1) return;
-      //Node &target= *(nodes_[lid]);
       Node &target = *(nodes_[gid]);
 
-      if ( target.size() == 0 )
-	set_status_single_node_(target, d);
+      if ( target.num_thread_siblings_() == 0 )
+        set_status_single_node_(target, d);
       else
-	for(size_t t=0; t < target.size(); ++t)
-	{
-	  // non-root container for devices without proxies and subnets
-	  // we iterate over all threads
-	  assert(target[t] != 0);
-	  set_status_single_node_(*target[t], d);
-	}
+        for(size_t t=0; t < target.num_thread_siblings_(); ++t)
+        {
+          // non-root container for devices without proxies and subnets
+          // we iterate over all threads
+          assert(target.get_thread_sibling_(t) != 0);
+          set_status_single_node_(*(target.get_thread_sibling_(t)), d);
+        }
     }
     return;
   }
-  
+
   /* Code below is executed only for the root node, gid == 0
 
      In this case, we must
      - set scheduler properties
      - set properties for the compound representing each thread
      - set the data_path, data_prefix and overwrite_files properties
-     
+
      The main difficulty here is to handle the access control for
      dictionary items, since the dictionary is read in several places.
 
@@ -665,7 +663,7 @@ void Network::set_status(index gid, const DictionaryDatum& d)
   set_data_path_prefix_(d);
   updateValue<bool>(d, "overwrite_files", overwrite_files_);
   updateValue<bool>(d, "dict_miss_is_error", dict_miss_is_error_);
-  
+
   std::string tmp;
   if ( !d->all_accessed(tmp) )  // proceed only if there are unaccessed items left
   {
@@ -674,13 +672,13 @@ void Network::set_status(index gid, const DictionaryDatum& d)
     // of threads changes. HEP, 2008-10-20
     Node &target= *(nodes_[gid]);
 
-    for(size_t t=0; t < target.size(); ++t)
+    for(size_t t=0; t < target.num_thread_siblings_(); ++t)
     {
       // Root container for per-thread subnets. We must prevent clearing of access
       // flags before each compound's properties are set by passing false as last arg
       // we iterate over all threads
-      assert(target[t] != 0);
-      set_status_single_node_(*target[t], d, false);
+      assert(target.get_thread_sibling_(t) != 0);
+      set_status_single_node_(*(target.get_thread_sibling_(t)), d, false);
     }
   }  
 }
@@ -700,7 +698,7 @@ void Network::set_status_single_node_(Node& target, const DictionaryDatum& d, bo
         throw UnaccessedDictionaryEntry(missed);
       else
         message(SLIInterpreter::M_WARNING, "Network::set_status", 
-                ("Unread dictionary entries: " + missed).c_str());
+            ("Unread dictionary entries: " + missed).c_str());
     }
   }
 }
@@ -722,15 +720,15 @@ void Network::set_data_path_prefix_(const DictionaryDatum& d)
 
       switch(errno)
       {
-	case ENOTDIR:
-	  msg = String::compose("'%1' is not a directory.", tmp);
-	  break;
-	case ENOENT:
-	  msg = String::compose("Directory '%1' does not exist.", tmp);
-	  break;
-	default:
-	  msg = String::compose("Errno %1 received when trying to open '%2'", errno, tmp);
-	  break;
+      case ENOTDIR:
+        msg = String::compose("'%1' is not a directory.", tmp);
+        break;
+      case ENOENT:
+        msg = String::compose("Directory '%1' does not exist.", tmp);
+        break;
+      default:
+        msg = String::compose("Errno %1 received when trying to open '%2'", errno, tmp);
+        break;
       }
 
       message(SLIInterpreter::M_ERROR, "SetStatus", "Variable data_path not set: " + msg);
@@ -773,16 +771,16 @@ DictionaryDatum Network::get_status(index idx)
 // gid gid
 void Network::connect(index source_id, index target_id, index syn)
 {
-   if (!is_local_gid(target_id))
-     return;
+  if (!is_local_gid(target_id))
+    return;
 
   Node* target_ptr = get_node(target_id);
-  
+
   Node* source_ptr = 0;
   //target_thread defaults to 0 for devices
   thread target_thread = target_ptr->get_thread();
   source_ptr = get_node(source_id, target_thread); 
- 
+
   //normal nodes and devices with proxies
   if (target_ptr->has_proxies())
   {
@@ -819,15 +817,15 @@ void Network::connect(index source_id, index target_id, index syn)
 void Network::connect(index source_id, index target_id, double_t w, double_t d, index syn)
 {
   if (!is_local_gid(target_id))
-     return;
+    return;
 
   Node* target_ptr = get_node(target_id);
-  
+
   Node* source_ptr = 0;
   //target_thread defaults to 0 for devices
   thread target_thread = target_ptr->get_thread();
   source_ptr = get_node(source_id, target_thread); 
- 
+
   //normal nodes and devices with proxies
   if (target_ptr->has_proxies())
   {
@@ -863,15 +861,15 @@ void Network::connect(index source_id, index target_id, double_t w, double_t d, 
 bool Network::connect(index source_id, index target_id, DictionaryDatum& params, index syn)
 {
   if (!is_local_gid(target_id))
-     return false;
+    return false;
 
   Node* target_ptr = get_node(target_id);
-  
+
   Node* source_ptr = 0;
   //target_thread defaults to 0 for devices
   thread target_thread = target_ptr->get_thread();
   source_ptr = get_node(source_id, target_thread);
- 
+
   //normal nodes and devices with proxies
   if (target_ptr->has_proxies())
   {
@@ -901,7 +899,7 @@ bool Network::connect(index source_id, index target_id, DictionaryDatum& params,
       connect(*source_ptr, *target_ptr, source_id, t, params, syn);
     } 
   }
-  
+
   // We did not exit prematurely due to proxies, so we have connected.
   return true;
 }
@@ -918,17 +916,17 @@ void Network::divergent_connect(index source_id, const TokenArray target_ids, co
   if (! (complete_wd_lists || short_wd_lists || no_wd_lists))
   {
     message(SLIInterpreter::M_ERROR, "DivergentConnect", "If explicitly specified, weights and delays must be either doubles or lists of equal size. "
-            "If given as lists, their size must be 1 or the same size as targets.");
+        "If given as lists, their size must be 1 or the same size as targets.");
     throw DimensionMismatch();
   }
-  
+
   Node* source = get_node(source_id);
-    
+
   Subnet *source_comp=dynamic_cast<Subnet *>(source);
   if(source_comp !=0)
   {
     message(SLIInterpreter::M_INFO, "DivergentConnect", "Source ID is a subnet; I will iterate it.");
-    
+
     // collect all leaves in source subnet, then divergent-connect each leaf
     LocalLeafList local_sources(*source_comp);
     vector<Communicator::NodeAddressingData> global_sources;
@@ -955,7 +953,7 @@ void Network::divergent_connect(index source_id, const TokenArray target_ids, co
   for(index i = 0; i < targets.size(); ++i)
   {
     thread target_thread = targets[i]->get_thread();
- 
+
     if (source->get_thread() != target_thread)
       source = get_node(source_id, target_thread);
 
@@ -965,11 +963,11 @@ void Network::divergent_connect(index source_id, const TokenArray target_ids, co
     try
     {
       if (complete_wd_lists)
-	connect(*source, *targets[i], source_id, target_thread, weights.get(i), delays.get(i), syn);
+        connect(*source, *targets[i], source_id, target_thread, weights.get(i), delays.get(i), syn);
       else if (short_wd_lists)
-	connect(*source, *targets[i], source_id, target_thread, weights.get(0), delays.get(0), syn);
+        connect(*source, *targets[i], source_id, target_thread, weights.get(0), delays.get(0), syn);
       else 
-	connect(*source, *targets[i], source_id, target_thread, syn);
+        connect(*source, *targets[i], source_id, target_thread, syn);
     }
     catch (IllegalConnection& e)
     {
@@ -996,7 +994,7 @@ void Network::divergent_connect(index source_id, DictionaryDatum pars, index syn
 {
   // We extract the parameters from the dictionary explicitly since getValue() for DoubleVectorDatum
   // copies the data into an array, from which the data must then be copied once more.
- 
+
   DictionaryDatum par_i(new Dictionary());
   Dictionary::iterator di_s, di_t;
   // To save time, we first create the parameter dictionary for connect(), then we copy
@@ -1005,36 +1003,36 @@ void Network::divergent_connect(index source_id, DictionaryDatum pars, index syn
   // rather than using the lookup operator.
   // We also do the parameter checking here so that we can later use unsafe operations.
   for(di_s=(*pars).begin(); di_s !=(*pars).end();++di_s)
+  {
+    par_i->insert(di_s->first,Token(new DoubleDatum()));
+    DoubleVectorDatum const* tmp = dynamic_cast<DoubleVectorDatum*>(di_s->second.datum());
+    if(tmp==0)
     {
-      par_i->insert(di_s->first,Token(new DoubleDatum()));
-      DoubleVectorDatum const* tmp = dynamic_cast<DoubleVectorDatum*>(di_s->second.datum());
-      if(tmp==0)
-	{
-	  std::string msg=String::compose("Parameter '%1' must be a DoubleVectorArray or numpy.array. ",di_s->first.toString());
-	  message(SLIInterpreter::M_WARNING, "DivergentConnect",msg);
-	  message(SLIInterpreter::M_WARNING, "DivergentConnect", "Trying to convert, but this takes time.");
-	  IntVectorDatum const* tmpint = dynamic_cast<IntVectorDatum*>(di_s->second.datum());
-	  if(tmpint){
-	    std::vector<double> *data=new std::vector<double>((*tmpint)->begin(),(*tmpint)->end());
-	    DoubleVectorDatum *dvd= new DoubleVectorDatum(data);
-	    di_s->second= dvd;
-	    continue;
-	  }
-	  ArrayDatum *ad= dynamic_cast<ArrayDatum *>(di_s->second.datum());
-	  if ( ad ) 
-	    {
-	      std::vector<double> *data=new std::vector<double>;
-	      ad->toVector(*data);
-	      DoubleVectorDatum *dvd= new DoubleVectorDatum(data);
-	      di_s->second= dvd;
-	    }
-	  else  
-	    throw TypeMismatch(DoubleVectorDatum().gettypename().toString() 
-			       + " or " + ArrayDatum().gettypename().toString(),  
-			       di_s->second.datum()->gettypename().toString());
+      std::string msg=String::compose("Parameter '%1' must be a DoubleVectorArray or numpy.array. ",di_s->first.toString());
+      message(SLIInterpreter::M_WARNING, "DivergentConnect",msg);
+      message(SLIInterpreter::M_WARNING, "DivergentConnect", "Trying to convert, but this takes time.");
+      IntVectorDatum const* tmpint = dynamic_cast<IntVectorDatum*>(di_s->second.datum());
+      if(tmpint){
+        std::vector<double> *data=new std::vector<double>((*tmpint)->begin(),(*tmpint)->end());
+        DoubleVectorDatum *dvd= new DoubleVectorDatum(data);
+        di_s->second= dvd;
+        continue;
+      }
+      ArrayDatum *ad= dynamic_cast<ArrayDatum *>(di_s->second.datum());
+      if ( ad )
+      {
+        std::vector<double> *data=new std::vector<double>;
+        ad->toVector(*data);
+        DoubleVectorDatum *dvd= new DoubleVectorDatum(data);
+        di_s->second= dvd;
+      }
+      else
+        throw TypeMismatch(DoubleVectorDatum().gettypename().toString()
+            + " or " + ArrayDatum().gettypename().toString(),
+            di_s->second.datum()->gettypename().toString());
 
-	}
     }
+  }
 
   const Token target_t=pars->lookup2(names::target);
   DoubleVectorDatum const* ptarget_ids = static_cast<DoubleVectorDatum*>(target_t.datum());
@@ -1056,14 +1054,14 @@ void Network::divergent_connect(index source_id, DictionaryDatum pars, index syn
     message(SLIInterpreter::M_ERROR, "DivergentConnect", "All lists in the paramter dictionary must be of equal size.");
     throw DimensionMismatch();
   }
-  
+
   Node* source = get_node(source_id);
-    
+
   Subnet *source_comp=dynamic_cast<Subnet *>(source);
   if(source_comp !=0)
   {
     message(SLIInterpreter::M_INFO, "DivergentConnect", "Source ID is a subnet; I will iterate it.");
-    
+
     // collect all leaves in source subnet, then divergent-connect each leaf
     LocalLeafList local_sources(*source_comp);
     vector<Communicator::NodeAddressingData> global_sources;
@@ -1080,50 +1078,50 @@ void Network::divergent_connect(index source_id, DictionaryDatum pars, index syn
   size_t n_targets=target_ids.size();
   for (index i = 0; i < n_targets; ++i)
     targets[i] = get_node(target_ids[i]);
- 
+
   for(index i = 0; i < n_targets; ++i)
+  {
+    if (targets[i]->is_proxy())
+      continue;
+
+    thread target_thread = targets[i]->get_thread();
+
+    if (source->get_thread() != target_thread)
+      source = get_node(source_id, target_thread);
+
+    if (!targets[i]->has_proxies() && source->is_proxy())
+      continue;
+
+    // here we fill a parameter dictionary with the values of the current loop index.
+    for(di_s=(*pars).begin(), di_t=par_i->begin(); di_s !=(*pars).end();++di_s,++di_t)
     {
-      if (targets[i]->is_proxy())
-	continue;
-
-      thread target_thread = targets[i]->get_thread();
-      
-      if (source->get_thread() != target_thread)
-	source = get_node(source_id, target_thread);
-
-      if (!targets[i]->has_proxies() && source->is_proxy())
-	continue;
-
-      // here we fill a parameter dictionary with the values of the current loop index.
-      for(di_s=(*pars).begin(), di_t=par_i->begin(); di_s !=(*pars).end();++di_s,++di_t)
-	{
-	  DoubleVectorDatum const* tmp = static_cast<DoubleVectorDatum*>(di_s->second.datum());
-	  const std::vector<double> &tmpvec=**tmp;
-	  DoubleDatum *dd= static_cast<DoubleDatum *>(di_t->second.datum());
-	  (*dd)= tmpvec[i]; // We assign the double directly into the double datum.
-	}
-
-      try
-	{
-	  connect(source->get_gid(), targets[i]->get_gid(), par_i, syn);
-	  
-	}
-      catch (IllegalConnection& e)
-	{
-	  std::string msg = String::compose("Global target ID %1: Target does not support event.", target_ids[i]);
-	  message(SLIInterpreter::M_WARNING, "DivergentConnect", msg.c_str());
-	  message(SLIInterpreter::M_WARNING, "DivergentConnect", "Connection will be ignored.");
-	  continue;
-	}
-      catch (UnknownReceptorType& e)
-	{
-	  std::string msg = String::compose("In Connection from global source ID %1 to target ID %2:", source_id, target_ids[i]);
-	  message(SLIInterpreter::M_WARNING, "Connect", msg.c_str());
-	  message(SLIInterpreter::M_WARNING, "Connect", "Target does not support requested receptor type.");
-	  message(SLIInterpreter::M_WARNING, "Connect", "Connection will be ignored.");
-	  continue;
-	}
+      DoubleVectorDatum const* tmp = static_cast<DoubleVectorDatum*>(di_s->second.datum());
+      const std::vector<double> &tmpvec=**tmp;
+      DoubleDatum *dd= static_cast<DoubleDatum *>(di_t->second.datum());
+      (*dd)= tmpvec[i]; // We assign the double directly into the double datum.
     }
+
+    try
+    {
+      connect(source->get_gid(), targets[i]->get_gid(), par_i, syn);
+
+    }
+    catch (IllegalConnection& e)
+    {
+      std::string msg = String::compose("Global target ID %1: Target does not support event.", target_ids[i]);
+      message(SLIInterpreter::M_WARNING, "DivergentConnect", msg.c_str());
+      message(SLIInterpreter::M_WARNING, "DivergentConnect", "Connection will be ignored.");
+      continue;
+    }
+    catch (UnknownReceptorType& e)
+    {
+      std::string msg = String::compose("In Connection from global source ID %1 to target ID %2:", source_id, target_ids[i]);
+      message(SLIInterpreter::M_WARNING, "Connect", msg.c_str());
+      message(SLIInterpreter::M_WARNING, "Connect", "Target does not support requested receptor type.");
+      message(SLIInterpreter::M_WARNING, "Connect", "Connection will be ignored.");
+      continue;
+    }
+  }
 }
 
 
@@ -1137,12 +1135,12 @@ void Network::random_divergent_connect(index source_id, const TokenArray target_
     message(SLIInterpreter::M_ERROR, "RandomDivergentConnect", "weights and delays must be lists of size n.");
     throw DimensionMismatch();
   }
-    
+
   Subnet *source_comp=dynamic_cast<Subnet *>(source);
   if(source_comp !=0)
   {
     message(SLIInterpreter::M_INFO, "RandomDivergentConnect", "Source ID is a subnet; I will iterate it.");
-    
+
     // collect all leaves in source subnet, then divergent-connect each leaf
     LocalLeafList local_sources(*source_comp);
     vector<Communicator::NodeAddressingData> global_sources;
@@ -1165,20 +1163,20 @@ void Network::random_divergent_connect(index source_id, const TokenArray target_
   for (size_t j = 0; j < n; ++j)
   {
     long t_id;
-      
+
     do 
     {
       t_id  = rng->ulrand(n_rnd);
     }
     while ( ( !allow_autapses && ((index)target_ids.get(t_id)) == source_id )
-            || ( !allow_multapses && ch_ids.find( t_id ) != ch_ids.end() ) );
-      
+        || ( !allow_multapses && ch_ids.find( t_id ) != ch_ids.end() ) );
+
     if (!allow_multapses)
       ch_ids.insert(t_id);
-      
+
     chosen_targets.push_back(target_ids.get(t_id));
   }
-  
+
   divergent_connect(source_id, chosen_targets, weights, delays, syn);
 }
 
@@ -1194,12 +1192,12 @@ void Network::convergent_connect(const TokenArray source_ids, index target_id, c
   if (! (complete_wd_lists || short_wd_lists || no_wd_lists))
   {
     message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights and delays must be either doubles or lists of equal size. "
-            "If given as lists, their size must be 1 or the same size as sources.");
+        "If given as lists, their size must be 1 or the same size as sources.");
     throw DimensionMismatch();
   }
 
-   if (!is_local_gid(target_id))
-     return;
+  if (!is_local_gid(target_id))
+    return;
 
   Node* target = get_node(target_id);
 
@@ -1227,7 +1225,7 @@ void Network::convergent_connect(const TokenArray source_ids, index target_id, c
     {
       //target_thread = sources[i]->get_thread();
       target_thread = source->get_thread();
-      
+
       // If target is on the wrong thread, we need to get the right one now.
       if (target->get_thread() != target_thread)
         target = get_node(target_id, target_thread);
@@ -1235,20 +1233,20 @@ void Network::convergent_connect(const TokenArray source_ids, index target_id, c
       if ( source->is_proxy())
         continue;
     }
-    
+
     // The source node may still be on a wrong thread, so we need to get the right
     // one now. As get_node() is quite expensive, so we only call it if we need to
     //if (source->get_thread() != target_thread)
-      //  source = get_node(sid, target_thread);
+    //  source = get_node(sid, target_thread);
 
     try
     {
       if (complete_wd_lists)
-	connect(*source, *target, source_id, target_thread, weights.get(i), delays.get(i), syn);
+        connect(*source, *target, source_id, target_thread, weights.get(i), delays.get(i), syn);
       else if (short_wd_lists)
-	connect(*source, *target, source_id, target_thread, weights.get(0), delays.get(0), syn);
+        connect(*source, *target, source_id, target_thread, weights.get(0), delays.get(0), syn);
       else 
-	connect(*source, *target, source_id, target_thread, syn);
+        connect(*source, *target, source_id, target_thread, syn);
     }
     catch (IllegalConnection& e)
     {
@@ -1285,7 +1283,7 @@ void Network::convergent_connect(const std::vector<index> & source_ids, const st
   if (! (complete_wd_lists || short_wd_lists || no_wd_lists))
   {
     message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights and delays must be either doubles or lists of equal size. "
-            "If given as lists, their size must be 1 or the same size as sources.");
+        "If given as lists, their size must be 1 or the same size as sources.");
     throw DimensionMismatch();
   }
 
@@ -1295,7 +1293,7 @@ void Network::convergent_connect(const std::vector<index> & source_ids, const st
 
   for(index i = 0; i < sources.size(); ++i)
   {
-    
+
     Node* source = sources[i];
 
     thread target_thread = target->get_thread();
@@ -1303,7 +1301,7 @@ void Network::convergent_connect(const std::vector<index> & source_ids, const st
     if (!target->has_proxies())
     {
       target_thread = source->get_thread();
-      
+
       // If target is on the wrong thread, we need to get the right one now.
       if (target->get_thread() != target_thread)
         target = get_node(target_id, target_thread);
@@ -1311,15 +1309,15 @@ void Network::convergent_connect(const std::vector<index> & source_ids, const st
       if (source->is_proxy())
         continue;
     }
-    
+
     try
     {
       if (complete_wd_lists)
-	connect(*source, *target, source_ids[i], target_thread, weights.get(i), delays.get(i), syn);
+        connect(*source, *target, source_ids[i], target_thread, weights.get(i), delays.get(i), syn);
       else if (short_wd_lists)
-	connect(*source, *target, source_ids[i], target_thread, weights.get(0), delays.get(0), syn);
+        connect(*source, *target, source_ids[i], target_thread, weights.get(0), delays.get(0), syn);
       else 
-	connect(*source, *target, source_ids[i], target_thread, syn);
+        connect(*source, *target, source_ids[i], target_thread, syn);
     }
     catch (IllegalConnection& e)
     {
@@ -1345,7 +1343,7 @@ void Network::convergent_connect(const std::vector<index> & source_ids, const st
 void Network::random_convergent_connect(const TokenArray source_ids, index target_id, index n, const TokenArray weights, const TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
 {
   if (!is_local_gid(target_id))
-     return;
+    return;
 
   Node* target = get_node(target_id);
 
@@ -1355,17 +1353,17 @@ void Network::random_convergent_connect(const TokenArray source_ids, index targe
     message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights and delays must be lists of size n.");
     throw DimensionMismatch();
   }
-    
+
   Subnet *target_comp=dynamic_cast<Subnet *>(target);
   if(target_comp !=0)
   {
     message(SLIInterpreter::M_INFO, "RandomConvergentConnect","Target ID is a subnet; I will iterate it.");
-    
+
     // we only consider local leaves as targets,
     LocalLeafList target_nodes(*target_comp);
     for ( LocalLeafList::iterator tgt = target_nodes.begin(); tgt != target_nodes.end(); ++tgt)
       random_convergent_connect(source_ids, (*tgt)->get_gid(), n, weights, delays,
-                                allow_multapses, allow_autapses, syn);
+          allow_multapses, allow_autapses, syn);
 
     return;
   }
@@ -1374,36 +1372,36 @@ void Network::random_convergent_connect(const TokenArray source_ids, index targe
   TokenArray chosen_sources;
 
   std::set<long> ch_ids;
-  
+
   long n_rnd = source_ids.size();
-  
+
   for (size_t j = 0; j < n; ++j)
   {
     long s_id;
-      
+
     do 
     {
       s_id  = rng->ulrand(n_rnd);
     }
     while ( ( !allow_autapses && ((index)source_ids[s_id]) == target_id )
-            || ( !allow_multapses && ch_ids.find( s_id ) != ch_ids.end() ) );
-      
+        || ( !allow_multapses && ch_ids.find( s_id ) != ch_ids.end() ) );
+
     if (!allow_multapses)
       ch_ids.insert(s_id);
-      
+
     chosen_sources.push_back(source_ids[s_id]);
   }
-  
+
   convergent_connect(chosen_sources, target_id, weights, delays, syn);
 }
 
 
 void Network::random_convergent_connect(TokenArray source_ids, TokenArray target_ids, TokenArray ns, TokenArray weights, TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
 {
-  
+
   // loop over all targets
   // every thread takes care of his own target nodes
- 
+
   // it only makes sense to call this function if we have openmp
 #ifndef _OPENMP
   assert(false);
@@ -1427,7 +1425,7 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
     vsource_ids[i] = sid;
   }
 
-// check if we have consistent lists for weights and delays
+  // check if we have consistent lists for weights and delays
   if (! (weights.size() == ns.size() || weights.size() == 0) && (weights.size() == delays.size()))
   {
     message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights, delays and ns must be same size.");
@@ -1448,20 +1446,20 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
 #endif
 
     librandom::RngPtr rng = get_rng(tid);
-    
+
     for (size_t i=0; i < target_ids.size() && !abort; i++)
     {      
       index target_id = target_ids.get(i);
 
       // this is true for neurons on remote processes
       if ( !is_local_gid(target_id) )
-	continue;
-      
+        continue;
+
       Node* target = get_node(target_id, tid);
 
       // check, if targets is on our thread
       if (target->get_thread() != tid)
-	continue;
+        continue;
 
       nrn_counter++;
 
@@ -1474,8 +1472,8 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
       TokenArray ds;      
       if (weights.size() > 0)
       {
-	 ws = getValue<TokenArray>(weights.get(i));
-	 ds = getValue<TokenArray>(delays.get(i));
+        ws = getValue<TokenArray>(weights.get(i));
+        ds = getValue<TokenArray>(delays.get(i));
       }
 
       // check if we have consistent lists for weights and delays
@@ -1485,46 +1483,46 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
 #pragma omp flush (abort) 
       if (! (ws.size() == n || ws.size() == 0) && (ws.size() == ds.size()) && !abort)
       {
-	abort = true;
+        abort = true;
 #pragma omp flush (abort)
       }
 
-          
+
       vector<Node*> chosen_sources(n);
       vector<index> chosen_source_ids(n);
       std::set<long> ch_ids;
-  
+
       long n_rnd = vsource_ids.size();
-      
+
       for (size_t j = 0; j < n; ++j)
-	{
-	  long s_id;
-      
-	  do 
-	    {
-	      s_id  = rng->ulrand(n_rnd);
-	    }
-	  while ( ( !allow_autapses && ((index)vsource_ids[s_id]) == target_id )
-		  || ( !allow_multapses && ch_ids.find( s_id ) != ch_ids.end() ) );
-      
-	  if (!allow_multapses)
-	    ch_ids.insert(s_id);
-      
-	  chosen_sources[j] = sources[s_id];
-	  chosen_source_ids[j] = vsource_ids[s_id];
-	}
+      {
+        long s_id;
+
+        do
+        {
+          s_id  = rng->ulrand(n_rnd);
+        }
+        while ( ( !allow_autapses && ((index)vsource_ids[s_id]) == target_id )
+            || ( !allow_multapses && ch_ids.find( s_id ) != ch_ids.end() ) );
+
+        if (!allow_multapses)
+          ch_ids.insert(s_id);
+
+        chosen_sources[j] = sources[s_id];
+        chosen_source_ids[j] = vsource_ids[s_id];
+      }
 
       // we use a specialized function which uses the information that target *is* already on this thread
       // and that takes a vector<Node*> for sources
       syn_counter += chosen_sources.size();
       convergent_connect(chosen_source_ids, chosen_sources, target_id, ws, ds, syn);
-    
+
     } // of for all targets
 
     //    std::cerr << "A thread's diary " << std::endl;
     //    std::cerr << "I am thread " << tid << " and was working on " << nrn_counter << " neurons." << std::endl;
     //    std::cerr << "I am thread " << tid << " and created " << syn_counter << " synapses." << std::endl;
-    
+
 
   } // of omp parallel
 
@@ -1534,7 +1532,7 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
     // on JUGENE: "throw" is not allowed in a structured block.
     throw DimensionMismatch();
   }
-  
+
 
 }
 
@@ -1569,7 +1567,7 @@ index Network::register_model(Model& m, bool private_model)
   {
     delete &m;
     throw NamingConflict("A model called '" + name + "' already exists.\n"
-                         "Please choose a different name!");
+        "Please choose a different name!");
   }
 
   const index id = models_.size();
@@ -1580,7 +1578,7 @@ index Network::register_model(Model& m, bool private_model)
 
   if ( !private_model )
     modeldict_->insert(name, id);
-  
+
   return id;
 }
 
@@ -1618,25 +1616,25 @@ int Network::execute_sli_protected(DictionaryDatum state, Name cmd)
   SLIInterpreter& i=interpreter_;
 
   sli_mutex.lock();
-  
+
   i.DStack->push(state); // push state dictionary as top namespace
   size_t exitlevel=i.EStack.load();
   i.EStack.push( new NameDatum(cmd));
   int result=i.execute_(exitlevel);
   i.DStack->pop();        // pop neuron's namespace
-  
+
   if (state->known("error"))
-    {
-      assert(state->known(names::global_id));
-      index g_id= (*state)[names::global_id];
-      std::string model= getValue<std::string>((*state)[names::model]);
-      std::string msg=String::compose("Error in %1 with global id %2.",model,g_id);
-      
-      message(SLIInterpreter::M_ERROR, cmd.toString().c_str(), msg.c_str());
-      message(SLIInterpreter::M_ERROR, "execute_sli_protected", "Terminating.");
-	
+  {
+    assert(state->known(names::global_id));
+    index g_id= (*state)[names::global_id];
+    std::string model= getValue<std::string>((*state)[names::model]);
+    std::string msg=String::compose("Error in %1 with global id %2.",model,g_id);
+
+    message(SLIInterpreter::M_ERROR, cmd.toString().c_str(), msg.c_str());
+    message(SLIInterpreter::M_ERROR, "execute_sli_protected", "Terminating.");
+
     scheduler_.terminate();
-    }
+  }
   sli_mutex.unlock();
 
   return result;

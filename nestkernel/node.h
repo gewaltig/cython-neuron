@@ -93,6 +93,7 @@ namespace nest {
     friend class Network;
     friend class Scheduler;
     friend class Subnet;
+    friend class proxynode;
     friend class Synapse;
     friend class Model;
     
@@ -185,19 +186,6 @@ namespace nest {
      */
     virtual
     std::string get_name() const;
-
-
-    /** 
-     * Return the size of the node. The return value for standard
-     * nodes is 0. For subnets, size() will return the number of nodes
-     * it contains.
-     */
-    virtual
-    size_t size() const { return 0;}
-
-    virtual
-    Node *operator[](index) const {return 0;}
-
 
     virtual 
       void register_connector(nest::Connector&) {}
@@ -713,7 +701,7 @@ namespace nest {
       * @internal
       */
      void set_status_base(const DictionaryDatum&);
-    
+
   private:
 
     void  set_lid_(index);         //!< Set local id, relative to the parent subnet
@@ -732,6 +720,36 @@ namespace nest {
     DictionaryDatum get_status_dict_();
 
   protected:
+
+    /**
+     * Return the number of thread siblings in SiblingContainer.
+     *
+     * This method is meaningful only for SiblingContainer, for which it
+     * returns the number of siblings in the container.
+     * For all other models (including Subnet), it returns 0, which is not
+     * wrong. By defining the method in this way, we avoid many dynamic casts.
+     */
+    virtual
+    size_t num_thread_siblings_() const { return 0;}
+
+    /**
+     * Return the specified member of a SiblingContainer.
+     *
+     * This method is meaningful only for SiblingContainer, for which it
+     * returns the pointer to the indexed node in the container.
+     * For all other models (including Subnet), it returns a null pointer
+     * and throws and assertion.By defining the method in this way, we avoid
+     * many dynamic casts.
+     */
+    virtual
+    Node* get_thread_sibling_(index) const { assert(false); return 0; }
+
+    /**
+     * Return specified member of a SiblingContainer, with access control.
+     */
+    virtual
+    Node* get_thread_sibling_safe_(index) const { assert(false); return 0; }
+
      /**
       * Private function to initialize node to model defaults.
       * This function, which must be overloaded by all derived classes, provides

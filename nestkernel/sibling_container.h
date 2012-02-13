@@ -26,6 +26,8 @@ namespace nest{
   using std::vector;
 
   class Node;
+  class Network;
+  class Scheduler;
 
   /**
    * SiblingContainer class.
@@ -36,6 +38,10 @@ namespace nest{
    */
   class SiblingContainer: public Node
   {
+    friend class Network;
+    friend class Scheduler;
+    friend class Subnet;
+
   public:
 
     SiblingContainer();   
@@ -49,22 +55,11 @@ namespace nest{
 
     bool has_proxies() const;
           
-    Node * at(index) const;
-    Node * operator[](index) const;
-
-    size_t size() const;
-    size_t local_size() const;
     bool   empty() const;
     void   reserve(size_t);
 
     void push_back(Node*);
     
-    /**
-     * Add a node to the SiblingContainer. The node is appended to
-     * the SiblingContainer's child-list.
-     */ 
-    void add_node(Node *);
-
     /**
      * Return iterator to the first child node.
      */
@@ -86,6 +81,9 @@ namespace nest{
     vector<Node*>::const_iterator end() const;
 
   protected:
+    size_t num_thread_siblings_() const;
+    Node* get_thread_sibling_(index) const;
+    Node* get_thread_sibling_safe_(index) const;
     void init_node_(const Node&) {}
     void init_state_(const Node&) {}
     void init_buffers_() {}
@@ -103,47 +101,21 @@ namespace nest{
     vector<Node *> nodes_;       //!< Pointer to child nodes.
   };
 
-  inline
-  void SiblingContainer::add_node(Node *n)
-  {
-// Do we need to do this for a SiblinContainer?
-//    const index lid = next_lid_;
-//    const index mid = n->get_model_id();
-//    if ((homogeneous_) && (lid > 0))
-//      if (mid != last_mid_)
-//	homogeneous_ = false;
-//    n->set_lid_(next_lid_);
-    nodes_.push_back(n);
-//    n->set_parent_(this);
-//    next_lid_++;
-//    last_mid_ = mid;
-//    return lid;
-  }
 
   inline
   void SiblingContainer::push_back(Node *n)
   {
     nodes_.push_back(n);
-// Do we need to do this for a SiblinContainer?
-//    last_mid_ = n->get_model_id();
-//    next_lid_++;
   }  
   
-  /**
-   * Index child node (with range check).
-   * \throws std::out_of_range (implemented via \c std::vector)
-   */
   inline
-  Node* SiblingContainer::at(index i) const
+  Node* SiblingContainer::get_thread_sibling_safe_(index i) const
   {
     return nodes_.at(i); //with range check
   }
 
-  /**
-   * Index child node (without range check).
-   */
   inline
-  Node* SiblingContainer::operator [](index i) const
+  Node* SiblingContainer::get_thread_sibling_(index i) const
   {
     return nodes_[i]; //without range check
   }
@@ -179,14 +151,7 @@ namespace nest{
   }
 
   inline
-  size_t SiblingContainer::size() const
-  {
-    return nodes_.size();
-//    return next_lid_;
-  }
-
-  inline
-  size_t SiblingContainer::local_size() const
+  size_t SiblingContainer::num_thread_siblings_() const
   {
     return nodes_.size();
   }
