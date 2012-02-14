@@ -63,7 +63,7 @@ void nest::Communicator::communicate_Allgatherv(std::vector<T>& send_buffer,
 template <typename NodeListType>
 void nest::Communicator::communicate(const NodeListType& local_nodes,
                                      vector<NodeAddressingData>& all_nodes,
-                                     bool remote = true)
+                                     bool remote)
 {
   size_t np = Communicator::num_processes_;
   if (np > 1 && remote)
@@ -121,7 +121,8 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
 template <typename NodeListType>
 void nest::Communicator::communicate(const NodeListType& local_nodes,
                                      vector<NodeAddressingData>& all_nodes,
-                                     Network& net, DictionaryDatum params, bool remote)
+                                     Network& net, DictionaryDatum params, 
+				     bool remote)
 {
   size_t np = Communicator::num_processes_;
 
