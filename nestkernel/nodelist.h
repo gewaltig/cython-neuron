@@ -52,8 +52,8 @@ public:
    * Return iterator pointing to first node in subnet.
    * @node Must be specialized by derived class.
    */
-  iterator begin() const { assert(false);
-                           return end(); }
+  iterator begin() const;/* { assert(false);
+			    return end(); }*/
 
   /**
    * Return iterator pointing to node past last node.
@@ -70,6 +70,18 @@ public:
 private:
   Subnet& subnet_;  //!< root of the network
 };
+
+// ----------------------------------------------------------------------------
+
+// We need to define this function here (instead of inline above), otherwise
+// the BlueGene compiler gets confused. HEP 2012-02-13
+template <typename ListIterator>
+  typename NodeList<ListIterator>::iterator
+  NodeList<ListIterator>::begin() const
+  {
+    assert(false);
+    return end(); 
+  }
 
 // ----------------------------------------------------------------------------
 
@@ -101,8 +113,11 @@ class LocalNodeListIterator
 
 };
 
+
+// ----------------------------------------------------------------------------
+
 template <>
-NodeList<LocalNodeListIterator>::iterator
+  NodeList<LocalNodeListIterator>::iterator
   NodeList<LocalNodeListIterator>::begin() const;
 
 typedef NodeList<LocalNodeListIterator> LocalNodeList;
@@ -134,8 +149,8 @@ class LocalChildListIterator
    vector<Node *>::iterator list_end_;
 };
 
-template <>
-NodeList<LocalChildListIterator>::iterator
+template <> 
+  NodeList<LocalChildListIterator>::iterator
   NodeList<LocalChildListIterator>::begin() const;
 
 typedef NodeList<LocalChildListIterator> LocalChildList;
@@ -173,7 +188,7 @@ class LocalLeafListIterator
 };
 
 template <>
-NodeList<LocalLeafListIterator>::iterator
+  NodeList<LocalLeafListIterator>::iterator
   NodeList<LocalLeafListIterator>::begin() const;
 
 typedef NodeList<LocalLeafListIterator> LocalLeafList;
