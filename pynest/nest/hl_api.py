@@ -781,26 +781,52 @@ def GetLeaves(subnets, properties=None, local_only=False) :
                     litconv=True)    
 
 
-def GetNodes(subnets):
-    """Return the complete list of nodes (including sub-networks) under
-    subnet."""
-
-    sps(subnets)
-    sr("{GetNodes} Map")
+def GetNodes(subnets, properties=None, local_only=False):
+    """
+    Return the global ids of the all nodes of the given subnets.
     
-    return spp()
-
-
-def GetChildren(gid):
+    If properties is given, it must be a dictionary. Only global ids of nodes 
+       matching the properties given in the dictionary exactly will be returned.
+       Matching properties with float values (e.g. the membrane potential) may
+       fail due to tiny numerical discrepancies and should be avoided.
+       
+    If local_only is True, only global ids of nodes simulated on the local MPI 
+       process will be returned. By default, global ids of nodes in the entire
+       simulation will be returned. This requires MPI communication and may
+       slow down the script.
+       
+    See also: GetLeaves, GetChildren
     """
-    Return the immediate children of subnet id.
+
+    if properties is None:
+        properties = {}
+    func = 'GetLocalNodes' if local_only else 'GetGlobalNodes'
+    return sli_func('/props Set { props %s } Map' % func, subnets, properties,
+                    litconv=True)    
+
+
+def GetChildren(subnets, properties=None, local_only=False):
+    """
+    Return the global ids of the immediate children of the given subnets.
+    
+    If properties is given, it must be a dictionary. Only global ids of nodes 
+       matching the properties given in the dictionary exactly will be returned.
+       Matching properties with float values (e.g. the membrane potential) may
+       fail due to tiny numerical discrepancies and should be avoided.
+       
+    If local_only is True, only global ids of nodes simulated on the local MPI 
+       process will be returned. By default, global ids of nodes in the entire
+       simulation will be returned. This requires MPI communication and may
+       slow down the script.
+       
+    See also: GetNodes, GetLeaves
     """
 
-    if len(gid)>1 :
-        raise NESTError("GetChildren() expects exactly one GID.")
-    sps(gid[0])
-    sr("GetChildren")
-    return spp()
+    if properties is None:
+        properties = {}
+    func = 'GetLocalChildren' if local_only else 'GetGlobalChildren'
+    return sli_func('/props Set { props %s } Map' % func, subnets, properties,
+                    litconv=True)    
 
         
 def GetNetwork(gid, depth):
