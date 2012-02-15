@@ -79,14 +79,13 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
     std::vector<nest::int_t> n_nodes(np);
     n_nodes[Communicator::rank_] = localnodes.size();
     communicate(n_nodes);
-
     // Set up displacements vector.
     std::vector<int> displacements(np,0);
 
     for ( size_t i = 1; i < np; ++i )
       displacements.at(i) = displacements.at(i-1)+n_nodes.at(i-1);
 
-    // Calculate sum of global connections.
+    // Calculate total number of node data items to be gathered.
     size_t n_globals =
         std::accumulate(n_nodes.begin(),n_nodes.end(), 0);
     assert(n_globals % 3 == 0);
@@ -95,8 +94,7 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
     {
       globalnodes.resize(n_globals,0L);
       communicate_Allgatherv<nest::long_t>(localnodes, globalnodes, displacements, n_nodes);
-    }
-
+    
     //Create unflattened vector
     for ( size_t i = 0; i < n_globals -2; i +=3)
       all_nodes.push_back(NodeAddressingData(globalnodes[i],globalnodes[i+1],globalnodes[i+2]));
@@ -106,6 +104,7 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
     vector<NodeAddressingData>::iterator it;
     it = std::unique(all_nodes.begin(), all_nodes.end());
     all_nodes.resize(it - all_nodes.begin());
+    }
   }
   else   //on one proc or not including remote nodes
   {
@@ -183,16 +182,17 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
     {
       globalnodes.resize(n_globals,0L);
       communicate_Allgatherv<nest::long_t>(localnodes, globalnodes, displacements, n_nodes);
-    }
-    //Create unflattened vector
-    for ( size_t i = 0; i < n_globals -2; i +=3)
-      all_nodes.push_back(NodeAddressingData(globalnodes[i],globalnodes[i+1],globalnodes[i+2]));
+  
+      //Create unflattened vector
+      for ( size_t i = 0; i < n_globals -2; i +=3)
+        all_nodes.push_back(NodeAddressingData(globalnodes[i],globalnodes[i+1],globalnodes[i+2]));
 
-    //get rid of any multiple entries
-    std::sort(all_nodes.begin(), all_nodes.end());
-    vector<NodeAddressingData>::iterator it;
-    it = std::unique(all_nodes.begin(), all_nodes.end());
-    all_nodes.resize(it - all_nodes.begin());
+      //get rid of any multiple entries
+      std::sort(all_nodes.begin(), all_nodes.end());
+      vector<NodeAddressingData>::iterator it;
+      it = std::unique(all_nodes.begin(), all_nodes.end());
+      all_nodes.resize(it - all_nodes.begin());
+    }
   }
   else   //on one proc or not including remote nodes
   {

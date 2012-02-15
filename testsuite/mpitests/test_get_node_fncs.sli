@@ -63,7 +63,6 @@ Author: February 2012, Kunkel
   8 ChangeSubnet
 
   /iaf_neuron 2 Create ; % gids 9,10
-
   0 GetGlobalNodes [1 2 3 4 5 6 7 8 9 10] eq
   3 GetGlobalNodes [5 6 7 8 9 10] eq and
   8 GetGlobalNodes [9 10] eq and

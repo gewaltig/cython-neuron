@@ -582,19 +582,19 @@ namespace nest
     const DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(1));
     const index node_id        = getValue<long>(i->OStack.pick(2));
 
+    
     Subnet *subnet = dynamic_cast<Subnet *>(get_network().get_node(node_id));     
     if (subnet==NULL)
       throw SubnetExpected();
- 
-    LocalNodeList localnodes(*subnet);
-    ArrayDatum result;
 
+    LocalNodeList localnodes(*subnet);
     vector<Communicator::NodeAddressingData> globalnodes;
     if (params->empty())
       nest::Communicator::communicate(localnodes,globalnodes,include_remote);
     else
       nest::Communicator::communicate(localnodes, globalnodes, get_network(), params, include_remote);
 
+    ArrayDatum result;
     result.reserve(globalnodes.size());
     for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
       result.push_back(new IntegerDatum(n->get_gid()));
