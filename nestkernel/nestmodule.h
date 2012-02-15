@@ -191,11 +191,11 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } currentsubnetfunction;
   
-     class GetNodes_i_D_bFunction: public SLIFunction
+     class GetNodes_i_D_b_bFunction: public SLIFunction
      { 
       public:
        void execute(SLIInterpreter *) const;
-     } getnodes_i_D_bfunction;
+     } getnodes_i_D_b_bfunction;
 
      class GetLeaves_i_D_bFunction: public SLIFunction
      { 

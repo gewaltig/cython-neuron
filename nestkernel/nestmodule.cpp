@@ -574,13 +574,14 @@ namespace nest
     i->EStack.pop();
   }
 
-  void NestModule::GetNodes_i_D_bFunction::execute(SLIInterpreter *i) const
+  void NestModule::GetNodes_i_D_b_bFunction::execute(SLIInterpreter *i) const
   {
-    i->assert_stack_load(3);
+    i->assert_stack_load(4);
 
-    const bool  include_remote = not getValue<bool>(i->OStack.pick(0));
-    const DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(1));
-    const index node_id        = getValue<long>(i->OStack.pick(2));
+    const bool return_gids_only = getValue<bool>(i->OStack.pick(0));
+    const bool  include_remote = not getValue<bool>(i->OStack.pick(1));
+    const DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(2));
+    const index node_id        = getValue<long>(i->OStack.pick(3));
 
     
     Subnet *subnet = dynamic_cast<Subnet *>(get_network().get_node(node_id));     
@@ -596,10 +597,20 @@ namespace nest
 
     ArrayDatum result;
     result.reserve(globalnodes.size());
-    for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
-      result.push_back(new IntegerDatum(n->get_gid()));
-          
-    i->OStack.pop(3);
+    for( vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin();
+         n != globalnodes.end(); ++n )
+      if ( return_gids_only )
+        result.push_back(IntegerDatum(n->get_gid()));
+      else
+      {
+        DictionaryDatum node_info(new Dictionary);
+        (*node_info)[names::global_id] = n->get_gid();
+        (*node_info)[names::vp] = n->get_vp();
+        (*node_info)[names::parent] = n->get_parent_gid();
+        result.push_back(node_info);
+      }
+
+    i->OStack.pop(4);
     i->OStack.push(result);
     i->EStack.pop();
   }
@@ -1520,7 +1531,7 @@ namespace nest
     // register interface functions with interpreter
     i->createcommand("ChangeSubnet",    &changesubnet_ifunction);
     i->createcommand("CurrentSubnet",   &currentsubnetfunction);
-    i->createcommand("GetNodes_i_D_b",    &getnodes_i_D_bfunction);
+    i->createcommand("GetNodes_i_D_b_b",    &getnodes_i_D_b_bfunction);
     i->createcommand("GetLeaves_i_D_b",   &getleaves_i_D_bfunction);
     i->createcommand("GetChildren_i_D_b", &getchildren_i_D_bfunction);
 

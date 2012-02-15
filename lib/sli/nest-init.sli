@@ -1171,6 +1171,36 @@ def
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /* BeginDocumentation
+   Name: GetGlobalNodesInfo - Return GIDs, VPs and Parent GIDs of all nodes of 
+         a subnet that fulfill the conditions given in the dictionary, or of
+         all nodes if no dictionary given.
+   Synopsis:
+     gid [<<dict>>]  GetGlobalNodes -> [<<...>> <<...>> ...]
+   Parameters:
+     gid      - id of a subnet
+     <<dict>> - Dictionary of selection properties
+     [<<...>>...]  - Array with dicts containing /global_id, /vp, /parent
+   Description:
+   This function recursively traverses a subnet and returns the gid, vp
+   and parent gid of all child nodes in increasing order of gid. If a dictionary
+   is provided, only those nodes which fulfill the given criteria are
+   returned.
+
+   The returned Nodes include the intermediate subnets.
+
+   Author: Marc-Oliver Gewaltig, Abigail Morrison
+
+   SeeAlso: GetNodes
+*/
+
+/GetGlobalNodesInfo trie
+[/integertype /dictionarytype] { false false GetNodes_i_D_b_b } bind addtotrie
+[/integertype] { << >> false false GetNodes_i_D_b_b } bind addtotrie
+def
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/* BeginDocumentation
    Name: GetGlobalNodes - Return IDs of all nodes of a subnet that fulfill the
          conditions given in the dictionary, or all nodes if no dictionary given.
    Synopsis:
@@ -1194,10 +1224,9 @@ def
 */
 
 /GetGlobalNodes trie
-[/integertype /dictionarytype] { false GetNodes_i_D_b } bind addtotrie
-[/integertype] { << >> false GetNodes_i_D_b } bind addtotrie
+[/integertype /dictionarytype] { false true GetNodes_i_D_b_b } bind addtotrie
+[/integertype] { << >> false true GetNodes_i_D_b_b } bind addtotrie
 def
-
 
 /* BeginDocumentation
    Name: GetLocalNodes - Return IDs of all local nodes of a subnet that fulfill the
@@ -1217,8 +1246,8 @@ def
    SeeAlso: GetGlobalNodes, GetLocalLeaves, GetLocalChildren
 */
 /GetLocalNodes trie
-[/integertype /dictionarytype] { true GetNodes_i_D_b } bind addtotrie
-[/integertype] { << >> true GetNodes_i_D_b} bind addtotrie
+[/integertype /dictionarytype] { true true GetNodes_i_D_b_b } bind addtotrie
+[/integertype] { << >> true true GetNodes_i_D_b_b } bind addtotrie
 def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
