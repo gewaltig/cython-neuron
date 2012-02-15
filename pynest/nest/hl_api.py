@@ -755,13 +755,30 @@ def ChangeSubnet(subnet) :
     sr("ChangeSubnet")
 
 
-def GetLeaves(subnets) :
-    """Return the global ids of all leaf nodes of the given
-    subnet."""
+def GetLeaves(subnets, properties=None, local_only=False) :
+    """
+    Return the global ids of the leaf nodes of the given subnets.
+    
+    Leaf nodes are all nodes that are not subnets.
+    
+    If properties is given, it must be a dictionary. Only global ids of nodes 
+       matching the properties given in the dictionary exactly will be returned.
+       Matching properties with float values (e.g. the membrane potential) may
+       fail due to tiny numerical discrepancies and should be avoided.
+       
+    If local_only is True, only global ids of nodes simulated on the local MPI 
+       process will be returned. By default, global ids of nodes in the entire
+       simulation will be returned. This requires MPI communication and may
+       slow down the script.
+       
+    See also: GetNodes, GetChildren
+    """
 
-    sps(subnets)
-    sr("{GetLeaves} Map")
-    return spp()
+    if properties is None:
+        properties = {}
+    func = 'GetLocalLeaves' if local_only else 'GetGlobalLeaves'
+    return sli_func('/props Set { props %s } Map' % func, subnets, properties,
+                    litconv=True)    
 
 
 def GetNodes(subnets):
