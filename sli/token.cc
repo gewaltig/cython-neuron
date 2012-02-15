@@ -169,4 +169,18 @@ std::ostream& operator<<(std::ostream& o, const Token& c)
   return o;
 }
 
+bool Token::matches_as_string(const Token& rhs) const
+{
+  try
+  {
+    const std::string& left  = getValue<std::string>(*this);
+    const std::string& right = getValue<std::string>(rhs);
+    return left == right;
+  }
+  catch ( TypeMismatch )
+  {
+    return false;
+  }
+  return false;
+}
 

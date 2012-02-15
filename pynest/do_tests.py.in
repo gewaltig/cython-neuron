@@ -43,7 +43,7 @@ runner = unittest.TextTestRunner(verbosity=2, stream=sys.stdout)
 result = runner.run(nest.tests.suite())
 
 # We return the numbers of tests via a temporaty file
-file_handle = file("pynest_test_numbers", "w")
+file_handle = file("pynest_test_numbers.log", "w")
 file_handle.write(str(result.testsRun) + " ")
 file_handle.write(str(len(result.failures)+len(result.errors)) + " ")
 file_handle.write(str(result.testsRun - len(result.failures) - len(result.errors)) + "\n")

@@ -346,7 +346,15 @@ public:
   {
     return dynamic_cast<DatumType*>(p);
   }
-  
+
+
+  /**
+   * Returns true if token equals rhs as string.
+   *
+   * The main purpose of this method is to allow seamless
+   * comparison of LiteralDatum and StringDatum tokens.
+   */
+  bool matches_as_string(const Token& rhs) const;
 
 };
 
