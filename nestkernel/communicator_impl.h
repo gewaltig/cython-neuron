@@ -147,7 +147,8 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
         for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
         {
           const Token token = node_status->lookup(i->first);
-          if ((token == params->getvoid()) || (token != i->second))
+          if (   token == params->getvoid()
+              || not ( token == i->second || token.matches_as_string(i->second) ) )
           {
             match = false;
             break;
@@ -210,7 +211,8 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
         for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
         {
           const Token token = node_status->lookup(i->first);
-          if ((token == params->getvoid()) || (token !=i->second))
+          if (   token == params->getvoid()
+              || not ( token == i->second || token.matches_as_string(i->second) ) )
           {
             match = false;
             break;
@@ -257,7 +259,8 @@ void nest::Communicator::communicate(const NodeListType& local_nodes, vector<Nod
       for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
       {
         const Token token = node_status->lookup(i->first);
-        if ((token == params->getvoid()) || (token != params->lookup(i->first)))
+        if (   token == params->getvoid()
+            || not ( token == i->second || token.matches_as_string(i->second) ) )
         {
           match = false;
           break;
