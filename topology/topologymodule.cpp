@@ -273,27 +273,17 @@ namespace nest
 	if(pd)
 	  {
 	    create_from_procedure(net_, i, *pd, length);
-
-	    //Set layer depth
-	    (*layer_dictionary)[names::depth] = net_->get_cwn()->at(0)->size();
-
 	  }
 	else if (ad)
 	  {
 	    TokenArray elements = TokenArray(*ad);
 	    create_from_array(net_, elements, length);
-
-	    //Set layer depth
-	    (*layer_dictionary)[names::depth] = elements.size();
 	  }
 	else
 	  {
 	    std::string element_name = 
 	      getValue<std::string>(layer_dictionary, names::elements);
 	    create_from_name(net_, element_name, length);
-
-	    //Set layer depth
-	    (*layer_dictionary)[names::depth] = 1;
 	  }
 
 	//Return to original subnet
@@ -1032,10 +1022,10 @@ namespace nest
       throw TypeMismatch("any layer type", "something else");
 
     // Get layer leaves
-    LeafList nodes(*layer);
+    LocalLeafList nodes(*layer);
 
     // Iterate over leaves
-    for( LeafList::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for( LocalLeafList::iterator it = nodes.begin(); it != nodes.end(); ++it )
     {
         DictionaryDatum dict = net_->get_connector_status(**it, synapse_id);
 

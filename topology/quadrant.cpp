@@ -246,8 +246,8 @@ namespace nest
 	    assert(subnet != 0);
 	    // Slicing of layer before calling ConnectLayer function
 	    // assures that the subnet isn't nested.
-	    for(std::vector<Node*>::iterator it_sub = subnet->begin();
-		it_sub != subnet->end(); ++it_sub)
+	    for(std::vector<Node*>::iterator it_sub = subnet->local_begin();
+		it_sub != subnet->local_end(); ++it_sub)
 	      {
 		nodes->push_back(NodeWrapper(*it_sub, (*it).get_position()-shift, extent));
 	      }
@@ -272,8 +272,8 @@ namespace nest
 		assert(subnet != 0);
 		// Slicing of layer before calling ConnectLayer function
 		// assures that the subnet isn't nested.
-		for(std::vector<Node*>::iterator it_sub = subnet->begin();
-		    it_sub != subnet->end(); ++it_sub)
+		for(std::vector<Node*>::iterator it_sub = subnet->local_begin();
+		    it_sub != subnet->local_end(); ++it_sub)
 		  {
 		    if(*it_sub != NULL)
 		      {

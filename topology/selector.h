@@ -42,39 +42,19 @@ namespace nest{
   class Selector{
   public:
     /**
-     * Create an empty Selector.
-     */
-    Selector();
-
-    /**
      * Create a Selector based upon an input dictionary.
      * @param dictionary with slicing information
      */
     Selector(const DictionaryDatum&);
     
     /**
-     * @param subnet Subnet where nodes extracted by slicing are stored
-     * @param node   Layer node that will be sliced
+     * @param Subnet where nodes extracted by slicing are stored
+     * @param Layer subnet from which nodes are sliced
      */
-    void slice_node(Subnet& subnet, Node* node);
+    void slice_node(Subnet&, Subnet&);
     
   private:
-    // Class variables. slice_depth_ of 0 indicates that all depths
-    // should be connected to. modeltype_ of -1 indicates that all
-    // modeltypes should be connected.
-    index slice_depth_;
-    long_t modeltype_;
-    
-    /**
-     * Recursive function called by slice_node(Subnet&, Node*).
-     *
-     * @param subnet Subnet where nodes extracted by slicing are stored
-     * @param node   Node that will be sliced
-     * @param slice_depth 
-     */
-    void slice_node(Subnet& subnet, Node* node,
-		    index slice_depth);
-
+    long_t modeltype_;  //!< model type to select, -1 means
   };
 
 }

@@ -52,34 +52,23 @@ namespace nest
   std::vector<Node*> 
   Layer::slice_layer(const DictionaryDatum& layer_connection_dict) const
   {    
-    // Create Selector object used to remove unwanted nodes
-    // from the layer. 
-    // Note to developers: Additional selector objects can be 
-    // added by manipulating this class. 
+    // Create Selector object used to pick desired nodes from layer.
     Selector selector(layer_connection_dict);
+    std::vector<Node*> result;
 
-    assert(false && "TODO: Re-write slice_layer");
-
-    /*
-    Subnet nodes;
-
-    // Retrieve nodes at selected depth level.
-    // Iterate through nodes and retrieve nodes that fit criteria.
-    // Selected nodes are inserted into a new subnet structure
-    // (i.e. nested subnet structures are flattened). 
-    for(std::vector<Node*>::const_iterator it=begin(); it != end(); ++it)
+    // iterate over the top level (layer level) and put all nodes at
+    // one layer location into a subnet, then collect these subnets
+    // in the results vector
+    for(std::vector<Node*>::const_iterator it=local_begin(); it != local_end(); ++it)
     {
-	  Subnet subnet;
-
-	  selector.slice_node(subnet, *it);
-	//	selector(subnet, *it, slice_depth, modeltype);
-
-	  nodes.push_back(new Subnet(subnet));
+      Subnet* loc_subnet = dynamic_cast<Subnet*>(*it);
+      assert(loc_subnet);
+      Subnet* dest_subnet = new Subnet;
+      selector.slice_node(*dest_subnet, *loc_subnet);
+      result.push_back(dest_subnet);
     }
 
-    return std::vector<Node*>(nodes.begin(), nodes.end());
-    */
-
+    return result;
   }
 
   void Layer::set_status(const DictionaryDatum& layer_dict)

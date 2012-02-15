@@ -37,8 +37,8 @@ namespace nest
 
     lockPTR<std::vector<NodeWrapper> > nodewrappers(new std::vector<NodeWrapper>());    
 
-    for(std::vector<Node*>::iterator it = subnet->begin();
-	it != subnet->end(); ++it)
+    for(std::vector<Node*>::iterator it = subnet->local_begin();
+	it != subnet->local_end(); ++it)
       {
 	nodewrappers->push_back(NodeWrapper(*it, pos, extent));
       }

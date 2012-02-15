@@ -96,23 +96,19 @@ namespace nest {
   {
     this->nodes_.clear();
 
-    // Create Selector object used to remove unwanted nodes
-    // from the layer. 
-    // Note to developers: Additional selector objects can be 
-    // added by manipulating this class. 
+    // Create Selector object used to pick desired nodes from layer.
     Selector selector(layer_connection_dict);
 
-    // Retrieve nodes at selected depth level.
-    // Iterate through nodes and retrieve nodes that fit criteria.
-    // Selected nodes are inserted into a new subnet structure
-    // (i.e. nested subnet structures are flattened). 
-    for(std::vector<Node*>::const_iterator it=layer.begin(); it != layer.end(); ++it)
+    // iterate over the top level (layer level) and put all nodes at
+    // one layer location into a subnet, then collect these subnets
+    // in the results vector
+    for(std::vector<Node*>::const_iterator it=layer.local_begin(); it != layer.local_end(); ++it)
     {
-      Subnet* subnet = new Subnet();
-
-      selector.slice_node(*subnet, *it);
-
-      this->nodes_.push_back(subnet);
+      Subnet* loc_subnet = dynamic_cast<Subnet*>(*it);
+      assert(loc_subnet);
+      Subnet* dest_subnet = new Subnet;
+      selector.slice_node(*dest_subnet, *loc_subnet);
+      this->nodes_.push_back(dest_subnet);
     }
 
     // Do layer type specific initialization
@@ -140,8 +136,8 @@ namespace nest {
   template<class LayerType>
   LayerSlice<LayerType>::~LayerSlice()
   {
-    for(std::vector<Node*>::iterator it = this->begin();
-	it != this->end(); ++it)
+    for(std::vector<Node*>::iterator it = this->local_begin();
+	it != this->local_end(); ++it)
       {
       Subnet* c = dynamic_cast<Subnet*>(*it);
       assert(c);
