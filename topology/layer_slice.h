@@ -26,6 +26,9 @@
 #include "subnet.h"
 #include "iostreamdatum.h"
 #include "nest.h"
+#include "communicator_impl.h"
+#include "network.h"
+#include "proxynode.h"
 
 #include "nodewrapper.h"
 #include "selector.h"
@@ -55,10 +58,10 @@ namespace nest {
      *             function.
      */
     template<class FromLayerType>
-    LayerSlice(const FromLayerType& layer, const DictionaryDatum& dict);
+    LayerSlice(FromLayerType& layer, const DictionaryDatum& dict);
 
     /**
-     * Destructor. Deletes the subnets created when slicing.
+     * Destructor. Deletes the subnets and proxynodes created when slicing.
     */
     ~LayerSlice();
 
@@ -89,7 +92,7 @@ namespace nest {
 
 
   template<class LayerType> template<class FromLayerType>
-  LayerSlice<LayerType>::LayerSlice(const FromLayerType &layer,
+  LayerSlice<LayerType>::LayerSlice(FromLayerType &layer,
 				    const DictionaryDatum &layer_connection_dict):
   LayerType(layer),
   original_layer_(&layer)
@@ -102,13 +105,27 @@ namespace nest {
     // iterate over the top level (layer level) and put all nodes at
     // one layer location into a subnet, then collect these subnets
     // in the results vector
-    for(std::vector<Node*>::const_iterator it=layer.local_begin(); it != layer.local_end(); ++it)
+    Subnet* layer_as_subnet = dynamic_cast<Subnet*>(&layer);
+    assert(layer_as_subnet);
+    LocalChildList local_layer_kids(*layer_as_subnet);
+    vector<Communicator::NodeAddressingData> layer_kids;
+    nest::Communicator::communicate(local_layer_kids, layer_kids, true);
+    Network& netw = *Node::network();
+
+    for ( std::vector<Communicator::NodeAddressingData>::iterator it = layer_kids.begin() ;
+          it != layer_kids.end() ; ++it )
     {
-      std::cerr << it-layer.local_begin() << ':' << (*it)->get_gid() << ':' << typeid(**it).name() << std::endl;
-      Subnet* loc_subnet = dynamic_cast<Subnet*>(*it);
-      assert(loc_subnet);
+      index gid = it->get_gid();
       Subnet* dest_subnet = new Subnet;
-      selector.slice_node(*dest_subnet, *loc_subnet);
+
+      Node* node = 0;
+      if ( netw.is_local_gid(gid) && dynamic_cast<Subnet*>(netw.get_node(gid)) )
+        node = netw.get_node(gid);
+      else
+        node = new proxynode(gid, it->get_parent_gid(), netw.get_model_id_of_gid(gid),
+                             it->get_vp());
+
+      selector.slice_node(*dest_subnet, *node);
       this->nodes_.push_back(dest_subnet);
     }
 
@@ -138,11 +155,17 @@ namespace nest {
   LayerSlice<LayerType>::~LayerSlice()
   {
     for(std::vector<Node*>::iterator it = this->local_begin();
-	it != this->local_end(); ++it)
-      {
+        it != this->local_end(); ++it)
+    {
       Subnet* c = dynamic_cast<Subnet*>(*it);
       assert(c);
-	    
+
+      // delete any proxynodes in subnet, we know it is flat
+      for ( std::vector<Node*>::iterator sit = c->local_begin();
+            sit != c->local_end(); ++sit )
+        if ( dynamic_cast<proxynode*>(*it) )
+          delete *it;
+
       delete c;
     }
   }

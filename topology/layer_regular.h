@@ -141,7 +141,7 @@ namespace nest
      * @returns a copy of the layer where only the selected nodes exist
      */
     virtual lockPTR<Layer> slice(bool,
-				 const DictionaryDatum&) const;
+				 const DictionaryDatum&);
 
     /**
      * Set member variables in layer according to details in input 

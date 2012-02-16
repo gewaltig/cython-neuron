@@ -92,7 +92,7 @@ namespace nest
   }
 
   lockPTR<Layer> LayerUnrestricted::
-  slice(bool, const DictionaryDatum& options) const
+  slice(bool, const DictionaryDatum& options)
   {
     return lockPTR<Layer>(new LayerSlice<LayerUnrestricted>(*this, options));
   }

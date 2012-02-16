@@ -121,7 +121,7 @@ namespace nest
      *              extracts nodes based on. See the documentation for
      *              the SLI topology/ConnectLayer function.
      */
-    virtual lockPTR<Layer> slice(bool, const DictionaryDatum& options) const;
+    virtual lockPTR<Layer> slice(bool, const DictionaryDatum& options) ;
 
     /**
      * Retrieve nodes within input region.

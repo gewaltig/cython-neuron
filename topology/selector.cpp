@@ -22,7 +22,6 @@
 #include "selector.h"
 
 #include "subnet.h"
-#include "nestmodule.h"
 #include "dictdatum.h"
 #include "nodelist.h"
 #include "communicator.h"
@@ -48,7 +47,7 @@ Selector::Selector(const DictionaryDatum& selection_dict):
   {
     //Get model type.
     const Token model =
-        NestModule::get_network().get_modeldict().lookup(modelname);
+        Node::network()->get_modeldict().lookup(modelname);
 
     if ( model.empty() )
       throw UnknownModelName(modelname);
@@ -57,22 +56,33 @@ Selector::Selector(const DictionaryDatum& selection_dict):
   }
 }
 
-void Selector::slice_node(Subnet& temp_subnet,
-                          Subnet& layer_subnet)
+void Selector::slice_node(Subnet& temp_subnet, Node& layer_member)
 {
-  LocalLeafList localnodes(layer_subnet);
-  vector<Communicator::NodeAddressingData> global_nodes;
-  Communicator::communicate(localnodes, global_nodes);
-
-  for ( vector<Communicator::NodeAddressingData>::iterator n = global_nodes.begin();
-      n != global_nodes.end(); ++n)
+  Subnet* layer_subnet = dynamic_cast<Subnet*>(&layer_member);
+  if ( not layer_subnet )
   {
-    const index gid = n->get_gid();
-    const index model_id = NestModule::get_network().get_model_id_of_gid(gid);
-    if ( modeltype_ == -1 ||  model_id == modeltype_ )
-      temp_subnet.add_node(new proxynode(gid,
-          n->get_parent_gid(),
-          model_id));
+    // member is single node
+    if ( modeltype_ == -1 || layer_member.get_model_id() == modeltype_ )
+      temp_subnet.add_node(&layer_member);
+  }
+  else
+  {
+    // member is subnet
+    LocalLeafList localnodes(*layer_subnet);
+    vector<Communicator::NodeAddressingData> global_nodes;
+    Communicator::communicate(localnodes, global_nodes);
+
+    Network& netw = *Node::network();
+    for ( vector<Communicator::NodeAddressingData>::iterator n = global_nodes.begin();
+          n != global_nodes.end(); ++n)
+    {
+      const index gid = n->get_gid();
+      const index model_id = netw.get_model_id_of_gid(gid);
+      if ( modeltype_ == -1 ||  model_id == modeltype_ )
+          temp_subnet.add_node(new proxynode(gid, n->get_parent_gid(),
+                                             model_id, n->get_vp()));
+    }
   }
 }
+
 }

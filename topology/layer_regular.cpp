@@ -72,7 +72,7 @@ namespace nest
 
   lockPTR<Layer> LayerRegular::
   slice(bool unrestricted,
-	const DictionaryDatum& layer_connection_dict) const
+	const DictionaryDatum& layer_connection_dict)
   {
     // Convert layer temporarily to an unrestricted layer if the 
     // mask region in the connection dictionary isn't suited for 

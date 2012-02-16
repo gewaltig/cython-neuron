@@ -113,7 +113,7 @@ namespace nest
      *              extracts nodes based on. See the documentation for
      *              the SLI topology/ConnectLayer function.
      */
-    lockPTR<Layer> slice(bool, const DictionaryDatum& options) const;
+    lockPTR<Layer> slice(bool, const DictionaryDatum& options) ;
 
     /**
      * Set octtree settings

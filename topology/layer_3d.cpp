@@ -62,7 +62,7 @@ namespace nest
     nodes_ = nodes;
   }
 
-  lockPTR<Layer> Layer3D::slice(bool, const DictionaryDatum& options) const
+  lockPTR<Layer> Layer3D::slice(bool, const DictionaryDatum& options)
   {
     return lockPTR<Layer>(new LayerSlice<Layer3D>(*this, options));
   }

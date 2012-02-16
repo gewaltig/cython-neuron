@@ -49,9 +49,9 @@ namespace nest{
     
     /**
      * @param Subnet where nodes extracted by slicing are stored
-     * @param Layer subnet from which nodes are sliced
+     * @param Node, either individual or subnet
      */
-    void slice_node(Subnet&, Subnet&);
+    void slice_node(Subnet&, Node&);
     
   private:
     long_t modeltype_;  //!< model type to select, -1 means

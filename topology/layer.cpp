@@ -23,6 +23,7 @@
 #include "layer.h"
 #include "selector.h"
 #include "topology_names.h"
+#include "communicator.h"
 
 namespace nest
 {
@@ -204,21 +205,23 @@ namespace nest
     // Slicing of layer before calling ConnectLayer function
     // assures that the subnet isn't nested.
 
-    assert(false && "TODO: rewrite Layer::get_nodes");
-    // return std::vector<Node*>(subnet->begin(), subnet->end());
+    // this is a pseudo-subnet created by slicing, it must be dense
+    assert(subnet->global_size() == subnet->local_size());
+
+    return std::vector<Node*>(subnet->local_begin(), subnet->local_end());
   }
 
   void Layer::dump_nodes(std::ostream& out) const
   {
-	assert(false && "TODO: rewrite Layer::dump_nodes");
-	/*
-    for ( std::vector<Node*>::const_iterator it = begin(); it != end() ; ++it)
+	  assert(Communicator::get_num_processes() == 1);
+
+	  for ( std::vector<Node*>::const_iterator it = local_begin(); it != local_end() ; ++it)
     {
       out << (*it)->get_gid() << ' ';
       Layer::get_position(**it).print(out);
       out << '\n';
     }
-    */
+
   }
 
   bool Layer::edge_wrap_is_set() const
