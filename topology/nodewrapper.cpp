@@ -37,8 +37,11 @@ namespace nest
 
     lockPTR<std::vector<NodeWrapper> > nodewrappers(new std::vector<NodeWrapper>());    
 
+    // at this point, subnet is a full subnet of proxynodes created by Selector::slice_node()
+    // we can thus iterate locally
+    assert(subnet->local_size() == subnet->global_size());
     for(std::vector<Node*>::iterator it = subnet->local_begin();
-	it != subnet->local_end(); ++it)
+        it != subnet->local_end(); ++it)
       {
 	nodewrappers->push_back(NodeWrapper(*it, pos, extent));
       }

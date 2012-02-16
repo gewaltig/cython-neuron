@@ -115,6 +115,13 @@ namespace nest{
     vector<Node*>::const_iterator local_end() const;
 
     /**
+     * Return pointer to Node at give LID if it is local.
+     * @throws LocalNodeExpected if LID is non-local.
+     * @node Currently implemented as very slow linear search
+     */
+    Node* at_lid(index) const;
+
+    /**
      * Return the subnets's user label.
      * Each subnet can be given a user-defined string as a label, which
      * may be used to give a symbolic name to the node. From the SLI
@@ -276,6 +283,22 @@ namespace nest{
   size_t Subnet::local_size() const
   {
     return nodes_.size();
+  }
+
+  inline
+  Node* Subnet::at_lid(index lid) const
+  {
+    if ( lid >= next_lid_ )
+      throw UnknownNode();
+
+    for ( std::vector<Node*>::const_iterator it = nodes_.begin() ;
+         it != nodes_.end() ; ++it )
+      if ( lid == (*it)->get_lid() )
+        return *it;
+
+    // if we get here, we have not found the lid, so it must be non-local
+    throw LocalNodeExpected(lid);
+    return 0;  // just to keep the compiler happy, we never get here
   }
 
   inline 

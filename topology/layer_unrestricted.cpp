@@ -75,7 +75,9 @@ namespace nest
     Position<double_t> dpd = l.get_dpd();
 
     // Generate position vector based upon fixed grid layer dimensions
-    for(index i = 0;i<l.size();++i)
+    // l is a layer, all its children are subnets, so it is dense
+    assert(l.local_size() == l.global_size());
+    for(index i = 0;i<l.global_size();++i)
       {
 	positions_.push_back(l.get_position(i));
       }

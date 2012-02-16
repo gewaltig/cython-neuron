@@ -228,7 +228,7 @@ void ConnectionCreator::execute()
   int_t i = 0;
 
   // Number of driver nodes to connect to.
-  int_t number = driver_->size();
+  int_t number = driver_->global_size();
 
   if(population_probability_ != 1.0)
   {
@@ -251,7 +251,7 @@ void ConnectionCreator::execute()
 
   if(!population_multapses_)
   {
-    chosen_nodes.resize(driver_->size(), false);
+    chosen_nodes.resize(driver_->global_size(), false);
   }
 
   librandom::RngPtr rng = net_.get_grng();
@@ -266,14 +266,14 @@ void ConnectionCreator::execute()
     {
       // Re-draw nodes untill unique node is picked if
       // multapses aren't allowed.
-      if(static_cast<size_t>(number) < driver_->size())
+      if(static_cast<size_t>(number) < driver_->global_size())
       {
         // Pick random node if population connect is used.
-        n_id = rng->ulrand(driver_->size());
+        n_id = rng->ulrand(driver_->global_size());
       }
       else
       {
-        ++n_id;
+        ++n_id;  // this is the standard case: go to next node
       }
     }
     while(!population_multapses_ && chosen_nodes.at(n_id) == true);
@@ -286,8 +286,12 @@ void ConnectionCreator::execute()
 
     // Retrieve driver nodes at the same 2D position as the main driver
     // node.
+    // 10k topology: driver_ contains only subnets, therefore all its
+    //               children are known. We can check that by assertion:
+    assert(driver_->global_size() == driver_->local_size());
+    // we can then retrieve the pertaining element
     lockPTR<std::vector<NodeWrapper> > driver_nodes =
-        NodeWrapper::get_nodewrappers(driver_->at(n_id), driver_->get_position(n_id));
+        NodeWrapper::get_nodewrappers(driver_->at_lid(n_id), driver_->get_position(n_id));
 
     // If the nodes at the driver position are removed, the iteration
     // skips to the next position.
@@ -304,8 +308,7 @@ void ConnectionCreator::execute()
                 region_);
 
         //Connect driver and pool nodes.
-        topology_->connect(driver_nodes,
-            pool_nodes);
+        topology_->connect(driver_nodes, pool_nodes);
       }
     }
 
@@ -323,10 +326,10 @@ void ConnectionCreator::execute()
 
     // Print information about connection progress to screen.
     if(display_progress_ &&
-        (driver_->size() > 100) && (i%(driver_->size()/100) == 0))
+        (driver_->global_size() > 100) && (i%(driver_->global_size()/100) == 0))
     {
       std::cout << " \rConnecting: " << std::setw(5)
-      << (100.0*i)/driver_->size()
+      << (100.0*i)/driver_->global_size()
       << " %" << std::flush;
 
       // 	    // THESE LINES ARE USED DURING DEVELOPMENT AND SHOULD BE
@@ -343,7 +346,7 @@ void ConnectionCreator::execute()
   // Complete connection process by printing a line shift if
   // connection progress is printed above.
   if(display_progress_ &&
-      (driver_->size() > 100) && (i%(driver_->size()/100) == 0))
+      (driver_->global_size() > 100) && (i%(driver_->global_size()/100) == 0))
   {
     std::cout << std::endl;
   }

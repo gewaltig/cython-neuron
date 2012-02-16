@@ -104,6 +104,7 @@ namespace nest {
     // in the results vector
     for(std::vector<Node*>::const_iterator it=layer.local_begin(); it != layer.local_end(); ++it)
     {
+      std::cerr << it-layer.local_begin() << ':' << (*it)->get_gid() << ':' << typeid(**it).name() << std::endl;
       Subnet* loc_subnet = dynamic_cast<Subnet*>(*it);
       assert(loc_subnet);
       Subnet* dest_subnet = new Subnet;
