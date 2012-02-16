@@ -3,7 +3,7 @@
  *
  *  This file is part of NEST
  *
- *  Copyright (C) 2010 by
+ *  Copyright (C) 2010-2012 by
  *  The NEST Initiative
  *
  *  See the file AUTHORS for details.
@@ -16,21 +16,19 @@
 
 /* BeginDocumentation
 
-Name: testsuite::ticket-336 - Check that vp-specific RNGs only provided for nodes with proxies and that they generate proper random numbers
+Name: testsuite::ticket-336 - Check that vp-specific RNGs generate proper random numbers
 
 Synopsis: (ticket-336) run -> NEST exits if test fails
 
 Description:
-  This test ensures that GetVpRNG returns an error if called on a subnet or
-  device without proxies. When called on a node with proxies, it checks that
+  This test ensures that GetVpRNG, when called on a node with proxies, generates
   the same random number is generated independent of the number of MPI
   processes.
 
-Todo:
-  This should also check that the VP-number of the node is the same independent
-  of the number of MPI processes
- 
-Author: Hans Ekkehard Plesser, 2010-09-29
+See also:
+  regressiontests/ticket-336.sli
+
+Author: Hans Ekkehard Plesser, 2010-09-29, 2012-02-16
  */
 
 /unittest (8831) require
@@ -80,21 +78,6 @@ Author: Hans Ekkehard Plesser, 2010-09-29
   >>
 }
 def
-
-/* The test must fail for the root network, any subnet
-   and a device without proxies, eg, voltmeter.
-   No need to run this in parallel.
- */
-[ 0 /subnet /voltmeter ]
-{ 
-  {
-    ResetKernel
-    LiteralQ { Create } if
-    0 << /total_num_virtual_procs 4 >> SetStatus
-    do_test
-  } fail_or_die
-} forall
-clear
  
 [1 2 4]
 {
