@@ -600,13 +600,13 @@ namespace nest
     for( vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin();
          n != globalnodes.end(); ++n )
       if ( return_gids_only )
-        result.push_back(IntegerDatum(n->get_gid()));
+        result.push_back(new IntegerDatum(n->get_gid()));
       else
       {
-        DictionaryDatum node_info(new Dictionary);
-        (*node_info)[names::global_id] = n->get_gid();
-        (*node_info)[names::vp] = n->get_vp();
-        (*node_info)[names::parent] = n->get_parent_gid();
+        DictionaryDatum* node_info = new DictionaryDatum(new Dictionary);
+        (**node_info)[names::global_id] = n->get_gid();
+        (**node_info)[names::vp] = n->get_vp();
+        (**node_info)[names::parent] = n->get_parent_gid();
         result.push_back(node_info);
       }
 
@@ -637,7 +637,7 @@ namespace nest
       nest::Communicator::communicate(localnodes, globalnodes, get_network(), params, include_remote);
     result.reserve(globalnodes.size());
     for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
-      result.push_back(IntegerDatum(n->get_gid()));
+      result.push_back(new IntegerDatum(n->get_gid()));
     
     i->OStack.pop(3);
     i->OStack.push(result);
@@ -667,7 +667,7 @@ namespace nest
     result.reserve(globalnodes.size());
 
     for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
-      result.push_back(IntegerDatum(n->get_gid()));
+      result.push_back(new IntegerDatum(n->get_gid()));
 
     i->OStack.pop(3);
     i->OStack.push(result);
