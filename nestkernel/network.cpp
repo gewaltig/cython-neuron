@@ -529,7 +529,7 @@ void Network::go_to(index n)
 Node* Network::get_node(index n, thread thr) //no_p
 {
   if (!is_local_gid(n))
-    return proxy_nodes_[node_model_ids_.get_model_id(n)];
+    return proxy_nodes_.at(node_model_ids_.get_model_id(n));
 
   if ((*nodes_[n]).num_thread_siblings_() == 0)
     return nodes_[n];
@@ -744,10 +744,7 @@ DictionaryDatum Network::get_status(index idx)
   Node *target = get_node(idx);
   assert(target != 0);
 
-  DictionaryDatum d;
-  assert(target !=0);
-
-  d = target->get_status_base();
+  DictionaryDatum d = target->get_status_base();
 
   if(target == root_)
   {
