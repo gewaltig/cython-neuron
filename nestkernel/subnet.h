@@ -116,8 +116,7 @@ namespace nest{
 
     /**
      * Return pointer to Node at give LID if it is local.
-     * @throws LocalNodeExpected if LID is non-local.
-     * @node Currently implemented as very slow linear search
+     * @node Defined for dense subnets only (all children local)
      */
     Node* at_lid(index) const;
 
@@ -288,17 +287,13 @@ namespace nest{
   inline
   Node* Subnet::at_lid(index lid) const
   {
+    // defined for "dense" subnets only
+    assert(local_size() == global_size());
+
     if ( lid >= next_lid_ )
       throw UnknownNode();
 
-    for ( std::vector<Node*>::const_iterator it = nodes_.begin() ;
-         it != nodes_.end() ; ++it )
-      if ( lid == (*it)->get_lid() )
-        return *it;
-
-    // if we get here, we have not found the lid, so it must be non-local
-    throw LocalNodeExpected(lid);
-    return 0;  // just to keep the compiler happy, we never get here
+    return nodes_.at(lid);  // offset one between lid and index
   }
 
   inline 
