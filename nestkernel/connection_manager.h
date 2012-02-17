@@ -97,6 +97,7 @@ public:
   void set_synapse_status(index gid, index syn_id, port p, thread tid, const DictionaryDatum& d);
 
   DictionaryDatum get_connector_status(const Node& node, index syn_id);
+  DictionaryDatum get_connector_status(index gid, index syn_id);
   void set_connector_status(Node& node, index syn_id, thread tid, const DictionaryDatum& d);
   
   ArrayDatum find_connections(DictionaryDatum params);

@@ -270,6 +270,19 @@ DictionaryDatum ConnectionManager::get_connector_status(const Node& node, index 
   return dict;
 }
 
+DictionaryDatum ConnectionManager::get_connector_status(index gid, index syn_id)
+{
+  assert_valid_syn_id(syn_id);
+
+  DictionaryDatum dict(new Dictionary);
+  for (thread tid = 0; tid < net_.get_num_threads(); tid++)
+  {
+    index syn_vec_index = validate_connector(tid, gid, syn_id);
+    connections_[tid].get(gid)[syn_vec_index].connector->get_status(dict);
+  }
+  return dict;
+}
+
 void ConnectionManager::set_connector_status(Node& node, index syn_id, thread tid, const DictionaryDatum& dict)
 {
   assert_valid_syn_id(syn_id);
