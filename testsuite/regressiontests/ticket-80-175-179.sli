@@ -19,6 +19,8 @@
 /unittest (6335) require
 /unittest using
 
+M_ERROR setverbosity
+
 /resolution 0.1 def
 
 /vm_params <<
