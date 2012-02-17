@@ -119,9 +119,9 @@ namespace nest
 
   void LayerRegular::test_validity() const
   {
-    if(nodes_.size() != static_cast<uint_t>(rows_*columns_))
+    if(global_size() != static_cast<uint_t>(rows_*columns_))
       {
-	throw DimensionMismatch(nodes_.size(), rows_*columns_);
+	throw DimensionMismatch(global_size(), rows_*columns_);
       }
   }
 

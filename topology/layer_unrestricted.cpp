@@ -75,8 +75,8 @@ namespace nest
     Position<double_t> dpd = l.get_dpd();
 
     // Generate position vector based upon fixed grid layer dimensions
-    // l is a layer, all its children are subnets, so it is dense
-    assert(l.local_size() == l.global_size());
+    // We can iterate here over the global size, since LayerRegular::get_position()
+    // only does arithmetic on numbers.
     for(index i = 0;i<l.global_size();++i)
       {
 	positions_.push_back(l.get_position(i));
@@ -265,9 +265,9 @@ namespace nest
 
   void LayerUnrestricted::test_validity() const
   {
-    if(nodes_.size() != positions_.size())
+    if(global_size() != positions_.size())
       {
-	throw DimensionMismatch(nodes_.size(), positions_.size());
+	throw DimensionMismatch(global_size(), positions_.size());
       }
 
     Position<double_t> lower_left = 
