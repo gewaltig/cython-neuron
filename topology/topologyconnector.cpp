@@ -366,7 +366,7 @@ ConvergentConnector::ConvergentConnector(Network& net):
 bool ConvergentConnector::get_rng(Node& node, librandom::RngPtr& rng)
 {
   // Only connect node if node(target) is local.
-  if(node.is_local())
+  if( Node::network()->is_local_gid(node.get_gid()) )
   {
     // Get rng for thread. The network pointer is inherited through
     // the Decorator class from the TopologyConnector class.
