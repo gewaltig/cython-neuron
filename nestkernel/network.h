@@ -314,6 +314,7 @@ SeeAlso: Simulate, Node
     void set_synapse_status(index gid, index syn, port p, thread tid, DictionaryDatum& d);
 
     DictionaryDatum get_connector_status(const Node& node, index sc);
+    DictionaryDatum get_connector_status(index gid, index sc);
     void set_connector_status(Node& node, index sc, thread tid, DictionaryDatum& d);
 
     ArrayDatum find_connections(DictionaryDatum dict);
@@ -823,6 +824,12 @@ SeeAlso: Simulate, Node
   DictionaryDatum Network::get_connector_status(const Node& node, index sc)
   {
     return connection_manager_.get_connector_status(node, sc);
+  }
+
+  inline
+  DictionaryDatum Network::get_connector_status(index gid, index sc)
+  {
+    return connection_manager_.get_connector_status(gid, sc);
   }
 
   inline
