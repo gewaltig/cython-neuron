@@ -19,8 +19,6 @@
 /unittest (6335) require
 /unittest using
 
-M_ERROR setverbosity
-
 /resolution 0.1 def
 
 /vm_params <<
@@ -64,25 +62,28 @@ M_ERROR setverbosity
     0 << /resolution resolution
          /overwrite_files true >> SetStatus
   
-%    /iaf_neuron iaf_params SetDefaults
-%    /voltmeter vm_params  SetDefaults
+    /iaf_neuron iaf_params SetDefaults
+    /voltmeter vm_params  SetDefaults
     /spike_detector sd_params SetDefaults
-  %  /spike_generator sg_params SetDefaults
+    /spike_generator sg_params SetDefaults
 
- %   /iaf_neuron Create /n_pre Set
-    /spike_generator sg_params Create /sg_pre Set
+    /iaf_neuron Create /n_pre Set
+    /spike_generator Create /sg_pre Set
 
     [ /spike_detector Create
+      /spike_detector Create
+      /spike_detector Create
+      /spike_detector Create
     ] /sds Set
-  %  [ /voltmeter Create
-  %    /voltmeter Create
-  %  ] /vms Set
+    [ /voltmeter Create
+      /voltmeter Create
+    ] /vms Set
 
-  %  /iaf_neuron Create /n_post Set
+    /iaf_neuron Create /n_post Set
     /spike_generator Create /sg_post Set
 
-    [[ sg_pre ] sds] { Connect true } MapThread ;
-%    [vms [n_pre n_post]] { Connect true } MapThread ;
+    [[n_pre n_post sg_pre sg_post] sds] { Connect true } MapThread ;
+    [vms [n_pre n_post]] { Connect true } MapThread ;
 
     { 
       T Simulate
@@ -91,17 +92,24 @@ M_ERROR setverbosity
     } loop
 
     sds { [/events /times] get cva } Map
- %   vms { [/events /V_m] get cva } Map
-    1 arraystore
-
+    vms { [/events /V_m] get cva } Map
+    2 arraystore
   end
 } def
 
 sim_blocks { single_trial } Map
 /res Set
 
-
-
 % first test: check spike times for equality
-res [/All 1] Part dup [/All 1] Part { == } forall 
+res [/All 1] Part 1 Flatten 
+dup First dup == /ref Set 
+Rest true exch { ref eq and } Fold
 
+% second test: check voltmeter readings for equality
+res [/All 2] Part 1 Flatten 
+dup First /ref Set 
+Rest true exch { ref eq and } Fold
+
+and
+
+assert_or_die
