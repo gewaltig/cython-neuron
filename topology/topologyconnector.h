@@ -343,7 +343,7 @@ namespace nest
 				     NodeWrapper& target)
   {
     // Connections are only stored on local target nodes.
-    if(target.get_node()->is_proxy())
+    if ( not Node::network()->is_local_gid(target.get_node()->get_gid()) )
       return;
 
     librandom::RngPtr rng = net_.get_rng(target.get_node()->get_thread());
