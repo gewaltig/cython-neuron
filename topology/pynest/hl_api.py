@@ -466,12 +466,14 @@ def DumpLayerNodes(layers, outname):
     When calling this function from distributed simulations, only MPI Rank 0
     will write data. It writes data for all nodes.
     """
+    # Rank 0 actually writes. The other ranks need to communicate with Rank 0.
     topology_func("""
                   /oname Set 
                   /lyrs  Set 
                   Rank 0 eq 
                     { oname (w) file lyrs { DumpLayerNodes } forall close } 
-                  if
+                    { lyrs { DumpLayerNodes_nowrite } forall } 
+                  ifelse
                   """,
                   layers, outname)
 

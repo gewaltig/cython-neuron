@@ -250,7 +250,9 @@ namespace nest
     assert(get_layer(to) == this);
 
     // obtain "raw" displacement
-    const Position<double_t> to_pos = Layer::get_position(to);
+    assert(false && "compute_displacement not implemented");
+    return Position<double_t>(0.,0.);
+/*    const Position<double_t> to_pos = Layer::get_position(to);
     Position<double_t> d = to_pos - from_pos;
 
     // handle periodic boundary conditions
@@ -258,6 +260,7 @@ namespace nest
       d.wrap_displacement_max_half(Position<double_t>(extent_));
 
     return d;
+    */
   }
 
   void LayerUnrestricted::test_validity() const

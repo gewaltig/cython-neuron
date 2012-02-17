@@ -57,8 +57,13 @@ def
 def
 
 /DumpLayerNodes [/ostreamtype /integertype]
-  /DumpLayerNodes_os_i load
+  { true DumpLayerNodes_os_i_b } bind
 def
+
+/DumpLayerNodes_nowrite [/integertype]
+  { false DumpLayerNodes_os_i_b } bind
+def
+
 
 /DumpLayerConnections [/ostreamtype /integertype /literaltype]
   /DumpLayerConnections_os_i_l load

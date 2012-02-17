@@ -36,6 +36,8 @@
 #include "topology_names.h"
 #include "region.h"
 
+#include "communicator.h"    // debugging
+
 namespace nest
 {
 

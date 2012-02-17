@@ -113,8 +113,8 @@ namespace nest
     i->createcommand("Distance_a_i",
 		     &distance_a_ifunction);
  
-    i->createcommand("DumpLayerNodes_os_i",
-		     &dumplayernodes_os_ifunction);
+    i->createcommand("DumpLayerNodes_os_i_b",
+		     &dumplayernodes_os_i_bfunction);
 
     i->createcommand("DumpLayerConnections_os_i_l",
 		     &dumplayerconnections_os_i_lfunction);
@@ -683,11 +683,12 @@ namespace nest
     i->assert_stack_load(1);
 
     const index node_gid = getValue<long_t>(i->OStack.pick(0));
+    if ( not net_->is_local_gid(node_gid) )
+      throw KernelException("GetPosition is currently implemented for local nodes only.");
 
-    Node const * const node = 
-      dynamic_cast<Node*>(net_->get_node(node_gid));
+    Node const * const node = dynamic_cast<Node*>(net_->get_node(node_gid));
 
-    Position<double_t> pos = Layer::get_position(*node);
+    Position<double_t> pos = Layer::get_position(node_gid, node->get_parent()->get_gid());
 	
     Token result = pos.getToken();
 	
@@ -889,9 +890,10 @@ namespace nest
   Position<double_t> TopologyModule::compute_displacement(const Node& from,
 							  const Node& to)
   {
-    const Position<double_t> from_pos = Layer::get_position(from);
+    assert(false && "compute displacement not implemented");
+    //const Position<double_t> from_pos = Layer::get_position(from);
 
-    return compute_displacement(from_pos, to);
+    return Position<double_t>(0.,0.); // compute_displacement(from_pos, to);
   }
 
   Position<double_t> TopologyModule::compute_displacement(const Position<double_t>& from_pos,
@@ -946,19 +948,28 @@ namespace nest
   */
 
   void TopologyModule::
-  DumpLayerNodes_os_iFunction::execute(SLIInterpreter *i) const
+  DumpLayerNodes_os_i_bFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
     
-    const index layer_gid =  getValue<long_t>(i->OStack.pick(0));
-    OstreamDatum out = getValue<OstreamDatum>(i->OStack.pick(1));
+    const bool write = getValue<bool>(i->OStack.pick(0));
+    const index layer_gid =  getValue<long_t>(i->OStack.pick(1));
+    std::ostream* out;
+    if ( write )
+    {
+      i->assert_stack_load(3);
+      out = &(*(getValue<OstreamDatum>(i->OStack.pick(2)))); // dereference Datum, then get pointer to stream
+      assert(out && out->good());
+    }
+    else
+      out = 0;
 
-    Layer const * const layer = dynamic_cast<Layer*>(net_->get_node(layer_gid));
+    Layer * layer = dynamic_cast<Layer*>(net_->get_node(layer_gid));
 
-    if( layer != 0 && out->good() )
-      layer->dump_nodes(*out);
+    if ( layer != 0 )
+      layer->dump_nodes(out);
 
-    i->OStack.pop(1);  // leave ostream on stack
+    i->OStack.pop(2);  // leave ostream on stack if it was there.
     i->EStack.pop();  
   }
 
@@ -1022,12 +1033,14 @@ namespace nest
       throw TypeMismatch("any layer type", "something else");
 
     // Get layer leaves
-    LocalLeafList nodes(*layer);
+    LocalLeafList local_leaves(*layer);
+    vector<Communicator::NodeAddressingData> leaves;
+    nest::Communicator::communicate(local_leaves, leaves, true);
 
     // Iterate over leaves
-    for( LocalLeafList::iterator it = nodes.begin(); it != nodes.end(); ++it )
+    for( std::vector<Communicator::NodeAddressingData>::iterator it = leaves.begin(); it != leaves.end(); ++it )
     {
-        DictionaryDatum dict = net_->get_connector_status(**it, synapse_id);
+        DictionaryDatum dict = net_->get_connector_status((*it).get_gid(), synapse_id);
 
         TokenArray targets = getValue<TokenArray>(dict, names::targets);
         TokenArray weights = getValue<TokenArray>(dict, names::weights);
@@ -1036,7 +1049,7 @@ namespace nest
         assert(targets.size() == weights.size());
         assert(targets.size() == delays.size());
 
-        const Position<double_t> source_pos = Layer::get_position(**it);
+        const Position<double_t> source_pos = Layer::get_position((*it).get_gid(), (*it).get_parent_gid());
 
         // Print information about all connections for current leaf
         for ( size_t i = 0; i < targets.size(); ++i )
@@ -1045,16 +1058,16 @@ namespace nest
             assert(target);
 
             // Print source, target, weight, delay, rports
-            out << (*it)->get_gid() << ' ' << targets[i] << ' '
+            out << (*it).get_gid() << ' ' << targets[i] << ' '
                 << weights[i] << ' ' << delays[i];
 
-            try
+       /*     try
             {
                 const Position<double_t> displacement =
                     TopologyModule::compute_displacement(source_pos, *target);
                 out << ' ';
                 displacement.print(out);
-            } catch ( LayerExpected &le )
+            } catch ( LayerExpected &le ) */
             {
                 // Happens if target does not belong to layer, eg spike_detector.
                 // We then print NaNs for the displacement, take dimension from

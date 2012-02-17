@@ -123,11 +123,11 @@ namespace nest
      static Position<double_t>
        compute_displacement(const Position<double_t>&, const Node&);
 
-     class DumpLayerNodes_os_iFunction: public SLIFunction
+     class DumpLayerNodes_os_i_bFunction: public SLIFunction
        {
        public:
 	 void execute(SLIInterpreter *) const;
-       } dumplayernodes_os_ifunction;
+       } dumplayernodes_os_i_bfunction;
 
      class DumpLayerConnections_os_i_lFunction: public SLIFunction
      {

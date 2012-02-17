@@ -147,11 +147,12 @@ namespace nest
 
     /**
      * Returns position of input node.
-     * @param n  node
+     * @param node gid
+     * @param parent node's gid
      * @returns position of node
      * @throws LayerExpected if the node is not inside a layer
      */
-    static const Position<double_t> get_position(const Node& n);
+    static const Position<double_t> get_position(index, index);
     
      /**
       * Get parent layer and local id within parent of node
@@ -166,7 +167,7 @@ namespace nest
      * GID x-position y-position [z-position]
      * @param   output stream
      */
-    void dump_nodes(std::ostream &) const;
+    void dump_nodes(std::ostream*);
 
     /**
      * @returns true if edge wrap is used.

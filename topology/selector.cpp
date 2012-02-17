@@ -70,7 +70,7 @@ void Selector::slice_node(Subnet& temp_subnet, Node& layer_member)
     // member is subnet
     LocalLeafList localnodes(*layer_subnet);
     vector<Communicator::NodeAddressingData> global_nodes;
-    Communicator::communicate(localnodes, global_nodes);
+    Communicator::communicate(localnodes, global_nodes, true);
 
     Network& netw = *Node::network();
     for ( vector<Communicator::NodeAddressingData>::iterator n = global_nodes.begin();
