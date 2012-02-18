@@ -24,6 +24,7 @@
 #include "selector.h"
 #include "topology_names.h"
 #include "communicator.h"
+#include "communicator_impl.h"
 #include "network.h"
 
 namespace nest

@@ -26,7 +26,7 @@
 #include "numerics.h"
 #include <string>
 #include "nestmodule.h"
-#include "communicator.h"
+#include "communicator_impl.h"
 
 #include <map>
 
