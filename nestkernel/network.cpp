@@ -34,7 +34,6 @@
 #include "processes.h"
 #include "nestmodule.h"
 #include "sibling_container.h"
-
 #include "communicator_impl.h"
 
 #include <cmath>
@@ -64,13 +63,13 @@ Network::Network(SLIInterpreter &i)
   interpreter_.def("modeldict", new DictionaryDatum(modeldict_));
 
   Model* model = new GenericModel<Subnet>("subnet");
-  register_model(*model);
+  register_basis_model(*model);
 
   siblingcontainer_model = new GenericModel<SiblingContainer>("siblingcontainer");
-  register_model(*siblingcontainer_model, true);
+  register_basis_model(*siblingcontainer_model, true);
 
   model = new GenericModel<proxynode>("proxynode");
-  register_model(*model, true);
+  register_basis_model(*model, true);
 
   synapsedict_ = new Dictionary();
   interpreter_.def("synapsedict", new DictionaryDatum(synapsedict_));
@@ -122,21 +121,9 @@ void Network::init_()
   current_ = root_ = static_cast<Subnet *>((*root_container).get_thread_sibling_(0));
 
   /**
-    Build modeldict and list of models from clean prototypes.
-
-    We also clear the models_ list here. This is necessary, since the
-    Network::Network(SLIIntepreter&) constructor places the subnet
-    and proxynode models in models_ before calling init_(), while
-    reset() calls init_() with an empty models_ list. This leads to
-    inconsistent modeldicts before and after ResetKernel, see #333.
-
-    @todo THIS IS A WORK-AROUND. The model name/model id setup, and the 
-    initialization of models must be revised in connection with with the
-    Network/Scheduler refactoring (#150).
+    Build modeldict, list of models and list of proxy nodes from clean prototypes.
    */
-  models_.clear();
-  modeldict_->clear();
-
+ 
   // Re-create the model list from the clean prototypes
   for(index i = 0; i < pristine_models_.size(); ++i)
     if (pristine_models_[i].first != 0)
@@ -349,7 +336,6 @@ index Network::add_node(index mod, long_t n)   //no_p
     message(SLIInterpreter::M_ERROR, " Network::add:node", "No nodes were created.");
     throw KernelException("OutOfMemory");
   }
-
   node_model_ids_.add_range(mod,min_gid,max_gid-1);
 
   if (model->has_proxies())
@@ -367,8 +353,6 @@ index Network::add_node(index mod, long_t n)   //no_p
     {
       thread vp = (current_->get_children_on_same_vp()) ? current_->get_children_vp() : suggest_vp(gid);
       thread t = vp_to_thread(vp);
-
-      //std::cout << "gid " << gid << ", size of nodes " << nodes_.size() << std::endl;
 
       if(is_local_vp(vp))
       {
@@ -528,9 +512,10 @@ void Network::go_to(index n)
 
 Node* Network::get_node(index n, thread thr) //no_p
 {
-  if (!is_local_gid(n))
+  long_t model_id = node_model_ids_.get_model_id(n);
+  if (!is_local_gid(n)){
     return proxy_nodes_.at(node_model_ids_.get_model_id(n));
-
+  }
   if ((*nodes_[n]).num_thread_siblings_() == 0)
     return nodes_[n];
 
@@ -1548,8 +1533,29 @@ index Network::copy_model(index old_id, std::string new_name)
   models_.push_back(new_model);
   int new_id = models_.size() - 1;
   modeldict_->insert(new_name, new_id);
+  int proxy_model_id = get_model_id("proxynode");
+  assert(proxy_model_id > 0);
+  Model *proxy_model = models_[proxy_model_id];
+  assert(proxy_model != 0);
+  Node* newnode = proxy_model->allocate(0);
+  newnode->set_model_id(new_id);
+  proxy_nodes_.push_back(newnode);
   return new_id;
 }
+
+void Network::register_basis_model(Model& m, bool private_model)
+{
+  std::string name = m.get_name();
+
+  if ( !private_model && modeldict_->known(name) )
+  {
+    delete &m;
+    throw NamingConflict("A model called '" + name + "' already exists.\n"
+        "Please choose a different name!");
+  }
+  pristine_models_.push_back(std::pair<Model*, bool>(&m, private_model));
+}
+
 
 index Network::register_model(Model& m, bool private_model)
 {
@@ -1567,6 +1573,13 @@ index Network::register_model(Model& m, bool private_model)
 
   pristine_models_.push_back(std::pair<Model*, bool>(&m, private_model));
   models_.push_back(m.clone(name));
+  int proxy_model_id = get_model_id("proxynode");
+  assert(proxy_model_id > 0);
+  Model *proxy_model = models_[proxy_model_id];
+  assert(proxy_model != 0);
+  Node* newnode = proxy_model->allocate(0);
+  newnode->set_model_id(id);
+  proxy_nodes_.push_back(newnode);
 
   if ( !private_model )
     modeldict_->insert(name, id);
@@ -1584,13 +1597,17 @@ void Network::unregister_model(index m_id)
 
   modeldict_->remove(name);
 
-  // ungegister from the pristine_models_ list
+  // unregister from the pristine_models_ list
   delete pristine_models_[m_id].first;
   pristine_models_[m_id].first = 0;
 
-  // ungegister from the models_ list
+  // unregister from the models_ list
   delete models_[m_id];
   models_[m_id] = 0;
+
+  // unregister from proxy_nodes_ list
+  delete proxy_nodes_[m_id];
+  proxy_nodes_[m_id] = 0;
 }
 
 void Network::try_unregister_model(index m_id)

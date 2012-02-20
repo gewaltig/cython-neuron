@@ -57,7 +57,6 @@ void Modelrangemanager::add_range(index model, index first_gid, index last_gid)
   int right = modelranges_.size();
   assert(right >= 1);
   assert(is_in_range(gid));
-
   while (!modelranges_[range_idx_].is_in_range(gid))
   {
     if (gid > modelranges_[range_idx_].get_last_gid())
@@ -72,7 +71,6 @@ void Modelrangemanager::add_range(index model, index first_gid, index last_gid)
     }
     assert(left+1 < right);
   }
-
   return modelranges_[range_idx_].get_model_id();
 }
 

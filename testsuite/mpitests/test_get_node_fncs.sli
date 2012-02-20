@@ -50,8 +50,6 @@ Author: February 2012, Kunkel
 
 [1 2 4] % check for 1, 2 and 4 processes
 {
-  ResetKernel
-
   /iaf_neuron 2 Create ; % gids 1,2
 
   /subnet 2 Create ;     % gids 3,4

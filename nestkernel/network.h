@@ -142,10 +142,20 @@ SeeAlso: Simulate, Node
      * Reset the network to the state at T = 0.
      */
     void reset_network();
+    
+    /**
+     * Registers a fundamental model for use with the network.
+     * @param   m     Model object.
+     * @param   private_model  If true, model is not entered in modeldict.
+     * @return void
+     * @note The Network calls the Model object's destructor at exit.
+     * @see register_model, unregister_model, register_user_model
+     */
+    void register_basis_model(Model& m, bool private_model = false);
 
     /**
      * Register a built-in model for use with the network.
-     * Also enters the model in modeldict, lest private_model is true.
+     * Also enters the model in modeldict, unless private_model is true.
      * @param   m     Model object.
      * @param   private_model  If true, model is not entered in modeldict.
      * @return Model ID assigned by network

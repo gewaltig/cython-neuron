@@ -1,5 +1,5 @@
 /*
- *  test_distributed_collect_assert_or_die.sli
+ *  test_distributed_invariant_collect_assert_or_die.sli
  *
  *  This file is part of NEST
  *
