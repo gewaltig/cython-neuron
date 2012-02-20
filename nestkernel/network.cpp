@@ -204,6 +204,7 @@ void Network::clear_models_()
       delete *m;
 
   models_.clear();
+  modeldict_->clear();
 }
 
 void Network::reset()
@@ -512,7 +513,6 @@ void Network::go_to(index n)
 
 Node* Network::get_node(index n, thread thr) //no_p
 {
-  long_t model_id = node_model_ids_.get_model_id(n);
   if (!is_local_gid(n)){
     return proxy_nodes_.at(node_model_ids_.get_model_id(n));
   }
