@@ -209,8 +209,8 @@ M_WARNING setverbosity
       % lists from the subnetworks
 
       % obtain array with GIDs of all excitatory/inhibitory neurons
-      /E_neurons E_net GetNodes def
-      /I_neurons I_net GetNodes def
+      /E_neurons E_net GetGlobalNodes def
+      /I_neurons I_net GetGlobalNodes def
 
       % list of all neurons
       /allNeurons E_neurons I_neurons join def
