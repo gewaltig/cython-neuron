@@ -43,30 +43,22 @@
 // the JUGENE system at the Research Center Juelich
 #ifdef IS_BLUEGENE_P
 
-#include <spi/bgp_SPI.h>
-
 extern "C"
 {
-  long get_heap_mem_bgp()
-  {
-    uint32_t heap_memory = 0;
-    Kernel_GetMemorySize(KERNEL_MEMSIZE_HEAP, &heap_memory);
-    return (long)heap_memory;
-  }
-
-  long get_stack_mem_bgp()
-  {
-    uint32_t stack_memory = 0;
-    Kernel_GetMemorySize(KERNEL_MEMSIZE_STACK, &stack_memory);
-    return (long)stack_memory;
-  }
+  // these functions are defined in get_mem_bgp.c
+  // they need to reside in a plain c file, because the
+  // paragmas defined in the bgp header files interfere
+  // with c++, causing "undefined references to non-virtual thunk"
+  // MH 12-02-22, redid fix by JME 12-01-27, changeset 9497
+  long get_heap_mem_bgp();
+  long get_stack_mem_bgp();
+}
 
 // For getrusage
 #include <sys/resource.h>
 #include <common/bgp_personality.h>
 #include <common/bgp_personality_inlines.h>
 #include <spi/kernel_interface.h>
-}
 
 #endif /* #ifdef IS_BLUEGENE_P */
 
