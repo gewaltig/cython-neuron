@@ -184,7 +184,6 @@ namespace nest {
      * This name is identical to the name that is used to identify
      * the model in the interpreter's model dictionary.
      */
-    virtual
     std::string get_name() const;
 
     virtual 

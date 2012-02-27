@@ -26,10 +26,10 @@ Description:
   processes.
   
 Note:
-  Per r9625 (approximately), this test no longer tests that the node for which the
-  RNG is obtained has the same VP on all MPI processes. Instead, the test checks
-  that all processes except one report VP==-1, as the VP of non-local nodes is
-  not known.
+  In response to the changes of GetStatus return values (cf #549), this test now
+  only checks that the neuron created has the same VP-number independent of the
+  number of MPI processes and that the first 10 RNs from its VP-RNG are identical
+  independent of the number of MPI processes.
 
 See also:
   regressiontests/ticket-336-serial.sli
@@ -89,17 +89,15 @@ def
 {
   ResetKernel
   0 << /total_num_virtual_procs 4 >> SetStatus
-  /iaf_neuron Create 
-  do_test
-  % pcvs does not handle dicts well, so we pull out
-  % the vp# and, if known, the random number
-  dup 
-  /rand known
+  /node /iaf_neuron Create def
+  node /local get
   {
-    begin [ vp rand ] end
+    /rng node GetVpRNG def 
+    [ node /vp get 
+      10 { rng drand } repeat ]
   }
   {
-    begin [vp ] end
+    [ ]
   }
   ifelse
 } 
@@ -107,23 +105,10 @@ def
   /res Set
   res length 3 eq
   {
-     % this is a very crude test working around shortcomings in
-     % the way results are returned via pcvs
      /ref res First def  % reference case, 1 MPI
-     ref length 2 eq % gid + rnd
+     ref length 11 eq
      {
-        /vp ref First def
-        /rnd ref Last  def
-  
-        % now check if all others have one identical random number,
-        % once the vp of the reference and all others are -1
-        res Rest 
-        { /rr Set 
-          rr { rnd eq } Select length 1 eq 
-          rr { vp  eq } Select length 1 eq  
-          rr { -1  eq } Select length rr length 2 sub eq 
-          and and
-        } Map
+        res Rest { ref eq } Map 
         true exch { and } Fold
      }
      { 

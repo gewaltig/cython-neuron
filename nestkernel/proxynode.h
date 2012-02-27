@@ -66,7 +66,6 @@ Author: June 2005, Jochen Martin Eppler
     port check_connection(Connection&, port);
     void handle(SpikeEvent &) {}
     port connect_sender(SpikeEvent &) {return 0;}
-    std::string get_name() const {return "proxynode";}
 
     void get_status(DictionaryDatum &) const {}
     
