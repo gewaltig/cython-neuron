@@ -24,11 +24,17 @@ Description:
   This test ensures that GetVpRNG, when called on a node with proxies, generates
   the same random number is generated independent of the number of MPI
   processes.
+  
+Note:
+  Per r9625 (approximately), this test no longer tests that the node for which the
+  RNG is obtained has the same VP on all MPI processes. Instead, the test checks
+  that all processes except one report VP==-1, as the VP of non-local nodes is
+  not known.
 
 See also:
-  regressiontests/ticket-336.sli
+  regressiontests/ticket-336-serial.sli
 
-Author: Hans Ekkehard Plesser, 2010-09-29, 2012-02-16
+Author: Hans Ekkehard Plesser, 2010-09-29, 2012-02-16, 2012-02-27
  */
 
 /unittest (8831) require
@@ -41,7 +47,7 @@ Author: Hans Ekkehard Plesser, 2010-09-29, 2012-02-16
  * Returns a dictionary containing
  * - GID
  * - model of node
- * - VP of node
+ * - VP of node (-1 if non-local)
  * - if node is local: integer random number from VP-specific RNG
  * - local number of threads
  *
@@ -106,16 +112,17 @@ def
      /ref res First def  % reference case, 1 MPI
      ref length 2 eq % gid + rnd
      {
-        /gid ref First def
+        /vp ref First def
         /rnd ref Last  def
   
-        % now check if all others have one identical random number
-        % and all others are equal to gid
+        % now check if all others have one identical random number,
+        % once the vp of the reference and all others are -1
         res Rest 
         { /rr Set 
           rr { rnd eq } Select length 1 eq 
-          rr { gid eq } Select length rr length 1 sub eq 
-          and 
+          rr { vp  eq } Select length 1 eq  
+          rr { -1  eq } Select length rr length 2 sub eq 
+          and and
         } Map
         true exch { and } Fold
      }
