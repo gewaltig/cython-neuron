@@ -122,7 +122,6 @@ namespace nest {
 
     // add information available for all nodes
     (*dict)[names::local] = is_local();
-    (*dict)[names::frozen] = is_frozen();
     (*dict)[names::model] = LiteralDatum(get_name());
 
     // add information available only for local nodes
@@ -130,6 +129,7 @@ namespace nest {
     {
       (*dict)[names::global_id] = get_gid();
       (*dict)[names::state] = get_status_flag();
+      (*dict)[names::frozen] = is_frozen();
       (*dict)[names::thread] = get_thread();
       (*dict)[names::vp] = get_vp();
       if ( parent_ )
