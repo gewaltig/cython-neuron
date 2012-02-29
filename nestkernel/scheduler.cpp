@@ -590,8 +590,8 @@ void nest::Scheduler::threaded_update_openmp()
 #endif
 
     do {
-      //if (print_time_)
-      //  gettimeofday(&t_slice_begin_, NULL);
+      if (print_time_)
+        gettimeofday(&t_slice_begin_, NULL);
 
       if ( from_step_ == 0 )  // deliver only at beginning of slice
 	{
@@ -611,8 +611,7 @@ void nest::Scheduler::threaded_update_openmp()
       for (std::vector<Node*>::iterator i = nodes_vec_[t].begin(); i != nodes_vec_[t].end(); ++i)
 	update_(*i);
 
-      // parallel section ends
-      // wait until all threads are done -> synchronize
+      // parallel section ends, wait until all threads are done -> synchronize
 #pragma omp barrier
 
       // the following block is executed by a single thread
@@ -630,11 +629,11 @@ void nest::Scheduler::threaded_update_openmp()
 	    terminate_ = true;
 	  }
 
-	//if (print_time_)
-	//  {
-	//    gettimeofday(&t_slice_end_, NULL);
-	//    print_progress_();
-	//  }
+	if (print_time_)
+        {
+          gettimeofday(&t_slice_end_, NULL);
+          print_progress_();
+        }
       }
       // end of single section, all threads synchronize at this point
 
