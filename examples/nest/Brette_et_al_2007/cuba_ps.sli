@@ -114,7 +114,7 @@
 
 cuba_ps_params using % here we activate the definitions in the dictionary
 
-[0]
+0
   <<
      /off_grid_spiking true
   >> SetStatus

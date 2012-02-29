@@ -183,8 +183,7 @@ def
 ResetKernel      % clear all existing network elements
 
 % set resolution and total/local number of threads
-[0]
-<<
+0 <<
     /resolution  dt
     /local_num_threads local_num_threads
 >> SetStatus
