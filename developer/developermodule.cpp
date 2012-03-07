@@ -370,7 +370,6 @@ BeginDocumentation
      {
        i->message(SLIInterpreter::M_ERROR, "RandomPopulationConnectD", "static_type or tsodyks_type have to be set to true");
        throw BadProperty();
-       return;
      }
 
      double_t res = Time::get_resolution().get_ms();

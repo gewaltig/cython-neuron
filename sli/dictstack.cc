@@ -141,6 +141,7 @@ void DictionaryStack::push(Token& d)
     assert(dd !=NULL);
     push(*dd);
 }
+
 void DictionaryStack::push(const DictionaryDatum& pd)
 {
   //

@@ -139,8 +139,12 @@ std::string SLIStartup::checkenvpath(std::string const &envvar, SLIInterpreter *
 
   if (envpath != "")
   {
-    if ( opendir(envpath.c_str()) != NULL )
+    DIR *dirptr = opendir(envpath.c_str());
+    if ( dirptr != NULL )
+    {
+      closedir(dirptr);
       return envpath;
+    }
     else
     {
       std::string msg;

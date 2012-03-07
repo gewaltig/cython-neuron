@@ -119,7 +119,7 @@ public:
   void clear_dict_from_cache(DictionaryDatum d)
   {
     for(TokenMap::iterator i = d->begin(); i != d->end(); ++i)
-	cache_[i->first.toIndex()]=0;
+      clear_token_from_cache(i->first);
   }
 
 
@@ -194,12 +194,18 @@ public:
 	}
 #endif
       TokenMap::const_iterator where =base_->find(n);
+
+    if ( where != base_->end() )
+    {
 #ifdef DICTSTACK_CACHE
-      cache_token(n,&(where->second));// Update the cache 
-      basecache_token(n,&(where->second)); // and the basecache 
+      cache_token(n, &(where->second)); // Update the cache
+      basecache_token(n, &(where->second)); // and the basecache
 #endif
       return where->second;
     }
+    else
+      return VoidToken;
+  }
 
   /** Test for a name searching all dictionaries on the stack.
    */
