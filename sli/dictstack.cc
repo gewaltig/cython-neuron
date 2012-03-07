@@ -96,7 +96,9 @@ void DictionaryStack::pop(void)
 void DictionaryStack::clear(void)
 { 
     d.erase(d.begin(),d.end());
+#ifdef DICTSTACK_CACHE
     clear_cache();
+#endif
 }
 
 
