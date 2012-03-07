@@ -235,7 +235,7 @@ M_WARNING setverbosity
         /withtime true   % record time of spikes
         /withgid  true   % and the global ID of the neuron
         /to_file true    % write results to a file
-       /to_memory false
+        /to_memory true  % record spikes in memory
       >> SetStatus
 
       (Creating inhibitory spike detector.) =
@@ -246,7 +246,7 @@ M_WARNING setverbosity
         /withtime true   % record time of spikes
         /withgid  true   % and the global ID of the neuron
         /to_file true    % write results to a file
-        /to_memory false
+        /to_memory true  % record spikes in memory
       >> SetStatus
 
       % Create custom synapse types with appropriate values for

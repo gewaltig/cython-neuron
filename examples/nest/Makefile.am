@@ -4,6 +4,7 @@ nobase_data_DATA=\
 	balancedneuron.sli\
 	balancedneuron-2.sli\
 	brunel-2000.sli\
+	brunel-2000_threaded_connect.sli\
 	brunel_ps.sli\
 	Brette_et_al_2007/coba.sli\
 	Brette_et_al_2007/cuba.sli\
