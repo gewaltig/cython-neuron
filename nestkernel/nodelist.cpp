@@ -40,8 +40,8 @@ namespace nest
   // -----------------------------------------------------------------------
 
   template <>
-  NodeList<LocalNodeListIterator>::iterator 
-  NodeList<LocalNodeListIterator>::begin() const
+  LocalNodeListBase<LocalNodeListIterator>::iterator 
+  LocalNodeListBase<LocalNodeListIterator>::begin() const
   {
     if ( empty() )
       return end();
@@ -119,8 +119,8 @@ namespace nest
   // -----------------------------------------------------------------------
 
   template <>
-  NodeList<LocalChildListIterator>::iterator 
-  NodeList<LocalChildListIterator>::begin() const
+  LocalNodeListBase<LocalChildListIterator>::iterator 
+  LocalNodeListBase<LocalChildListIterator>::begin() const
   {
     if ( empty() )
       return end();
@@ -138,8 +138,8 @@ namespace nest
   // -----------------------------------------------------------------------
 
   template <>
-  NodeList<LocalLeafListIterator>::iterator 
-  NodeList<LocalLeafListIterator>::begin() const
+  LocalNodeListBase<LocalLeafListIterator>::iterator 
+  LocalNodeListBase<LocalLeafListIterator>::begin() const
    {
      if ( empty() )
        return end();

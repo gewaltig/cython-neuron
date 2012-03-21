@@ -23,40 +23,44 @@
 namespace nest{
 
 /**
- * List interface to network tree.
+ * Template for list interface to network tree.
  *
- * LocalNodeList is an adaptor class which provides and iterator
- * interface to a subnet. The iterator traverses all underlying
- * subnets recursively in depth-first (post-order) order. This
- * iterator traverses only local nodes.
+ * LocalNodeListBase provides a template for classes providing
+ * iterator interfaces to subnets. These iterators traverse only
+ * local nodes.
  *
- * This iterator is not used during Network update, since it is not
- * thread safe.
+ * Concrete classes for local lists are created by instantiating
+ * LocalNodeListBase with suitable iterator classes and specializing
+ * the begin() method for those template instances.
  *
- * For a list interface that only accesses the leaves of a network
- * tree, excluding the intermediate subnets, see class LocalLeafList
- * and its iterator.
- * LocalNodeList iterates only over local nodes.
- * @see GlobalNodeList
+ * @note All iterators provided must either perform post-order iteration
+ *       or specialize the end() method suitably, as the end() method
+ *       provided by LocalNodeListBase assumes post-order traversal.
+ *
+ * @note The list iterators provided here are not thread-safe. If you need
+ *       to use then in threaded code, you must make sure that (a) each
+ *       thread has its own list and iterator instances and (b) that no two
+ *       threads manipulate the same node simultaneously.
  */
-
 template <typename ListIterator>
-class NodeList
+class LocalNodeListBase
 {
 public:
   typedef ListIterator iterator;
 
-  explicit NodeList(Subnet &subnet) : subnet_(subnet) {}
+  explicit LocalNodeListBase(Subnet &subnet) : subnet_(subnet) {}
 
   /**
    * Return iterator pointing to first node in subnet.
-   * @node Must be specialized by derived class.
+   * @node Must be defined by all derived classes.
    */
-  iterator begin() const;/* { assert(false);
-			    return end(); }*/
+  iterator begin() const;
 
   /**
    * Return iterator pointing to node past last node.
+   *
+   * @note Since traversal is post-order, the local_end() of the top-level
+   *       subnet is the end also for Leaf and Child lists.
    */
   iterator end() const { return iterator(subnet_.local_end(),
                                          subnet_.local_end()); }
@@ -71,23 +75,15 @@ private:
   Subnet& subnet_;  //!< root of the network
 };
 
-// ----------------------------------------------------------------------------
-
-// We need to define this function here (instead of inline above), otherwise
-// the BlueGene compiler gets confused. HEP 2012-02-13
-template <typename ListIterator>
-  typename NodeList<ListIterator>::iterator
-  NodeList<ListIterator>::begin() const
-  {
-    assert(false);
-    return end(); 
-  }
 
 // ----------------------------------------------------------------------------
 
+/**
+ * Iterator for post-order traversal of all local nodes in a subnet.
+ */
 class LocalNodeListIterator
 {
-  friend class NodeList<LocalNodeListIterator>;
+  friend class LocalNodeListBase<LocalNodeListIterator>;
   friend class LocalLeafListIterator;
 
   private:
@@ -117,16 +113,22 @@ class LocalNodeListIterator
 // ----------------------------------------------------------------------------
 
 template <>
-  NodeList<LocalNodeListIterator>::iterator
-  NodeList<LocalNodeListIterator>::begin() const;
+  LocalNodeListBase<LocalNodeListIterator>::iterator
+  LocalNodeListBase<LocalNodeListIterator>::begin() const;
 
-typedef NodeList<LocalNodeListIterator> LocalNodeList;
+/**
+ * List interface to subnet providing iteration over all local nodes.
+ */
+typedef LocalNodeListBase<LocalNodeListIterator> LocalNodeList;
 
 // ----------------------------------------------------------------------------
 
+/**
+ * Iterator for traversal of all local immediate child nodes in a subnet.
+ */
 class LocalChildListIterator
 {
-  friend class NodeList<LocalChildListIterator>;
+  friend class LocalNodeListBase<LocalChildListIterator>;
 
   private:
    //! Create iterator from pointer to Node in subnet
@@ -150,16 +152,24 @@ class LocalChildListIterator
 };
 
 template <> 
-  NodeList<LocalChildListIterator>::iterator
-  NodeList<LocalChildListIterator>::begin() const;
+  LocalNodeListBase<LocalChildListIterator>::iterator
+  LocalNodeListBase<LocalChildListIterator>::begin() const;
 
-typedef NodeList<LocalChildListIterator> LocalChildList;
+/**
+ * List interface to subnet providing iteration over immediate local child nodes.
+ */
+typedef LocalNodeListBase<LocalChildListIterator> LocalChildList;
 
 // ----------------------------------------------------------------------------
 
+/**
+ * Iterator for traversal of only local leaf nodes in a subnet.
+ * @note Leaf nodes are those children that are not subnets. Empty subnets
+ *       are not considered leaves.
+ */
 class LocalLeafListIterator
 {
-  friend class NodeList<LocalLeafListIterator>;
+  friend class LocalNodeListBase<LocalLeafListIterator>;
 
   private:
    //! Create iterator from pointer to Node in subnet
@@ -188,12 +198,15 @@ class LocalLeafListIterator
 };
 
 template <>
-  NodeList<LocalLeafListIterator>::iterator
-  NodeList<LocalLeafListIterator>::begin() const;
+  LocalNodeListBase<LocalLeafListIterator>::iterator
+  LocalNodeListBase<LocalLeafListIterator>::begin() const;
 
-typedef NodeList<LocalLeafListIterator> LocalLeafList;
-
-
+/**
+ * List interface to subnet providing iteration over local leaf nodes.
+ * @note Leaf nodes are those children that are not subnets. Empty subnets
+ *       are not considered leaves.
+ */
+typedef LocalNodeListBase<LocalLeafListIterator> LocalLeafList;
 
 }
 #endif
