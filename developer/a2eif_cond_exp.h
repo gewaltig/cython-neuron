@@ -132,15 +132,9 @@ namespace nest
 
     /**
      * Import sets of overloaded virtual functions.
-     * We need to explicitly include sets of overloaded
-     * virtual functions into the current scope.
-     * According to the SUN C++ FAQ, this is the correct
-     * way of doing things, although all other compilers
-     * happily live without.
+     * @see Technical Issues / Virtual Functions: Overriding, Overloading, and Hiding
      */
-#ifndef IS_BLUEGENE
-    using Node::check_connection;
-#endif
+
     using Node::connect_sender;
     using Node::handle;
 
