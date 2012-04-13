@@ -1,0 +1,100 @@
+/topology-interface /SLI ($Revision: 6714 $) provide-component
+
+% topology-interface is a temporary file during the mirgration of
+% topology functionality from SLI to C++ migration. Thus, functions
+% in topology-interface are also included in the topology namespace.
+%
+% See topology.sli for legacy code.
+
+/topology namespace
+
+% ------------------------------------------------------------------------------
+
+% /ConnectLayers [/integertype /integertype /dictionarytype]
+%   /ConnectLayers_i_i_dict load
+% def
+
+/CreateLayer [/dictionarytype]
+  /CreateLayer_D load
+def
+
+% /GetElement [/integertype /arraytype]
+%   /GetElement_i_ia load
+% def
+
+/GetPosition [/integertype]
+  /GetPosition_i load
+def
+
+% /GetLayer [/integertype]
+%   /GetLayer_i load
+% def
+
+/Displacement [/integertype /integertype]
+  { exch GetPosition exch
+    Displacement_a_i } bind
+def
+
+/Displacement [/arraytype /integertype]
+  /Displacement_a_i load
+def
+
+/Displacement [/doublevectortype /integertype]
+  { exch cva exch
+    Displacement_a_i } bind
+def
+
+/Distance [/integertype /integertype]
+  { exch GetPosition exch
+    Distance_a_i } bind
+def
+
+/Distance [/arraytype /integertype]
+  /Distance_a_i load
+def
+
+/Distance [/doublevectortype /integertype]
+  { exch cva exch
+    Distance_a_i } bind
+def
+
+% /DumpLayerNodes [/ostreamtype /integertype]
+%   { true DumpLayerNodes_os_i_b } bind
+% def
+
+% /DumpLayerNodes_nowrite [/integertype]
+%   { false DumpLayerNodes_os_i_b } bind
+% def
+
+
+% /DumpLayerConnections [/ostreamtype /integertype /literaltype]
+%   /DumpLayerConnections_os_i_l load
+% def
+
+/CreateMask [/dictionarytype]
+  /CreateMask_D load
+def
+
+/Inside [/masktype /arraytype]
+  /Inside_M_a load
+def
+
+/Inside [/dictionarytype /arraytype]
+  { exch CreateMask exch Inside_M_a } bind
+def
+
+/and [/masktype /masktype]
+  /and_M_M load
+def
+
+/or [/masktype /masktype]
+  /or_M_M load
+def
+
+/sub [/masktype /masktype]
+  /sub_M_M load
+def
+
+% ------------------------------------------------------------------------------
+
+end % namespace topology
