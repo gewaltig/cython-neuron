@@ -25,7 +25,8 @@ libtopology3module_la_SOURCES= \
 			free_layer.h \
 			mask.h \
 			mask.cpp \
-			quadrant.h
+			quadrant.h \
+			quadrant_impl.h
 
 # do not change anything below this line ------------------------------
 

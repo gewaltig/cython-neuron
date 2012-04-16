@@ -186,13 +186,13 @@ namespace nest
     /**
      * @returns member nodes in quadrant.
      */
-    std::vector<std::pair<Position<2>,T> > get_nodes() const;
+    std::vector<std::pair<Position<2>,T> > get_nodes();
 
     /**
      * Applies a Mask to this quadrant.
      * @returns member nodes in quadrant inside mask.
      */
-    std::vector<std::pair<Position<2>,T> > get_nodes(const Mask<2> &mask) const;
+    std::vector<std::pair<Position<2>,T> > get_nodes(const Mask<2> &mask);
 
     /**
      * This function returns a node iterator which will traverse the rest
@@ -221,12 +221,12 @@ namespace nest
     /**
      * Append this quadrant's nodes to the vector
      */
-    void append_nodes_(std::vector<std::pair<Position<2>,T> >&) const;
+    void append_nodes_(std::vector<std::pair<Position<2>,T> >&);
 
     /**
      * Append this quadrant's nodes inside the mask to the vector
      */
-    void append_nodes_(std::vector<std::pair<Position<2>,T> >&, const Mask<2> &) const;
+    void append_nodes_(std::vector<std::pair<Position<2>,T> >&, const Mask<2> &);
 
     /**
      * @returns the subquad number for this position
@@ -255,9 +255,9 @@ namespace nest
                                      int subquad=0) :
     lower_left_(lower_left),
     extent_(extent),
+    leaf_(true),
     parent_(parent),
-    my_subquad_(subquad),
-    leaf_(true)
+    my_subquad_(subquad)
   {
   }
 
@@ -267,24 +267,9 @@ namespace nest
     return leaf_;
   }
 
-  template<class T, int max_capacity>
-  void Quadrant<T,max_capacity>::append_nodes_(std::vector<std::pair<Position<2>,T> >&v) const
-  {
-    if (leaf_) {
-      std::copy(nodes_.begin(), nodes_.end(), std::back_inserter(v));
-    } else {
-      for (int i=0;i<4;++i)
-        children_[i]->append_nodes_(v);
-    }
-  }
 
   template<class T, int max_capacity>
-  void Quadrant<T,max_capacity>::append_nodes_(std::vector<std::pair<Position<2>,T> >&v, const Mask<2> &mask) const
-  {
-  }
-
-  template<class T, int max_capacity>
-  std::vector<std::pair<Position<2>,T> > Quadrant<T,max_capacity>::get_nodes() const
+  std::vector<std::pair<Position<2>,T> > Quadrant<T,max_capacity>::get_nodes()
   {
     std::vector<std::pair<Position<2>,T> > result;
     append_nodes_(result);
@@ -292,7 +277,7 @@ namespace nest
   }
 
   template<class T, int max_capacity>
-  std::vector<std::pair<Position<2>,T> > Quadrant<T,max_capacity>::get_nodes(const Mask<2> &mask) const
+  std::vector<std::pair<Position<2>,T> > Quadrant<T,max_capacity>::get_nodes(const Mask<2> &mask)
   {
     std::vector<std::pair<Position<2>,T> > result;
     append_nodes_(result,mask);
@@ -327,26 +312,6 @@ namespace nest
 
     }
   }
-
-  template<class T, int max_capacity>
-  void Quadrant<T,max_capacity>::split_()
-  {
-    assert(leaf_);
-
-    children_[0] = new Quadrant<T,max_capacity>(lower_left_, extent_*0.5,this,0);
-    children_[1] = new Quadrant<T,max_capacity>(lower_left_ + extent_*Position<2>(0.5,0.0), extent_*0.5,this,1);
-    children_[2] = new Quadrant<T,max_capacity>(lower_left_ + extent_*Position<2>(0.0,0.5), extent_*0.5,this,2);
-    children_[3] = new Quadrant<T,max_capacity>(lower_left_ + extent_*0.5, extent_*0.5,this,3);
-
-    for(typename std::vector<std::pair<Position<2>,T> >::iterator i=nodes_.begin(); i!=nodes_.end(); ++i) {
-      children_[subquad_(i->first)]->insert(i->first,i->second);
-    }
-
-    nodes_.clear();
-
-    leaf_ = false;
-  }
-
 
 } // namespace nest
 

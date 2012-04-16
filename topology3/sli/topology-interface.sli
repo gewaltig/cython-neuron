@@ -95,6 +95,10 @@ def
   /sub_M_M load
 def
 
+/GetGlobalChildren [/integertype /masktype]
+  /GetGlobalChildren_i_M load
+def
+  
 % ------------------------------------------------------------------------------
 
 end % namespace topology

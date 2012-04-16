@@ -15,10 +15,13 @@
  */
 
 #include "config.h"
+#include "arraydatum.h"
+#include "integerdatum.h"
 #include "network.h"
 #include "model.h"
 #include "genericmodel.h"
-#include "network.h"
+#include "communicator.h"
+#include "communicator_impl.h"
 #include "topology3module.h"
 #include "layer.h"
 #include "free_layer.h"
@@ -26,7 +29,7 @@
 #include "lockptrdatum_impl.h"
 #include "dictdatum.h"
 #include "booldatum.h"
-#include "arraydatum.h"
+#include "quadrant_impl.h"
 
 namespace nest
 {
@@ -434,13 +437,36 @@ namespace nest
     i->assert_stack_load(2);
 
     index gid = getValue<long_t>(i->OStack.pick(1));
-    MaskDatum mask = getValue<MaskDatum>(i->OStack.pick(0));
+    MaskDatum maskd = getValue<MaskDatum>(i->OStack.pick(0));
 
-    AbstractLayer *layer = dynamic_cast<AbstractLayer *>(get_network().get_node(gid));
+    Mask<2> *mask = dynamic_cast<Mask<2> *>(&(*maskd));
+    Layer<2> *layer = dynamic_cast< Layer<2> *>(get_network().get_node(gid));
     if (layer == NULL)
       throw LayerExpected();
 
+    // TODO: This needs work
+
+    // Retrieve global node list, put gids and positions into Quadtree
+    LocalChildList localnodes(*layer);
+    Quadrant<index> quadtree(layer->get_lower_left(),layer->get_lower_left()+layer->get_extent());
+
+    vector<Communicator::NodeAddressingData> globalnodes;
+
+    nest::Communicator::communicate(localnodes,globalnodes,true);
+
+    int j=0;
+    for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
+      quadtree.insert(layer->get_position(j++),n->get_gid());
+
+    std::vector<std::pair<Position<2>,index> > pairs = quadtree.get_nodes(*mask);
+
+    ArrayDatum result;
+    result.reserve(globalnodes.size());
+    for(std::vector<std::pair<Position<2>,index> >::iterator p = pairs.begin(); p != pairs.end(); ++p)
+      result.push_back(new IntegerDatum(p->second));
+
     i->OStack.pop(2);
+    i->OStack.push(result);
     i->EStack.pop();
   }
 
