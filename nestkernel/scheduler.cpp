@@ -154,7 +154,7 @@ void nest::Scheduler::init_()
 #endif
 #endif
 
-  Communicator::set_num_threads(n_threads_);
+  set_num_threads(n_threads_);
 
   create_rngs_(true);  // flag that this is a call from the ctr
   create_grng_(true);  // flag that this is a call from the ctr
@@ -577,8 +577,6 @@ void nest::Scheduler::threaded_update_openmp()
 {
 #ifdef _OPENMP
   net_.message(SLIInterpreter::M_INFO, "Scheduler::threaded_update_openmp", "Simulating using OpenMP.");
-  // TODO: better do in set_status
-  omp_set_num_threads(n_threads_);
 #endif
 
 // parallel section begins
@@ -804,13 +802,6 @@ void nest::Scheduler::threaded_update(thread)
 
 void nest::Scheduler::prepare_nodes()
 {
-  std::string msg;
-#ifdef _OPENMP
-  msg = String::compose( "Setting OpenMP num_threads to %1.", n_threads_);
-  net_.message(SLIInterpreter::M_INFO, "Scheduler::prepare_nodes", msg);
-  omp_set_num_threads(n_threads_);
-#endif
-
   assert(initialized_);
 
   init_moduli_();
@@ -855,7 +846,7 @@ void nest::Scheduler::prepare_nodes()
     n_nodes_ += nodes_vec_[t].size();
   }
 
-  msg = String::compose("Simulating %1 nodes.", n_nodes_);
+  std::string msg = String::compose("Simulating %1 nodes.", n_nodes_);
   net_.message(SLIInterpreter::M_INFO, "Scheduler::prepare_nodes", msg);
 }
 
@@ -997,7 +988,7 @@ void nest::Scheduler::set_status(DictionaryDatum const &d)
       {
         // it is essential to call net_.reset() here to adapt memory pools and more
         // to the new number of threads and VPs
-        Communicator::set_num_threads(n_threads_);
+        set_num_threads(n_threads_);
         net_.reset();
       }
     }
@@ -1609,4 +1600,15 @@ void nest::Scheduler::print_progress_()
             << "realtime factor: " << std::setprecision(4) << rt_factor
             << std::resetiosflags(std::ios_base::floatfield);
   std::flush(std::cout);
+}
+
+
+void nest::Scheduler::set_num_threads(thread n_threads)
+{
+  n_threads_ = n_threads;
+
+#ifdef _OPENMP
+  omp_set_num_threads(n_threads_);
+#endif
+  Communicator::set_num_threads(n_threads_);
 }

@@ -134,7 +134,12 @@ namespace nest
      */
     thread get_num_threads() const;
     
-    void set_threads(thread);
+    /**
+     * Set the number of threads by setting the internal variable
+     * n_threads_, the corresponding value in the Communicator, and
+     * the OpenMP number of threads.
+     */
+    void set_num_threads(thread n_threads);
     
     /**
      * Return the number of processes used during simulation.
@@ -561,12 +566,6 @@ namespace nest
   thread Scheduler::get_num_threads() const
   {
     return n_threads_;
-  }
-
-  inline 
-  void Scheduler::set_threads(thread t)
-  {
-    n_threads_ = t;
   }
 
   inline 
