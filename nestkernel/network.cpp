@@ -228,7 +228,7 @@ void Network::reset()
 
 void Network::reset_kernel()
 {
-  scheduler_.set_threads(1);
+  scheduler_.set_num_threads(1);
   data_path_ = "";
   data_prefix_ = "";
   overwrite_files_ = false;
