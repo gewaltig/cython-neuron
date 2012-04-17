@@ -98,19 +98,20 @@ namespace nest
     // Read positions from dictionary
     if(d->known(names::positions)) {
       TokenArray pos = getValue<TokenArray>(d, names::positions);
-      if(Subnet::global_size() != pos.size()) {
+      if(this->global_size() != pos.size()) {
         std::stringstream expected;
         std::stringstream got;
-        expected << "position array with length " << Subnet::global_size();
+        expected << "position array with length " << this->global_size();
         got << "position array with length" << pos.size();
         throw TypeMismatch(expected.str(), got.str());
       }
 
       positions_.clear();
+      positions_.reserve(this->local_size());
 
-      for(uint_t i = 0; i < pos.size(); ++i) {
+      for(vector<Node*>::iterator i = this->local_begin(); i != this->local_end(); ++i) {
         std::vector<double_t> point =
-          getValue<std::vector<double_t> >(pos[i]);
+          getValue<std::vector<double_t> >(pos[(*i)->get_lid()]);
 
         positions_.push_back(Position<D>(point));
       }
