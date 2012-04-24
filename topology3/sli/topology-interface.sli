@@ -71,8 +71,8 @@ def
 %   /DumpLayerConnections_os_i_l load
 % def
 
-/CreateMask [/dictionarytype]
-  /CreateMask_D load
+/CreateMask [/literaltype /dictionarytype]
+  /CreateMask_l_D load
 def
 
 /Inside [/masktype /arraytype]

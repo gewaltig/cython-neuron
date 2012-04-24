@@ -22,114 +22,122 @@
 #include "position.h"
 #include "quadrant.h"
 #include "exceptions.h"
+#include "generic_factory.h"
 
 namespace nest
 {
-   class Topology3Module: public SLIModule
-   {
+  class AbstractMask;
+  
+  class Topology3Module: public SLIModule
+  {
+  public:
+
+    Topology3Module(Network&);
+    ~Topology3Module();
+
+    /**
+     * Initialize module by registering models with the network.
+     * @param SLIInterpreter* SLI interpreter, must know modeldict
+     */
+    void init(SLIInterpreter*);
+
+    const std::string name(void) const;
+    const std::string commandstring(void) const;
+
+    static SLIType MaskType;    ///< SLI type for masks
+
+    /*
+     * SLI functions: See source file for documentation
+     */
+
+    class CreateLayer_DFunction: public SLIFunction
+    {
     public:
+      void execute(SLIInterpreter *) const;
+    } createlayer_Dfunction;
 
-     Topology3Module(Network&);
-     ~Topology3Module();
+    class GetPosition_iFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } getposition_ifunction;
 
-     /**
-      * Initialize module by registering models with the network.
-      * @param SLIInterpreter* SLI interpreter, must know modeldict
-      */
-     void init(SLIInterpreter*);
+    class Displacement_a_iFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } displacement_a_ifunction;
 
-     const std::string name(void) const;
-     const std::string commandstring(void) const;
+    class Distance_a_iFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } distance_a_ifunction;
 
-     static SLIType MaskType;    ///< SLI type for masks
+    class GetGlobalChildren_i_MFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } getglobalchildren_i_Mfunction;
 
-     /*
-      * SLI functions: See source file for documentation
-      */
+    class CreateMask_l_DFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } createmask_l_Dfunction;
 
-     class CreateLayer_DFunction: public SLIFunction
-     {
-     public:
-       void execute(SLIInterpreter *) const;
-     } createlayer_Dfunction;
+    class Inside_M_aFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } inside_M_afunction;
 
-     class GetPosition_iFunction: public SLIFunction
-     {
-     public:
-       void execute(SLIInterpreter *) const;
-     } getposition_ifunction;
+    class And_M_MFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } and_M_Mfunction;
 
-     class Displacement_a_iFunction: public SLIFunction
-     {
-     public:
-       void execute(SLIInterpreter *) const;
-     } displacement_a_ifunction;
+    class Or_M_MFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } or_M_Mfunction;
 
-     class Distance_a_iFunction: public SLIFunction
-     {
-     public:
-       void execute(SLIInterpreter *) const;
-     } distance_a_ifunction;
+    class Sub_M_MFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } sub_M_Mfunction;
 
-     class GetGlobalChildren_i_MFunction: public SLIFunction
-     {
-     public:
-       void execute(SLIInterpreter *) const;
-     } getglobalchildren_i_Mfunction;
+    /**
+     * Return a reference to the network managed by the topology module.
+     */
+    static Network &get_network();
 
-     class CreateMask_DFunction: public SLIFunction
-     {
-     public:
-       void execute(SLIInterpreter *) const;
-     } createmask_Dfunction;
+    /**
+     * Return a reference to the mask factory class.
+     */
+    static GenericFactory<AbstractMask> &mask_factory();
 
-     class Inside_M_aFunction: public SLIFunction
-     {
-     public:
-       void execute(SLIInterpreter *) const;
-     } inside_M_afunction;
+  private:
 
-     class And_M_MFunction: public SLIFunction
-     {
-     public:
-       void execute(SLIInterpreter *) const;
-     } and_M_Mfunction;
+    /**
+     * GID for the single layer for which we cache global position information
+     */
+    index cached_layer_;
 
-     class Or_M_MFunction: public SLIFunction
-     {
-     public:
-       void execute(SLIInterpreter *) const;
-     } or_M_Mfunction;
+    /**
+     * Global position information for a single layer
+     */
+    Quadrant<index> * cached_positions_;
 
-     class Sub_M_MFunction: public SLIFunction
-     {
-     public:
-       void execute(SLIInterpreter *) const;
-     } sub_M_Mfunction;
-
-     /**
-      * Return a reference to the network managed by the topology module.
-      */
-     static Network &get_network();
-
-   private:
-
-     /**
-      * GID for the single layer for which we cache global position information
-      */
-     index cached_layer_;
-
-     /**
-      * Global position information for a single layer
-      */
-     Quadrant<index> * cached_positions_;
-
-     /**
-      * - @c net must be static, so that the execute() members of the
-      *   SliFunction classes in the module can access the network.
-      */
-     static Network* net_;
-   };
+    /**
+     * - @c net must be static, so that the execute() members of the
+     *   SliFunction classes in the module can access the network.
+     */
+    static Network* net_;
+  };
 
   /**
    * Exception to be thrown if the wrong argument type

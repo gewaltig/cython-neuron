@@ -111,7 +111,7 @@ namespace nest
 
       for(vector<Node*>::iterator i = this->local_begin(); i != this->local_end(); ++i) {
         std::vector<double_t> point =
-          getValue<std::vector<double_t> >(pos.at((*i)->get_lid()));
+          getValue<std::vector<double_t> >(pos[(*i)->get_lid()]);
 
         positions_.push_back(Position<D>(point));
       }

@@ -60,6 +60,23 @@ namespace nest
 		  "/topology-interface /SLI (6203) require-component ");
   }
 
+  GenericFactory<AbstractMask> &Topology3Module::mask_factory(void)
+  {
+    static GenericFactory<AbstractMask> factory;
+    return factory;
+  }
+
+  static AbstractMask* create_doughnut(const DictionaryDatum& d) {
+      Position<2> center(0,0);
+      if (d->known(Name("anchor")))
+        center = getValue<std::vector<double_t> >(d, Name("anchor"));
+
+      BallMask<2> outer_circle(center,getValue<double_t>(d, "outer_radius"));
+      BallMask<2> inner_circle(center,getValue<double_t>(d, "inner_radius"));
+
+      return new MinusMask<2>(outer_circle, inner_circle);
+  }
+
   void Topology3Module::init(SLIInterpreter *i)
   {
     // Register the topology functions as SLI commands.
@@ -76,8 +93,8 @@ namespace nest
     i->createcommand("Distance_a_i",
 		     &distance_a_ifunction);
 
-    i->createcommand("CreateMask_D",
-		     &createmask_Dfunction);
+    i->createcommand("CreateMask_l_D",
+		     &createmask_l_Dfunction);
 
     i->createcommand("Inside_M_a",
 		     &inside_M_afunction);
@@ -99,6 +116,14 @@ namespace nest
 
     register_model<FreeLayer<2> >(net, "topology_layer_free");
     register_model<FreeLayer<3> >(net, "topology_layer_3d");
+
+    // Register mask types
+    mask_factory().register_subtype<BallMask<2> >("circular");
+    mask_factory().register_subtype<BallMask<3> >("spherical");
+    mask_factory().register_subtype<BoxMask<2> >("rectangular");
+    mask_factory().register_subtype<BoxMask<3> >("box");
+    mask_factory().register_subtype<BoxMask<3> >("volume");  // For compatibility with topo 2.0
+    mask_factory().register_subtype("doughnut",create_doughnut);
 
   }
 
@@ -335,10 +360,11 @@ namespace nest
     Name: CreateMask - create a spatial mask
 
     Synopsis:
-    dict CreateMask -> mask
+    /type dict CreateMask -> mask
 
     Parameters:
-    dict - dictionary with mask specifications
+    /type - mask type
+    dict  - dictionary with mask specifications
 
     Description: Masks are used when creating connections in the Topology
     module. A mask describes which area of the pool layer shall be searched
@@ -348,16 +374,18 @@ namespace nest
 
     Author: Håkon Enger
   */
-  void Topology3Module::CreateMask_DFunction::execute(SLIInterpreter *i) const
+  void Topology3Module::CreateMask_l_DFunction::execute(SLIInterpreter *i) const
   {
-    i->assert_stack_load(1);
+    i->assert_stack_load(2);
 
+    const Name masktype = getValue<Name>(i->OStack.pick(1));    
     DictionaryDatum mask_dict =
       getValue<DictionaryDatum>(i->OStack.pick(0));
 
-    MaskDatum datum( AbstractMask::create_mask(mask_dict) );
+    
+    MaskDatum datum( mask_factory().create(masktype,mask_dict) );
 
-    i->OStack.pop(1);
+    i->OStack.pop(2);
     i->OStack.push(datum);
     i->EStack.pop();
   }

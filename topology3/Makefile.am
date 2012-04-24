@@ -19,12 +19,12 @@ libtopology3module_la_SOURCES= \
 			topology3module.cpp \
 			topology_names.h \
 			topology_names.cpp \
+			generic_factory.h \
 			position.h \
 			layer.h \
 			layer.cpp \
 			free_layer.h \
 			mask.h \
-			mask.cpp \
 			quadrant.h \
 			quadrant_impl.h \
 			vose.h \
