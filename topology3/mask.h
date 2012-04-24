@@ -114,10 +114,10 @@ namespace nest
     virtual bool outside(const Position<D> &,const Position<D> &) const = 0;
 
     /**
-     * Copy method.
+     * Clone method.
      * @returns dynamically allocated copy of mask object
      */
-    virtual Mask * copy() const = 0;
+    virtual Mask * clone() const = 0;
 
     AbstractMask * intersect_mask(const AbstractMask & other) const;
     AbstractMask * union_mask(const AbstractMask & other) const;
@@ -155,7 +155,7 @@ namespace nest
     bool outside(const Position<D> &,const Position<D> &) const
       { return false; }
 
-    Mask<D> * copy() const
+    Mask<D> * clone() const
       { return new AllMask(); }
   };
 
@@ -203,7 +203,7 @@ namespace nest
           return false;
       }
 
-    Mask<D> * copy() const
+    Mask<D> * clone() const
       { return new BoxMask(*this); }
 
   protected:
@@ -264,7 +264,7 @@ namespace nest
         return false;
       }
 
-    Mask<D> * copy() const
+    Mask<D> * clone() const
       { return new BallMask(*this); }
 
   protected:
@@ -284,7 +284,7 @@ namespace nest
      * of the supplied Mask objects.
      */
     IntersectionMask(const Mask<D> &m1, const Mask<D> &m2):
-      mask1_(m1.copy()), mask2_(m2.copy())
+      mask1_(m1.clone()), mask2_(m2.clone())
       {}
 
     ~IntersectionMask()
@@ -299,7 +299,7 @@ namespace nest
     bool outside(const Position<D> &ll, const Position<D> &ur) const
       { return mask1_->outside(ll,ur) || mask2_->outside(ll,ur); }
 
-    Mask<D> * copy() const
+    Mask<D> * clone() const
       { return new IntersectionMask(*this); }
 
   protected:
@@ -318,7 +318,7 @@ namespace nest
      * of the supplied Mask objects.
      */
     UnionMask(const Mask<D> &m1, const Mask<D> &m2):
-      mask1_(m1.copy()), mask2_(m2.copy())
+      mask1_(m1.clone()), mask2_(m2.clone())
       {}
 
     ~UnionMask()
@@ -333,7 +333,7 @@ namespace nest
     bool outside(const Position<D> &ll, const Position<D> &ur) const
     { return mask1_->outside(ll,ur) && mask2_->outside(ll,ur); }
 
-    Mask<D> * copy() const
+    Mask<D> * clone() const
       { return new UnionMask(*this); }
 
   protected:
@@ -352,7 +352,7 @@ namespace nest
      * of the supplied Mask objects.
      */
     MinusMask(const Mask<D> &m1, const Mask<D> &m2):
-      mask1_(m1.copy()), mask2_(m2.copy())
+      mask1_(m1.clone()), mask2_(m2.clone())
       {}
 
     ~MinusMask()
@@ -367,7 +367,7 @@ namespace nest
     bool outside(const Position<D> &ll, const Position<D> &ur) const
       { return mask1_->outside(ll,ur) || mask2_->inside(ll,ur); }
 
-    Mask<D> * copy() const
+    Mask<D> * clone() const
       { return new MinusMask(*this); }
 
   protected:
