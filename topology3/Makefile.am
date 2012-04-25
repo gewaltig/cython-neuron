@@ -25,8 +25,8 @@ libtopology3module_la_SOURCES= \
 			layer.cpp \
 			free_layer.h \
 			mask.h \
-			quadrant.h \
-			quadrant_impl.h \
+			ntree.h \
+			ntree_impl.h \
 			vose.h \
 			vose.cpp
 

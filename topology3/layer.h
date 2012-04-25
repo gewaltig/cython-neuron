@@ -23,6 +23,7 @@
 #include "position.h"
 #include "dictutils.h"
 #include "topology_names.h"
+#include "ntree.h"
 
 namespace nest
 {
@@ -71,6 +72,13 @@ namespace nest
      * @returns pointer to new layer
      */
     static index create_layer(const DictionaryDatum&);
+
+    /**
+     * Return an Ntree with the positions and GIDs of the nodes in this
+     * layer. Normally the TopologyModule method should be used instead,
+     * since TopologyModule caches the positions.
+     */
+    virtual AbstractNtree<index> * get_global_positions() const = 0;
   };
 
   // It is necessary to declare the template for operator<< first in order

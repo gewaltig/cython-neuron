@@ -20,7 +20,7 @@
 #include "slimodule.h"
 #include "layer.h"
 #include "position.h"
-#include "quadrant.h"
+#include "ntree.h"
 #include "exceptions.h"
 #include "generic_factory.h"
 
@@ -111,6 +111,13 @@ namespace nest
     } sub_M_Mfunction;
 
     /**
+     * Return an Ntree with the positions and GIDs of the nodes in this
+     * layer. Positions are cached by the Topology module for one layer at
+     * the time.
+     */
+    static AbstractNtree<index> * get_global_positions(AbstractLayer *layer);
+
+    /**
      * Return a reference to the network managed by the topology module.
      */
     static Network &get_network();
@@ -125,12 +132,12 @@ namespace nest
     /**
      * GID for the single layer for which we cache global position information
      */
-    index cached_layer_;
+    static index cached_layer_;
 
     /**
      * Global position information for a single layer
      */
-    Quadrant<index> * cached_positions_;
+    static AbstractNtree<index> * cached_positions_;
 
     /**
      * - @c net must be static, so that the execute() members of the

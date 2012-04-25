@@ -29,12 +29,13 @@
 #include "lockptrdatum_impl.h"
 #include "dictdatum.h"
 #include "booldatum.h"
-#include "quadrant_impl.h"
 
 namespace nest
 {
   SLIType Topology3Module::MaskType;
 
+  index Topology3Module::cached_layer_;
+  AbstractNtree<index> * Topology3Module::cached_positions_;
   Network *Topology3Module::net_;
 
   Topology3Module::Topology3Module(Network& net)
@@ -460,6 +461,25 @@ namespace nest
     i->EStack.pop();
   }
 
+  AbstractNtree<index> * Topology3Module::get_global_positions(AbstractLayer *layer)
+  {
+    if (cached_layer_ == layer->get_gid()) {
+      return cached_positions_;
+    }
+
+    if (cached_positions_ != 0) {
+      delete cached_positions_;
+      cached_positions_ = 0;
+      cached_layer_ = -1;
+    }
+
+    cached_positions_ = layer->get_global_positions();
+
+    cached_layer_ = layer->get_gid();
+    return cached_positions_;
+  }
+
+
   void Topology3Module::GetGlobalChildren_i_MFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
@@ -467,31 +487,18 @@ namespace nest
     index gid = getValue<long_t>(i->OStack.pick(1));
     MaskDatum maskd = getValue<MaskDatum>(i->OStack.pick(0));
 
-    Mask<2> *mask = dynamic_cast<Mask<2> *>(&(*maskd));
-    Layer<2> *layer = dynamic_cast< Layer<2> *>(get_network().get_node(gid));
+    AbstractMask *mask = dynamic_cast<AbstractMask*>(&(*maskd));
+    AbstractLayer *layer = dynamic_cast<AbstractLayer *>(get_network().get_node(gid));
     if (layer == NULL)
       throw LayerExpected();
 
-    // TODO: This needs work
-
-    // Retrieve global node list, put gids and positions into Quadtree
-    LocalChildList localnodes(*layer);
-    Quadrant<index> quadtree(layer->get_lower_left(),layer->get_lower_left()+layer->get_extent());
-
-    vector<Communicator::NodeAddressingData> globalnodes;
-
-    nest::Communicator::communicate(localnodes,globalnodes,true);
-
-    int j=0;
-    for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n)
-      quadtree.insert(layer->get_position(j++),n->get_gid());
-
-    std::vector<std::pair<Position<2>,index> > pairs = quadtree.get_nodes(*mask);
+    AbstractNtree<index> *tree = get_global_positions(layer);
+    std::vector<index> gids = tree->get_nodes_only(*mask);
 
     ArrayDatum result;
-    result.reserve(globalnodes.size());
-    for(std::vector<std::pair<Position<2>,index> >::iterator p = pairs.begin(); p != pairs.end(); ++p)
-      result.push_back(new IntegerDatum(p->second));
+    result.reserve(gids.size());
+    for(std::vector<index>::iterator it = gids.begin(); it != gids.end(); ++it)
+      result.push_back(new IntegerDatum(*it));
 
     i->OStack.pop(2);
     i->OStack.push(result);

@@ -22,30 +22,13 @@
 #include "layer.h"
 #include "topology_names.h"
 #include "dictutils.h"
+#include "ntree_impl.h"
 
 namespace nest
 {
 
-  // Trick to get a templated typedef
-/*
-  class UnknownTree;
-
-  template<int D>
-  struct Ntree {
-    typedef UnknownTree type;
-  };
-
-  template<>
-  struct Ntree<2> {
-    typedef Quadtree type;
-  };
-
-  template<>
-  struct Ntree<3> {
-    typedef Octtree type;
-  };
-*/
-  /** Layer with free positioning of neurons, positions specified by user.
+  /**
+   * Layer with free positioning of neurons, positions specified by user.
    */
   template <int D>
   class FreeLayer: public Layer<D>
@@ -54,13 +37,13 @@ namespace nest
     const Position<D> & get_position(index lid) const;
     void set_status(const DictionaryDatum&);
     void get_status(DictionaryDatum&) const;
+    AbstractNtree<index> * get_global_positions() const;
 
   protected:
     void update_bbox_(); ///< update bounding box (min/max coordinates)
 
     /// Vector of positions. Should match node vector in Subnet.
     std::vector<Position<D> > positions_;
-//    typename Ntree<D>::type tree_;       ///< quad- or octtree with positions
   };
 
   template <int D>
@@ -144,6 +127,24 @@ namespace nest
   const Position<D> & FreeLayer<D>::get_position(index lid) const
   {
     return positions_[lid];
+  }
+
+  template <int D>
+  AbstractNtree<index> * FreeLayer<D>::get_global_positions() const
+  {
+    // TODO: This needs work
+
+    Ntree<D,index> * tree = new Ntree<D,index>(this->lower_left_, this->extent_);
+
+    // FIXME: Actually only gets local positions as of now
+
+    assert(this->nodes_.size() == positions_.size());
+
+    for(index i = 0; i < this->nodes_.size(); ++i) {
+      tree->insert(positions_[i],this->nodes_[i]->get_gid());
+    }
+
+    return tree;
   }
 
 } // namespace nest
