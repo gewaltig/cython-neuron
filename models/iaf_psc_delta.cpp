@@ -175,13 +175,6 @@ nest::iaf_psc_delta::iaf_psc_delta(const iaf_psc_delta& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_psc_delta::init_node_(const Node& proto)
-{
-  const iaf_psc_delta& pr = downcast<iaf_psc_delta>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::iaf_psc_delta::init_state_(const Node& proto)
 {
   const iaf_psc_delta& pr = downcast<iaf_psc_delta>(proto);

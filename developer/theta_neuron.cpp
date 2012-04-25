@@ -142,14 +142,6 @@ nest::theta_neuron::theta_neuron(const theta_neuron &n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::theta_neuron::init_node_(const Node &proto)
-{
-  const theta_neuron &pr = downcast<theta_neuron>(proto);
-
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::theta_neuron::init_state_(const Node &proto)
 {
   const theta_neuron &pr = downcast<theta_neuron>(proto);

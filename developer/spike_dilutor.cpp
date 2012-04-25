@@ -71,15 +71,6 @@ nest::spike_dilutor::spike_dilutor(const spike_dilutor & n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::spike_dilutor::init_node_(const Node & proto)
-{
-  const spike_dilutor & pr = downcast<spike_dilutor>(proto);
-
-  device_.init_parameters(pr.device_);
-
-  P_ = pr.P_;
-}
-
 void nest::spike_dilutor::init_state_(const Node & proto)
 {
   const spike_dilutor& pr = downcast<spike_dilutor>(proto);

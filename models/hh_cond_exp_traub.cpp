@@ -280,7 +280,7 @@ namespace nest
 
   nest::hh_cond_exp_traub::~hh_cond_exp_traub()
   {
-    // GSL structs only allocated by init_nodes_(), so we need to protect destruction
+    // GSL structs may not have been allocated, so we need to protect destruction
     if ( B_.s_ ) gsl_odeiv_step_free(B_.s_);
     if ( B_.c_ ) gsl_odeiv_control_free(B_.c_);
     if ( B_.e_ ) gsl_odeiv_evolve_free(B_.e_);
@@ -289,13 +289,6 @@ namespace nest
   /* ---------------------------------------------------------------- 
    * Node initialization functions
    * ---------------------------------------------------------------- */
-
-  void nest::hh_cond_exp_traub::init_node_(const Node& proto)
-  {
-    const hh_cond_exp_traub& pr = downcast<hh_cond_exp_traub>(proto);
-    P_ = pr.P_;
-    S_ = pr.S_;
-  }
 
   void nest::hh_cond_exp_traub::init_state_(const Node& proto)
   {

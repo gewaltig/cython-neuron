@@ -99,15 +99,6 @@ nest::noise_generator::noise_generator(const noise_generator& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::noise_generator::init_node_(const Node& proto)
-{
-  const noise_generator& pr = downcast<noise_generator>(proto);
-
-  device_.init_parameters(pr.device_);
-  
-  P_ = pr.P_;
-}
-
 void nest::noise_generator::init_state_(const Node& proto)
 { 
   const noise_generator& pr = downcast<noise_generator>(proto);

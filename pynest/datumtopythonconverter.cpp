@@ -104,11 +104,12 @@ void DatumToPythonConverter::convert_me(DoubleVectorDatum &dvd)
   PyArrayObject *array;
 
 // PyArray_SimpleNew is a drop-in replacement for PyArray_FromDims
-// (except it takes ``npy_intp*`` dims instead of ``int*`` dims
-// which matters on 64-bit systems) and it does not initialize 
-// the memory to zero.
-#if (NPY_VERSION >= 0x01000009) && SIZEOF_VOID_P == SIZEOF_INT
-  array = (PyArrayObject*)(PyArray_SimpleNew(1, &dims, PyArray_DOUBLE));
+#if (NPY_VERSION >= 0x01000009)
+// PyArray_SimpleNew takes ``npy_intp*`` dims instead of ``int*`` dims
+// which matters on 64-bit systems and it does not initialize the
+// memory to zero.
+  npy_intp npydims = dims;
+  array = (PyArrayObject*)(PyArray_SimpleNew(1, &npydims, PyArray_DOUBLE));
 #else
   array = (PyArrayObject*)(PyArray_FromDims(1, &dims, PyArray_DOUBLE));  
 #endif 
@@ -130,11 +131,12 @@ void DatumToPythonConverter::convert_me(IntVectorDatum &ivd)
   PyArrayObject *array;
 
 // PyArray_SimpleNew is a drop-in replacement for PyArray_FromDims
-// (except it takes ``npy_intp*`` dims instead of ``int*`` dims
-// which matters on 64-bit systems) and it does not initialize 
-// the memory to zero.
-#if (NPY_VERSION >= 0x01000009) && SIZEOF_VOID_P == SIZEOF_INT
-  array = (PyArrayObject*)PyArray_SimpleNew(1, &dims, PyArray_INT);
+#if (NPY_VERSION >= 0x01000009)
+// PyArray_SimpleNew takes ``npy_intp*`` dims instead of ``int*`` dims
+// which matters on 64-bit systems and it does not initialize the
+// memory to zero.
+  npy_intp npydims = dims;
+  array = (PyArrayObject*)PyArray_SimpleNew(1, &npydims, PyArray_INT);
 #else
   array = (PyArrayObject*)PyArray_FromDims(1, &dims, PyArray_INT);
 #endif

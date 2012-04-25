@@ -138,13 +138,6 @@ nest::izhikevich::izhikevich(const izhikevich & n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::izhikevich::init_node_(const Node & proto)
-{
-  const izhikevich & pr = downcast<izhikevich>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::izhikevich::init_state_(const Node & proto)
 {
   const izhikevich & pr = downcast<izhikevich>(proto);

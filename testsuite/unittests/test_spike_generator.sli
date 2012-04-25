@@ -128,6 +128,312 @@ fail_or_die
 }
 assert_or_die
 
+% test first example from documentation
+%    /spike_generator << /spike_times [1.0 1.9999 3.0001] >> Create
+%    ---> spikes at steps 10 (==1.0ms), 20 (==2.0ms) and 30 (==3.0ms)
+{
+  ResetKernel
+  0 << 
+      /local_num_threads 1
+      /resolution 0.1
+  >> SetStatus
+      
+  /spike_generator Create /sg Set
+  sg <<
+        /spike_times [1.0 1.9999 3.0001]   % in ms
+        /origin 0.0                        % in ms
+        /start 0.0                         % in ms  
+        /stop  6.0                         % in ms
+  >> SetStatus
+  
+  /spike_detector Create /sd Set
+  sd << /withtime true /to_memory true /withgid true /time_in_steps true >> SetStatus
+  sg sd 1.0 1.0 Connect
+
+  10.0 Simulate
+  
+  sd [ /events /times ] get cva
+  [10 20 30]
+  eq
+}
+assert_or_die
+
+% test second example from documentation
+%    /spike_generator << /spike_times [1.0 1.05 3.0001] >> Create
+%    ---> error, spike time 1.05 not within tic/2 of step
+{
+  ResetKernel
+  0 << 
+      /local_num_threads 1
+      /resolution 0.1
+  >> SetStatus
+      
+  /spike_generator Create /sg Set
+  sg <<
+        /spike_times [1.0 1.05 3.0001]   % in ms
+        /origin 0.0                        % in ms
+        /start 0.0                         % in ms  
+        /stop  6.0                         % in ms
+  >> SetStatus
+} fail_or_die  
+
+% test third example from documentation
+%    /spike_generator << /spike_times [1.0 1.05 3.0001] 
+%                        /allow_offgrid_times true >> Create
+%    ---> spikes at steps 10, 11 (mid-step time rounded up),
+%         30 (time within tic/2 of step moved to step)
+{
+  ResetKernel
+  0 << 
+      /local_num_threads 1
+      /resolution 0.1
+  >> SetStatus
+      
+  /spike_generator Create /sg Set
+  sg <<
+        /spike_times [1.0 1.05 3.0001]   % in ms
+        /allow_offgrid_spikes true  
+        /origin 0.0                        % in ms
+        /start 0.0                         % in ms  
+        /stop  6.0                         % in ms
+  >> SetStatus
+  
+  /spike_detector Create /sd Set
+  sd << /withtime true /to_memory true /withgid true /time_in_steps true >> SetStatus
+  sg sd 1.0 1.0 Connect
+
+  10.0 Simulate
+  
+  sd [ /events /times ] get cva
+  [10 11 30]
+  eq
+}
+assert_or_die
+
+% fourth example from documentation
+%    /spike_generator << /spike_times [1.0 1.05 3.0001] 
+%                        /precise_times true >> Create
+%    ---> spikes at step 10, offset 0.0; step 11, offset 0.05; 
+%         step 31, offset 0.0999
+{
+  ResetKernel
+  0 << 
+      /local_num_threads 1
+      /resolution 0.1
+      /off_grid_spiking true  
+  >> SetStatus
+      
+  /spike_generator Create /sg Set
+  sg <<
+        /spike_times [1.0 1.05 3.0001]   % in ms
+        /precise_times true   
+        /origin 0.0                        % in ms
+        /start 0.0                         % in ms  
+        /stop  6.0                         % in ms
+  >> SetStatus
+  
+  /spike_detector Create /sd Set
+  sd << /withtime true /to_memory true /withgid true /time_in_steps true >> SetStatus
+  sg sd 1.0 1.0 Connect
+
+  10.0 Simulate
+  
+  sd [ /events /times ] get cva [10 11 31] eq
+  sd [ /events /offsets ] get cva 5 ToUnitTestPrecision [0 0.05 0.0999] eq
+  and
+}
+assert_or_die
+
+% fifth example from documentation
+%    Assume we have simulated 10.0ms and simulation times is thus 10.0 (step 100).
+%    Then, any spike times set, at this time, must be later than step 100.
+%
+%    /spike_generator << /spike_times [10.0001] >> Create 
+%    ---> spike time is within tic/2 of step 100, rounded down to 100 thus
+%         not in the future and should not be emitted
+{
+  ResetKernel
+  0 << 
+      /local_num_threads 1
+      /resolution 0.1
+  >> SetStatus
+        
+  /spike_generator Create /sg Set
+  /spike_detector Create /sd Set
+  sg sd Connect
+
+  10 Simulate
+  sg <<
+        /spike_times [10.0001]   % in ms
+        /origin 0.0                        % in ms
+        /start 0.0                         % in ms  
+        /stop  16.0                         % in ms
+  >> SetStatus
+
+  10 Simulate
+  sd /n_events get 0 eq  
+} assert_or_die  
+
+% sixth example from documentation
+%    /spike_generator << /spike_times [10.0001] /precise_times true >> Create 
+%    ---> spike at step 101, offset 0.0999 is in the future, requires recipients
+%         that respect the offset (precise-timing model neurons)
+{
+  ResetKernel
+  0 << 
+      /local_num_threads 1
+      /resolution 0.1
+      /off_grid_spiking true  
+  >> SetStatus
+     
+  /spike_generator Create /sg Set
+  sg <<
+        /precise_times true   
+        /origin 0.0                        % in ms
+        /start 0.0                         % in ms  
+  >> SetStatus
+  
+  /spike_detector Create /sd Set
+  sd << /withtime true /to_memory true /withgid true /time_in_steps true >> SetStatus
+  sg sd Connect
+
+  10.0 Simulate
+
+  sg << /spike_times [10.0001] >> SetStatus   % in ms
+  
+  10.0 Simulate  
+  
+  sd [ /events /times ] get cva [101] eq
+  sd [ /events /offsets ] get cva 5 ToUnitTestPrecision [0.0999] eq
+  and  
+}
+assert_or_die
+
+% seventh example from documentation
+%    /spike_generator << /spike_times [10.0001 11.0001] /shift_now_spikes true >> Create 
+%    ---> spike at step 101, spike shifted into the future; spike at 110 not shifted
+{
+  ResetKernel
+  0 << 
+      /local_num_threads 1
+      /resolution 0.1
+  >> SetStatus
+     
+  /spike_generator Create /sg Set
+  sg <<
+        /shift_now_spikes true   
+        /origin 0.0                        % in ms
+        /start 0.0                         % in ms  
+  >> SetStatus
+  
+  /spike_detector Create /sd Set
+  sd << /withtime true /to_memory true /withgid true /time_in_steps true >> SetStatus
+  sg sd 1.0 1.0 Connect
+
+  10.0 Simulate
+
+  sg << /spike_times [10.0001 11.0001] >> SetStatus   % in ms
+  
+  10.0 Simulate  
+  
+  sd [ /events /times ] get cva
+  [101 110] eq
+  sd [ /events /offsets ] get cva
+  5 ToUnitTestPrecision [0 0] eq
+  and
+}
+assert_or_die	 
+
+
+% seventh example from documentation, but with origin
+%    /spike_generator << /spike_times [0.0001 1.0001] /origin 10.0 /shift_now_spikes true >> Create 
+%    ---> spike at step 101, spike shifted into the future; spike at 110 not shifted
+{
+  ResetKernel
+  0 << 
+      /local_num_threads 1
+      /resolution 0.1
+  >> SetStatus
+     
+  /spike_generator Create /sg Set
+  sg <<
+        /shift_now_spikes true   
+        /origin 0.0                        % in ms
+        /start 0.0                         % in ms  
+  >> SetStatus
+  
+  /spike_detector Create /sd Set
+  sd << /withtime true /to_memory true /withgid true /time_in_steps true >> SetStatus
+  sg sd 1.0 1.0 Connect
+
+  10.0 Simulate
+
+  sg << /origin 10.0 /spike_times [0.0001 1.0001] >> SetStatus   % in ms
+  
+  10.0 Simulate  
+  
+  sd [ /events /times ] get cva
+  [101 110] eq
+  sd [ /events /offsets ] get cva
+  5 ToUnitTestPrecision [0 0] eq
+  and
+}
+assert_or_die	 
+
+
+
+% ensure exclusivity between /precise_times and /allow_offgrid_spikes and /shift_now_spikes
+{ /spike_generator << /precise_times true /allow_offgrid_spikes true >> Create } fail_or_die
+{ /spike_generator << /precise_times true /shift_now_spikes true >> Create } fail_or_die
+
+
+% test set-get
+{
+  ResetKernel  
+  0 << /local_num_threads 1 /resolution 0.1 >> SetStatus
+
+  /spike_generator << /spike_times [ 0.1 10.0 10.5 10.50001 ] >> Create
+  /spike_times get cva 5 ToUnitTestPrecision
+  [0.1 10.0 10.5 10.5] 5 ToUnitTestPrecision
+  eq
+}
+assert_or_die
+  
+{
+  ResetKernel  
+  0 << /local_num_threads 1 /resolution 0.1 >> SetStatus
+
+  /spike_generator << /spike_times [ 0.1 10.0 10.5 10.50001 10.55 ] 
+                      /allow_offgrid_spikes true >> Create
+  /spike_times get cva 5 ToUnitTestPrecision
+  [0.1 10.0 10.5 10.5 10.6 ] 5 ToUnitTestPrecision pstack
+  eq
+}
+assert_or_die
+
+{
+  ResetKernel  
+  0 << /local_num_threads 1 /resolution 0.1 >> SetStatus
+
+  /spike_generator << /spike_times [ 0.1 10.0 10.5 10.50001 10.55 ] 
+                      /precise_times true >> Create
+  /spike_times get cva 5 ToUnitTestPrecision
+  [0.1 10.0 10.5 10.5 10.55 ] 5 ToUnitTestPrecision
+  eq
+}
+assert_or_die
+
+{
+  ResetKernel  
+  0 << /local_num_threads 1 /resolution 0.1 >> SetStatus
+
+  /spike_generator << /spike_times [ 0.0 10.0 10.5 10.50001 ] 
+                      /shift_now_spikes true >> Create
+  /spike_times get cva 5 ToUnitTestPrecision
+  [0.1 10.0 10.5 10.5 ] 5 ToUnitTestPrecision
+  eq
+}
+assert_or_die
 
 %
 % check, if precise times are conveyed up to desired precision

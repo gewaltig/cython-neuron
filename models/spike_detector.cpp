@@ -37,12 +37,6 @@ nest::spike_detector::spike_detector(const spike_detector &n)
           user_set_precise_times_(n.user_set_precise_times_)
 {}
 
-void nest::spike_detector::init_node_(const Node& np)
-{
-  const spike_detector& sd = dynamic_cast<const spike_detector&>(np);
-  device_.init_parameters(sd.device_);
-}
-
 void nest::spike_detector::init_state_(const Node& np)
 {
   const spike_detector& sd = dynamic_cast<const spike_detector&>(np);

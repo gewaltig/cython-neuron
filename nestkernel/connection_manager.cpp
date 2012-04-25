@@ -211,8 +211,8 @@ index ConnectionManager::copy_synapse_prototype(index old_id, std::string new_na
   assert (! synapsedict_->known(new_name));
 
   ConnectorModel* new_prototype = get_synapse_prototype(old_id).clone(new_name);
+  int new_id = prototypes_.size();
   prototypes_.push_back(new_prototype);
-  int new_id = prototypes_.size() - 1;
   synapsedict_->insert(new_name, new_id);
   return new_id;
 }

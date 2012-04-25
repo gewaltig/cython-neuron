@@ -81,7 +81,6 @@ Author: June 2005, Jochen Martin Eppler
     bool is_proxy() const;
     
   private:
-    void init_node_(const Node&) {}
     void init_state_(const Node&) {}
     void init_buffers_() {}
     void calibrate() {}

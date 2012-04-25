@@ -95,15 +95,6 @@ nest::mip_generator::mip_generator(const mip_generator& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::mip_generator::init_node_(const Node& proto)
-{
-  const mip_generator& pr = downcast<mip_generator>(proto);
-
-  device_.init_parameters(pr.device_);
-  
-  P_ = pr.P_;
-}
-
 void nest::mip_generator::init_state_(const Node& proto)
 { 
   const mip_generator& pr = downcast<mip_generator>(proto);

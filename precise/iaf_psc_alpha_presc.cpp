@@ -196,13 +196,6 @@ nest::iaf_psc_alpha_presc::iaf_psc_alpha_presc(const iaf_psc_alpha_presc& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_psc_alpha_presc::init_node_(const Node& proto)
-{
-  const iaf_psc_alpha_presc& pr = downcast<iaf_psc_alpha_presc>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::iaf_psc_alpha_presc::init_state_(const Node& proto)
 {
   const iaf_psc_alpha_presc& pr = downcast<iaf_psc_alpha_presc>(proto);

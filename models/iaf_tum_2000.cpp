@@ -176,13 +176,6 @@ namespace nest
    * Node initialization functions
    * ---------------------------------------------------------------- */
 
-  void nest::iaf_tum_2000::init_node_(const Node& proto)
-  {
-    const iaf_tum_2000& pr = downcast<iaf_tum_2000>(proto);
-    P_ = pr.P_;
-    S_ = pr.S_;
-  }
-
   void nest::iaf_tum_2000::init_state_(const Node& proto)
   {
     const iaf_tum_2000& pr = downcast<iaf_tum_2000>(proto);

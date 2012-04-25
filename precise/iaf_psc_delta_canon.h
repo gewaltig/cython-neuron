@@ -200,7 +200,6 @@ namespace nest{
      * only through a Node*. 
      */
     //@{
-    void init_node_(const Node& proto);
     void init_state_(const Node& proto);
     void init_buffers_();
 

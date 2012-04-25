@@ -44,6 +44,7 @@ libdevelopermodule_la_SOURCES= \
 			maturing_connection_fr.cpp maturing_connection_fr.h\
 			maturing_connector_fr.cpp maturing_connector_fr.h\
 			stdp_triplet_connection.h stdp_triplet_connection.cpp\
+			annealing_connection.h annealing_connection.cpp\
 			iaf_chxk_2008.cpp iaf_chxk_2008.h\
 			mirollo_strogatz_ps.cpp mirollo_strogatz_ps.h\
 			environment.cpp environment.h\

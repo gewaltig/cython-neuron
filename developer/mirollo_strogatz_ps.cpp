@@ -151,14 +151,6 @@ nest::mirollo_strogatz_ps::~mirollo_strogatz_ps()
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::mirollo_strogatz_ps::init_node_(const Node &proto)
-{
-  const mirollo_strogatz_ps &pr = downcast<mirollo_strogatz_ps>(proto);
-
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::mirollo_strogatz_ps::init_state_(const Node &proto)
 {
   const mirollo_strogatz_ps &pr = downcast<mirollo_strogatz_ps>(proto);

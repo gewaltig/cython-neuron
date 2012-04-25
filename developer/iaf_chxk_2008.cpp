@@ -232,7 +232,7 @@ nest::iaf_chxk_2008::iaf_chxk_2008(const iaf_chxk_2008& n) :
 }
 
 nest::iaf_chxk_2008::~iaf_chxk_2008() {
-	// GSL structs only allocated by init_nodes_(), so we need to protect destruction
+	// GSL structs may not have been allocated, so we need to protect destruction
 	if (B_.s_)
 		gsl_odeiv_step_free(B_.s_);
 	if (B_.c_)
@@ -244,12 +244,6 @@ nest::iaf_chxk_2008::~iaf_chxk_2008() {
 /* ---------------------------------------------------------------- 
  * Node initialization functions
  * ---------------------------------------------------------------- */
-
-void nest::iaf_chxk_2008::init_node_(const Node& proto) {
-	const iaf_chxk_2008& pr = downcast<iaf_chxk_2008> (proto);
-	P_ = pr.P_;
-	S_ = pr.S_;
-}
 
 void nest::iaf_chxk_2008::init_state_(const Node& proto) {
 	const iaf_chxk_2008& pr = downcast<iaf_chxk_2008> (proto);

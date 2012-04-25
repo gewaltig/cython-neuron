@@ -106,14 +106,6 @@ namespace nest
     }  
   }
 
-  void Multimeter::init_node_(const Node& np)
-  {
-    const Multimeter& asd = dynamic_cast<const Multimeter&>(np);
-    device_.init_parameters(asd.device_);
-    
-    P_ = Parameters_(asd.P_);   // force recalibration of Time objects
-  }
-
   void Multimeter::init_state_(const Node& np)
   {
     const Multimeter& asd = dynamic_cast<const Multimeter&>(np);

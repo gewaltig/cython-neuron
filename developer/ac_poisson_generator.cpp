@@ -212,21 +212,6 @@ nest::ac_poisson_generator::ac_poisson_generator(const ac_poisson_generator&n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::ac_poisson_generator::init_node_(const Node& proto)
-{
-  const ac_poisson_generator& pr = 
-    downcast<ac_poisson_generator>(proto);
-
-  device_.init_parameters(pr.device_);
-
-  P_ = pr.P_;
-  S_ = pr.S_;
-
-  network()->message(SLIInterpreter::M_WARNING, 
-		     "ac_poisson_generator::init_node_",
-  "Parameter initialization not fully implemented, be careful!");
-}
-
 void nest::ac_poisson_generator::init_state_(const Node& proto)
 { 
   const ac_poisson_generator& pr = 

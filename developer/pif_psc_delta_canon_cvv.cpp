@@ -178,13 +178,6 @@ nest::pif_psc_delta_canon_cvv::pif_psc_delta_canon_cvv(const pif_psc_delta_canon
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::pif_psc_delta_canon_cvv::init_node_(const Node& proto)
-{
-  const pif_psc_delta_canon_cvv& pr = downcast<pif_psc_delta_canon_cvv>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::pif_psc_delta_canon_cvv::init_state_(const Node& proto)
 {
   const pif_psc_delta_canon_cvv& pr = downcast<pif_psc_delta_canon_cvv>(proto);

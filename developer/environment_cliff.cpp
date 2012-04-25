@@ -207,13 +207,6 @@ void nest::environment_cliff::Parameters_::set(const DictionaryDatum& d)
  * Environment_Cliff initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::environment_cliff::init_node_(const Node& proto)
-{
-  const environment_cliff& pr = downcast<environment_cliff>(proto);
-  P_ = pr.P_;
-}
-
-
 void nest::environment_cliff::init_state_(const Node&)
 {
 }

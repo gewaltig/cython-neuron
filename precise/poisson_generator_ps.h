@@ -82,7 +82,6 @@ namespace nest{
     void set_status(const DictionaryDatum &);
 
   private:
-    void init_node_(const Node&);
     void init_state_(const Node&);
     void init_buffers_();
     void calibrate();

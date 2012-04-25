@@ -38,23 +38,50 @@ nest::ppd_sup_generator::Age_distribution_::Age_distribution_(size_t num_age_bin
  * Propagate age distribution one time step and generate spikes
  * ---------------------------------------------------------------- */
 
-nest::ulong_t nest::ppd_sup_generator::Age_distribution_::update(double_t hazard_rate, librandom::RngPtr rng)
+nest::ulong_t nest::ppd_sup_generator::Age_distribution_::update(double_t hazard_step, librandom::RngPtr rng)
 {
     ulong_t n_spikes;
     if (occ_active_>0)
-    { 
-      bino_dev_.set_p_n( hazard_rate, occ_active_);      
-      n_spikes = bino_dev_.uldev(rng);
-    }
+      { 
+      /*The binomial distribution converges towards the Poisson distribution as
+      the number of trials goes to infinity while the product np remains fixed.
+      Therefore the Poisson distribution with parameter λ = np can be used as 
+      an approximation to B(n, p) of the binomial distribution if n is 
+      sufficiently large and p is sufficiently small. According to two rules 
+      of thumb, this approximation is good if n ≥ 20 and p ≤ 0.05, or if 
+      n ≥ 100 and np ≤ 10. Source:
+      http://en.wikipedia.org/wiki/Binomial_distribution#Poisson_approximation */
+      if (( occ_active_ >= 100 && hazard_step <= 0.01 ) || \
+          ( occ_active_ >= 500 && hazard_step * occ_active_ <= 0.1 ))
+        {
+        poisson_dev_.set_lambda( hazard_step * occ_active_ );
+        n_spikes = poisson_dev_.uldev(rng);
+        if ( n_spikes > occ_active_)
+            {
+            n_spikes = occ_active_;
+            }
+        else
+            {;}
+        }
+      else
+        {
+        bino_dev_.set_p_n( hazard_step, occ_active_); 
+        n_spikes = bino_dev_.uldev(rng);
+        }
+      }
     else
+      {
       n_spikes = 0;
+      }
     
     if (occ_refractory_.size()>0)
-    {
+      {
       occ_active_ += occ_refractory_[activate_] - n_spikes;
       occ_refractory_[activate_] = n_spikes;
       activate_ = (activate_ + 1) % occ_refractory_.size();
-    }
+      }
+    else
+      {;}
     return n_spikes;
 }
 
@@ -134,15 +161,6 @@ nest::ppd_sup_generator::ppd_sup_generator(const ppd_sup_generator& n)
 /* ---------------------------------------------------------------- 
  * Node initialization functions
  * ---------------------------------------------------------------- */
-
-void nest::ppd_sup_generator::init_node_(const Node& proto)
-{
-  const ppd_sup_generator& pr = downcast<ppd_sup_generator>(proto);
-
-  device_.init_parameters(pr.device_);
-  
-  P_ = pr.P_;
-}
 
 void nest::ppd_sup_generator::init_state_(const Node& proto)
 { 

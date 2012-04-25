@@ -186,14 +186,6 @@ nest::iaf_psc_exp_ps::iaf_psc_exp_ps(const iaf_psc_exp_ps & n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_psc_exp_ps::init_node_(const Node & proto)
-{
-  const iaf_psc_exp_ps & pr = downcast<iaf_psc_exp_ps>(proto);
-
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::iaf_psc_exp_ps::init_state_(const Node & proto)
 {
   const iaf_psc_exp_ps & pr = downcast<iaf_psc_exp_ps>(proto);

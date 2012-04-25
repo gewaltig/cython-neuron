@@ -143,16 +143,6 @@ nest::smp_generator::smp_generator(const smp_generator&n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::smp_generator::init_node_(const Node& proto)
-{
-  const smp_generator& pr = downcast<smp_generator>(proto);
-
-  device_.init_parameters(pr.device_);
-
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::smp_generator::init_state_(const Node& proto)
 { 
   const smp_generator& pr = downcast<smp_generator>(proto);

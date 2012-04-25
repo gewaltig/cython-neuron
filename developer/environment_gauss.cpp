@@ -177,13 +177,6 @@ void nest::environment_gauss::Parameters_::set(const DictionaryDatum& d)
  * environment_gauss initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::environment_gauss::init_node_(const Node& proto)
-{
-  const environment_gauss& pr = downcast<environment_gauss>(proto);
-  P_ = pr.P_;
-}
-
-
 void nest::environment_gauss::init_state_(const Node&)
 {
 }

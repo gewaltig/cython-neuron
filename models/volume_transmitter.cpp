@@ -64,11 +64,6 @@ nest::volume_transmitter::volume_transmitter(const volume_transmitter &n)
 {
 }
 
-void nest::volume_transmitter::init_node_(const Node&)
-{
-}
-
-
 void nest::volume_transmitter::init_state_(const Node&)
 {
 }

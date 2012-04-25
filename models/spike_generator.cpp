@@ -30,15 +30,21 @@
  * ---------------------------------------------------------------- */
 
 nest::spike_generator::Parameters_::Parameters_()
-  : precise_times_(true),
-    spike_times_(),
-    spike_weights_()
+  : spike_stamps_(),
+    spike_offsets_(),
+    spike_weights_(),
+    precise_times_(false),
+    allow_offgrid_spikes_(false),
+    shift_now_spikes_(false)
 {}
 
 nest::spike_generator::Parameters_::Parameters_(const Parameters_& op)
-  :  precise_times_(op.precise_times_),
-     spike_times_(op.spike_times_),
-     spike_weights_(op.spike_weights_)
+  : spike_stamps_(op.spike_stamps_),
+    spike_offsets_(op.spike_offsets_),
+    spike_weights_(op.spike_weights_),
+    precise_times_(op.precise_times_),
+    allow_offgrid_spikes_(op.allow_offgrid_spikes_),
+    shift_now_spikes_(op.shift_now_spikes_)
 {}
 
 nest::spike_generator::State_::State_()
@@ -52,53 +58,109 @@ nest::spike_generator::State_::State_()
 
 void nest::spike_generator::Parameters_::get(DictionaryDatum &d) const
 {  
-  (*d)[names::spike_times] = DoubleVectorDatum(new std::vector<double_t>(spike_times_));
+  const size_t n_spikes = spike_stamps_.size();
+  const size_t n_offsets = spike_offsets_.size();
+  assert(   ( precise_times_ && n_offsets == n_spikes )
+	 || (!precise_times_ && n_offsets == 0        ) );
+
+  std::vector<double_t>* times_ms = new std::vector<double_t>();
+  times_ms->reserve(n_spikes);
+  for ( size_t n = 0 ; n < n_spikes ; ++n )
+  {
+    times_ms->push_back(spike_stamps_[n].get_ms());
+    if ( precise_times_ )
+      (*times_ms)[n] -= spike_offsets_[n];
+  }
+  (*d)[names::spike_times] = DoubleVectorDatum(times_ms);
   (*d)["spike_weights"] = DoubleVectorDatum(new std::vector<double_t>(spike_weights_));
-  (*d)["precise_times"] = BoolDatum(precise_times_);
+  (*d)[names::precise_times] = BoolDatum(precise_times_);
+  (*d)["allow_offgrid_spikes"] = BoolDatum(allow_offgrid_spikes_);
+  (*d)["shift_now_spikes"] = BoolDatum(shift_now_spikes_);
 }
  
-void nest::spike_generator::Parameters_::set(const DictionaryDatum& d, State_& s)
+void nest::spike_generator::Parameters_::assert_valid_spike_time_and_insert_(double t,
+									     const Time& origin,
+									     const Time& now)
 {
-  if ( d->known("precise_times") )
-    precise_times_ = getValue<bool>(d->lookup("precise_times"));
-
-  bool updated_spike_times = d->known(names::spike_times);
-  
-  if(updated_spike_times)
+  Time t_spike;
+  if ( precise_times_ )
+    t_spike = Time::ms_stamp(t);
+  else 
   {
-    // First obtain times as double vector, then convert to Time representation
-    // Also compute absolute times
-    std::vector<double_t> d_times;
-    
-    d_times = getValue<std::vector<double> >(d->lookup(names::spike_times));
+    // In this case, we need to force the spike time to the grid
 
-    // ensure that spike times are sorted
-    if ( !d_times.empty() )
-    { 
-      std::vector<double_t>::const_iterator prev = d_times.begin();
-      if ( !precise_times_ && !Time(Time::ms(*prev)).is_grid_time() ) {
+    // First, convert the spike time to tics, may not be on grid
+    t_spike = Time::ms(t);
+    if ( not t_spike.is_grid_time() )
+      if ( allow_offgrid_spikes_ )
+      {
+	// In this case, we need to round to the end of the step
+	// in which t lies, ms_stamp does that for us.
+	t_spike = Time::ms_stamp(t);
+      }
+      else
+      {
 	std::stringstream msg;
-	msg << "spike_generator: Time point " << *prev << " is not representable in current resolution.";
+	msg << "spike_generator: Time point " << t 
+	    << " is not representable in current resolution.";
 	throw BadProperty(msg.str());
       }
+    assert(t_spike.is_grid_time());
 
+    if ( origin + t_spike == now && shift_now_spikes_ )
+      t_spike.advance();
+  }
+  // t_spike is now the correct time stamp given the chosen options
+
+  // when we get here, we know that the spike time is valid
+  spike_stamps_.push_back(t_spike);
+  if ( precise_times_ )
+  {
+    assert(t_spike.get_ms() - t >= 0);
+    spike_offsets_.push_back(t_spike.get_ms() - t);
+  }
+}
+
+void nest::spike_generator::Parameters_::set(const DictionaryDatum& d, State_& s, 
+					     const Time& origin, const Time& now)
+{
+  const bool flags_changed =    updateValue<bool>(d, names::precise_times, precise_times_)
+                             || updateValue<bool>(d, "allow_offgrid_spikes", allow_offgrid_spikes_)
+                             || updateValue<bool>(d, "shift_now_spikes", shift_now_spikes_);
+  if ( precise_times_ && ( allow_offgrid_spikes_ || shift_now_spikes_ ) )
+    throw BadProperty("Option precise_times cannot be set to true when either allow_offgrid_spikes "
+		      "or shift_now_spikes is set to true.");
+
+  const bool updated_spike_times = d->known(names::spike_times);  
+  if ( flags_changed && !(updated_spike_times || spike_stamps_.empty()) )
+    throw BadProperty("Options can only be set together with spike times or if no "
+		      "spike times have been set.");
+
+  if ( updated_spike_times )
+  {
+    const std::vector<double_t> d_times = getValue<std::vector<double> >(d->lookup(names::spike_times));
+    const size_t n_spikes = d_times.size();
+    spike_stamps_.clear();
+    spike_stamps_.reserve(n_spikes);
+    spike_offsets_.clear();
+    if ( precise_times_ )
+      spike_offsets_.reserve(n_spikes);
+
+    // Check spike times for ordering and grid compatibility and insert them
+    if ( !d_times.empty() )
+    { 
+      // handle first spike time, no predecessor to compare with
+      std::vector<double_t>::const_iterator prev = d_times.begin();
+      assert_valid_spike_time_and_insert_(*prev, origin, now);
+
+      // handle all remaining spike times, compare to predecessor
       for ( std::vector<double_t>::const_iterator next = prev + 1;
             next != d_times.end() ; ++next, ++prev )
-	{
-	  if ( *prev > *next )
-	    throw BadProperty("Spike times must be sorted in non-descending order.");
-
-	  if ( !precise_times_ && !Time(Time::ms(*next)).is_grid_time() ) {
-	    std::stringstream msg;
-	    msg << "spike_generator: Time point " << *next << " is not representable in current resolution.";
-	    throw BadProperty(msg.str());
-	  }
-	}
+	if ( *prev > *next )
+	  throw BadProperty("Spike times must be sorted in non-descending order.");
+        else
+	  assert_valid_spike_time_and_insert_(*next, origin, now);
     }
-    
-    // Now copy to vector of Time entries
-    spike_times_ = d_times;
-
   }
 
   // spike_weights can be the same size as spike_times, or can be of size 0 to
@@ -112,7 +174,7 @@ void nest::spike_generator::Parameters_::set(const DictionaryDatum& d, State_& s
       spike_weights_.clear();
     else
     {
-      if (spike_weights.size() != spike_times_.size())
+      if (spike_weights.size() != spike_stamps_.size())
         throw BadProperty("spike_weights must have the same number of elements as spike_times,"
                           " or 0 elements to clear the property.");
 
@@ -121,7 +183,7 @@ void nest::spike_generator::Parameters_::set(const DictionaryDatum& d, State_& s
   }
 
   // Set position to start if something changed
-  if (updated_spike_times || updated_spike_weights || d->known(names::origin))
+  if ( updated_spike_times || updated_spike_weights || d->known(names::origin) )
     s.position_ = 0;
 }
 
@@ -149,16 +211,6 @@ nest::spike_generator::spike_generator(const spike_generator& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::spike_generator::init_node_(const Node& proto)
-{
-  const spike_generator& pr = downcast<spike_generator>(proto);
-
-  device_.init_parameters(pr.device_);
-
-  P_ = Parameters_(pr.P_);   // force recalibration of Time objects
-  S_ = pr.S_;
-}
-
 void nest::spike_generator::init_state_(const Node& proto)
 { 
   const spike_generator& pr = downcast<spike_generator>(proto);
@@ -184,46 +236,34 @@ void nest::spike_generator::calibrate()
 
 void nest::spike_generator::update(Time const & sliceT0, const long_t from, const long_t to)
 {
-  if ( P_.spike_times_.empty() )
+  if ( P_.spike_stamps_.empty() )
     return;
+
+  assert(    !P_.precise_times_ 
+          || P_.spike_stamps_.size() == P_.spike_offsets_.size() );
+  assert(    P_.spike_weights_.empty() 
+          || P_.spike_stamps_.size() == P_.spike_weights_.size() );
 
   const Time  tstart = sliceT0 + Time::step(from);
   const Time  tstop  = sliceT0 + Time::step(to);
   const Time& origin = device_.get_origin();
   
   // We fire all spikes with time stamps up to including sliceT0 + to
-  while ( S_.position_ < P_.spike_times_.size() )
+  while ( S_.position_ < P_.spike_stamps_.size() )
   {
-    double Dtnext = P_.spike_times_[S_.position_];
+    const Time tnext_stamp = origin + P_.spike_stamps_[S_.position_];
 
-    Time Ttnext;
-    double offset;
-
-    if (P_.precise_times_)
-      {
-	Ttnext = Time::ms_stamp(Dtnext);
-	offset = Ttnext.get_ms() - Dtnext;
-      }
-    else
-      {
-	Ttnext = Time(Time::ms(Dtnext));
-	offset = 0.;
-      }
-
-    // origin is always rounded to time grid, so just add to steps
-    Ttnext += origin; 
-
-    // skip all spikes that are in the past
     // this might happen due to wrong usage of the generator
-    if ( Ttnext <= tstart ) {
+    if ( tnext_stamp <= tstart ) 
+    {
       ++S_.position_;
       continue;
     }
 
-    if ( Ttnext > tstop )
+    if ( tnext_stamp > tstop )
       break;
 
-    if ( device_.is_active(Ttnext) )
+    if ( device_.is_active(tnext_stamp) )
     {
       SpikeEvent* se;
 
@@ -235,10 +275,11 @@ void nest::spike_generator::update(Time const & sliceT0, const long_t from, cons
       else
 	se = new SpikeEvent;
 
-      se->set_offset(offset);
+      if ( P_.precise_times_ )
+	se->set_offset(P_.spike_offsets_[S_.position_]);
       
       // we need to subtract one from stamp which is added again in send()
-      long_t lag = Time(Ttnext - sliceT0).get_steps() - 1;
+      long_t lag = Time(tnext_stamp - sliceT0).get_steps() - 1;
       
       // all spikes are sent locally, so offset information is always preserved
       network()->send(*this, *se, lag);

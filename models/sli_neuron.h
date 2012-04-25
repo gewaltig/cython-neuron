@@ -123,7 +123,6 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_sli_neuron
 
     DictionaryDatum get_status_dict_();
 
-    void init_node_(const Node& proto);
     void init_state_(const Node& proto);
     void init_buffers_();
     void calibrate();

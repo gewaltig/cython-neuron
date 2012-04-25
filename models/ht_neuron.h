@@ -161,7 +161,6 @@ namespace nest{
 			AMPA, NMDA, GABA_A, GABA_B, 
 			SUP_SPIKE_RECEPTOR };
 
-    void init_node_(const Node& proto);
     void init_state_(const Node& proto);
     void init_buffers_();
     void calibrate();

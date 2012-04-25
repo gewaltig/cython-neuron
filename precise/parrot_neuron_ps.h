@@ -107,7 +107,6 @@ namespace nest
 
   private:
       
-    void init_node_(Node const &){}  // no parameters
     void init_state_(Node const &){} // no state
     void init_buffers_();
     void calibrate(){}               // no variables

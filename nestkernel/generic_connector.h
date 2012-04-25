@@ -54,6 +54,11 @@ class GenericConnectorBase : public Connector
    */
   GenericConnectorBase(ConnectorModelT &cm);
 
+  GenericConnectorBase(GenericConnectorBase &rhs)
+    : connections_(),
+    connector_model_(rhs.connector_model_)
+      {}
+
   /**
    * Default destructor.
    */
@@ -158,7 +163,9 @@ template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorMo
 GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::GenericConnectorBase(ConnectorModelT &cm)
   : connector_model_(cm),
     t_lastspike_(0.0)
-{}
+{
+  //  std::cerr << "Connector with common object at "<< (size_t) &connector_model_.get_common_properties() << '\n';
+}
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
 void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r)

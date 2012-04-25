@@ -104,7 +104,6 @@ namespace nest
     void put_agent(int x, int y);
     void plot_agent();
 
-    void init_node_(const Node& proto);
     void init_state_(const Node& proto);
     void init_buffers_();
     void calibrate();

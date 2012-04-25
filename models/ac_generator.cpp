@@ -92,16 +92,6 @@ nest::ac_generator::ac_generator(const ac_generator& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::ac_generator::init_node_(const Node& proto)
-{
-  const ac_generator& pr = downcast<ac_generator>(proto);
-
-  device_.init_parameters(pr.device_);
-
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::ac_generator::init_state_(const Node& proto)
 { 
   const ac_generator& pr = downcast<ac_generator>(proto);

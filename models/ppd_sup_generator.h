@@ -20,6 +20,7 @@
 #include "stimulating_device.h"
 #include "scheduler.h"
 #include "binomial_randomdev.h"
+#include "poisson_randomdev.h"
 #include "connection.h"
 
 /*BeginDocumentation
@@ -87,7 +88,6 @@ namespace nest{
     
 
   private:
-    void init_node_(const Node&);
     void init_state_(const Node&);
     void init_buffers_();
     void calibrate();
@@ -142,6 +142,7 @@ namespace nest{
     class Age_distribution_ {
     
       librandom::BinomialRandomDev bino_dev_;       //!< random deviate generator
+      librandom::PoissonRandomDev poisson_dev_;     //!< random deviate generator
       std::vector<ulong_t> occ_refractory_;         //!< occupation numbers of ages below dead time
       ulong_t  occ_active_;                         //!< summed occupation number of ages above dead time
       size_t activate_;                             //!< rotating pointer

@@ -190,13 +190,6 @@ namespace nest   // template specialization must be placed in namespace
    * Node initialization functions
    * ---------------------------------------------------------------- */
 
-  void nest::mat2_psc_exp::init_node_(const Node& proto)
-  {
-    const mat2_psc_exp& pr = downcast<mat2_psc_exp>(proto);
-    P_ = pr.P_;
-    S_ = pr.S_;
-  }
-
   void nest::mat2_psc_exp::init_state_(const Node& proto)
   {
     const mat2_psc_exp& pr = downcast<mat2_psc_exp>(proto);

@@ -20,8 +20,8 @@
 #include "stimulating_device.h"
 #include "scheduler.h"
 #include "binomial_randomdev.h"
+#include "poisson_randomdev.h"
 #include "connection.h"
-#include "ppd_sup_generator.h"
 
 /*BeginDocumentation
 Name: gamma_sup_generator - simulate the superimposed spike train of a population of Gamma process.
@@ -83,7 +83,6 @@ namespace nest{
     void set_status(const DictionaryDatum &);
 
   private:
-    void init_node_(const Node&);
     void init_state_(const Node&);
     void init_buffers_();
     void calibrate();
@@ -135,6 +134,7 @@ namespace nest{
     class Internal_states_ {
     
       librandom::BinomialRandomDev bino_dev_;       //!< random deviate generator
+      librandom::PoissonRandomDev poisson_dev_;     //!< random deviate generator
       std::vector<ulong_t> occ_;                    //!< occupation numbers of internal states
       
       public:

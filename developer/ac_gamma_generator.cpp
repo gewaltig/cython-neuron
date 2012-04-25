@@ -170,16 +170,6 @@ nest::ac_gamma_generator::ac_gamma_generator(const ac_gamma_generator&n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::ac_gamma_generator::init_node_(const Node& proto)
-{
-  const ac_gamma_generator& pr = downcast<ac_gamma_generator>(proto);
-
-  device_.init_parameters(pr.device_);
-
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::ac_gamma_generator::init_state_(const Node& proto)
 {
   const ac_gamma_generator& pr = downcast<ac_gamma_generator>(proto);

@@ -141,13 +141,6 @@ iaf_psc_delta_canon_stepcurr::iaf_psc_delta_canon_stepcurr(const iaf_psc_delta_c
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void iaf_psc_delta_canon_stepcurr::init_node_(const Node& proto)
-{
-  const iaf_psc_delta_canon_stepcurr& pr = downcast<iaf_psc_delta_canon_stepcurr>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void iaf_psc_delta_canon_stepcurr::init_state_(const Node& proto)
 {
   const iaf_psc_delta_canon_stepcurr& pr = downcast<iaf_psc_delta_canon_stepcurr>(proto);

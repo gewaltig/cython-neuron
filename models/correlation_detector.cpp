@@ -189,17 +189,6 @@ nest::correlation_detector::correlation_detector(const correlation_detector& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::correlation_detector::init_node_(const Node& proto)
-{
-  const correlation_detector& pr = downcast<correlation_detector>(proto);
-
-  device_.init_parameters(pr.device_);
-
-  P_ = Parameters_(pr.P_);  // force recalibration of Time objects
-  S_ = pr.S_;
-  unset(buffers_initialized);  // force recreation of buffers
-}
-
 void nest::correlation_detector::init_state_(const Node& proto)
 { 
   const correlation_detector& pr = downcast<correlation_detector>(proto);

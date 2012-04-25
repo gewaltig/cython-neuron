@@ -97,14 +97,6 @@ nest::music_message_in_proxy::music_message_in_proxy(const music_message_in_prox
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::music_message_in_proxy::init_node_(const Node& proto)
-{
-  const music_message_in_proxy& pr = downcast<music_message_in_proxy>(proto);
-
-  P_ = Parameters_(pr.P_);   // force recalibration of Time objects
-  S_ = pr.S_;
-}
-
 void nest::music_message_in_proxy::init_state_(const Node& proto)
 { 
   const music_message_in_proxy& pr = downcast<music_message_in_proxy>(proto);

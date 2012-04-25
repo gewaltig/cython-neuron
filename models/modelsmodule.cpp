@@ -214,6 +214,7 @@ namespace nest
                                                     STDPDopaCommonProperties
                                                    > (net_, "stdp_dopamine_synapse");
 
+
   }
 
 } // namespace nest

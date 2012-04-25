@@ -78,20 +78,42 @@ namespace nest
     const Name c("c");
     const Name d("d");
     const Name U_m("U_m");
-      const Name consistent_integration("consistent_integration");
-
+    const Name consistent_integration("consistent_integration");
+    
     // Tsodyks2_connection
-      const Name dU("U"); //!< Unit increment of the utilization for a facilitating synapse [0...1]
-      const Name u("u");  //!< probability of release [0...1]
-      const Name x("x"); //!< current scaling factor of the synaptic weight [0...1]
-      const Name tau_rec("tau_rec"); //!< time constant for recovery (ms)
-      const Name tau_fac("tau_fac"); //!< facilitation time constant (ms)
+    const Name dU("U"); //!< Unit increment of the utilization for a facilitating synapse [0...1]
+    const Name u("u");  //!< probability of release [0...1]
+    const Name x("x"); //!< current scaling factor of the synaptic weight [0...1]
+    const Name tau_rec("tau_rec"); //!< time constant for recovery (ms)
+    const Name tau_fac("tau_fac"); //!< facilitation time constant (ms)
+    
+    const Name dUs("Us"); //!< Unit increment of the utilization for a facilitating synapse [0...1]
+    const Name us("us");  //!< probability of release [0...1]
+    const Name xs("xs"); //!< current scaling factor of the synaptic weight [0...1]
+    const Name tau_recs("tau_recs"); //!< time constant for recovery (ms)
+    const Name tau_facs("tau_facs"); //!< facilitation time constant (ms)
 
-      const Name dUs("Us"); //!< Unit increment of the utilization for a facilitating synapse [0...1]
-      const Name us("us");  //!< probability of release [0...1]
-      const Name xs("xs"); //!< current scaling factor of the synaptic weight [0...1]
-      const Name tau_recs("tau_recs"); //!< time constant for recovery (ms)
-      const Name tau_facs("tau_facs"); //!< facilitation time constant (ms)
+    const Name A("A");
+    const Name A_upper("A_upper");
+    const Name A_lower("A_lower");
+    const Name A_mean("A_mean");
+    const Name A_std("A_std");
+    const Name U_upper("U_upper");
+    const Name U_lower("U_lower");
+    const Name U_mean("U_mean");
+    const Name U_std("U_std");
+    const Name D_upper("D_upper");
+    const Name D_lower("D_lower");
+    const Name D_mean("D_mean");
+    const Name D_std("D_std");
+    const Name F_upper("F_upper");
+    const Name F_lower("F_lower");
+    const Name F_mean("F_mean");
+    const Name F_std("F_std");
+    const Name epoch("epoch");
+    const Name success("success");
+    const Name with_noise("with_noise");
+
 
     // Other Adaptation
     const Name E_sfa("E_sfa");

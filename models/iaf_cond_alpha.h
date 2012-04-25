@@ -141,7 +141,6 @@ namespace nest
     void set_status(const DictionaryDatum &);
 
   private:
-    void init_node_(const Node& proto);
     void init_state_(const Node& proto);
     void init_buffers_();
     void calibrate();

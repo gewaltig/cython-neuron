@@ -405,8 +405,7 @@ namespace nest{
 
   nest::ht_neuron::~ht_neuron()
   {
-    // GSL structs only allocated by init_nodes_(), so we 
-    // need to protect destruction.
+    // GSL structs may not be initialized, so we need to protect destruction.
     if ( B_.e_ ) gsl_odeiv_evolve_free(B_.e_);
     if ( B_.c_ ) gsl_odeiv_control_free(B_.c_);
     if ( B_.s_ ) gsl_odeiv_step_free(B_.s_);
@@ -415,13 +414,6 @@ namespace nest{
   /* ---------------------------------------------------------------- 
    * Node initialization functions
    * ---------------------------------------------------------------- */
-  
-  void nest::ht_neuron::init_node_(const Node& proto)
-  {
-    const ht_neuron& pr = downcast<ht_neuron>(proto);
-    P_ = pr.P_;
-    S_ = pr.S_;
-  }
   
   void nest::ht_neuron::init_state_(const Node& proto)
   {

@@ -81,15 +81,6 @@ nest::poisson_generator_ps::poisson_generator_ps(const poisson_generator_ps& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::poisson_generator_ps::init_node_(const Node& proto)
-{
-  const poisson_generator_ps& pr = downcast<poisson_generator_ps>(proto);
-
-  device_.init_parameters(pr.device_);
-  
-  P_ = pr.P_;
-}
-
 void nest::poisson_generator_ps::init_state_(const Node& proto)
 { 
   const poisson_generator_ps& pr = downcast<poisson_generator_ps>(proto);

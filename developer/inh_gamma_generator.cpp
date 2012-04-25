@@ -220,21 +220,6 @@ nest::inh_gamma_generator::inh_gamma_generator(inh_gamma_generator const &n)
 
 }
 
-void nest::inh_gamma_generator::init_node_(const Node& proto)
-{
-  const inh_gamma_generator& pr = downcast<inh_gamma_generator>(proto);
-  
-  device_.init_parameters(pr.device_);
-
-  P_ = Parameters_(pr.P_);   // force recalibration of Time objects
-  S_ = pr.S_;
-
-  //network()->message(SLIInterpreter::M_WARNING, "inh_gamma_generator::init_node_", 
-  //"Parameter initialization not fully implemented, be careful!");
-
-
-}
-
 void nest::inh_gamma_generator::init_state_(const Node& proto)
 { 
   const inh_gamma_generator& pr = downcast<inh_gamma_generator>(proto);

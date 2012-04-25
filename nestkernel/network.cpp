@@ -485,15 +485,6 @@ index Network::add_node(index mod, long_t n)   //no_p
   return max_gid - 1;
 }
 
-void Network::init_node(index GID)
-{
-  Node *n= get_node(GID);
-  if(n == 0 )
-    throw UnknownNode(GID);
-
-  n->init_node();
-}
-
 void Network::init_state(index GID)
 {
   Node *n= get_node(GID);

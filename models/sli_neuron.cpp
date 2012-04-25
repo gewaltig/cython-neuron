@@ -80,13 +80,6 @@ nest::sli_neuron::sli_neuron(const sli_neuron& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::sli_neuron::init_node_(const Node& proto)
-{
-  const sli_neuron& pr = downcast<sli_neuron>(proto);
-  init_state_(pr);
-  init_buffers_();
-}
-
 void nest::sli_neuron::init_state_(const Node& proto)
 {
   const sli_neuron& pr = downcast<sli_neuron>(proto);

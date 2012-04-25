@@ -170,13 +170,6 @@ void nest::environment::Parameters_::set(const DictionaryDatum& d)
  * Environment initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::environment::init_node_(const Node& proto)
-{
-  const environment& pr = downcast<environment>(proto);
-  P_ = pr.P_;
-}
-
-
 void nest::environment::init_state_(const Node&)
 {
 }

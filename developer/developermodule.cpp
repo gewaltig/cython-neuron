@@ -40,6 +40,8 @@
 #include "genericmodel.h"
 #include <string>
 #include "generic_connector_model.h"
+#include "generic_connector.h"
+#include "common_synapse_properties.h"
 #include "booldatum.h"
 #include "integerdatum.h"
 #include "tokenarray.h"
@@ -49,6 +51,8 @@
 
 #include "selective_connector.h"
 #include "static_connection.h"
+#include "static_connection_hom_wd.h"
+#include "annealing_connection.h"
 
 //
 // The following models are commented out for a reason! Please see the mail at:
@@ -1038,6 +1042,8 @@ BeginDocumentation
     register_prototype_connection_commonproperties<STDPFACETSHWConnectionHom, STDPFACETSHWHomCommonProperties>(*net_, "stdp_facetshw_synapse_hom");
 
     register_prototype_connection<LossyConnection>(*net_, "lossy_synapse");
+
+    register_prototype_connection_commonproperties <AnnealingConnection, AnnealingCommon > (*net_, "annealing_synapse");
 
   }  // DeveloperModule::init()
 

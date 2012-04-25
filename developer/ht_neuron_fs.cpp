@@ -401,21 +401,13 @@ namespace nest{
 
   nest::ht_neuron_fs::~ht_neuron_fs()
   {
-    // GSL structs only allocated by init_nodes_(), so we 
-    // need to protect destruction.
+    // GSL structs may not be allocated, so we need to protect destruction.
     if ( B_.s_ ) gsl_odeiv_step_free(B_.s_);
   }
   
   /* ---------------------------------------------------------------- 
    * Node initialization functions
    * ---------------------------------------------------------------- */
-  
-  void nest::ht_neuron_fs::init_node_(const Node& proto)
-  {
-    const ht_neuron_fs& pr = downcast<ht_neuron_fs>(proto);
-    P_ = pr.P_;
-    S_ = pr.S_;
-  }
   
   void nest::ht_neuron_fs::init_state_(const Node& proto)
   {

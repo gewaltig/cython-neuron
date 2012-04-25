@@ -152,13 +152,6 @@ nest::iaf_psc_alpha_multisynapse::iaf_psc_alpha_multisynapse(const iaf_psc_alpha
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_psc_alpha_multisynapse::init_node_(const Node& proto)
-{
-  const iaf_psc_alpha_multisynapse& pr = downcast<iaf_psc_alpha_multisynapse>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::iaf_psc_alpha_multisynapse::init_state_(const Node& proto)
 {
   const iaf_psc_alpha_multisynapse& pr = downcast<iaf_psc_alpha_multisynapse>(proto);

@@ -45,14 +45,39 @@ nest::ulong_t nest::gamma_sup_generator::Internal_states_::update(double_t trans
         {
         if (occ_[i]>0) 
             {
-            bino_dev_.set_p_n( transition_prob, occ_[i]);
-            n_trans[i] = bino_dev_.uldev(rng); 
+            /*The binomial distribution converges towards the Poisson distribution as
+             the number of trials goes to infinity while the product np remains fixed.
+             Therefore the Poisson distribution with parameter λ = np can be used as 
+             an approximation to B(n, p) of the binomial distribution if n is 
+             sufficiently large and p is sufficiently small. According to two rules 
+             of thumb, this approximation is good if n ≥ 20 and p ≤ 0.05, or if 
+             n ≥ 100 and np ≤ 10. Source:
+             http://en.wikipedia.org/wiki/Binomial_distribution#Poisson_approximation */
+            if (( occ_[i] >= 100 && transition_prob <= 0.01 ) || \
+                (  occ_[i] >= 500 && transition_prob * occ_[i] <= 0.1 ))
+                {
+                poisson_dev_.set_lambda( transition_prob * occ_[i] );
+                n_trans[i] = poisson_dev_.uldev(rng);
+                if ( n_trans[i] > occ_[i] )
+                    {
+                    n_trans[i] = occ_[i];
+                    }
+                else
+                    {;}
+                }
+            else
+                {
+                bino_dev_.set_p_n( transition_prob, occ_[i]);
+                n_trans[i] = bino_dev_.uldev(rng); 
+                }
             }
         else
+            {
             n_trans[i] = 0;
+            }
         }
     
-    // according to above numbers, changes the occupation vector
+    // according to above numbers, change the occupation vector
     for (ulong_t i=0; i<occ_.size(); i++)
         {
         if (n_trans[i]>0) 
@@ -129,15 +154,6 @@ nest::gamma_sup_generator::gamma_sup_generator(const gamma_sup_generator& n)
 /* ---------------------------------------------------------------- 
  * Node initialization functions
  * ---------------------------------------------------------------- */
-
-void nest::gamma_sup_generator::init_node_(const Node& proto)
-{
-  const gamma_sup_generator& pr = downcast<gamma_sup_generator>(proto);
-
-  device_.init_parameters(pr.device_);
-  
-  P_ = pr.P_;
-}
 
 void nest::gamma_sup_generator::init_state_(const Node& proto)
 { 

@@ -127,7 +127,6 @@ SeeAlso: iaf_psc_alpha
 
   private:
 
-    void init_node_(const Node& proto);
     void init_state_(const Node& proto);
     void init_buffers_();
     void calibrate();

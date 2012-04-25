@@ -60,13 +60,6 @@ namespace nest {
   Node::~Node()
   {}
 
-  void Node::init_node()
-  {
-    Model const * const model= net_->get_model(model_id_);
-    assert(model);
-    init_node_(model->get_prototype());
-  }
-
   void Node::init_state()
   {
     Model const * const model= net_->get_model(model_id_);

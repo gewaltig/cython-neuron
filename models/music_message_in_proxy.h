@@ -125,7 +125,6 @@ namespace nest
 
   private:
     
-    void init_node_(const Node&);
     void init_state_(const Node&);
     void init_buffers_();
     void calibrate();

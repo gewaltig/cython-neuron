@@ -164,13 +164,6 @@ nest::iaf_neuron::iaf_neuron(const iaf_neuron& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_neuron::init_node_(const Node& proto)
-{
-  const iaf_neuron& pr = downcast<iaf_neuron>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::iaf_neuron::init_state_(const Node& proto)
 {
   const iaf_neuron& pr = downcast<iaf_neuron>(proto);

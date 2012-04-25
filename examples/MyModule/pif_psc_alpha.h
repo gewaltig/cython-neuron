@@ -131,7 +131,6 @@ iaf_psc_delta, iaf_psc_exp, iaf_psc_alpha
   private:
 
     //! Reset parameters and state of neuron.
-    void init_node_(const Node& proto);
 
     //! Reset state of neuron.
     void init_state_(const Node& proto);

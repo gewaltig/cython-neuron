@@ -247,12 +247,6 @@ SeeAlso: Simulate, Node
     void init_state(index);
 
     /**
-     * Set the independent parameters and state of a node to model defaults.
-     * @see Node::init_node()
-     */
-    void init_node(index);
-
-    /**
      * Return total number of network nodes.
      * The size also includes all Subnet objects.
      */

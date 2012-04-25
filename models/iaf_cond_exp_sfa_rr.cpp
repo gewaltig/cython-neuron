@@ -271,7 +271,7 @@ nest::iaf_cond_exp_sfa_rr::iaf_cond_exp_sfa_rr(const iaf_cond_exp_sfa_rr& n)
 
 nest::iaf_cond_exp_sfa_rr::~iaf_cond_exp_sfa_rr()
 {
-  // GSL structs only allocated by init_nodes_(), so we need to protect destruction
+  // GSL structs may not have been allocated, so we need to protect destruction
   if ( B_.s_ ) gsl_odeiv_step_free(B_.s_);
   if ( B_.c_ ) gsl_odeiv_control_free(B_.c_);
   if ( B_.e_ ) gsl_odeiv_evolve_free(B_.e_);
@@ -280,13 +280,6 @@ nest::iaf_cond_exp_sfa_rr::~iaf_cond_exp_sfa_rr()
 /* ---------------------------------------------------------------- 
  * Node initialization functions
  * ---------------------------------------------------------------- */
-
-void nest::iaf_cond_exp_sfa_rr::init_node_(const Node& proto)
-{
-  const iaf_cond_exp_sfa_rr& pr = downcast<iaf_cond_exp_sfa_rr>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
 
 void nest::iaf_cond_exp_sfa_rr::init_state_(const Node& proto)
 {

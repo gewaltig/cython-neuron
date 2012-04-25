@@ -153,13 +153,6 @@ nest::iaf_psc_exp_canon::iaf_psc_exp_canon(iaf_psc_exp_canon const &n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_psc_exp_canon::init_node_(Node const &proto)
-{
-  iaf_psc_exp_canon const &pr = downcast<iaf_psc_exp_canon>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::iaf_psc_exp_canon::init_state_(Node const &proto)
 {
   iaf_psc_exp_canon const &pr = downcast<iaf_psc_exp_canon>(proto);

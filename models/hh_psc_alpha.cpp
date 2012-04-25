@@ -279,7 +279,7 @@ nest::hh_psc_alpha::hh_psc_alpha(const hh_psc_alpha& n)
 
 nest::hh_psc_alpha::~hh_psc_alpha()
 {
-  // GSL structs only allocated by init_nodes_(), so we need to protect destruction
+  // GSL structs may not have been allocated, so we need to protect destruction
   if ( B_.s_ ) gsl_odeiv_step_free(B_.s_);
   if ( B_.c_ ) gsl_odeiv_control_free(B_.c_);
   if ( B_.e_ ) gsl_odeiv_evolve_free(B_.e_);
@@ -288,13 +288,6 @@ nest::hh_psc_alpha::~hh_psc_alpha()
 /* ---------------------------------------------------------------- 
  * Node initialization functions
  * ---------------------------------------------------------------- */
-
-void nest::hh_psc_alpha::init_node_(const Node& proto)
-{
-  const hh_psc_alpha& pr = downcast<hh_psc_alpha>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
 
 void nest::hh_psc_alpha::init_state_(const Node& proto)
 {

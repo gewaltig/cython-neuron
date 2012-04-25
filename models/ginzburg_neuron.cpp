@@ -133,13 +133,6 @@ ginzburg::ginzburg(const ginzburg& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void ginzburg::init_node_(const Node& proto)
-{
-  const ginzburg& pr = downcast<ginzburg>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void ginzburg::init_state_(const Node& proto)
 {
   const ginzburg& pr = downcast<ginzburg>(proto);

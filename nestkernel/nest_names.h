@@ -100,6 +100,29 @@ namespace nest
     extern const Name tau_rec; //!< time constant for recovery (ms)
     extern const Name tau_fac; //!< facilitation time constant (ms)
 
+    extern const Name A;
+    extern const Name A_upper;
+    extern const Name A_lower;
+    extern const Name A_mean;
+    extern const Name A_std;
+    extern const Name U_upper;
+    extern const Name U_lower;
+    extern const Name U_mean;
+    extern const Name U_std;
+    extern const Name D_upper;
+    extern const Name D_lower;
+    extern const Name D_mean;
+    extern const Name D_std;
+    extern const Name F_upper;
+    extern const Name F_lower;
+    extern const Name F_mean;
+    extern const Name F_std;
+    extern const Name epoch;
+    extern const Name success;
+    extern const Name with_noise;
+
+
+
     // Same as aboce, but for property arrays.
     extern const Name dUs; //!< Unit increment of the utilization for a facilitating synapse [0...1]
     extern const Name us;  //!< probability of release [0...1]

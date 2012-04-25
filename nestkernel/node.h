@@ -311,21 +311,6 @@ namespace nest {
     bool is_local() const;
 
     /**
-     * Initialize the node to the default parameters and state for its model.
-     * This function resets the parameters and state variables of a node
-     * to the values of the model instance of the node. 
-     *
-     * @note If the parameters of the model have been changes since the node
-     *       was created, the node will be initialized to the present values
-     *       set in the model.
-     * @note This function is the public interface to the private function
-     *       Node::init_node_(const Node&) that must be implemented by derived 
-     *       classes. 
-     * @note This function may be called from SLI to reset the state of the Node.
-     */ 
-    void init_node();
-
-    /**
      * Set state variables to the default values for the model.
      * Dynamic variables are all observable state variables of a node 
      * that change during Node::update().
@@ -748,20 +733,6 @@ namespace nest {
      */
     virtual
     Node* get_thread_sibling_safe_(index) const { assert(false); return 0; }
-
-     /**
-      * Private function to initialize node to model defaults.
-      * This function, which must be overloaded by all derived classes, provides
-      * the implementation for initializing a node to the model defaults. 
-      * Parameters and State of the node must be initialized from the prototype
-      * provided to ensure that the node is in a consistent state.
-      * @param Reference to model prototype object.
-      * @see Node::init_node()
-      * @note To provide a reasonable behavior during the transition to the new scheme,
-      *       init_node_() has a default implementation calling init_paramters_() and
-      *       init_dynamic_state_().
-      */
-     virtual void init_node_(Node const&) =0;
 
      /**
       * Private function to initialize the state of a node to model defaults.

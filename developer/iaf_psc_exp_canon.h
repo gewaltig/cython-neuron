@@ -135,7 +135,6 @@ namespace nest
      */
     //@{
 
-    void init_node_(Node const &proto);
     void init_state_(Node const &proto);
     void init_buffers_();
     void calibrate();

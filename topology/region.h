@@ -466,11 +466,14 @@ namespace nest{
      */
     Position<int_t> get_position(const int_t lid) const;
 
-    Position<double_t> get_lower_left() const {assert(false);}
-    Position<double_t> get_upper_right() const {assert(false);}
-    bool within_range(const Position<double_t>&) const {assert(false);}
+    /* The following functions have returns after assert(false); to
+       avoid compiler warnings.
+    */
+    Position<double_t> get_lower_left() const {assert(false); return Position<double_t>(0.,0.);}
+    Position<double_t> get_upper_right() const {assert(false); return Position<double_t>(0.,0.);}
+    bool within_range(const Position<double_t>&) const {assert(false); return false;}
     void set_anchor(const Position<double_t>&) {assert(false);}
-    bool outside(const Region&) const {assert(false);}
+    bool outside(const Region&) const {assert(false); return false; }
 
   private:
     // Class variables

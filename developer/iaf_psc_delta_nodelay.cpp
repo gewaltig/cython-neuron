@@ -175,13 +175,6 @@ nest::iaf_psc_delta_nodelay::iaf_psc_delta_nodelay(const iaf_psc_delta_nodelay& 
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_psc_delta_nodelay::init_node_(const Node& proto)
-{
-  const iaf_psc_delta_nodelay& pr = downcast<iaf_psc_delta_nodelay>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::iaf_psc_delta_nodelay::init_state_(const Node& proto)
 {
   const iaf_psc_delta_nodelay& pr = downcast<iaf_psc_delta_nodelay>(proto);

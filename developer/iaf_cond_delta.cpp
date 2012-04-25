@@ -133,13 +133,6 @@ nest::iaf_cond_delta::iaf_cond_delta(const iaf_cond_delta& n)
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_cond_delta::init_node_(const Node& proto)
-{
-  const iaf_cond_delta& pr = downcast<iaf_cond_delta>(proto);
-  P_ = pr.P_;
-  S_ = pr.S_;
-}
-
 void nest::iaf_cond_delta::init_state_(const Node& proto)
 {
   const iaf_cond_delta& pr = downcast<iaf_cond_delta>(proto);
