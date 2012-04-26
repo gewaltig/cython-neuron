@@ -287,6 +287,13 @@ namespace nest
       mask1_(m1.clone()), mask2_(m2.clone())
       {}
 
+    /**
+     * Copy constructor
+     */
+    IntersectionMask(const IntersectionMask &m):
+      mask1_(m.mask1_->clone()), mask2_(m.mask2_->clone())
+      {}
+
     ~IntersectionMask()
       { delete mask1_; delete mask2_; }
 
@@ -321,6 +328,13 @@ namespace nest
       mask1_(m1.clone()), mask2_(m2.clone())
       {}
 
+    /**
+     * Copy constructor
+     */
+    UnionMask(const UnionMask &m):
+      mask1_(m.mask1_->clone()), mask2_(m.mask2_->clone())
+      {}
+
     ~UnionMask()
       { delete mask1_; delete mask2_; }
 
@@ -353,6 +367,13 @@ namespace nest
      */
     MinusMask(const Mask<D> &m1, const Mask<D> &m2):
       mask1_(m1.clone()), mask2_(m2.clone())
+      {}
+
+    /**
+     * Copy constructor
+     */
+    MinusMask(const MinusMask &m):
+      mask1_(m.mask1_->clone()), mask2_(m.mask2_->clone())
       {}
 
     ~MinusMask()

@@ -151,7 +151,16 @@ namespace nest
        * Initialize an iterator to point to the first leaf node within the
        * tree below this Ntree.
        */
-      iterator(Ntree& q) : ntree_(q), node_(0) {}
+      iterator(Ntree& q) : ntree_(q), node_(0)
+        {
+          // Find the first non-empty leaf
+          while(ntree_->nodes_.size() == 0) {
+
+            ++ntree_;
+            if (!ntree_.valid()) break;
+
+          }
+        }
 
       std::pair<Position<D>,T> & operator*() { return ntree_->nodes_[node_]; }
       std::pair<Position<D>,T> * operator->() { return &ntree_->nodes_[node_]; }
