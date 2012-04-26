@@ -109,8 +109,8 @@ namespace nest
     i->createcommand("sub_M_M",
 		     &sub_M_Mfunction);
 
-    i->createcommand("GetGlobalChildren_i_M",
-		     &getglobalchildren_i_Mfunction);
+    i->createcommand("GetGlobalChildren_i_M_a",
+		     &getglobalchildren_i_M_afunction);
 
     // Register layer types as models
     Network & net = get_network();
@@ -480,27 +480,28 @@ namespace nest
   }
 
 
-  void Topology3Module::GetGlobalChildren_i_MFunction::execute(SLIInterpreter *i) const
+  void Topology3Module::GetGlobalChildren_i_M_aFunction::execute(SLIInterpreter *i) const
   {
-    i->assert_stack_load(2);
+    i->assert_stack_load(3);
 
-    index gid = getValue<long_t>(i->OStack.pick(1));
-    MaskDatum maskd = getValue<MaskDatum>(i->OStack.pick(0));
+    index gid = getValue<long_t>(i->OStack.pick(2));
+    MaskDatum maskd = getValue<MaskDatum>(i->OStack.pick(1));
+    std::vector<double_t> anchor = getValue<std::vector<double_t> >(i->OStack.pick(0));
 
-    AbstractMask *mask = dynamic_cast<AbstractMask*>(&(*maskd));
+    AbstractMask &mask = *maskd;
     AbstractLayer *layer = dynamic_cast<AbstractLayer *>(get_network().get_node(gid));
     if (layer == NULL)
       throw LayerExpected();
 
     AbstractNtree<index> *tree = get_global_positions(layer);
-    std::vector<index> gids = tree->get_nodes_only(*mask);
+    std::vector<index> gids = tree->get_nodes_only(mask,anchor);
 
     ArrayDatum result;
     result.reserve(gids.size());
     for(std::vector<index>::iterator it = gids.begin(); it != gids.end(); ++it)
       result.push_back(new IntegerDatum(*it));
 
-    i->OStack.pop(2);
+    i->OStack.pop(3);
     i->OStack.push(result);
     i->EStack.pop();
   }

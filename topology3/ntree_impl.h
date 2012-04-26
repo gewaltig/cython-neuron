@@ -33,23 +33,23 @@ namespace nest {
   }
 
   template<int D, class T, int max_capacity>
-  void Ntree<D,T,max_capacity>::append_nodes_(std::vector<std::pair<Position<D>,T> >&v, const Mask<D> &mask)
+  void Ntree<D,T,max_capacity>::append_nodes_(std::vector<std::pair<Position<D>,T> >&v, const Mask<D> &mask, const Position<D> &anchor)
   {
-    if (mask.outside(lower_left_, lower_left_+extent_))
+    if (mask.outside(lower_left_-anchor, lower_left_-anchor+extent_))
       return;
 
-    if (mask.inside(lower_left_, lower_left_+extent_))
+    if (mask.inside(lower_left_-anchor, lower_left_-anchor+extent_))
       return append_nodes_(v);
 
     if (!leaf_) {
       for (int i=0;i<N;++i)
-        children_[i]->append_nodes_(v,mask);
+        children_[i]->append_nodes_(v,mask,anchor);
       return;
     }      
 
     for(typename std::vector<std::pair<Position<D>,T> >::iterator i=nodes_.begin();
         i!=nodes_.end(); ++i) {
-      if (mask.inside(i->first))
+      if (mask.inside(i->first - anchor))
         v.push_back(*i);
     }
   }
@@ -96,10 +96,10 @@ namespace nest {
   }
 
   template<int D, class T, int max_capacity>
-  std::vector<T> Ntree<D,T,max_capacity>::get_nodes_only(const AbstractMask &mask)
+  std::vector<T> Ntree<D,T,max_capacity>::get_nodes_only(const AbstractMask &mask, const std::vector<double_t> &anchor)
   {
     std::vector<std::pair<Position<D>,T> > result_pairs;
-    append_nodes_(result_pairs,dynamic_cast<const Mask<D>&>(mask));
+    append_nodes_(result_pairs,dynamic_cast<const Mask<D>&>(mask),Position<D>(anchor));
 
     std::vector<T> result;
     for(typename std::vector<std::pair<Position<D>,T> >::iterator i=result_pairs.begin(); i != result_pairs.end(); ++i) {

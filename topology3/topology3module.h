@@ -74,11 +74,11 @@ namespace nest
       void execute(SLIInterpreter *) const;
     } distance_a_ifunction;
 
-    class GetGlobalChildren_i_MFunction: public SLIFunction
+    class GetGlobalChildren_i_M_aFunction: public SLIFunction
     {
     public:
       void execute(SLIInterpreter *) const;
-    } getglobalchildren_i_Mfunction;
+    } getglobalchildren_i_M_afunction;
 
     class CreateMask_l_DFunction: public SLIFunction
     {

@@ -45,7 +45,7 @@ namespace nest
      * Applies a Mask to this ntree.
      * @returns member nodes in ntree inside mask without positions.
      */
-    virtual std::vector<T> get_nodes_only(const AbstractMask &mask) = 0;
+    virtual std::vector<T> get_nodes_only(const AbstractMask &mask, const std::vector<double_t> &anchor) = 0;
   };
 
   /**
@@ -213,9 +213,11 @@ namespace nest
 
     /**
      * Applies a Mask to this ntree.
+     * @param mask    mask to apply.
+     * @param anchor  position to center mask in.
      * @returns member nodes in ntree inside mask.
      */
-    std::vector<std::pair<Position<D>,T> > get_nodes(const Mask<D> &mask);
+    std::vector<std::pair<Position<D>,T> > get_nodes(const Mask<D> &mask, const Position<D> &anchor);
 
     /**
      * @returns member nodes in ntree without positions.
@@ -224,9 +226,11 @@ namespace nest
 
     /**
      * Applies a Mask to this ntree.
+     * @param mask    mask to apply.
+     * @param anchor  position to center mask in.
      * @returns member nodes in ntree inside mask without positions.
      */
-    std::vector<T> get_nodes_only(const AbstractMask &mask);
+    std::vector<T> get_nodes_only(const AbstractMask &mask, const std::vector<double_t> &anchor);
 
     /**
      * This function returns a node iterator which will traverse the rest
@@ -260,7 +264,7 @@ namespace nest
     /**
      * Append this ntree's nodes inside the mask to the vector
      */
-    void append_nodes_(std::vector<std::pair<Position<D>,T> >&, const Mask<D> &);
+    void append_nodes_(std::vector<std::pair<Position<D>,T> >&, const Mask<D> &, const Position<D> &);
 
     /**
      * @returns the subquad number for this position
@@ -311,10 +315,10 @@ namespace nest
   }
 
   template<int D, class T, int max_capacity>
-  std::vector<std::pair<Position<D>,T> > Ntree<D,T,max_capacity>::get_nodes(const Mask<D> &mask)
+  std::vector<std::pair<Position<D>,T> > Ntree<D,T,max_capacity>::get_nodes(const Mask<D> &mask, const Position<D> &anchor)
   {
     std::vector<std::pair<Position<D>,T> > result;
-    append_nodes_(result,mask);
+    append_nodes_(result,mask,anchor);
     return result;
   }
 

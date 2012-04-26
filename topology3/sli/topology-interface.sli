@@ -95,8 +95,8 @@ def
   /sub_M_M load
 def
 
-/GetGlobalChildren [/integertype /masktype]
-  /GetGlobalChildren_i_M load
+/GetGlobalChildren [/integertype /masktype /arraytype]
+  /GetGlobalChildren_i_M_a load
 def
   
 % ------------------------------------------------------------------------------
