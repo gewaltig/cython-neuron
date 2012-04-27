@@ -64,16 +64,6 @@ namespace nest
      */
     virtual AbstractMask * minus_mask(const AbstractMask & other) const = 0;
 
-    /**
-     * Factory function for masks. Creates a new mask from a dictionary
-     * which should contain one of the keys /circular, /spherical,
-     * /rectangular, /volume, /box, or /doughnut, defining the mask
-     * type. The corresponding value should be a dictionary containing
-     * parameters specific for this mask type.
-     * @returns pointer to new dynamically allocated mask.
-     */
-    static AbstractMask * create_mask(const DictionaryDatum&);
-
   };
 
   typedef lockPTRDatum<AbstractMask, &Topology3Module::MaskType> MaskDatum;
@@ -247,8 +237,7 @@ namespace nest
     /**
      * @returns true if the whole box is inside the circle
      */
-    bool inside(const Position<D> &ll, const Position<D> &ur) const
-      { return inside(ll) && inside(ur); }
+    bool inside(const Position<D> &ll, const Position<D> &ur) const;
 
     /**
      * @returns true if the whole box is outside the circle

@@ -62,128 +62,32 @@ namespace nest
   {
   public:
 
-    class iterator;
-
     static const int N = 1<<D;
 
     /**
-     * Helper class which points to a leaf ntree
-     */
-    class ntree_iterator {
-    public:
-      /**
-       * Constructor for invalid iterator.
-       */
-      ntree_iterator() : ntree_(0) {}
-
-      /**
-       * Initialize the iterator to point to the first leaf ntree below
-       * the given ntree.
-       */
-      ntree_iterator(Ntree& q) : ntree_(&q)
-        {
-          while(!ntree_->is_leaf())
-            ntree_ = ntree_->children_[0];
-        }
-
-      bool valid() { return ntree_ != 0; }
-
-      ntree_iterator& operator++()
-        {
-
-          // If we are on the last subntree, move up
-          while(ntree_ && (ntree_->my_subquad_ == N-1)) {
-            ntree_ = ntree_->parent_;
-          }
-
-          // If we reached the end, return
-          if (ntree_ == 0)
-            return *this;
-
-          // If we have reached the top, mark as invalid and return
-          if (ntree_->parent_ == 0) {
-            ntree_ = 0;
-            return *this;
-          }
-
-          // Move to next sibling
-          ntree_ = ntree_->parent_->children_[ntree_->my_subquad_+1];
-
-          // Move down if this is not a leaf.
-          while(!ntree_->is_leaf())
-            ntree_ = ntree_->children_[0];
-
-          return *this;
-        }
-
-      Ntree& operator*()
-        { return *ntree_; }
-
-      Ntree* operator->()
-        { return ntree_; }
-
-      bool operator==(const ntree_iterator &other) const
-        { return ntree_ == other.ntree_; }
-
-      bool operator!=(const ntree_iterator &other) const
-        { return ntree_ != other.ntree_; }
-
-      friend class iterator;
-
-    protected:
-
-      Ntree *ntree_;
-
-    };
-
-    /**
-     * Iterator iterating the nodes in a Quadtree. The iterator will
-     * traverse the tree until it finds leaf Ntrees.
+     * Iterator iterating the nodes in a Quadtree.
      */
     class iterator {
     public:
       /**
        * Initialize an invalid iterator.
        */
-      iterator() : ntree_(), node_(0) {}
+      iterator() : ntree_(0), top_(0), node_(0) {}
 
       /**
-       * Initialize an iterator to point to the first leaf node within the
-       * tree below this Ntree.
+       * Initialize an iterator to point to the first node in the first
+       * non-empty leaf within the tree below this Ntree.
        */
-      iterator(Ntree& q) : ntree_(q), node_(0)
-        {
-          // Find the first non-empty leaf
-          while(ntree_->nodes_.size() == 0) {
-
-            ++ntree_;
-            if (!ntree_.valid()) break;
-
-          }
-        }
+      iterator(Ntree& q);
 
       std::pair<Position<D>,T> & operator*() { return ntree_->nodes_[node_]; }
       std::pair<Position<D>,T> * operator->() { return &ntree_->nodes_[node_]; }
 
       /**
-       * Move the iterator to the next node within the tree.
+       * Move the iterator to the next node within the tree. May cause the
+       * iterator to become invalid if there are no more nodes.
        */
-      iterator & operator++()
-        {
-          node_++;
-
-          while (node_ >= ntree_->nodes_.size()) {
-
-            ++ntree_;
-
-            node_ = 0;
-
-            if (!ntree_.valid()) break;
-
-          }
-
-          return *this;
-        }
+      iterator & operator++();
 
       /**
        * Iterators are equal if they point to the same node in the same
@@ -196,8 +100,77 @@ namespace nest
 
     protected:
 
-      ntree_iterator ntree_;
+      /**
+       * Move to the next leaf quadrant, or set ntree_ to 0 if there are no
+       * more leaves.
+      */
+      void next_leaf_();
+
+      Ntree *ntree_;
+      Ntree *top_;
       index node_;
+    };
+
+    /**
+     * Iterator iterating the nodes in a Quadtree inside a Mask.
+     */
+    class masked_iterator {
+    public:
+      /**
+       * Initialize an invalid iterator.
+       */
+      masked_iterator() : ntree_(0), top_(0), node_(0), allin_top_(0), mask_(0) {}
+
+      /**
+       * Initialize an iterator to point to the first leaf node inside the
+       * mask within the tree below this Ntree.
+       */
+      masked_iterator(Ntree& q, const Mask<D> &mask, const Position<D> &anchor);
+
+      std::pair<Position<D>,T> & operator*() { return ntree_->nodes_[node_]; }
+      std::pair<Position<D>,T> * operator->() { return &ntree_->nodes_[node_]; }
+
+      /**
+       * Move the iterator to the next node inside the mask within the
+       * tree. May cause the iterator to become invalid if there are no
+       * more nodes.
+       */
+      masked_iterator & operator++();
+
+      /**
+       * Iterators are equal if they point to the same node in the same
+       * ntree.
+       */
+      bool operator==(const masked_iterator &other) const
+        { return (other.ntree_==ntree_) && (other.node_==node_); }
+      bool operator!=(const masked_iterator &other) const
+        { return (other.ntree_!=ntree_) || (other.node_!=node_); }
+
+    protected:
+
+      /**
+       * Find the next leaf which is not outside the mask.
+       */
+      void next_leaf_();
+
+      /**
+       * Find the first leaf which is not outside the mask. If no leaf is
+       * found below the current quadrant, will continue to next_leaf_().
+       */
+      void first_leaf_();
+
+      /**
+       * Set the allin_top_ to the current quadrant, and find the first
+       * leaf below the current quadrant.
+       */
+      void first_leaf_inside_();
+
+      Ntree *ntree_;
+      Ntree *top_;
+      Ntree *allin_top_;
+      index node_;
+      const Mask<D> *mask_;
+      Position<D> anchor_;
     };
 
     /**
@@ -253,6 +226,12 @@ namespace nest
     iterator end()
       { return iterator(); }
 
+    masked_iterator masked_begin(const Mask<D> &mask, const Position<D> &anchor)
+      { return masked_iterator(*this,mask,anchor); }
+
+    masked_iterator masked_end()
+      { return masked_iterator(); }
+
     /**
      * @returns true if ntree is a leaf.
      */
@@ -291,8 +270,8 @@ namespace nest
     int my_subquad_;    ///< This Ntree's subquad number within parent
     Ntree* children_[N];
 
-    friend class ntree_iterator;
     friend class iterator;
+    friend class masked_iterator;
   };
 
   template<int D, class T, int max_capacity>
@@ -329,39 +308,6 @@ namespace nest
     std::vector<std::pair<Position<D>,T> > result;
     append_nodes_(result,mask,anchor);
     return result;
-  }
-
-  template<int D, class T, int max_capacity>
-  int Ntree<D,T,max_capacity>::subquad_(const Position<D>& pos)
-  {
-    Position<D> offset = pos - lower_left_;
-
-    offset /= extent_/2;
-
-    int r = 0;
-    for(int i=0;i<D;++i)
-      r += (1<<i) * int(offset[i]);
-
-    return r;
-  }
-
-  template<int D, class T, int max_capacity>
-  void Ntree<D,T,max_capacity>::insert(const Position<D>& pos, const T& node)
-  {
-    if (leaf_ && (nodes_.size()>=max_capacity))
-      split_();
-
-    if (leaf_) {
-
-      assert((pos >= lower_left_) && (pos < lower_left_ + extent_));
-
-      nodes_.push_back(std::pair<Position<D>,T>(pos,node));
-
-    } else {
-
-      children_[subquad_(pos)]->insert(pos,node);
-
-    }
   }
 
 } // namespace nest
