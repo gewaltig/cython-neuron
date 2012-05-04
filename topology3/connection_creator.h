@@ -74,6 +74,9 @@ namespace nest
   private:
 
     template<int D>
+    void source_driven_connect_(const Layer<D>& source, const Layer<D>& target);
+
+    template<int D>
     void convergent_connect_(const Layer<D>& source, const Layer<D>& target);
 
     ConnectionType type;

@@ -26,6 +26,11 @@ namespace nest
   void ConnectionCreator::connect(const Layer<D>& source, const Layer<D>& target)
   {
     switch (type) {
+    case Source_driven:
+
+      source_driven_connect_(source, target);
+      break;
+
     case Convergent:
 
       convergent_connect_(source, target);
@@ -38,8 +43,56 @@ namespace nest
   }
 
   template<int D>
+  void ConnectionCreator::source_driven_connect_(const Layer<D>& source, const Layer<D>& target)
+  {
+    // Source driven connect
+    // For each local target node:
+    //  1. Apply Mask to source layer
+    //  2. For each source node: Compute probability, draw random number, make
+    //     connection conditionally
+
+    Ntree<D,index> *ntree = Topology3Module::get_global_positions(&source);
+
+    if (mask.valid()) {
+
+      const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask);
+
+      for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
+
+        index target_id = (*tgt_it)->get_gid();
+        //librandom::RngPtr rng = Topology3Module::get_network().get_rng((*tgt_it)->get_thread());
+
+        for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target.get_position((*tgt_it)->get_subnet_index()));iter!=ntree->masked_end();++iter) {
+          Topology3Module::get_network().connect(iter->second,target_id,synapse_model);
+        }
+      }
+
+    } else {
+      // no mask
+
+      for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
+
+        index target_id = (*tgt_it)->get_gid();
+
+        for(typename Ntree<D,index>::iterator iter=ntree->begin();iter!=ntree->end();++iter) {
+          Topology3Module::get_network().connect(iter->second,target_id,synapse_model);
+        }
+      }
+
+    }
+
+  }
+
+  template<int D>
   void ConnectionCreator::convergent_connect_(const Layer<D>& source, const Layer<D>& target)
   {
+    // Convergent connections (fixed fan in)
+    //
+    // For each local target node:
+    // 1. Apply Mask to source layer
+    // 2. Compute connection probability for each source position
+    // 3. Draw source nodes and make connections
+
     Ntree<D,index> *ntree = Topology3Module::get_global_positions(&source);
     if (mask.valid()) {
 
@@ -69,6 +122,7 @@ namespace nest
       }
 
     } else {
+      // no mask
 
       std::vector<index> sources;
       for(typename Ntree<D,index>::iterator iter=ntree->begin();iter!=ntree->end();++iter) {
