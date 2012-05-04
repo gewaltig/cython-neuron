@@ -44,6 +44,10 @@ namespace nest
     const Name lid("lid");
     const Name elements("elements");
     const Name allow_oversized_mask("allow_oversized_mask");
+    const Name connection_type("connection_type");
+    const Name number_of_connections("number_of_connections");
+    const Name convergent("convergent");
+    const Name divergent("divergent");
   }
 }
 

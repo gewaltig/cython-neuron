@@ -87,7 +87,7 @@ namespace nest {
 
   template<int D, class T, int max_capacity>
   Ntree<D,T,max_capacity>::masked_iterator::masked_iterator(Ntree<D,T,max_capacity>& q, const Mask<D> &mask, const Position<D> &anchor):
-    ntree_(&q), top_(&q), node_(0), mask_(&mask), anchor_(anchor), allin_top_(0)
+    ntree_(&q), top_(&q), allin_top_(0), node_(0), mask_(&mask), anchor_(anchor)
   {
     if (mask_->outside(ntree_->lower_left_-anchor_,ntree_->lower_left_-anchor_+ntree_->extent_)) {
 
@@ -293,7 +293,7 @@ namespace nest {
   }
 
   template<int D, class T, int max_capacity>
-  void Ntree<D,T,max_capacity>::insert(const Position<D>& pos, const T& node)
+  typename Ntree<D,T,max_capacity>::iterator Ntree<D,T,max_capacity>::insert(const Position<D>& pos, const T& node)
   {
     if (leaf_ && (nodes_.size()>=max_capacity))
       split_();
@@ -304,9 +304,11 @@ namespace nest {
 
       nodes_.push_back(std::pair<Position<D>,T>(pos,node));
 
+      return iterator(*this,nodes_.size()-1);
+
     } else {
 
-      children_[subquad_(pos)]->insert(pos,node);
+      return children_[subquad_(pos)]->insert(pos,node);
 
     }
   }

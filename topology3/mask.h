@@ -20,6 +20,7 @@
 #include "nest.h"
 #include "position.h"
 #include "dictdatum.h"
+#include "dictutils.h"
 #include "topology3module.h"
 
 namespace nest

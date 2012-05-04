@@ -19,6 +19,9 @@ libtopology3module_la_SOURCES= \
 			topology3module.cpp \
 			topology_names.h \
 			topology_names.cpp \
+			connection_creator.h \
+			connection_creator_impl.h \
+			connection_creator.cpp \
 			generic_factory.h \
 			position.h \
 			layer.h \

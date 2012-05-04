@@ -10,9 +10,9 @@
 
 % ------------------------------------------------------------------------------
 
-% /ConnectLayers [/integertype /integertype /dictionarytype]
-%   /ConnectLayers_i_i_dict load
-% def
+/ConnectLayers [/integertype /integertype /dictionarytype]
+  /ConnectLayers_i_i_D load
+def
 
 /CreateLayer [/dictionarytype]
   /CreateLayer_D load

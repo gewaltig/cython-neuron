@@ -64,6 +64,12 @@ namespace nest
 
     static const int N = 1<<D;
 
+    typedef Position<D> key_type;
+    typedef T mapped_type;
+    typedef std::pair<Position<D>,T> value_type;
+    typedef value_type& reference;
+    typedef const value_type& const_reference;
+
     /**
      * Iterator iterating the nodes in a Quadtree.
      */
@@ -80,14 +86,31 @@ namespace nest
        */
       iterator(Ntree& q);
 
-      std::pair<Position<D>,T> & operator*() { return ntree_->nodes_[node_]; }
-      std::pair<Position<D>,T> * operator->() { return &ntree_->nodes_[node_]; }
+      /**
+       * Initialize an iterator to point to the nth node in this Ntree,
+       * which must be a leaf. The top of the tree is the first ancestor of
+       * the Ntree.
+       */
+      iterator(Ntree& q, index n);
+
+      value_type & operator*() { return ntree_->nodes_[node_]; }
+      value_type * operator->() { return &ntree_->nodes_[node_]; }
 
       /**
        * Move the iterator to the next node within the tree. May cause the
        * iterator to become invalid if there are no more nodes.
        */
       iterator & operator++();
+
+      /**
+       * Postfix increment operator.
+       */
+      iterator & operator++(int)
+        {
+          iterator tmp = *this;
+          ++*this;
+          return tmp;
+        }
 
       /**
        * Iterators are equal if they point to the same node in the same
@@ -119,7 +142,7 @@ namespace nest
       /**
        * Initialize an invalid iterator.
        */
-      masked_iterator() : ntree_(0), top_(0), node_(0), allin_top_(0), mask_(0) {}
+      masked_iterator() : ntree_(0), top_(0), allin_top_(0), node_(0), mask_(0) {}
 
       /**
        * Initialize an iterator to point to the first leaf node inside the
@@ -127,8 +150,8 @@ namespace nest
        */
       masked_iterator(Ntree& q, const Mask<D> &mask, const Position<D> &anchor);
 
-      std::pair<Position<D>,T> & operator*() { return ntree_->nodes_[node_]; }
-      std::pair<Position<D>,T> * operator->() { return &ntree_->nodes_[node_]; }
+      value_type & operator*() { return ntree_->nodes_[node_]; }
+      value_type * operator->() { return &ntree_->nodes_[node_]; }
 
       /**
        * Move the iterator to the next node inside the mask within the
@@ -136,6 +159,16 @@ namespace nest
        * more nodes.
        */
       masked_iterator & operator++();
+
+      /**
+       * Postfix increment operator.
+       */
+      masked_iterator & operator++(int)
+        {
+          masked_iterator tmp = *this;
+          ++*this;
+          return tmp;
+        }
 
       /**
        * Iterators are equal if they point to the same node in the same
@@ -185,13 +218,24 @@ namespace nest
     /**
      * Traverse quadtree structure from current ntree.
      * Inserts node in correct leaf in quadtree.
+     * @returns iterator pointing to inserted node.
      */
-    void insert(const Position<D>& pos, const T& node);
+    iterator insert(const Position<D>& pos, const T& node);
+
+    /**
+     * std::multimap like insert method
+     */
+    iterator insert(const value_type& val);
+
+    /**
+     * STL container compatible insert method (the first argument is ignored)
+     */
+    iterator insert(iterator iter, const value_type& val);
 
     /**
      * @returns member nodes in ntree and their position.
      */
-    std::vector<std::pair<Position<D>,T> > get_nodes();
+    std::vector<value_type> get_nodes();
 
     /**
      * Applies a Mask to this ntree.
@@ -199,7 +243,7 @@ namespace nest
      * @param anchor  position to center mask in.
      * @returns member nodes in ntree inside mask.
      */
-    std::vector<std::pair<Position<D>,T> > get_nodes(const Mask<D> &mask, const Position<D> &anchor);
+    std::vector<value_type> get_nodes(const Mask<D> &mask, const Position<D> &anchor);
 
     /**
      * @returns member nodes in ntree without positions.
@@ -215,9 +259,8 @@ namespace nest
     std::vector<T> get_nodes_only(const AbstractMask &mask, const std::vector<double_t> &anchor);
 
     /**
-     * This function returns a node iterator which will traverse the rest
-     * of the tree, including parent Ntrees, starting with the first
-     * node in this Ntree.
+     * This function returns a node iterator which will traverse the
+     * subtree below this Ntree.
      * @returns iterator for nodes in quadtree.
      */
     iterator begin()
@@ -226,6 +269,11 @@ namespace nest
     iterator end()
       { return iterator(); }
 
+    /**
+     * This function returns a masked node iterator which will traverse the
+     * subtree below this Ntree, skipping nodes outside the mask.
+     * @returns iterator for nodes in quadtree.
+     */
     masked_iterator masked_begin(const Mask<D> &mask, const Position<D> &anchor)
       { return masked_iterator(*this,mask,anchor); }
 
@@ -247,12 +295,12 @@ namespace nest
     /**
      * Append this ntree's nodes to the vector
      */
-    void append_nodes_(std::vector<std::pair<Position<D>,T> >&);
+    void append_nodes_(std::vector<value_type>&);
 
     /**
      * Append this ntree's nodes inside the mask to the vector
      */
-    void append_nodes_(std::vector<std::pair<Position<D>,T> >&, const Mask<D> &, const Position<D> &);
+    void append_nodes_(std::vector<value_type>&, const Mask<D> &, const Position<D> &);
 
     /**
      * @returns the subquad number for this position
@@ -264,7 +312,7 @@ namespace nest
 
     bool leaf_;
 
-    std::vector<std::pair<Position<D>,T> > nodes_;
+    std::vector<value_type> nodes_;
 
     Ntree* parent_;
     int my_subquad_;    ///< This Ntree's subquad number within parent
@@ -288,6 +336,17 @@ namespace nest
   }
 
   template<int D, class T, int max_capacity>
+  Ntree<D,T,max_capacity>::iterator::iterator(Ntree& q, index n):
+    ntree_(&q), top_(&q), node_(n)
+  {
+    assert(ntree_->leaf_);
+
+    // First ancestor
+    while(top_->parent_)
+      top_ = top_->parent_;
+  }
+
+  template<int D, class T, int max_capacity>
   bool Ntree<D,T,max_capacity>::is_leaf() const
   {
     return leaf_;
@@ -308,6 +367,18 @@ namespace nest
     std::vector<std::pair<Position<D>,T> > result;
     append_nodes_(result,mask,anchor);
     return result;
+  }
+
+  template<int D, class T, int max_capacity>
+  typename Ntree<D,T,max_capacity>::iterator Ntree<D,T,max_capacity>::insert(const std::pair<Position<D>,T>& val)
+  {
+    return insert(val.first,val.second);
+  }
+
+  template<int D, class T, int max_capacity>
+  typename Ntree<D,T,max_capacity>::iterator Ntree<D,T,max_capacity>::insert(iterator iter, const std::pair<Position<D>,T>& val)
+  {
+    return insert(val.first,val.second);
   }
 
 } // namespace nest

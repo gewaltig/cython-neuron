@@ -24,6 +24,7 @@
 #include "dictutils.h"
 #include "topology_names.h"
 #include "ntree.h"
+#include "connection_creator.h"
 
 namespace nest
 {
@@ -64,6 +65,15 @@ namespace nest
      */
     virtual double_t compute_distance(const std::vector<double_t>& from_pos,
                                       const index to) const = 0;
+
+    /**
+     * Connect this layer to the given target layer. The actual connections
+     * are made in class ConnectionCreator.
+     * @param target    target layer to connect to. Must have same dimension
+     *                  as this layer.
+     * @param connector connection properties
+     */
+    virtual void connect(const AbstractLayer& target, ConnectionCreator &connector) = 0;
 
     /**
      * Factory function for layers. The supplied dictionary contains
@@ -182,6 +192,15 @@ namespace nest
                               const index to) const;
 
     /**
+     * Connect this layer to the given target layer. The actual connections
+     * are made in class ConnectionCreator.
+     * @param target    target layer to connect to. Must have same dimension
+     *                  as this layer.
+     * @param connector connection properties
+     */
+    void connect(const AbstractLayer& target, ConnectionCreator &connector);
+
+    /**
      * Write layer data to stream.
      * For each node in layer, write one line to stream containing:
      * GID x-position y-position [z-position]
@@ -265,6 +284,13 @@ namespace nest
     (*topology_dict)[names::center] = std::vector<double_t>(Layer<D>::lower_left_ + Layer<D>::extent_/2);
 
     (*d)[names::topology] = topology_dict;
+  }
+
+  template <int D>
+  void Layer<D>::connect(const AbstractLayer& target_layer, ConnectionCreator &connector)
+  {
+    const Layer<D> &tgt = dynamic_cast<const Layer<D>&>(target_layer);
+    connector.connect(*this, tgt);
   }
 
 } // namespace nest

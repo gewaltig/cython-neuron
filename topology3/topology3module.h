@@ -18,7 +18,6 @@
  */
 
 #include "slimodule.h"
-#include "layer.h"
 #include "position.h"
 #include "ntree.h"
 #include "exceptions.h"
@@ -27,7 +26,11 @@
 namespace nest
 {
   class AbstractMask;
-  
+  class AbstractLayer;
+
+  template<int D>
+  class Layer;
+
   class Topology3Module: public SLIModule
   {
   public:
@@ -80,6 +83,12 @@ namespace nest
       void execute(SLIInterpreter *) const;
     } getglobalchildren_i_M_afunction;
 
+    class ConnectLayers_i_i_DFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } connectlayers_i_i_Dfunction;
+
     class CreateMask_l_DFunction: public SLIFunction
     {
     public:
@@ -115,7 +124,10 @@ namespace nest
      * layer. Positions are cached by the Topology module for one layer at
      * the time.
      */
-    static AbstractNtree<index> * get_global_positions(AbstractLayer *layer);
+    static AbstractNtree<index> * get_global_positions(const AbstractLayer *layer);
+
+    template<int D>
+    static Ntree<D,index> * get_global_positions(const Layer<D> *layer);
 
     /**
      * Return a reference to the network managed by the topology module.
@@ -128,6 +140,7 @@ namespace nest
     static GenericFactory<AbstractMask> &mask_factory();
 
   private:
+
 
     /**
      * GID for the single layer for which we cache global position information
@@ -167,6 +180,15 @@ namespace nest
     assert(net_ != 0);
     return *net_;
   }
+
+  template<int D>
+  Ntree<D,index> * Topology3Module::get_global_positions(const Layer<D> *layer)
+  {
+    Ntree<D,index> *ntree = dynamic_cast<Ntree<D,index> *>(get_global_positions(static_cast<const AbstractLayer*>(layer)));
+    assert(ntree);
+    return ntree;
+  }
+
 
 } // namespace nest
 

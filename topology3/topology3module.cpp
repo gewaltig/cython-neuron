@@ -29,6 +29,7 @@
 #include "lockptrdatum_impl.h"
 #include "dictdatum.h"
 #include "booldatum.h"
+#include "connection_creator_impl.h"
 
 namespace nest
 {
@@ -111,6 +112,9 @@ namespace nest
 
     i->createcommand("GetGlobalChildren_i_M_a",
 		     &getglobalchildren_i_M_afunction);
+
+    i->createcommand("ConnectLayers_i_i_D",
+		     &connectlayers_i_i_Dfunction);
 
     // Register layer types as models
     Network & net = get_network();
@@ -358,7 +362,7 @@ namespace nest
 
   /*BeginDocumentation
 
-    Name: CreateMask - create a spatial mask
+    Name: topology::CreateMask - create a spatial mask
 
     Synopsis:
     /type dict CreateMask -> mask
@@ -461,7 +465,7 @@ namespace nest
     i->EStack.pop();
   }
 
-  AbstractNtree<index> * Topology3Module::get_global_positions(AbstractLayer *layer)
+  AbstractNtree<index> * Topology3Module::get_global_positions(const AbstractLayer *layer)
   {
     if (cached_layer_ == layer->get_gid()) {
       return cached_positions_;
@@ -503,6 +507,201 @@ namespace nest
 
     i->OStack.pop(3);
     i->OStack.push(result);
+    i->EStack.pop();
+  }
+
+  /*
+    BeginDocumentation
+    
+    Name: topology::ConnectLayers - connect two layers
+    
+    Synopsis: sourcelayergid targetlayergid connection_dict 
+    ConnectLayers -> -
+
+    Description: Connects nodes in two topological layers. 
+
+    The parameters set in the input dictionary decides the nature
+    of the connection pattern being created. Please see parameter
+    list below for a detailed description of these variables.
+    
+    The connections are created by iterating through either the 
+    source or the target layer, consecutively connecting each node
+    to a region in the opposing layer.
+
+    Parameters:
+    sourcelayergid  - GID of source layer 
+    targetlayergid  - GID of target layer 
+
+    connection_dict - dictionary containing any of the following 
+                      elements:
+    
+    ------------------------------------------------------------------
+    Connection dictionary parameters:
+    ------------------------------------------------------------------
+    Parameter name: connection-type               
+
+    Type: string       
+
+    Parameter description: 
+
+    Decides the type of connection pattern being created (i.e. 
+    convergent or divergent topological connection). A convergent
+    topological connection is a connection between a source region 
+    and a target node. A divergent topological connection is a 
+    connection between a source node and a target region. A convergent
+    topological connection can also be called a receptive field connection.
+    A divergent topological connection can also be called a projective
+    field connection. A one-to-one connection can be created by setting 
+    the size of the source or target region equal to one. The connection 
+    type has particular effect on the connection pattern when used together 
+    with the number_of_connections variable.
+
+
+    Parameter name: mask
+    
+    Type: dictionary
+
+    Parameter description:
+
+    The mask defines the region used in the connection type described
+    above. There exists a selection of many different region sizes and
+    shapes. Examples are the grid region, the rectangular, circular or
+    doughnut region.
+
+    The grid region takes an optional anchor parameter. The anchor
+    parameter indicates which node of the grid region is aligned with
+    the source node.
+
+
+    Parameter name: weights, delays and kernel
+    
+    Type: dictionary
+
+    Parameter description:
+
+    These parameters can be initialised in many ways. Either as a constant
+    value, with the help of a dictionary, or in an array (only for fixed 
+    grid layers). The dictionary can be of type gaussian, 2D gaussian, 
+    linear, exponential and other.
+
+
+    Parameter name: source
+
+    Type: dictionary
+
+    Parameter description:
+
+    The source dictionary enables us to give further detail on
+    how the nodes in the source layer used in the connection function
+    should be processed.
+
+    Parameters:
+    model*             literal
+    lid^               integer
+
+    *modeltype (i.e. /iaf_neuron) of nodes that should be connected to
+    in the layer. All nodes are used if this variable isn't set.
+    ^Nesting depth of nodes that should be connected to. All layers are used
+    if this variable isn't set.
+
+
+    Parameter name: target
+    
+    Type: dictionary
+
+    Parameter description:
+
+    See description for source dictionary.
+
+
+    Parameter name: number_of_connections
+    
+    Type: integer
+
+    Parameter description:
+
+    Maximum number of connections that each iterating node is allowed.
+    The actual connections being created are picked at random from all
+    the candidate connections. 
+    
+.
+    Parameter name: allow_autapses
+    
+    Type: bool
+
+    Parameter description: Used together with the number_of_connections option to
+    indicate if autapses are allowed.
+
+
+    Parameter name: allow_multapses
+    
+    Type: bool
+
+    Parameter description: Used together with the number_of_connections option to
+    indicate if multapses are allowed.
+
+    ------------------------------------------------------------------
+   
+    Example:
+
+    topology using
+
+    %Create source layer with CreateLayer
+    << /rows 15
+       /columns 43
+       /extent [1.0 2.0]
+       /elements /iaf_neuron
+    >> /src_dictionary Set
+
+    src_dictionary CreateLayer /src Set 
+
+    %Create target layer with CreateLayer
+    %%Create layer
+    << /rows 34
+       /columns 71
+       /extent [3.0 1.0]
+       /elements {/iaf_neuron Create ; /iaf_psc_alpha Create ;}
+    >> /tgt_dictionary Set
+
+    tgt_dictionary CreateLayer /tgt Set 
+
+    <<	/connection_type (convergent)
+        /mask << /grid << /rows 2 /columns 3 >>
+	         /anchor << /row 4 /column 2 >> >>
+	/weights 2.3
+	/delays [2.3 1.2 3.2 1.3 2.3 1.2]
+	/kernel << /gaussian << /sigma 1.2 /p_center 1.41 >> >>
+	/sources << /model /iaf_neuron
+		    /lid 1 >>
+	/targets << /model /iaf_neuron
+		    /lid 2 >>
+	
+    >> /parameters Set
+
+    src tgt parameters ConnectLayers
+       
+    Author: Håkon Enger, Kittel Austvoll
+    
+    SeeAlso: topology::CreateLayer
+  */
+  void Topology3Module::ConnectLayers_i_i_DFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(3);
+
+    index source_gid = getValue<long_t>(i->OStack.pick(2));
+    index target_gid = getValue<long_t>(i->OStack.pick(1));
+    const DictionaryDatum connection_dict = getValue<DictionaryDatum>(i->OStack.pick(0));
+
+    AbstractLayer *source = dynamic_cast<AbstractLayer *>(get_network().get_node(source_gid));
+    AbstractLayer *target = dynamic_cast<AbstractLayer *>(get_network().get_node(target_gid));
+
+    if ((source == NULL) || (target == NULL))
+      throw LayerExpected();
+
+    ConnectionCreator connector(connection_dict);
+    source->connect(*target,connector);
+
+    i->OStack.pop(3);
     i->EStack.pop();
   }
 

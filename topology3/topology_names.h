@@ -52,6 +52,10 @@ namespace nest
     extern const Name lid;
     extern const Name elements;
     extern const Name allow_oversized_mask;
+    extern const Name connection_type;
+    extern const Name number_of_connections;
+    extern const Name convergent;
+    extern const Name divergent;
   }
 }
 
