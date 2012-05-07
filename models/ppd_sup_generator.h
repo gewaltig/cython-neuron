@@ -52,7 +52,7 @@ Note:
 Authors:
    June 2009, Moritz Deger, Moritz Helias
 
-SeeAlso: poisson_generator_ps, spike_generator, Device, StimulatingDevice, gamma_sup_generator
+SeeAlso: gamma_sup_generator, poisson_generator_ps, spike_generator, Device, StimulatingDevice
 */
 
 

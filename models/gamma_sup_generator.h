@@ -24,7 +24,7 @@
 #include "connection.h"
 
 /*BeginDocumentation
-Name: gamma_sup_generator - simulate the superimposed spike train of a population of Gamma process.
+Name: gamma_sup_generator - simulate the superimposed spike train of a population of gamma process.
 Description:
 
   The gamma_sup_generator generator simulates the pooled spike train of a 
@@ -45,9 +45,9 @@ Note:
    DOI: 10.1007/s10827-011-0362-8
 
 Author:
-   Jan 2011, Deger
+   Jan 2011, Moritz Deger
 
-SeeAlso: poisson_deadtime_sup_generator, poisson_generator_ps, spike_generator, 
+SeeAlso: ppd_sup_generator, poisson_generator_ps, spike_generator, 
          Device, StimulatingDevice
 */
 
