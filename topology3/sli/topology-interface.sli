@@ -1,11 +1,5 @@
 /topology-interface /SLI ($Revision: 6714 $) provide-component
 
-% topology-interface is a temporary file during the mirgration of
-% topology functionality from SLI to C++ migration. Thus, functions
-% in topology-interface are also included in the topology namespace.
-%
-% See topology.sli for legacy code.
-
 /topology namespace
 
 % ------------------------------------------------------------------------------
@@ -95,8 +89,32 @@ def
   /sub_M_M load
 def
 
+/mul [/parametertype /parametertype]
+  /mul_P_P load
+def
+
+/div [/parametertype /parametertype]
+  /div_P_P load
+def
+
+/add [/parametertype /parametertype]
+  /add_P_P load
+def
+
+/sub [/parametertype /parametertype]
+  /sub_P_P load
+def
+
 /GetGlobalChildren [/integertype /masktype /arraytype]
   /GetGlobalChildren_i_M_a load
+def
+  
+/CreateParameter [/literaltype /dictionarytype]
+  /CreateParameter_l_D load
+def
+
+/GetValue [/arraytype /parametertype]
+  /GetValue_a_P load
 def
   
 % ------------------------------------------------------------------------------

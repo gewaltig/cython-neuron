@@ -56,6 +56,7 @@ namespace nest
     extern const Name number_of_connections;
     extern const Name convergent;
     extern const Name divergent;
+    extern const Name synapse_model;
   }
 }
 

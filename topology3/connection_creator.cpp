@@ -20,63 +20,55 @@ namespace nest
 {
 
   ConnectionCreator::ConnectionCreator(DictionaryDatum dict):
-    number_of_connections(0),mask(),synapse_model(0)
+    number_of_connections_(0),mask_(),synapse_model_(0),net_(Topology3Module::get_network())
   {
+    Name connection_type;
 
-    Name connection_type = getValue<Name>(dict,names::connection_type);
+    for(Dictionary::iterator dit = dict->begin(); dit != dict->end(); ++dit) {
 
-    updateValue<long_t>(dict,names::number_of_connections,number_of_connections);
+      if (dit->first == names::connection_type) {
+
+        connection_type = getValue<Name>(dit->second);
+
+      } else if (dit->first == names::number_of_connections) {
+
+        number_of_connections_ = getValue<long_t>(dit->second);
+
+      } else if (dit->first == names::mask) {
+
+        mask_ = Topology3Module::create_mask(dit->second);
+
+      } else if (dit->first == names::synapse_model) {
+
+        const std::string syn_name = getValue<std::string>(dit->second);
+
+        const Token synmodel =
+          net_.get_synapsedict().lookup(syn_name);
+
+        if ( synmodel.empty() )
+          throw UnknownSynapseType(syn_name);
+
+        synapse_model_ = static_cast<index>(synmodel);
+
+      } else {
+
+        parameters_[dit->first] = Topology3Module::create_parameter(dit->second);
+
+      }
+
+    }
 
     if (connection_type==names::convergent) {
 
-      if (number_of_connections) {
-        type = Convergent;
+      if (number_of_connections_) {
+        type_ = Convergent;
       } else {
-        type = Source_driven;
+        type_ = Source_driven;
       }
 
     } else {
 
       throw BadProperty("Unknown connection type.");
-
-    }
-
-    if(dict->known(names::mask)) {
-
-      const Token& t = dict->lookup(names::mask);
-
-      MaskDatum *maskd = dynamic_cast<MaskDatum*>(t.datum());
-      if (maskd) {
-        mask = *maskd;
-      } else {
-
-        DictionaryDatum *dd = dynamic_cast<DictionaryDatum*>(t.datum());
-        if (dd) {
-
-          assert((*dd)->size() == 1);  // FIXME: Fail gracefully
-          Name n = (*dd)->begin()->first;
-          DictionaryDatum mask_dict = getValue<DictionaryDatum>(*dd,n);
-          mask = lockPTR<AbstractMask>(Topology3Module::mask_factory().create(n,mask_dict));
-
-        } else {
-          throw BadProperty("Mask must be masktype or dictionary.");
-        }
-      }
-    }
-
-    // Get synapse type
-    if(dict->known("synapse_model")) {
-
-      const std::string syn_name =
-        getValue<std::string>(dict, "synapse_model");
-
-      const Token synmodel =
-        Topology3Module::get_network().get_synapsedict().lookup(syn_name);
-
-      if ( synmodel.empty() )
-        throw UnknownSynapseType(syn_name);
-
-      synapse_model = static_cast<index>(synmodel);
 
     }
 

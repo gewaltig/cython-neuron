@@ -15,8 +15,11 @@
  */
 
 #include "config.h"
-#include "arraydatum.h"
 #include "integerdatum.h"
+#include "booldatum.h"
+#include "doubledatum.h"
+#include "arraydatum.h"
+#include "dictdatum.h"
 #include "network.h"
 #include "model.h"
 #include "genericmodel.h"
@@ -26,14 +29,14 @@
 #include "layer.h"
 #include "free_layer.h"
 #include "mask.h"
-#include "lockptrdatum_impl.h"
-#include "dictdatum.h"
-#include "booldatum.h"
 #include "connection_creator_impl.h"
+#include "parameter.h"
+#include "lockptrdatum_impl.h"
 
 namespace nest
 {
   SLIType Topology3Module::MaskType;
+  SLIType Topology3Module::ParameterType;
 
   index Topology3Module::cached_layer_;
   AbstractNtree<index> * Topology3Module::cached_positions_;
@@ -44,6 +47,8 @@ namespace nest
     net_ = &net;
     MaskType.settypename("masktype");
     MaskType.setdefaultaction(SLIInterpreter::datatypefunction);
+    ParameterType.settypename("parametertype");
+    ParameterType.setdefaultaction(SLIInterpreter::datatypefunction);
   }
 
   Topology3Module::~Topology3Module()
@@ -62,11 +67,90 @@ namespace nest
 		  "/topology-interface /SLI (6203) require-component ");
   }
 
-  GenericFactory<AbstractMask> &Topology3Module::mask_factory(void)
+  GenericFactory<AbstractMask> &Topology3Module::mask_factory_(void)
   {
     static GenericFactory<AbstractMask> factory;
     return factory;
   }
+
+  GenericFactory<Parameter> &Topology3Module::parameter_factory_(void)
+  {
+    static GenericFactory<Parameter> factory;
+    return factory;
+  }
+
+  MaskDatum Topology3Module::create_mask(const Token & t)
+  {
+    MaskDatum *maskd = dynamic_cast<MaskDatum*>(t.datum());
+    if (maskd) {
+      return *maskd;
+    } else {
+
+      DictionaryDatum *dd = dynamic_cast<DictionaryDatum*>(t.datum());
+      if (dd) {
+
+        assert((*dd)->size() == 1);  // FIXME: Fail gracefully
+        Name n = (*dd)->begin()->first;
+        DictionaryDatum mask_dict = getValue<DictionaryDatum>(*dd,n);
+        return create_mask(n,mask_dict);
+
+      } else {
+        throw BadProperty("Mask must be masktype or dictionary.");
+      }
+    }
+
+  }
+
+  ParameterDatum Topology3Module::create_parameter(const Token & t)
+  {
+    ParameterDatum *pd = dynamic_cast<ParameterDatum*>(t.datum());
+    if (pd)
+      return *pd;
+
+    DoubleDatum *dd = dynamic_cast<DoubleDatum*>(t.datum());
+    if (dd) {
+      return new ConstantParameter(*dd);
+    }
+
+    DictionaryDatum *dictd = dynamic_cast<DictionaryDatum*>(t.datum());
+    if (dictd) {
+
+      assert((*dictd)->size() == 1);  // FIXME: Fail gracefully
+      Name n = (*dictd)->begin()->first;
+      DictionaryDatum pdict = getValue<DictionaryDatum>(*dictd,n);
+      return create_parameter(n, pdict);
+
+    } else {
+      throw BadProperty("Parameter must be parametertype, constant or dictionary.");
+    }
+
+  }
+
+  Parameter *Topology3Module::create_parameter(const Name& name, const DictionaryDatum &d)
+  {
+    Parameter *param = parameter_factory_().create(name,d);
+
+    if (d->known(names::anchor)) {
+      std::vector<double_t> anchor = getValue<std::vector<double_t> >(d,names::anchor);
+      Parameter *aparam;
+      switch(anchor.size()) {
+      case 2:
+        aparam = new AnchoredParameter<2>(*param,anchor);
+        break;
+      case 3:
+        aparam = new AnchoredParameter<3>(*param,anchor);
+        break;
+      default:
+        throw BadProperty("Anchor must be 2- or 3-dimensional.");
+      }
+
+      delete param;
+      param = aparam;
+    }
+
+    return param;
+  }
+
 
   static AbstractMask* create_doughnut(const DictionaryDatum& d) {
       Position<2> center(0,0);
@@ -110,11 +194,29 @@ namespace nest
     i->createcommand("sub_M_M",
 		     &sub_M_Mfunction);
 
+    i->createcommand("mul_P_P",
+		     &mul_P_Pfunction);
+
+    i->createcommand("div_P_P",
+		     &div_P_Pfunction);
+
+    i->createcommand("add_P_P",
+		     &add_P_Pfunction);
+
+    i->createcommand("sub_P_P",
+		     &sub_P_Pfunction);
+
     i->createcommand("GetGlobalChildren_i_M_a",
 		     &getglobalchildren_i_M_afunction);
 
     i->createcommand("ConnectLayers_i_i_D",
 		     &connectlayers_i_i_Dfunction);
+
+    i->createcommand("CreateParameter_l_D",
+		     &createparameter_l_Dfunction);
+
+    i->createcommand("GetValue_a_P",
+		     &getvalue_a_Pfunction);
 
     // Register layer types as models
     Network & net = get_network();
@@ -123,12 +225,20 @@ namespace nest
     register_model<FreeLayer<3> >(net, "topology_layer_3d");
 
     // Register mask types
-    mask_factory().register_subtype<BallMask<2> >("circular");
-    mask_factory().register_subtype<BallMask<3> >("spherical");
-    mask_factory().register_subtype<BoxMask<2> >("rectangular");
-    mask_factory().register_subtype<BoxMask<3> >("box");
-    mask_factory().register_subtype<BoxMask<3> >("volume");  // For compatibility with topo 2.0
-    mask_factory().register_subtype("doughnut",create_doughnut);
+    register_mask<BallMask<2> >("circular");
+    register_mask<BallMask<3> >("spherical");
+    register_mask<BoxMask<2> >("rectangular");
+    register_mask<BoxMask<3> >("box");
+    register_mask<BoxMask<3> >("volume");  // For compatibility with topo 2.0
+    register_mask("doughnut",create_doughnut);
+
+    // Register parameter types
+    register_parameter<ConstantParameter>("constant");
+    register_parameter<LinearParameter>("linear");
+    register_parameter<ExponentialParameter>("exponential");
+    register_parameter<GaussianParameter>("gaussian");
+    register_parameter<Gaussian2DParameter>("gaussian2D");
+    register_parameter<UniformParameter>("uniform");
 
   }
 
@@ -388,7 +498,7 @@ namespace nest
       getValue<DictionaryDatum>(i->OStack.pick(0));
 
     
-    MaskDatum datum( mask_factory().create(masktype,mask_dict) );
+    MaskDatum datum( create_mask(masktype,mask_dict) );
 
     i->OStack.pop(2);
     i->OStack.push(datum);
@@ -462,6 +572,62 @@ namespace nest
 
     i->OStack.pop(2);
     i->OStack.push(newmask);
+    i->EStack.pop();
+  }
+
+  void Topology3Module::Mul_P_PFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(2);
+
+    ParameterDatum param1 = getValue<ParameterDatum>(i->OStack.pick(1));
+    ParameterDatum param2 = getValue<ParameterDatum>(i->OStack.pick(0));
+
+    ParameterDatum newparam = param1->multiply_parameter(*param2);
+
+    i->OStack.pop(2);
+    i->OStack.push(newparam);
+    i->EStack.pop();
+  }
+
+  void Topology3Module::Div_P_PFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(2);
+
+    ParameterDatum param1 = getValue<ParameterDatum>(i->OStack.pick(1));
+    ParameterDatum param2 = getValue<ParameterDatum>(i->OStack.pick(0));
+
+    ParameterDatum newparam = param1->divide_parameter(*param2);
+
+    i->OStack.pop(2);
+    i->OStack.push(newparam);
+    i->EStack.pop();
+  }
+
+  void Topology3Module::Add_P_PFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(2);
+
+    ParameterDatum param1 = getValue<ParameterDatum>(i->OStack.pick(1));
+    ParameterDatum param2 = getValue<ParameterDatum>(i->OStack.pick(0));
+
+    ParameterDatum newparam = param1->add_parameter(*param2);
+
+    i->OStack.pop(2);
+    i->OStack.push(newparam);
+    i->EStack.pop();
+  }
+
+  void Topology3Module::Sub_P_PFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(2);
+
+    ParameterDatum param1 = getValue<ParameterDatum>(i->OStack.pick(1));
+    ParameterDatum param2 = getValue<ParameterDatum>(i->OStack.pick(0));
+
+    ParameterDatum newparam = param1->subtract_parameter(*param2);
+
+    i->OStack.pop(2);
+    i->OStack.push(newparam);
     i->EStack.pop();
   }
 
@@ -702,6 +868,75 @@ namespace nest
     source->connect(*target,connector);
 
     i->OStack.pop(3);
+    i->EStack.pop();
+  }
+
+
+  /*BeginDocumentation
+
+    Name: topology::CreateParameter - create a spatial function
+
+    Synopsis:
+    /type dict CreateParameter -> parameter
+
+    Parameters:
+    /type - parameter type
+    dict  - dictionary with parameter specifications
+
+    Description: Parameters are spatial functions which are used when
+    creating connections in the Topology module. A parameter may be used as
+    a probability kernel when creating connections or as synaptic
+    parameters (such as weight and delay). This command creates a parameter
+    object which may be combined with other parameter objects using
+    arithmetic operators. The parameter is specified in a dictionary.
+
+    Author: Håkon Enger
+  */
+  void Topology3Module::CreateParameter_l_DFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(2);
+
+    const Name paramtype = getValue<Name>(i->OStack.pick(1));    
+    DictionaryDatum param_dict =
+      getValue<DictionaryDatum>(i->OStack.pick(0));
+
+    
+    ParameterDatum datum( create_parameter(paramtype,param_dict) );
+
+    i->OStack.pop(2);
+    i->OStack.push(datum);
+    i->EStack.pop();
+  }
+
+
+  /*BeginDocumentation
+
+    Name: topology::GetValue - compute value of parameter at a point
+
+    Synopsis:
+    point param GetValue -> value
+
+    Parameters:
+    point - array of coordinates
+    param - parameter object
+
+    Returns:
+    value - the value of the parameter at the point.
+
+    Author: Håkon Enger
+  */
+  void Topology3Module::GetValue_a_PFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(2);
+
+    std::vector<double_t> point = getValue<std::vector<double_t> >(i->OStack.pick(1));
+    ParameterDatum param = getValue<ParameterDatum>(i->OStack.pick(0));
+
+    librandom::RngPtr rng = get_network().get_grng();
+    double_t value = param->value(point,rng);
+
+    i->OStack.pop(2);
+    i->OStack.push(value);
     i->EStack.pop();
   }
 

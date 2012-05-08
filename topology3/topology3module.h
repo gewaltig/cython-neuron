@@ -25,6 +25,7 @@
 
 namespace nest
 {
+  class Parameter;
   class AbstractMask;
   class AbstractLayer;
 
@@ -47,7 +48,8 @@ namespace nest
     const std::string name(void) const;
     const std::string commandstring(void) const;
 
-    static SLIType MaskType;    ///< SLI type for masks
+    static SLIType MaskType;         ///< SLI type for masks
+    static SLIType ParameterType;    ///< SLI type for parameters
 
     /*
      * SLI functions: See source file for documentation
@@ -119,6 +121,42 @@ namespace nest
       void execute(SLIInterpreter *) const;
     } sub_M_Mfunction;
 
+    class Mul_P_PFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } mul_P_Pfunction;
+
+    class Div_P_PFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } div_P_Pfunction;
+
+    class Add_P_PFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } add_P_Pfunction;
+
+    class Sub_P_PFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } sub_P_Pfunction;
+
+    class CreateParameter_l_DFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } createparameter_l_Dfunction;
+
+    class GetValue_a_PFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } getvalue_a_Pfunction;
+
     /**
      * Return an Ntree with the positions and GIDs of the nodes in this
      * layer. Positions are cached by the Topology module for one layer at
@@ -134,13 +172,38 @@ namespace nest
      */
     static Network &get_network();
 
-    /**
-     * Return a reference to the mask factory class.
-     */
-    static GenericFactory<AbstractMask> &mask_factory();
+    typedef GenericFactory<AbstractMask> MaskFactory;
+    typedef GenericFactory<AbstractMask>::CreatorFunction MaskCreatorFunction;
+
+    template<class T>
+    static bool register_mask(const Name & name);
+    static bool register_mask(const Name& name, MaskCreatorFunction creator);
+
+    static lockPTRDatum<AbstractMask, &Topology3Module::MaskType> /*MaskDatum*/ create_mask(const Token &);
+    static AbstractMask *create_mask(const Name& name, const DictionaryDatum &d);
+
+    typedef GenericFactory<Parameter> ParameterFactory;
+    typedef GenericFactory<Parameter>::CreatorFunction ParameterCreatorFunction;
+
+    template<class T>
+    static bool register_parameter(const Name & name);
+    static bool register_parameter(const Name& name, ParameterCreatorFunction creator);
+
+    static lockPTRDatum<Parameter, &Topology3Module::ParameterType> /*ParameterDatum*/ create_parameter(const Token &);
+    static Parameter *create_parameter(const Name& name, const DictionaryDatum &d);
 
   private:
 
+
+    /**
+     * Return a reference to the mask factory class.
+     */
+    static MaskFactory &mask_factory_();
+
+    /**
+     * Return a reference to the parameter factory class.
+     */
+    static ParameterFactory &parameter_factory_();
 
     /**
      * GID for the single layer for which we cache global position information
@@ -187,6 +250,38 @@ namespace nest
     Ntree<D,index> *ntree = dynamic_cast<Ntree<D,index> *>(get_global_positions(static_cast<const AbstractLayer*>(layer)));
     assert(ntree);
     return ntree;
+  }
+
+  template<class T>
+  inline
+  bool Topology3Module::register_mask(const Name& name)
+  {
+    return mask_factory_().register_subtype<T>(name);
+  }
+
+  inline
+  bool Topology3Module::register_mask(const Name& name, MaskCreatorFunction creator)
+  {
+    return mask_factory_().register_subtype(name, creator);
+  }
+
+  inline
+  AbstractMask *Topology3Module::create_mask(const Name& name, const DictionaryDatum &d)
+  {
+    return mask_factory_().create(name,d);
+  }
+
+  template<class T>
+  inline
+  bool Topology3Module::register_parameter(const Name& name)
+  {
+    return parameter_factory_().register_subtype<T>(name);
+  }
+
+  inline
+  bool Topology3Module::register_parameter(const Name& name, ParameterCreatorFunction creator)
+  {
+    return parameter_factory_().register_subtype(name, creator);
   }
 
 

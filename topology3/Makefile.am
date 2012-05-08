@@ -32,7 +32,9 @@ libtopology3module_la_SOURCES= \
 			ntree.h \
 			ntree_impl.h \
 			vose.h \
-			vose.cpp
+			vose.cpp \
+			parameter.h \
+			parameter.cpp
 
 # do not change anything below this line ------------------------------
 

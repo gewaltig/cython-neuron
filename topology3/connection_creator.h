@@ -24,6 +24,7 @@
 #include "topology_names.h"
 #include "vose.h"
 #include "mask.h"
+#include "parameter.h"
 
 namespace nest
 {
@@ -55,6 +56,7 @@ namespace nest
   public:
 
     enum ConnectionType {Source_driven, Target_driven, Convergent, Divergent, Population};
+    typedef std::map<Name,lockPTR<Parameter> > ParameterMap;
 
     /**
      * Construct a ConnectionCreator with the properties defined in the
@@ -79,12 +81,19 @@ namespace nest
     template<int D>
     void convergent_connect_(const Layer<D>& source, const Layer<D>& target);
 
-    ConnectionType type;
-    long_t number_of_connections;
-    lockPTR<AbstractMask> mask;
-    index synapse_model;
-    //std::map<Name,lockPTR<AbstractParameter> > parameters;
+    /**
+     * Calculate parameter values for this position.
+     */
+    template<int D>
+    void get_parameters_(const Position<D> & pos, librandom::RngPtr rng, DictionaryDatum d);
 
+    ConnectionType type_;
+    long_t number_of_connections_;
+    lockPTR<AbstractMask> mask_;
+    index synapse_model_;
+    ParameterMap parameters_;
+
+    Network& net_;
   };
 
 } // namespace nest
