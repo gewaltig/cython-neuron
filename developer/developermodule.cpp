@@ -68,6 +68,7 @@
 #include "iaf_psc_alpha_dynth.h"
 #include "theta_neuron.h"
 #include "theta_neuron_ps.h"
+#include "iaf_chs_2007.h"
 #include "izhikevich.h"
 
 #include "iaf_psc_delta_canon_cvv.h"
@@ -937,6 +938,7 @@ BeginDocumentation
     register_model<iaf_psc_alpha_mod>(*net_, "iaf_psc_alpha_mod");
     register_model<iaf_psc_alpha_norec>(*net_, "iaf_psc_alpha_norec");
     register_model<iaf_psc_alpha_dynth>(*net_, "iaf_psc_alpha_dynth");
+    register_model<iaf_chs_2007>(*net_, "iaf_chs_2007");
     //register_model<iaf_psc_delta_cvv>(*net_, "iaf_psc_delta_cvv");
 
     register_model<iaf_psc_delta_canon_cvv>(*net_, "iaf_psc_delta_canon_cvv");

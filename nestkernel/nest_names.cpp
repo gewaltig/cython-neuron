@@ -167,6 +167,13 @@ namespace nest
     const Name tau_ahp("tau_ahp");
     const Name E_ahp("E_ahp");
 
+    // Specific to iaf_chs_2007 neuron
+    const Name tau_reset("tau_reset");
+    const Name tau_epsp("tau_epsp");
+    const Name V_epsp("V_epsp");
+    const Name V_noise("V_noise");
+    const Name noise("noise");
+
     // Specific to iaf_tum_2000
     const Name I_syn_ex("I_syn_ex");  // Total excitatory synaptic current
     const Name I_syn_in("I_syn_in");  // Total inhibitory synaptic current

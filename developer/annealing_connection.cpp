@@ -30,6 +30,7 @@ namespace nest
     with_noise(true),
     update_means(false),
     epoch(0),
+    mode(0),
     A_upper(1000.),//!< Rather arbitrary large number
     A_lower(0.01),
     A_std(0.01),
@@ -52,6 +53,7 @@ namespace nest
     def<bool>(d, names::with_noise, with_noise);
     def<bool>(d, "update_means", update_means);
     def<long>(d, "training_epoch", epoch);
+    def<long>(d, "mode", mode);
     def<double_t>(d, names::A_upper, A_upper);
     def<double_t>(d, names::A_lower, A_lower);
     def<double_t>(d, names::A_std, A_std);
@@ -73,6 +75,7 @@ namespace nest
     updateValue<bool>(d, names::with_noise, with_noise);
     updateValue<bool>(d, "update_means", update_means);
     updateValue<long>(d, "training_epoch", epoch);
+    updateValue<long>(d, "mode", mode);
     updateValue<double_t>(d, names::A_upper, A_upper);
     updateValue<double_t>(d, names::A_lower, A_lower);
     updateValue<double_t>(d, names::A_std, A_std);

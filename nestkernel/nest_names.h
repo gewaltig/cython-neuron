@@ -196,6 +196,13 @@ namespace nest
     extern const Name tau_ahp;
     extern const Name E_ahp;
 
+    // Specific to iaf_chs_2008 neuron
+    extern const Name tau_reset;
+    extern const Name tau_epsp;
+    extern const Name V_epsp;
+    extern const Name V_noise;
+    extern const Name noise;
+
     // Specific to iaf_tum_2000
     extern const Name I_syn_ex;  // Total excitatory synaptic current
     extern const Name I_syn_in;  // Total inhibitory synaptic current

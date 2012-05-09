@@ -46,6 +46,7 @@ libdevelopermodule_la_SOURCES= \
 			stdp_triplet_connection.h stdp_triplet_connection.cpp\
 			annealing_connection.h annealing_connection.cpp\
 			iaf_chxk_2008.cpp iaf_chxk_2008.h\
+			iaf_chs_2007.cpp iaf_chs_2007.h\
 			mirollo_strogatz_ps.cpp mirollo_strogatz_ps.h\
 			environment.cpp environment.h\
 			environment_cliff.cpp environment_cliff.h\

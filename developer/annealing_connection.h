@@ -22,7 +22,7 @@
 #include <iostream>
 
 /* BeginDocumentation
-  Name: tsodyks2_synapse - Synapse type with short term plasticity.
+  Name: annealing_synapse - Synapse type with short term plasticity.
 
   Description:
    This synapse model implements synaptic short-term depression and short-term facilitation
@@ -99,10 +99,10 @@ namespace nest {
     void set_status(const DictionaryDatum & d, ConnectorModel& cm);
     
     // data members common to all connections
-    bool     with_noise; //!< True if synapses are perturbed
-    bool     update_means;    //!< True if perturbed synapse parameters become new means.
-    long_t   epoch;      //!< learning epoch counter
-
+    bool     with_noise;   //!< True if synapses are perturbed
+    bool     update_means; //!< True if perturbed synapse parameters become new means.
+    long_t   epoch;        //!< learning epoch counter
+    int_t    mode;         //!< Noise mode for weight update
     double_t A_upper;
     double_t A_lower;
     double_t A_std;
@@ -227,18 +227,32 @@ void AnnealingConnection::send(Event& e, double_t t_lastspike, AnnealingCommon &
 	  librandom::RngPtr rng=net->get_rng(vp);
 	  
 	  A_ = weight_ * (1. + cp.A_std* cp.normal_dev(rng));
+	  U_ = U_mean_ *(1. + cp.U_std* cp.normal_dev(rng));
+	  tau_rec_ = D_mean_* (1. + cp.D_std * cp.normal_dev(rng));
+	  tau_fac_ = F_mean_*(1. + cp.F_std * cp.normal_dev(rng));
+
+	  switch (cp.mode)
+	    {
+	    case -1: // Just allow negative changes
+ 	      A_ = std::min(A_, weight_);
+	      break;
+	    case 1:
+	      A_ = std::max(A_, weight_);
+	      break;
+	    default:
+	      break;
+	    }
+
 	  if(A_ < cp.A_lower)
 	    A_=cp.A_lower;
 	  if(A_> cp.A_upper)
 	    A_=cp.A_upper;
 	  
-	  U_ = U_mean_ *(1. + cp.U_std* cp.normal_dev(rng));
 	  if(U_ < cp.U_lower)
 	    U_=cp.U_lower;
 	  else if (U_>cp.U_upper)
 	    U_=cp.U_upper;
 	  
-	  tau_rec_ = D_mean_* (1. + cp.D_std * cp.normal_dev(rng));
 	  if(tau_rec_< cp.D_lower)
 	    tau_rec_=cp.D_lower;
 	  else if (tau_rec_>cp.D_upper)
@@ -246,7 +260,6 @@ void AnnealingConnection::send(Event& e, double_t t_lastspike, AnnealingCommon &
 	  
 	  if(F_mean_>0.0) // otherwise the synapse cannot facilitate
 	    {
-	      tau_fac_ = F_mean_*(1. + cp.F_std * cp.normal_dev(rng));
 	      if(tau_fac_<cp.F_lower)
 		tau_fac_=cp.F_lower;
 	      else if (tau_fac_>cp.F_upper)
