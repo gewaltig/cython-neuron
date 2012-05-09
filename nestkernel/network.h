@@ -754,8 +754,8 @@ SeeAlso: Simulate, Node
     std::vector< std::pair<Model *, bool> > pristine_models_;
 
     std::vector<Model *> models_;            //!< The list of available models
-    std::vector<Node*> proxy_nodes_;         //!< Placeholders for remote nodes
-    std::vector<Node*> dummy_spike_sources_; //!< Placeholders for spiking remote nodes
+    std::vector<Node*> proxy_nodes_;         //!< Placeholders for remote nodes, one per thread
+    std::vector<Node*> dummy_spike_sources_; //!< Placeholders for spiking remote nodes, one per thread
 
     google::sparsetable<Node *> nodes_;  //!< The network as flat list of nodes
     Modelrangemanager node_model_ids_;   //!< Records the model id of each neuron in the network
