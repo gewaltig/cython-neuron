@@ -12,7 +12,7 @@
  */
 
 
-/unittest (8831) require
+/unittest (9715) require
 /unittest using
 
 
@@ -24,7 +24,8 @@
  n n << /weight 1.0 >> Connect
 
 }
-distributed_exec
+distributed_pass_or_die
+
 
 
 

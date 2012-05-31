@@ -18,6 +18,8 @@
  */
 
 #include <iostream>
+#include <utility>
+#include <bitset>
 #include "nest.h"
 #include "subnet.h"
 #include "position.h"
@@ -38,8 +40,7 @@ namespace nest
     /**
      * Virtual destructor
      */
-    virtual ~AbstractLayer()
-      {}
+    virtual ~AbstractLayer();
 
     /**
      * @returns position of node as std::vector
@@ -85,10 +86,31 @@ namespace nest
 
     /**
      * Return an Ntree with the positions and GIDs of the nodes in this
-     * layer. Normally the TopologyModule method should be used instead,
-     * since TopologyModule caches the positions.
+     * layer.
      */
-    virtual AbstractNtree<index> * get_global_positions() const = 0;
+    virtual AbstractNtree<index> * get_global_positions_ntree() const = 0;
+
+  protected:
+    /**
+     * GID for the single layer for which we cache global position information
+     */
+    static index cached_ntree_layer_;
+
+    /**
+     * GID for the single layer for which we cache global position information
+     */
+    static index cached_vector_layer_;
+
+    /**
+     * Clear the cache for global position information
+     */
+    virtual void clear_ntree_cache_() const = 0;
+
+    /**
+     * Clear the cache for global position information
+     */
+    virtual void clear_vector_cache_() const = 0;
+
   };
 
   // It is necessary to declare the template for operator<< first in order
@@ -122,7 +144,15 @@ namespace nest
      * Virtual destructor
      */
     ~Layer()
-      {}
+      {
+        if (cached_ntree_layer_ == get_gid()) {
+          clear_ntree_cache_();
+        }
+
+        if (cached_vector_layer_ == get_gid()) {
+          clear_vector_cache_();
+        }
+      }
 
     /**
      * Change properties of the layer according to the
@@ -191,6 +221,10 @@ namespace nest
     double_t compute_distance(const std::vector<double_t>& from_pos,
                               const index to) const;
 
+    Ntree<D,index> * get_global_positions_ntree() const;
+
+    std::vector<std::pair<Position<D>,index> >* get_global_positions_vector() const;
+
     /**
      * Connect this layer to the given target layer. The actual connections
      * are made in class ConnectionCreator.
@@ -218,18 +252,58 @@ namespace nest
       { return false; }
 
   protected:
+    /**
+     * Clear the cache for global position information
+     */
+    void clear_ntree_cache_() const;
+
+    /**
+     * Clear the cache for global position information
+     */
+    void clear_vector_cache_() const;
+
+    /**
+     * Insert global position info into ntree.
+     */
+    virtual void insert_global_positions_ntree_(Ntree<D,index> & tree) const = 0;
+
+    /**
+     * Insert global position info into vector.
+     */
+    virtual void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > &) const = 0;
+
     Position<D> lower_left_;  ///< lower left corner (minimum coordinates) of layer
     Position<D> extent_;      ///< size of layer
-    bool periodic_[D];        ///< periodic b.c.
+    std::bitset<D> periodic_; ///< periodic b.c.
     int stride_;              ///< number of neurons at each position
+
+    /**
+     * Global position information for a single layer
+     */
+    static Ntree<D,index> * cached_ntree_;
+    static std::vector<std::pair<Position<D>,index> > * cached_vector_;
+
   };
+
+  template<int D>
+  Ntree<D,index> * Layer<D>::cached_ntree_ = 0;
+
+  template<int D>
+  std::vector<std::pair<Position<D>,index> > * Layer<D>::cached_vector_ = 0;
 
   template<int D>
   Position<D> Layer<D>::compute_displacement(const Position<D>& from_pos,
                                              const index to) const
   {
-    // FIXME: periodic b.c.
-    return get_position(to) - from_pos;
+    Position<D> displ = get_position(to) - from_pos;
+    for(int i=0;i<D;++i) {
+      if (periodic_[i]) {
+        displ[i] = -0.5*extent_[i] + std::fmod(displ[i]+0.5*extent_[i], extent_[i]);
+        if (displ[i]<-0.5*extent_[i])
+          displ[i] += extent_[i];
+      }
+    }
+    return displ;
   }
 
   template<int D>
@@ -269,6 +343,11 @@ namespace nest
       lower_left_ = getValue<std::vector<double_t> >(d, names::center);
       lower_left_ -= extent_/2;
     }
+    if (d->known(names::edge_wrap)) {
+      if (getValue<bool>(d, names::edge_wrap)) {
+        periodic_ = (1<<D) - 1;  // All dimensions periodic
+      }
+    }
 
     Subnet::set_status(d);
   }
@@ -291,6 +370,94 @@ namespace nest
   {
     const Layer<D> &tgt = dynamic_cast<const Layer<D>&>(target_layer);
     connector.connect(*this, tgt);
+  }
+
+  template <int D>
+  Ntree<D,index> * Layer<D>::get_global_positions_ntree() const
+  {
+    if (cached_ntree_layer_ == get_gid()) {
+      assert(cached_ntree_);
+      return cached_ntree_;
+    }
+
+    clear_ntree_cache_();
+
+    cached_ntree_ = new Ntree<D,index>(this->lower_left_, this->extent_, this->periodic_);
+
+    if (cached_vector_layer_ == get_gid()) {
+      // Convert from vector to Ntree
+    
+      typename std::insert_iterator<Ntree<D,index> > to = std::inserter(*cached_ntree_, cached_ntree_->end());
+  
+      for(typename std::vector<std::pair<Position<D>,index> >::iterator from=cached_vector_->begin();
+          from != cached_vector_->end(); ++from) {
+        *to = *from;
+      }
+
+    } else {
+
+      insert_global_positions_ntree_(*cached_ntree_);
+
+    }
+
+    clear_vector_cache_();
+
+    cached_ntree_layer_ = get_gid();
+
+    return cached_ntree_;
+  }
+
+  template <int D>
+  std::vector<std::pair<Position<D>,index> >* Layer<D>::get_global_positions_vector() const
+  {
+    if (cached_vector_layer_ == get_gid()) {
+      assert(cached_vector_);
+      return cached_vector_;
+    }
+
+    clear_vector_cache_();
+
+    cached_vector_ = new std::vector<std::pair<Position<D>,index> >;
+
+    if (cached_ntree_layer_ == get_gid()) {
+      // Convert from NTree to vector
+
+      typename std::back_insert_iterator<std::vector<std::pair<Position<D>,index> > > to = std::back_inserter(*cached_vector_);
+
+      for(typename Ntree<D,index>::iterator from=cached_ntree_->begin();
+          from != cached_ntree_->end(); ++from) {
+        *to = *from;
+      }
+
+    } else {
+
+      insert_global_positions_vector_(*cached_vector_);
+
+    }
+
+    clear_ntree_cache_();
+
+    cached_vector_layer_ = get_gid();
+
+    return cached_vector_;
+  }
+
+  template <int D>
+  void Layer<D>::clear_ntree_cache_() const
+  {
+    if (cached_ntree_ != 0)
+      delete cached_ntree_;
+    cached_ntree_ = 0;
+    cached_ntree_layer_ = -1;
+  }
+
+  template <int D>
+  void Layer<D>::clear_vector_cache_() const
+  {
+    if (cached_vector_ != 0)
+      delete cached_vector_;
+    cached_vector_ = 0;
+    cached_vector_layer_ = -1;
   }
 
 } // namespace nest

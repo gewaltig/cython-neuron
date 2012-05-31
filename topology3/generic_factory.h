@@ -82,7 +82,7 @@ namespace nest
     if ( i != associations_.end() ) {
       return (i->second)(d);
     }
-    assert(0);  // FIXME: Fail gracefully
+    throw UndefinedName(name.toString());
   }
 
   template<class BaseT>

@@ -136,7 +136,7 @@ Examples:  (remember regexdict begin for these examples!)
                (   simple   ) 1 0 regexec -> [[3 9]] 0
                % this 3,9 are begin and end offsets of matched regex!
             3) ((paranthesize)+.*example) regcomp -> <regextype>
-               (This is a paranthesize using example) 2 0 regexec
+               (This is a paranthesize using example) 2 0 regexec -> 0 [[10 36] [10 22]]
  
 Bugs: no knwon ;-)
 Diagnostics: no errors raised

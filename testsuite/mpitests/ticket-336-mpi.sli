@@ -25,102 +25,34 @@ Description:
   the same random number is generated independent of the number of MPI
   processes.
   
-Note:
-  In response to the changes of GetStatus return values (cf #549), this test now
-  only checks that the neuron created has the same VP-number independent of the
-  number of MPI processes and that the first 10 RNs from its VP-RNG are identical
-  independent of the number of MPI processes.
+Note: In response to the changes of GetStatus return values (cf #549),
+  this test now only checks that the first 10 RNs from its VP-RNG are
+  identical independent of the number of MPI processes.
 
 See also:
   regressiontests/ticket-336-serial.sli
 
-Author: Hans Ekkehard Plesser, 2010-09-29, 2012-02-16, 2012-02-27
+Author: Hans Ekkehard Plesser, 2010-09-29, 2012-02-16, 2012-02-27, 2012-05-22
  */
 
-/unittest (8831) require
+/unittest (9726) require
 /unittest using
 
-/*
- * do_test
- *
- * Expects a GID as argument.
- * Returns a dictionary containing
- * - GID
- * - model of node
- * - VP of node (-1 if non-local)
- * - if node is local: integer random number from VP-specific RNG
- * - local number of threads
- *
- * Determines number of local threads, model of GID, vp of GID
- * and tries to obtain the VP-specific RNG for the GID and draws
- * a random number from it.
- *
- * The test should fail on any node that has proxies, since they have no
- * well-defined VP and thus no well-defined VP-specific RNG (see r8824).
- *
- * When called on a node with proxies, one MPI process should report
- * a "full" node and a random number, all others a proxy node and no
- * random number.
- */
-
-/do_test 
-{
-  /node Set
-
-  <<
-    /gid node
-    /model node /model get
-    /vp    node /vp    get
-    /n_threads 0 /local_num_threads get
-    /n_vps     0 /total_num_virtual_procs get
-    /n_procs   NumProcesses
-    /rank      Rank
-
-    node /local get
-    {
-      /rand node GetVpRNG drand
-    }
-    if
-  >>
-}
-def
- 
 [1 2 4]
 {
   ResetKernel
   0 << /total_num_virtual_procs 4 >> SetStatus
-  /node /iaf_neuron Create def
-  node /local get
+  /iaf_neuron Create 
+  dup /local get
   {
-    /rng node GetVpRNG def 
-    [ node /vp get 
-      10 { rng drand } repeat ]
+    GetVpRNG /rng Set
+    [ 10 ] { pop rng drand } Table
   }
   {
-    [ ]
-  }
+    pop
+  }    
   ifelse
 } 
-{
-  /res Set
-  res length 3 eq
-  {
-     /ref res First def  % reference case, 1 MPI
-     ref length 11 eq
-     {
-        res Rest { ref eq } Map 
-        true exch { and } Fold
-     }
-     { 
-       false
-     }
-     ifelse
-  }
-  {
-     false % should have had 3 results on stack
-  } 
-  ifelse 
-} 
-distributed_collect_assert_or_die
+distributed_invariant_assert_or_die
 
 endusing % unittest

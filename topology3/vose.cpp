@@ -72,7 +72,7 @@ namespace nest
 
   }
 
-  index Vose::get_random_id(librandom::RngPtr& rng) const
+  index Vose::get_random_id(librandom::RngPtr rng) const
   {
     // Choose random number between 0 and n
     double_t r = rng->drand()*dist_.size();

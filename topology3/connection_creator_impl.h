@@ -19,6 +19,7 @@
 
 #include <vector>
 #include "connection_creator.h"
+#include "binomial_randomdev.h"
 
 namespace nest
 {
@@ -26,9 +27,9 @@ namespace nest
   void ConnectionCreator::connect(const Layer<D>& source, const Layer<D>& target)
   {
     switch (type_) {
-    case Source_driven:
+    case Target_driven:
 
-      source_driven_connect_(source, target);
+      target_driven_connect_(source, target);
       break;
 
     case Convergent:
@@ -36,10 +37,32 @@ namespace nest
       convergent_connect_(source, target);
       break;
 
+    case Divergent:
+
+      divergent_connect_(source, target);
+      break;
+
+    case Source_driven:
+
+      // Reverse the mask and parameters and use target driven connect,
+      // which is more efficient.
+      if (mask_.valid()) {
+        const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
+        mask_ = lockPTR<AbstractMask>(new ConverseMask<D>(mask_ref));
+      }
+      for(ParameterMap::iterator iter=parameters_.begin(); iter != parameters_.end(); ++iter) {
+        parameters_[iter->first] = lockPTR<Parameter>(new ConverseParameter(*iter->second));
+      }
+
+      type_ = Target_driven;
+
+      target_driven_connect_(source, target);
+      break;
+
     default:
       throw BadProperty("Unknown connection type.");
     }
-        
+
   }
 
   template<int D>
@@ -51,21 +74,20 @@ namespace nest
   }
 
   template<int D>
-  void ConnectionCreator::source_driven_connect_(const Layer<D>& source, const Layer<D>& target)
+  void ConnectionCreator::target_driven_connect_(const Layer<D>& source, const Layer<D>& target)
   {
-    // Source driven connect
+    // Target driven connect
     // For each local target node:
     //  1. Apply Mask to source layer
     //  2. For each source node: Compute probability, draw random number, make
     //     connection conditionally
 
-    DictionaryDatum d = new Dictionary(); 
-
-    Ntree<D,index> *ntree = Topology3Module::get_global_positions(&source);
+    DictionaryDatum d = new Dictionary();
 
     if (mask_.valid()) {
 
       const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
+      Ntree<D,index> *ntree = source.get_global_positions_ntree();
 
       for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
 
@@ -73,27 +95,58 @@ namespace nest
         librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
         Position<D> target_pos = target.get_position((*tgt_it)->get_subnet_index());
 
-        for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target_pos); iter!=ntree->masked_end(); ++iter) {
-          get_parameters_(iter->first - target_pos, rng, d);
-          net_.connect(iter->second,target_id,d,synapse_model_);
+        if (kernel_.valid()) {
+
+          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target_pos); iter!=ntree->masked_end(); ++iter) {
+
+            if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
+              get_parameters_(iter->first - target_pos, rng, d);
+              net_.connect(iter->second,target_id,d,synapse_model_);
+            }
+
+          }
+
+        } else {
+
+          // no kernel
+
+          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target_pos); iter!=ntree->masked_end(); ++iter) {
+            get_parameters_(iter->first - target_pos, rng, d);
+            net_.connect(iter->second,target_id,d,synapse_model_);
+          }
+
         }
+
       }
 
     } else {
       // no mask
 
+      std::vector<std::pair<Position<D>,index> >* positions = source.get_global_positions_vector();
       for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
 
         index target_id = (*tgt_it)->get_gid();
         librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
         Position<D> target_pos = target.get_position((*tgt_it)->get_subnet_index());
 
-        for(typename Ntree<D,index>::iterator iter=ntree->begin();iter!=ntree->end();++iter) {
-          get_parameters_(iter->first - target_pos, rng, d);
-          net_.connect(iter->second,target_id,d,synapse_model_);
+        if (kernel_.valid()) {
+
+          for(typename std::vector<std::pair<Position<D>,index> >::iterator iter=positions->begin();iter!=positions->end();++iter) {
+            if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
+              get_parameters_(iter->first - target_pos, rng, d);
+              net_.connect(iter->second,target_id,d,synapse_model_);
+            }
+          }
+
+        } else {
+
+          for(typename std::vector<std::pair<Position<D>,index> >::iterator iter=positions->begin();iter!=positions->end();++iter) {
+            get_parameters_(iter->first - target_pos, rng, d);
+            net_.connect(iter->second,target_id,d,synapse_model_);
+          }
+
         }
       }
-
     }
 
   }
@@ -108,12 +161,12 @@ namespace nest
     // 2. Compute connection probability for each source position
     // 3. Draw source nodes and make connections
 
-    DictionaryDatum d = new Dictionary(); 
+    DictionaryDatum d = new Dictionary();
 
-    Ntree<D,index> *ntree = Topology3Module::get_global_positions(&source);
     if (mask_.valid()) {
 
       const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
+      Ntree<D,index> *ntree = source.get_global_positions_ntree();
 
       for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
 
@@ -122,23 +175,52 @@ namespace nest
         Position<D> target_pos = target.get_position((*tgt_it)->get_subnet_index());
 
         std::vector<index> sources;
-        std::vector<double_t> probabilities;
         std::vector<Position<D> > positions;
 
-        for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target.get_position((*tgt_it)->get_subnet_index()));iter!=ntree->masked_end();++iter) {
-          positions.push_back(iter->first);
-          sources.push_back(iter->second);
-          // FIXME: compute connection probability
-          probabilities.push_back(1.0);
-        }
+        if (kernel_.valid()) {
 
-        Vose lottery(probabilities);
+          std::vector<double_t> probabilities;
 
-        for(int i=0;i<number_of_connections_;++i) {
-          index random_id = lottery.get_random_id(rng);
-          index source_id = sources[random_id];
-          get_parameters_(positions[random_id] - target_pos, rng, d);
-          net_.connect(source_id, target_id, d, synapse_model_);
+          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target.get_position((*tgt_it)->get_subnet_index()));iter!=ntree->masked_end();++iter) {
+            positions.push_back(iter->first);
+            sources.push_back(iter->second);
+            probabilities.push_back(kernel_->value(iter->first - target_pos, rng));
+          }
+
+          if (sources.size()==0) {
+
+            std::string msg = String::compose("Global target ID %1: No sources found inside mask.", target_id);
+            net_.message(SLIInterpreter::M_WARNING, "ConnectLayers", msg.c_str());
+
+          } else {
+
+            Vose lottery(probabilities);
+
+            for(int i=0;i<number_of_connections_;++i) {
+              index random_id = lottery.get_random_id(rng);
+              index source_id = sources[random_id];
+              get_parameters_(positions[random_id] - target_pos, rng, d);
+              net_.connect(source_id, target_id, d, synapse_model_);
+            }
+
+          }
+
+        } else {
+
+          // no kernel
+
+          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target.get_position((*tgt_it)->get_subnet_index()));iter!=ntree->masked_end();++iter) {
+            positions.push_back(iter->first);
+            sources.push_back(iter->second);
+          }
+
+          for(int i=0;i<number_of_connections_;++i) {
+            index random_id = rng->ulrand(sources.size());
+            index source_id = sources[random_id];
+            get_parameters_(positions[random_id] - target_pos, rng, d);
+            net_.connect(source_id, target_id, d, synapse_model_);
+          }
+
         }
 
       }
@@ -146,12 +228,7 @@ namespace nest
     } else {
       // no mask
 
-      std::vector<index> sources;
-      std::vector<Position<D> > positions;
-      for(typename Ntree<D,index>::iterator iter=ntree->begin();iter!=ntree->end();++iter) {
-        positions.push_back(iter->first);
-        sources.push_back(iter->second);
-      }
+      std::vector<std::pair<Position<D>,index> >* positions = source.get_global_positions_vector();
 
       for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
 
@@ -159,24 +236,116 @@ namespace nest
         librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
         Position<D> target_pos = target.get_position((*tgt_it)->get_subnet_index());
 
-        std::vector<double_t> probabilities;
+        if (kernel_.valid()) {
 
-        for(typename Ntree<D,index>::iterator iter=ntree->begin();iter!=ntree->end();++iter) {
-          // FIXME: compute connection probability
-          probabilities.push_back(1.0);
-        }
+          std::vector<double_t> probabilities;
 
-        Vose lottery(probabilities);
+          for(typename std::vector<std::pair<Position<D>,index> >::iterator iter=positions->begin();iter!=positions->end();++iter) {
+            probabilities.push_back(kernel_->value(iter->first - target_pos, rng));
+          }
 
-        for(int i=0;i<number_of_connections_;++i) {
-          index random_id = lottery.get_random_id(rng);
-          index source_id = sources[random_id];
-          get_parameters_(positions[random_id] - target_pos, rng, d);
-          net_.connect(source_id, target_id, d, synapse_model_);
+          Vose lottery(probabilities);
+
+          for(int i=0;i<number_of_connections_;++i) {
+            index random_id = lottery.get_random_id(rng);
+            Position<D> source_pos = (*positions)[random_id].first;
+            index source_id = (*positions)[random_id].second;
+            get_parameters_(source_pos - target_pos, rng, d);
+            net_.connect(source_id, target_id, d, synapse_model_);
+          }
+
+        } else {
+
+          // no kernel
+
+          for(int i=0;i<number_of_connections_;++i) {
+            index random_id = rng->ulrand(positions->size());
+            Position<D> source_pos = (*positions)[random_id].first;
+            index source_id = (*positions)[random_id].second;
+            get_parameters_(source_pos - target_pos, rng, d);
+            net_.connect(source_id, target_id, d, synapse_model_);
+          }
+
         }
 
       }
     }
+  }
+
+
+  template<int D>
+  void ConnectionCreator::divergent_connect_(const Layer<D>& source, const Layer<D>& target)
+  {
+    // Divergent connections (fixed fan out)
+    //
+    // For each (global) source:
+    // 1. Apply mask to local targets
+    // 2. If using kernel: Compute connection probability for each local target,
+    //    sum and communicate
+    // 3. Draw number of connections to make using global rng
+    // 4. Draw from local targets and make connections
+
+    std::vector<std::pair<Position<D>,index> >* sources = source.get_global_positions_vector();
+    DictionaryDatum d = new Dictionary();
+
+    for (typename std::vector<std::pair<Position<D>,index> >::iterator src_it = sources->begin(); src_it != sources->end(); ++src_it) {
+
+      Position<D> source_pos = src_it->first;
+      index source_id = src_it->second;
+      std::vector<index> targets;
+      std::vector<Position<D> > displacements;
+      std::vector<double_t> probabilities;
+
+      // Find potential targets and probabilities
+
+      for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
+
+        Position<D> target_displ = target.compute_displacement(source_pos, (*tgt_it)->get_subnet_index());
+          
+        if (mask_.valid() && !mask_->inside(target_displ))
+          continue;
+
+        librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
+
+        targets.push_back((*tgt_it)->get_gid());
+        displacements.push_back(target_displ);
+
+        if (kernel_.valid())
+          probabilities.push_back(kernel_->value(target_displ, rng));
+        else
+          probabilities.push_back(1.0);
+      }
+
+      // Find local and global "probability"
+      double_t local_probability = std::accumulate(probabilities.begin(),probabilities.end(),0.0);
+      std::vector<double_t> global_probabilities;
+      Communicator::communicate(local_probability,global_probabilities);
+      double_t total_probability = std::accumulate(global_probabilities.begin(),global_probabilities.end(),0.0);
+
+      // Draw how many connections to make on each process
+      std::vector<long_t> num_connections(global_probabilities.size());
+      long_t total_connections = number_of_connections_;
+      for(index i=0;i<num_connections.size()-1;++i) {
+        librandom::BinomialRandomDev brng(net_.get_grng(), global_probabilities[i]/total_probability, total_connections);
+        num_connections[i] = brng.uldev();
+        total_connections -= num_connections[i];
+        if (total_connections==0) break;
+      }
+      num_connections[num_connections.size()-1] = total_connections;
+
+      // Draw targets
+      Vose lottery(probabilities);
+      for(long_t i=0;i<num_connections[Communicator::get_rank()];++i) {
+        index random_id = lottery.get_random_id(net_.get_rng(net_.get_node(targets[0])->get_thread())); // FIXME: Can not use grng here!
+        Position<D> target_displ = displacements[random_id];
+        index target_id = targets[random_id];
+        librandom::RngPtr rng = net_.get_rng(net_.get_node(target_id)->get_thread());
+        get_parameters_(target_displ, rng, d);
+        net_.connect(source_id, target_id, d, synapse_model_);
+      }
+
+    }
+
   }
 
 } // namespace nest

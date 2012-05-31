@@ -37,10 +37,11 @@ namespace nest
     const Position<D> & get_position(index lid) const;
     void set_status(const DictionaryDatum&);
     void get_status(DictionaryDatum&) const;
-    AbstractNtree<index> * get_global_positions() const;
 
   protected:
     void update_bbox_(); ///< update bounding box (min/max coordinates)
+    void insert_global_positions_ntree_(Ntree<D,index> & tree) const;
+    void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec) const;
 
     /// Vector of positions. Should match node vector in Subnet.
     std::vector<Position<D> > positions_;
@@ -129,22 +130,46 @@ namespace nest
     return positions_[lid];
   }
 
-  template <int D>
-  AbstractNtree<index> * FreeLayer<D>::get_global_positions() const
+  template <int D,class Ins>
+  static
+  void communicate_positions(const std::vector<Node*>& nodes, const std::vector<Position<D> >& positions, Ins iter)
   {
-    // TODO: This needs work
+    assert(nodes.size() == positions.size());
+    
+    std::vector<double_t> local_gid_pos((D+1)*nodes.size());
 
-    Ntree<D,index> * tree = new Ntree<D,index>(this->lower_left_, this->extent_);
-
-    // FIXME: Actually only gets local positions as of now
-
-    assert(this->nodes_.size() == positions_.size());
-
-    for(index i = 0; i < this->nodes_.size(); ++i) {
-      tree->insert(positions_[i],this->nodes_[i]->get_gid());
+    for(index i = 0; i<nodes.size(); ++i) {
+      local_gid_pos[(D+1)*i] = nodes[i]->get_gid();
+      for(int j=0;j<D;++j)
+        local_gid_pos[(D+1)*i+j+1] = positions[i][j];
     }
 
-    return tree;
+    std::vector<double_t> global_gid_pos;
+    std::vector<int> displacements;
+    Communicator::communicate(local_gid_pos,global_gid_pos,displacements);
+
+    for(index i = 0; i<global_gid_pos.size(); i+=D+1) {
+      *iter++ = std::pair<Position<D>,index>(&global_gid_pos[i+1], global_gid_pos[i]);
+    }
+
+  }
+
+  template <int D>
+  void FreeLayer<D>::insert_global_positions_ntree_(Ntree<D,index> & tree) const
+  {
+
+    communicate_positions(this->nodes_, positions_, std::inserter(tree, tree.end()));
+
+  }
+
+  template <int D>
+  void FreeLayer<D>::insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec) const
+  {
+
+    communicate_positions(this->nodes_, positions_, std::back_inserter(vec));
+
+    // should we sort the vector here?
+
   }
 
 } // namespace nest

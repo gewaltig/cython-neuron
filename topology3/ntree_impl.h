@@ -87,11 +87,55 @@ namespace nest {
 
   template<int D, class T, int max_capacity>
   Ntree<D,T,max_capacity>::masked_iterator::masked_iterator(Ntree<D,T,max_capacity>& q, const Mask<D> &mask, const Position<D> &anchor):
-    ntree_(&q), top_(&q), allin_top_(0), node_(0), mask_(&mask), anchor_(anchor)
+    ntree_(&q), top_(&q), allin_top_(0), node_(0), mask_(&mask), anchor_(anchor), anchors_(), current_anchor_(0)
   {
+    if (ntree_->periodic_.any()) {
+      // Add one image of anchor for each periodic dimension
+      // This assumes that the mask never extends beyond more than one half layer
+      // from the anchor in any direction.
+
+      for(int i=0;i<D;++i) {
+        if (ntree_->periodic_[i]) {
+          anchor_[i] = ntree_->lower_left_[i] + std::fmod(anchor_[i]-ntree_->lower_left_[i], ntree_->extent_[i]);
+          if (anchor_[i]<ntree_->lower_left_[i])
+            anchor_[i] += ntree_->extent_[i];
+        }
+      }
+      anchors_.push_back(anchor_);
+
+      for(int i=0;i<D;++i) {
+        if (ntree_->periodic_[i]) {
+          int n = anchors_.size();
+          if ((anchor_[i]-ntree_->lower_left_[i]) > 0.5*ntree_->extent_[i]) {
+            for(int j=0;j<n;++j) {
+              Position<D> p = anchors_[j];
+              p[i] -= ntree_->extent_[i];
+              anchors_.push_back(p);
+            }
+          } else {
+            for(int j=0;j<n;++j) {
+              Position<D> p = anchors_[j];
+              p[i] += ntree_->extent_[i];
+              anchors_.push_back(p);
+            }
+          }
+        }
+      }
+    }
+
+    init_();
+  }
+
+  template<int D, class T, int max_capacity>
+  void Ntree<D,T,max_capacity>::masked_iterator::init_()
+  {
+    node_ = 0;
+    allin_top_ = 0;
+    ntree_ = top_;
+
     if (mask_->outside(ntree_->lower_left_-anchor_,ntree_->lower_left_-anchor_+ntree_->extent_)) {
 
-      ntree_ = 0;
+      next_anchor_();
 
     } else {
 
@@ -104,6 +148,20 @@ namespace nest {
       if ((ntree_->nodes_.size() == 0) || (!mask_->inside(ntree_->nodes_[node_].first-anchor_))) {
         ++(*this);
       }
+    }
+  }
+
+  template<int D, class T, int max_capacity>
+  void Ntree<D,T,max_capacity>::masked_iterator::next_anchor_()
+  {
+    ++current_anchor_;
+    if (current_anchor_ >= anchors_.size()) {
+      // Done. Mark as invalid.
+      ntree_ = 0;
+      node_ = 0;
+    } else {
+      anchor_ = anchors_[current_anchor_];
+      init_();
     }
   }
 
@@ -167,8 +225,7 @@ namespace nest {
 
       // If we have reached the top, mark as invalid and return
       if (ntree_ == top_) {
-        ntree_ = 0;
-        return;
+        return next_anchor_();
       }
 
       // Move to next sibling
@@ -325,7 +382,7 @@ namespace nest {
           ll[i] += extent_[i]*0.5;
       }
 
-      children_[j] = new Ntree<D,T,max_capacity>(ll, extent_*0.5,this,j);
+      children_[j] = new Ntree<D,T,max_capacity>(ll, extent_*0.5,0,this,j);
     }
 
     for(typename std::vector<std::pair<Position<D>,T> >::iterator i=nodes_.begin(); i!=nodes_.end(); ++i) {

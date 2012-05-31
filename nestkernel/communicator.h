@@ -154,6 +154,10 @@ public:
   static void communicate(std::vector<OffGridSpike>& send_buffer,
                           std::vector<OffGridSpike>& recv_buffer,
                           std::vector<int>& displacements);
+  static void communicate(std::vector<double_t>& send_buffer,
+                          std::vector<double_t>& recv_buffer,
+                          std::vector<int>& displacements);
+  static void communicate(double_t, std::vector<double_t>&);
   static void communicate(std::vector<int_t>&);
 
   /**
@@ -300,6 +304,10 @@ public:
   static void communicate(std::vector<OffGridSpike>& send_buffer,
                           std::vector<OffGridSpike>& recv_buffer,
                           std::vector<int>& displacements);
+  static void communicate(std::vector<double_t>& send_buffer,
+                          std::vector<double_t>& recv_buffer,
+                          std::vector<int>& displacements);
+  static void communicate(double_t, std::vector<double_t>&);
   static void communicate(std::vector<int_t>&) {}
 
    /**

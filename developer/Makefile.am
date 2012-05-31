@@ -47,7 +47,6 @@ libdevelopermodule_la_SOURCES= \
 			annealing_connection.h annealing_connection.cpp\
 			iaf_chxk_2008.cpp iaf_chxk_2008.h\
 			iaf_chs_2007.cpp iaf_chs_2007.h\
-			mirollo_strogatz_ps.cpp mirollo_strogatz_ps.h\
 			environment.cpp environment.h\
 			environment_cliff.cpp environment_cliff.h\
                         theta_neuron.cpp theta_neuron.h\

@@ -45,7 +45,7 @@ Description:
 Author: February 2012, Kunkel
 */
 
-/unittest (8831) require
+/unittest (9715) require
 /unittest using
 
 [1 2 4] % check for 1, 2 and 4 processes

@@ -19,6 +19,7 @@
 
 #include <vector>
 #include <utility>
+#include <bitset>
 #include "position.h"
 
 namespace nest
@@ -182,6 +183,11 @@ namespace nest
     protected:
 
       /**
+       * Initialize
+       */
+      void init_();
+
+      /**
        * Find the next leaf which is not outside the mask.
        */
       void next_leaf_();
@@ -198,12 +204,19 @@ namespace nest
        */
       void first_leaf_inside_();
 
+      /**
+       * Go to the next anchor image.
+       */
+      void next_anchor_();
+
       Ntree *ntree_;
       Ntree *top_;
       Ntree *allin_top_;
       index node_;
       const Mask<D> *mask_;
       Position<D> anchor_;
+      std::vector<Position<D> > anchors_;
+      index current_anchor_;
     };
 
     /**
@@ -212,8 +225,8 @@ namespace nest
      * @param lower_left  Lower left corner of ntree.
      * @param extent      Size (width,height) of ntree.
      */
-    Ntree(const Position<D>& lower_left,
-	     const Position<D>& extent, Ntree *parent, int subquad);
+    Ntree(const Position<D>& lower_left, const Position<D>& extent,
+          std::bitset<D> periodic, Ntree *parent, int subquad);
 
     /**
      * Traverse quadtree structure from current ntree.
@@ -230,7 +243,7 @@ namespace nest
     /**
      * STL container compatible insert method (the first argument is ignored)
      */
-    iterator insert(iterator iter, const value_type& val);
+    iterator insert(iterator, const value_type& val);
 
     /**
      * @returns member nodes in ntree and their position.
@@ -317,6 +330,7 @@ namespace nest
     Ntree* parent_;
     int my_subquad_;    ///< This Ntree's subquad number within parent
     Ntree* children_[N];
+    std::bitset<D> periodic_;        ///< periodic b.c.
 
     friend class iterator;
     friend class masked_iterator;
@@ -324,14 +338,16 @@ namespace nest
 
   template<int D, class T, int max_capacity>
   Ntree<D,T,max_capacity>::Ntree(const Position<D>& lower_left,
-                                     const Position<D>& extent,
-                                     Ntree<D,T,max_capacity>* parent=0,
-                                     int subquad=0) :
+                                 const Position<D>& extent,
+                                 std::bitset<D> periodic = 0,
+                                 Ntree<D,T,max_capacity>* parent=0,
+                                 int subquad=0) :
     lower_left_(lower_left),
     extent_(extent),
     leaf_(true),
     parent_(parent),
-    my_subquad_(subquad)
+    my_subquad_(subquad),
+    periodic_(periodic)
   {
   }
 
@@ -376,7 +392,7 @@ namespace nest
   }
 
   template<int D, class T, int max_capacity>
-  typename Ntree<D,T,max_capacity>::iterator Ntree<D,T,max_capacity>::insert(iterator iter, const std::pair<Position<D>,T>& val)
+  typename Ntree<D,T,max_capacity>::iterator Ntree<D,T,max_capacity>::insert(iterator, const std::pair<Position<D>,T>& val)
   {
     return insert(val.first,val.second);
   }

@@ -101,8 +101,8 @@ public:
   void set_connector_status(Node& node, index syn_id, thread tid, const DictionaryDatum& d);
   
   ArrayDatum find_connections(DictionaryDatum params);
-  void find_connections(ArrayDatum& connectome, thread t, index source, index syn_id, DictionaryDatum params);
-
+//   void find_connections(ArrayDatum& connectome, thread t, index source, index syn_id, DictionaryDatum params);
+  void find_connections(ArrayDatum& connectome, thread t, index source, int syn_vec_index, index syn_id, DictionaryDatum params);
   // aka CopyModel for synapse models
   index copy_synapse_prototype(index old_id, std::string new_name);
 

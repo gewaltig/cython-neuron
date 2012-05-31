@@ -17,13 +17,11 @@
  */
 
 #include "datumtopythonconverter.h"
+#include "pydatum.h"
 
 void DatumToPythonConverter::convert_me(Datum &s)
 { 
-  std::string type_name = s.gettypename().toString();
-  std::string msg= "SLI object of type " + type_name + " cannot be converted to Python object.";
-  PyErr_Warn(PyExc_Warning, const_cast<char *>(msg.c_str()));
-  py_object_ = PyString_FromString(type_name.c_str());
+  py_object_ = PyDatum_FromDatum(s);
 }
 
 DatumToPythonConverter::DatumToPythonConverter()

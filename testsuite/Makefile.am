@@ -1,4 +1,4 @@
-TESTSUBDIRS= selftests unittests regressiontests manualtests mpitests
+TESTSUBDIRS= selftests unittests regressiontests manualtests mpitests mpi_selftests mpi_selftests/pass mpi_selftests/fail
 
 install-data-hook:
 	for dir in $(TESTSUBDIRS) ; do \

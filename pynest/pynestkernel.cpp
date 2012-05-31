@@ -69,6 +69,7 @@ typedef int Py_ssize_t;
 #include "stringdatum.h"
 #include "connectiondatum.h"
 #include "datumtopythonconverter.h"
+#include "pydatum.h"
 
 #include <algorithm>
 
@@ -275,6 +276,12 @@ Datum* PyObj_ToDatum(PyObject *pObj)
       else
 	(*d)->insert(PyString_AsString(key), t);
     }
+    return d;
+  }
+
+  if (PyDatum_Check(pObj)) { // Object is encapsulated Datum
+    Datum* d = PyDatum_GetDatum(reinterpret_cast<PyDatum*>(pObj));
+    d->addReference();
     return d;
   }
 
@@ -668,6 +675,11 @@ PyMODINIT_FUNC initpynestkernel(void)
 {
   NESTError = Py_BuildValue("s", "NESTError");
 
+  if (PyType_Ready(&PyDatumType) < 0) {
+    PyErr_SetString(NESTError, "Failed to initialize nest.Datum type.");
+    return;
+  }
+
   PyObject *m;
   m = Py_InitModule3("pynestkernel", MethodTable, "Basic Python Module to access NEST SLI kernel");
 
@@ -679,4 +691,7 @@ PyMODINIT_FUNC initpynestkernel(void)
 #ifdef HAVE_NUMPY
   import_array(); // we need to set up the numeric array type
 #endif
+
+  Py_INCREF(&PyDatumType);
+  PyModule_AddObject(m, "Datum", (PyObject *)&PyDatumType);
 }

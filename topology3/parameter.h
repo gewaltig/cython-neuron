@@ -19,6 +19,8 @@
 
 #include "nest.h"
 #include "randomgen.h"
+#include "nest_names.h"
+#include "topology_names.h"
 #include "position.h"
 #include "dictdatum.h"
 #include "dictutils.h"
@@ -146,8 +148,8 @@ namespace nest
       a_(1.0),
       c_(0.0)
       {
-        updateValue<double_t>(d, "a", a_);
-        updateValue<double_t>(d, "c", c_);
+        updateValue<double_t>(d, names::a, a_);
+        updateValue<double_t>(d, names::c, c_);
       }
 
     double_t value(double_t x) const
@@ -174,9 +176,9 @@ namespace nest
       c_(0.0),
       tau_(1.0)
       {
-        updateValue<double_t>(d, "a", a_);
-        updateValue<double_t>(d, "c", c_);
-        updateValue<double_t>(d, "tau", tau_);
+        updateValue<double_t>(d, names::a, a_);
+        updateValue<double_t>(d, names::c, c_);
+        updateValue<double_t>(d, names::tau, tau_);
       }
 
     double_t value(double_t x) const
@@ -204,10 +206,10 @@ namespace nest
       mean_(0.0),
       sigma_(1.0)
       {
-        updateValue<double_t>(d, "c", c_);
-        updateValue<double_t>(d, "p_center", p_center_);
-        updateValue<double_t>(d, "mean", mean_);
-        updateValue<double_t>(d, "sigma", sigma_);
+        updateValue<double_t>(d, names::c, c_);
+        updateValue<double_t>(d, names::p_center, p_center_);
+        updateValue<double_t>(d, names::mean, mean_);
+        updateValue<double_t>(d, names::sigma, sigma_);
       }
 
     double_t value(double_t x) const
@@ -264,8 +266,8 @@ namespace nest
       lower_(0.0),
       range_(1.0)
       {
-        updateValue<double_t>(d, "min", lower_);
-        updateValue<double_t>(d, "max", range_);
+        updateValue<double_t>(d, names::min, lower_);
+        updateValue<double_t>(d, names::max, range_);
         range_ += lower_;
       }
 
@@ -482,6 +484,47 @@ namespace nest
 
   protected:
     Parameter *parameter1_, *parameter2_;
+  };
+
+  /**
+   * Parameter class for a parameter oriented in the opposite direction.
+   */
+  class ConverseParameter : public Parameter {
+  public:
+
+    /**
+     * Construct the converse of the given parameter. A copy is made of the
+     * supplied Parameter object.
+     */
+    ConverseParameter(const Parameter &p):
+      p_(p.clone())
+      {}
+
+    /**
+     * Copy constructor.
+     */
+    ConverseParameter(const ConverseParameter &p):
+      p_(p.p_->clone())
+      {}
+
+    ~ConverseParameter()
+      { delete p_; }
+
+    using Parameter::value;
+
+    /**
+     * @returns the value of the parameter.
+     */
+    double_t value(const Position<2> &p, librandom::RngPtr& rng) const
+      { return p_->value(-p,rng); }
+    double_t value(const Position<3> &p, librandom::RngPtr& rng) const
+      { return p_->value(-p,rng); }
+
+    Parameter * clone() const
+      { return new ConverseParameter(*this); }
+
+  protected:
+    Parameter *p_;
   };
 
   inline

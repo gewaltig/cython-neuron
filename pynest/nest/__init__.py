@@ -24,6 +24,8 @@ import nest.pynestkernel as _kernel
 
 hl_api.nest = _kernel
 
+Datum = _kernel.Datum
+
 sli_push = _kernel.pushsli
 hl_api.sps = sli_push
 sps = sli_push

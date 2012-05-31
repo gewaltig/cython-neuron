@@ -2921,6 +2921,16 @@ SeeAlso: NumberQ, LiteralQ, ArrayQ
        	      [/anytype]    false addtotrie
 def
 
+/*BeginDocumentation
+Name: DictQ - returns true if top object is a dictionary
+Synposis: dictionary DictQ -> true
+          any        DictQ -> false
+SeeAlso: NumberQ, LiteralQ, ArrayQ
+*/
+/DictQ trie 
+  [/dictionarytype] true addtotrie
+  [/anytype]        false addtotrie
+def
 
 /*BeginDocumentation
 Name: MemberQ - checks if array contains a specific element
@@ -2970,6 +2980,52 @@ SeeAlso: LiteralQ, NumberQ, ArrayQ, MatrixQ, MemberQ
  array {/member load neq {pop true exit} if} forall
  end
 } def
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/* BeginDocumentation
+   Name: SubsetQ - Test if one dictinary is a subset of another
+
+   Synopsis:
+   dict1 dict2 SubsetQ -> bool
+
+   Parameters:
+   dict1 - dictionary
+   dict2 - dictionary
+
+   Description:
+   The functions returns true, if all entries of dict2 are present in dict1
+   with the same values.
+
+   Examples:
+   << /a 1 /b 2 /c 2 >> << /c 2 >> SubsetQ -> true
+*/
+
+/SubsetQ
+[/dictionarytype /dictionarytype]
+{
+  << >> begin
+  cva 2 Partition
+  /properties Set
+  /object Set
+
+  true
+  properties
+  {
+    arrayload ;
+    /val Set
+    cvlit /key Set
+    object dup key known
+    {
+      key get
+      val eq and
+    }
+    {
+     pop pop false exit
+    } ifelse
+  } forall
+  end
+} bind def
 
 /*BeginDocumentation
 Name: ToMathematicaExpression - converts SLI data to Mathematica input

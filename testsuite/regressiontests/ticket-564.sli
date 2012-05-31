@@ -1,0 +1,58 @@
+/*
+ *  ticket-564.sli
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2012 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ *  Permission is granted to compile and modify
+ *  this file for non-commercial use.
+ *  See the file LICENSE for details.
+ *
+ */
+
+/* BeginDocumentation
+
+Name: testsuite::ticket-564 - Regression test for OpenMP-parallel problems on OSX
+
+Synopsis: (ticket-564) run -> NEST exits if test fails
+
+Description: 
+This test usess RandomConvergentConnect to connect a net of 100 neurons
+to itself, with 100 connections per neuron, a total of 10000 connections.
+This is repeated 10 times, and the resulting number of connections checked. 
+ 
+Author: Hans Ekkehard Plesser, 2012-05-27
+ */
+
+/unittest (9726) require
+/unittest using
+M_ERROR setverbosity
+
+{ 
+  /N    100  def % number of neurons
+  /C    100  def % number of connections per neuron
+  /N_VP 4    def % number of virtual processes
+  /ConnExpected N C mul def
+
+  [ 10 ]
+  {
+    pop    
+    ResetKernel    
+    0 << /total_num_virtual_procs N_VP >> SetStatus
+
+    /net /iaf_neuron [ N ] LayoutNetwork def
+    /nodes net GetGlobalNodes def
+    /local_nodes net GetLocalNodes def
+    nodes local_nodes C RandomConvergentConnect
+
+    0 /num_connections get
+  } Table
+  dup ==
+  true exch { ConnExpected eq and } Fold
+} assert_or_die
+
+endusing

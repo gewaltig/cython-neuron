@@ -9,4 +9,4 @@ setup(name         = 'Topology',
       author       = 'The NEST Initiative',
       url          = 'http://www.nest-initiative.org',     
       packages     = ['nest.topology'],
-      package_dir  = {'nest.topology': '@PKGSRCDIR@/topology/pynest'})
+      package_dir  = {'nest.topology': '@PKGSRCDIR@/topology3/pynest'})

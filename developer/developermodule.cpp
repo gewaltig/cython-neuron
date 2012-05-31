@@ -76,7 +76,6 @@
 #include "pif_psc_delta_canon_cvv.h"
 // #include "iaf_psc_delta_canon_stepcurr.h"
 // #include "iaf_psc_alpha_canon_nr.h"
-#include "mirollo_strogatz_ps.h"
 // #include "iaf_psc_exp_canon.h"
 
 #include "spike_dilutor.h"
@@ -952,7 +951,6 @@ BeginDocumentation
     register_model<theta_neuron_ps>(*net_, "theta_neuron_ps");
     register_model<izhikevich>(*net_, "izhikevich");
     // register_model<iaf_psc_alpha_canon_nr>(*net_, "iaf_psc_alpha_canon_nr");
-    register_model<mirollo_strogatz_ps>(*net_, "mirollo_strogatz_ps");
     // register_model<iaf_psc_exp_canon>(*net_, "iaf_psc_exp_canon");
 
     register_model<spike_dilutor>(*net_, "spike_dilutor");

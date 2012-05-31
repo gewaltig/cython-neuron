@@ -1,4 +1,4 @@
-/topology-interface /SLI ($Revision: 6714 $) provide-component
+/topology-interface /SLI ($Revision$) provide-component
 
 /topology namespace
 
@@ -69,12 +69,12 @@ def
   /CreateMask_l_D load
 def
 
-/Inside [/masktype /arraytype]
-  /Inside_M_a load
+/Inside [/arraytype /masktype]
+  /Inside_a_M load
 def
 
-/Inside [/dictionarytype /arraytype]
-  { exch CreateMask exch Inside_M_a } bind
+/Inside [/arraytype /dictionarytype]
+  { CreateMask Inside_M_a } bind
 def
 
 /and [/masktype /masktype]

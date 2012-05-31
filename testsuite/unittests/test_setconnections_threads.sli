@@ -38,7 +38,7 @@ source target /stdp_synapse Connect
 << /source source /synapse_type /stdp_synapse >> FindConnections 0 get /conn Set
 
 { conn /weight get 1.0 eq} assert_or_die
-
+{ conn /synapse_type get /stdp_synapse eq} assert_or_die
 conn << /weight 2.0 >> SetStatus
 
 { conn /weight get 2.0 eq} assert_or_die

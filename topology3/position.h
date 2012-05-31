@@ -105,6 +105,12 @@ namespace nest
     Position operator-(const Position &other) const;
 
     /**
+     * Unary minus.
+     * @returns opposite vector.
+     */
+    Position operator-() const;
+
+    /**
      * Elementwise multiplication.
      * @returns elementwise product of coordinates.
      */
@@ -302,6 +308,14 @@ namespace nest
   {
     Position p = *this;
     p -= other;
+    return p;
+  }
+
+  template <int D, class T>
+  Position<D,T> Position<D,T>::operator-() const
+  {
+    Position p;
+    p -= *this;
     return p;
   }
 

@@ -54,7 +54,7 @@ namespace nest
     /**
      * @returns a randomly selected index with the given distribution
      */
-    index get_random_id(librandom::RngPtr& rng) const;
+    index get_random_id(librandom::RngPtr rng) const;
 
   private:
     std::vector<BiasedCoin> dist_;

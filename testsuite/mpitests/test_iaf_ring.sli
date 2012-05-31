@@ -46,7 +46,7 @@ SeeAlso: testsuite::test_iaf_i0,test_getrng_neuron.sli
 */
 
 
-/unittest (8831) require
+/unittest (9715) require
 /unittest using
 
 

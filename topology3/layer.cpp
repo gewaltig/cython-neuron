@@ -23,6 +23,13 @@
 
 namespace nest {
 
+  index AbstractLayer::cached_ntree_layer_ = -1;
+  index AbstractLayer::cached_vector_layer_ = -1;
+
+  AbstractLayer::~AbstractLayer()
+  {
+  }
+
   index AbstractLayer::create_layer(const DictionaryDatum & layer_dict)
   {
     index layer_node;
@@ -91,6 +98,5 @@ namespace nest {
 
     return layer_node;
   }
-
 
 } // namespace nest

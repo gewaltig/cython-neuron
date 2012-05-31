@@ -1122,7 +1122,6 @@ def
 
 /int    /cvi load def
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 /* BeginDocumentation
    Name: SubsetQ - Test if one dictionary is a subset of another
@@ -1141,7 +1140,6 @@ def
    Examples:
    << /a 1 /b 2 /c 2 >> << /c 2 >> SubsetQ -> true
 */
-
 /SubsetQ
 [/dictionarytype /dictionarytype]
 {

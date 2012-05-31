@@ -38,8 +38,6 @@ namespace nest
   SLIType Topology3Module::MaskType;
   SLIType Topology3Module::ParameterType;
 
-  index Topology3Module::cached_layer_;
-  AbstractNtree<index> * Topology3Module::cached_positions_;
   Network *Topology3Module::net_;
 
   Topology3Module::Topology3Module(Network& net)
@@ -63,7 +61,7 @@ namespace nest
   const std::string Topology3Module::commandstring(void) const
   {
     return
-      std::string("/topology /C++ ($Revision: 7862 $) provide-component "
+      std::string("/topology /C++ ($Revision$) provide-component "
 		  "/topology-interface /SLI (6203) require-component ");
   }
 
@@ -154,13 +152,13 @@ namespace nest
 
   static AbstractMask* create_doughnut(const DictionaryDatum& d) {
       Position<2> center(0,0);
-      if (d->known(Name("anchor")))
-        center = getValue<std::vector<double_t> >(d, Name("anchor"));
+      if (d->known(names::anchor))
+        center = getValue<std::vector<double_t> >(d, names::anchor);
 
-      BallMask<2> outer_circle(center,getValue<double_t>(d, "outer_radius"));
-      BallMask<2> inner_circle(center,getValue<double_t>(d, "inner_radius"));
+      BallMask<2> outer_circle(center,getValue<double_t>(d, names::outer_radius));
+      BallMask<2> inner_circle(center,getValue<double_t>(d, names::inner_radius));
 
-      return new MinusMask<2>(outer_circle, inner_circle);
+      return new DifferenceMask<2>(outer_circle, inner_circle);
   }
 
   void Topology3Module::init(SLIInterpreter *i)
@@ -182,8 +180,8 @@ namespace nest
     i->createcommand("CreateMask_l_D",
 		     &createmask_l_Dfunction);
 
-    i->createcommand("Inside_M_a",
-		     &inside_M_afunction);
+    i->createcommand("Inside_a_M",
+		     &inside_a_Mfunction);
 
     i->createcommand("and_M_M",
 		     &and_M_Mfunction);
@@ -507,24 +505,24 @@ namespace nest
 
   /*BeginDocumentation
 
-    Name: Inside - test if a point is inside a mask
+    Name: topology::Inside - test if a point is inside a mask
 
     Synopsis:
-    mask list Inside -> bool
+    point mask Inside -> bool
 
     Parameters:
+    point - array of coordinates
     mask - mask object
-    list - point coordinates
 
     Returns:
     bool - true if the point is inside the mask
   */
-  void Topology3Module::Inside_M_aFunction::execute(SLIInterpreter *i) const
+  void Topology3Module::Inside_a_MFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
-    MaskDatum mask = getValue<MaskDatum>(i->OStack.pick(1));
-    std::vector<double_t> point = getValue<std::vector<double_t> >(i->OStack.pick(0));
+    std::vector<double_t> point = getValue<std::vector<double_t> >(i->OStack.pick(1));
+    MaskDatum mask = getValue<MaskDatum>(i->OStack.pick(0));
 
     bool ret = mask->inside(point);
 
@@ -631,24 +629,6 @@ namespace nest
     i->EStack.pop();
   }
 
-  AbstractNtree<index> * Topology3Module::get_global_positions(const AbstractLayer *layer)
-  {
-    if (cached_layer_ == layer->get_gid()) {
-      return cached_positions_;
-    }
-
-    if (cached_positions_ != 0) {
-      delete cached_positions_;
-      cached_positions_ = 0;
-      cached_layer_ = -1;
-    }
-
-    cached_positions_ = layer->get_global_positions();
-
-    cached_layer_ = layer->get_gid();
-    return cached_positions_;
-  }
-
 
   void Topology3Module::GetGlobalChildren_i_M_aFunction::execute(SLIInterpreter *i) const
   {
@@ -663,7 +643,7 @@ namespace nest
     if (layer == NULL)
       throw LayerExpected();
 
-    AbstractNtree<index> *tree = get_global_positions(layer);
+    AbstractNtree<index> *tree = layer->get_global_positions_ntree();
     std::vector<index> gids = tree->get_nodes_only(mask,anchor);
 
     ArrayDatum result;

@@ -239,10 +239,10 @@ DictionaryDatum ConnectionManager::get_prototype_status(index syn_id) const
 
 DictionaryDatum ConnectionManager::get_synapse_status(index gid, index syn_id, port p, thread tid)
 {
+  int syn_vec_index = get_syn_vec_index (tid,gid,syn_id);
   assert_valid_syn_id(syn_id);
-
   DictionaryDatum dict(new Dictionary);
-  connections_[tid].get(gid)[syn_id].connector->get_synapse_status(dict, p);
+  connections_[tid].get(gid)[syn_vec_index].connector->get_synapse_status(dict, p);
   (*dict)[names::source] = gid;
   (*dict)[names::synapse_type] = LiteralDatum(get_synapse_prototype(syn_id).get_name());
 
@@ -252,7 +252,8 @@ DictionaryDatum ConnectionManager::get_synapse_status(index gid, index syn_id, p
 void ConnectionManager::set_synapse_status(index gid, index syn_id, port p, thread tid, const DictionaryDatum& dict)
 {
   assert_valid_syn_id(syn_id);
-  connections_[tid].get(gid)[syn_id].connector->set_synapse_status(dict, p);
+  int syn_vec_index = get_syn_vec_index (tid,gid,syn_id);
+  connections_[tid].get(gid)[syn_vec_index].connector->set_synapse_status(dict, p);
 }
 
 
@@ -327,7 +328,7 @@ ArrayDatum ConnectionManager::find_connections(DictionaryDatum params)
     {
       int syn_vec_index = get_syn_vec_index(t, source, syn_id);
       if (source < connections_[t].size() && syn_vec_index != -1)
-        find_connections(connectome, t, source, syn_vec_index, params);
+        find_connections(connectome, t, source, syn_vec_index, syn_id, params);
     }
     else
     {
@@ -336,7 +337,7 @@ ArrayDatum ConnectionManager::find_connections(DictionaryDatum params)
         {
           int syn_vec_index = get_syn_vec_index(t, source, syn_id);
           if (syn_vec_index != -1)
-            find_connections(connectome, t, source, syn_vec_index, params);
+            find_connections(connectome, t, source, syn_vec_index, syn_id, params);
         }
     }
   }
@@ -344,9 +345,9 @@ ArrayDatum ConnectionManager::find_connections(DictionaryDatum params)
   return connectome;
 }
 
-void ConnectionManager::find_connections(ArrayDatum& connectome, thread t, index source, index syn_id, DictionaryDatum params)
+void ConnectionManager::find_connections(ArrayDatum& connectome, thread t, index source, int syn_vec_index, index syn_id, DictionaryDatum params)
 {
-  std::vector<long>* p = connections_[t].get(source)[syn_id].connector->find_connections(params);
+  std::vector<long>* p = connections_[t].get(source)[syn_vec_index].connector->find_connections(params);
   for (size_t i = 0; i < p->size(); ++i)
     connectome.push_back(ConnectionDatum(ConnectionID(source, t, syn_id, (*p)[i])));
   delete p;

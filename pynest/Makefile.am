@@ -19,6 +19,8 @@ EXTRA_DIST= setup.py.in do_tests.py.in \
 	LICENSE.PyNEST README.PyNEST \
 	pynestkernel.cpp \
 	checkpython.py \
+	pydatum.h \
+	pydatum.cpp \
 	datumtopythonconverter.h \
 	datumtopythonconverter.cpp
 

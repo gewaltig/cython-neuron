@@ -635,6 +635,41 @@ void nest::Communicator::communicate_CPEX (std::vector<OffGridSpike>& send_buffe
     }
 }
 
+
+void nest::Communicator::communicate(std::vector<double_t>& send_buffer,
+                                     std::vector<double_t>& recv_buffer,
+                                     std::vector<int>& displacements)
+{
+  //get size of buffers
+  std::vector<int> n_nodes(num_processes_);
+  n_nodes[Communicator::rank_] = send_buffer.size();
+  communicate(n_nodes);
+  // Set up displacements vector.
+  displacements.resize(num_processes_,0);
+
+  for ( int i = 1; i < num_processes_; ++i )
+    displacements.at(i) = displacements.at(i-1)+n_nodes.at(i-1);
+
+  // Calculate total number of node data items to be gathered.
+  size_t n_globals =
+    std::accumulate(n_nodes.begin(),n_nodes.end(), 0);
+
+  if (n_globals != 0) {
+    recv_buffer.resize(n_globals,0.0);
+    communicate_Allgatherv(send_buffer, recv_buffer, displacements, n_nodes);
+  } else {
+    recv_buffer.clear();
+  }
+}
+
+
+void nest::Communicator::communicate(double_t send_val, std::vector<double_t>& recv_buffer)
+{
+  recv_buffer.resize(num_processes_);
+  MPI_Allgather(&send_val, 1, MPI_DOUBLE, &recv_buffer[0], 1, MPI_DOUBLE, comm);
+}
+
+
 /**
  * communicate function for sending set-up information
  */
@@ -675,6 +710,7 @@ void nest::Communicator::communicate_CPEX(std::vector<int_t>& buffer)
     }
   }
 }
+
 
 
 		
@@ -909,6 +945,21 @@ void nest::Communicator::communicate (std::vector<OffGridSpike>& send_buffer,
       recv_buffer.resize(recv_buffer_size_);
     }
   recv_buffer.swap(send_buffer);
+}
+
+void nest::Communicator::communicate(std::vector<double_t>& send_buffer,
+                                     std::vector<double_t>& recv_buffer,
+                                     std::vector<int>& displacements)
+{
+  displacements.resize(1);
+  displacements[0] = 0;
+  recv_buffer.swap(send_buffer);
+}
+
+void nest::Communicator::communicate(double_t send_val, std::vector<double_t>& recv_buffer)
+{
+  recv_buffer.resize(1);
+  recv_buffer[0] = send_val;
 }
 
 #endif /* #ifdef HAVE_MPI */

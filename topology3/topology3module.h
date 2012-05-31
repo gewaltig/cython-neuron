@@ -97,11 +97,11 @@ namespace nest
       void execute(SLIInterpreter *) const;
     } createmask_l_Dfunction;
 
-    class Inside_M_aFunction: public SLIFunction
+    class Inside_a_MFunction: public SLIFunction
     {
     public:
       void execute(SLIInterpreter *) const;
-    } inside_M_afunction;
+    } inside_a_Mfunction;
 
     class And_M_MFunction: public SLIFunction
     {
@@ -158,16 +158,6 @@ namespace nest
     } getvalue_a_Pfunction;
 
     /**
-     * Return an Ntree with the positions and GIDs of the nodes in this
-     * layer. Positions are cached by the Topology module for one layer at
-     * the time.
-     */
-    static AbstractNtree<index> * get_global_positions(const AbstractLayer *layer);
-
-    template<int D>
-    static Ntree<D,index> * get_global_positions(const Layer<D> *layer);
-
-    /**
      * Return a reference to the network managed by the topology module.
      */
     static Network &get_network();
@@ -206,16 +196,6 @@ namespace nest
     static ParameterFactory &parameter_factory_();
 
     /**
-     * GID for the single layer for which we cache global position information
-     */
-    static index cached_layer_;
-
-    /**
-     * Global position information for a single layer
-     */
-    static AbstractNtree<index> * cached_positions_;
-
-    /**
      * - @c net must be static, so that the execute() members of the
      *   SliFunction classes in the module can access the network.
      */
@@ -242,14 +222,6 @@ namespace nest
   {
     assert(net_ != 0);
     return *net_;
-  }
-
-  template<int D>
-  Ntree<D,index> * Topology3Module::get_global_positions(const Layer<D> *layer)
-  {
-    Ntree<D,index> *ntree = dynamic_cast<Ntree<D,index> *>(get_global_positions(static_cast<const AbstractLayer*>(layer)));
-    assert(ntree);
-    return ntree;
   }
 
   template<class T>

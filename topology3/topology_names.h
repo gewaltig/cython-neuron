@@ -57,6 +57,22 @@ namespace nest
     extern const Name convergent;
     extern const Name divergent;
     extern const Name synapse_model;
+    extern const Name kernel;
+    extern const Name lower_left;
+    extern const Name upper_right;
+    extern const Name radius;
+    extern const Name outer_radius;
+    extern const Name inner_radius;
+    extern const Name tau;
+    extern const Name p_center;
+    extern const Name sigma;
+    extern const Name min;
+    extern const Name max;
+    extern const Name mean_x;
+    extern const Name mean_y;
+    extern const Name sigma_x;
+    extern const Name sigma_y;
+    extern const Name rho;
   }
 }
 

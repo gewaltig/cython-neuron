@@ -28,7 +28,7 @@ namespace nest
 
       if (dit->first == names::connection_type) {
 
-        connection_type = getValue<Name>(dit->second);
+        connection_type = getValue<std::string>(dit->second);
 
       } else if (dit->first == names::number_of_connections) {
 
@@ -37,6 +37,10 @@ namespace nest
       } else if (dit->first == names::mask) {
 
         mask_ = Topology3Module::create_mask(dit->second);
+
+      } else if (dit->first == names::kernel) {
+
+        kernel_ = Topology3Module::create_parameter(dit->second);
 
       } else if (dit->first == names::synapse_model) {
 
@@ -62,6 +66,14 @@ namespace nest
 
       if (number_of_connections_) {
         type_ = Convergent;
+      } else {
+        type_ = Target_driven;
+      }
+
+    } else if (connection_type==names::divergent) {
+
+      if (number_of_connections_) {
+        type_ = Divergent;
       } else {
         type_ = Source_driven;
       }

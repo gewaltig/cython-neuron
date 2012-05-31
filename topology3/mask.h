@@ -18,6 +18,7 @@
  */
 
 #include "nest.h"
+#include "topology_names.h"
 #include "position.h"
 #include "dictdatum.h"
 #include "dictutils.h"
@@ -348,25 +349,25 @@ namespace nest
    * Mask combining two masks with a minus operation, the difference.
    */
   template<int D>
-  class MinusMask : public Mask<D> {
+  class DifferenceMask : public Mask<D> {
   public:
 
     /**
      * Construct the difference of the two given masks. Copies are made
      * of the supplied Mask objects.
      */
-    MinusMask(const Mask<D> &m1, const Mask<D> &m2):
+    DifferenceMask(const Mask<D> &m1, const Mask<D> &m2):
       mask1_(m1.clone()), mask2_(m2.clone())
       {}
 
     /**
      * Copy constructor
      */
-    MinusMask(const MinusMask &m):
+    DifferenceMask(const DifferenceMask &m):
       mask1_(m.mask1_->clone()), mask2_(m.mask2_->clone())
       {}
 
-    ~MinusMask()
+    ~DifferenceMask()
       { delete mask1_; delete mask2_; }
 
     bool inside(const Position<D> &p) const
@@ -379,10 +380,47 @@ namespace nest
       { return mask1_->outside(ll,ur) || mask2_->inside(ll,ur); }
 
     Mask<D> * clone() const
-      { return new MinusMask(*this); }
+      { return new DifferenceMask(*this); }
 
   protected:
     Mask<D> *mask1_, *mask2_;
+  };
+
+
+  /**
+   * Mask oriented in the opposite direction.
+   */
+  template<int D>
+  class ConverseMask : public Mask<D> {
+  public:
+    /**
+     * Construct the converse of the two given mask. A copy is made of the
+     * supplied Mask object.
+     */
+    ConverseMask(const Mask<D> &m): m_(m.clone()) {}
+
+    /**
+     * Copy constructor
+     */
+    ConverseMask(const ConverseMask &m): m_(m.m_->clone()) {}
+
+    ~ConverseMask()
+      { delete m_; }
+
+    bool inside(const Position<D> &p) const
+      { return m_->inside(-p); }
+
+    bool inside(const Position<D> &ll, const Position<D> &ur) const
+      { return m_->inside(-ur,-ll); }
+
+    bool outside(const Position<D> &ll, const Position<D> &ur) const
+      { return m_->outside(-ur,-ll); }
+
+    Mask<D> * clone() const
+      { return new ConverseMask(*this); }
+
+  protected:
+    Mask<D> *m_;
   };
 
 
@@ -407,14 +445,14 @@ namespace nest
   {
     const Mask * other_d = dynamic_cast<const Mask*>(&other);
     assert(other_d); // FIXME: Fail gracefully
-    return new MinusMask<D>(*this,*other_d);
+    return new DifferenceMask<D>(*this,*other_d);
   }
 
   template<int D>
   BoxMask<D>::BoxMask(const DictionaryDatum& d)
   {
-    lower_left_ = getValue<std::vector<double_t> >(d, "lower_left");
-    upper_right_ = getValue<std::vector<double_t> >(d, "upper_right");
+    lower_left_ = getValue<std::vector<double_t> >(d, names::lower_left);
+    upper_right_ = getValue<std::vector<double_t> >(d, names::upper_right);
 
     // TODO: Implement shifting by anchor for compatibility with topo2
   }
@@ -422,9 +460,9 @@ namespace nest
   template<int D>
   BallMask<D>::BallMask(const DictionaryDatum& d)
   {
-    radius_ = getValue<double_t>(d, "radius");
-    if (d->known("anchor")) {
-      center_ = getValue<std::vector<double_t> >(d, "anchor");
+    radius_ = getValue<double_t>(d, names::radius);
+    if (d->known(names::anchor)) {
+      center_ = getValue<std::vector<double_t> >(d, names::anchor);
     }
   }
 

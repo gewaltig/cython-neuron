@@ -44,9 +44,9 @@ namespace nest
    * connect method, but it is not possible to have a virtual template
    * method.
    *
-   * This class distinguishes between source driven and convergent
+   * This class distinguishes between target driven and convergent
    * connections, which are both called "convergent" in the Topology module
-   * documentation, and between target driven and divergent
+   * documentation, and between source driven and divergent
    * connections. The true convergent/divergent connections are those with
    * a fixed number of connections (fan in/out). The only difference
    * between source driven and target driven connections is which layer
@@ -55,7 +55,7 @@ namespace nest
   class ConnectionCreator {
   public:
 
-    enum ConnectionType {Source_driven, Target_driven, Convergent, Divergent, Population};
+    enum ConnectionType {Target_driven, Source_driven, Convergent, Divergent, Population};
     typedef std::map<Name,lockPTR<Parameter> > ParameterMap;
 
     /**
@@ -76,10 +76,13 @@ namespace nest
   private:
 
     template<int D>
-    void source_driven_connect_(const Layer<D>& source, const Layer<D>& target);
+    void target_driven_connect_(const Layer<D>& source, const Layer<D>& target);
 
     template<int D>
     void convergent_connect_(const Layer<D>& source, const Layer<D>& target);
+
+    template<int D>
+    void divergent_connect_(const Layer<D>& source, const Layer<D>& target);
 
     /**
      * Calculate parameter values for this position.
@@ -90,6 +93,7 @@ namespace nest
     ConnectionType type_;
     long_t number_of_connections_;
     lockPTR<AbstractMask> mask_;
+    lockPTR<Parameter> kernel_;
     index synapse_model_;
     ParameterMap parameters_;
 

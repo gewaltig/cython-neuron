@@ -40,13 +40,13 @@ namespace nest
     sigma_y_(1.0),
     rho_(0.0)
   {
-    updateValue<double_t>(d, "c", c_);
-    updateValue<double_t>(d, "p_center", p_center_);
-    updateValue<double_t>(d, "mean_x", mean_x_);
-    updateValue<double_t>(d, "sigma_x", sigma_x_);
-    updateValue<double_t>(d, "mean_y", mean_y_);
-    updateValue<double_t>(d, "sigma_y", sigma_y_);
-    updateValue<double_t>(d, "rho", rho_);
+    updateValue<double_t>(d, names::c, c_);
+    updateValue<double_t>(d, names::p_center, p_center_);
+    updateValue<double_t>(d, names::mean_x, mean_x_);
+    updateValue<double_t>(d, names::sigma_x, sigma_x_);
+    updateValue<double_t>(d, names::mean_y, mean_y_);
+    updateValue<double_t>(d, names::sigma_y, sigma_y_);
+    updateValue<double_t>(d, names::rho, rho_);
 
     if(rho_ > 1.0 || rho_ < -1.0)
     {
