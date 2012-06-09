@@ -38,14 +38,22 @@ namespace nest
   {
   public:
     /**
+     * Constructor.
+     */
+    AbstractLayer() : depth_(1)
+      {}
+
+    /**
      * Virtual destructor
      */
     virtual ~AbstractLayer();
 
     /**
+     * Get position of node. Only possible for local nodes.
+     * @param sind subnet index of node
      * @returns position of node as std::vector
      */
-    virtual std::vector<double_t> get_position_vector(const index lid) const = 0;
+    virtual std::vector<double_t> get_position_vector(const index sind) const = 0;
 
     /**
      * Returns displacement of node from given position. When using periodic
@@ -74,7 +82,7 @@ namespace nest
      *                  as this layer.
      * @param connector connection properties
      */
-    virtual void connect(const AbstractLayer& target, ConnectionCreator &connector) = 0;
+    virtual void connect(AbstractLayer& target, ConnectionCreator &connector) = 0;
 
     /**
      * Factory function for layers. The supplied dictionary contains
@@ -88,13 +96,18 @@ namespace nest
      * Return an Ntree with the positions and GIDs of the nodes in this
      * layer.
      */
-    virtual AbstractNtree<index> * get_global_positions_ntree() const = 0;
+    virtual AbstractNtree<index> * get_global_positions_ntree() = 0;
 
   protected:
     /**
      * GID for the single layer for which we cache global position information
      */
     static index cached_ntree_layer_;
+
+    /**
+     * number of neurons at each position
+     */
+    int depth_;
 
     /**
      * GID for the single layer for which we cache global position information
@@ -132,12 +145,21 @@ namespace nest
      * Creates an empty layer.
      */
     Layer()
-      {}
+      {
+        // Default center (0,0) and extent (1,1)
+        for(int i=0;i<D;++i) {
+          lower_left_[i] = -0.5;
+          extent_[i] = 1.0;
+        }
+      }
 
     /**
      * Copy constructor.
      */
-    Layer(const Layer &)
+    Layer(const Layer &l) :
+      lower_left_(l.lower_left_),
+      extent_(l.extent_),
+      periodic_(l.periodic_)
       {}
 
     /**
@@ -181,14 +203,22 @@ namespace nest
       { return extent_; }
 
     /**
+     * @returns center of layer.
+     */
+    Position<D> get_center() const
+      { return lower_left_ + extent_/2; }
+
+    /**
      * @returns a bitmask specifying which directions are periodic
      */
     int get_periodic_mask() const;
 
     /**
-     * @returns position of node identified by Subnet local id value.
+     * Get position of node. Only possible for local nodes.
+     * @param sind subnet index of node
+     * @returns position of node identified by Subnet local index value.
      */
-    virtual const Position<D> & get_position(index lid) const = 0;
+    virtual Position<D> get_position(index sind) const = 0;
 
     /**
      * @returns position of node as std::vector
@@ -221,9 +251,9 @@ namespace nest
     double_t compute_distance(const std::vector<double_t>& from_pos,
                               const index to) const;
 
-    Ntree<D,index> * get_global_positions_ntree() const;
+    Ntree<D,index> * get_global_positions_ntree();
 
-    std::vector<std::pair<Position<D>,index> >* get_global_positions_vector() const;
+    std::vector<std::pair<Position<D>,index> >* get_global_positions_vector();
 
     /**
      * Connect this layer to the given target layer. The actual connections
@@ -232,7 +262,7 @@ namespace nest
      *                  as this layer.
      * @param connector connection properties
      */
-    void connect(const AbstractLayer& target, ConnectionCreator &connector);
+    void connect(AbstractLayer& target, ConnectionCreator &connector);
 
     /**
      * Write layer data to stream.
@@ -265,17 +295,16 @@ namespace nest
     /**
      * Insert global position info into ntree.
      */
-    virtual void insert_global_positions_ntree_(Ntree<D,index> & tree) const = 0;
+    virtual void insert_global_positions_ntree_(Ntree<D,index> & tree) = 0;
 
     /**
      * Insert global position info into vector.
      */
-    virtual void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > &) const = 0;
+    virtual void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > &) = 0;
 
     Position<D> lower_left_;  ///< lower left corner (minimum coordinates) of layer
     Position<D> extent_;      ///< size of layer
     std::bitset<D> periodic_; ///< periodic b.c.
-    int stride_;              ///< number of neurons at each position
 
     /**
      * Global position information for a single layer
@@ -337,7 +366,9 @@ namespace nest
   void Layer<D>::set_status(const DictionaryDatum & d)
   {
     if (d->known(names::extent)) {
+      Position<D> center = get_center();
       extent_ = getValue<std::vector<double_t> >(d, names::extent);
+      lower_left_ = center - extent_/2;
     }
     if (d->known(names::center)) {
       lower_left_ = getValue<std::vector<double_t> >(d, names::center);
@@ -366,14 +397,14 @@ namespace nest
   }
 
   template <int D>
-  void Layer<D>::connect(const AbstractLayer& target_layer, ConnectionCreator &connector)
+  void Layer<D>::connect(AbstractLayer& target_layer, ConnectionCreator &connector)
   {
-    const Layer<D> &tgt = dynamic_cast<const Layer<D>&>(target_layer);
+    Layer<D> &tgt = dynamic_cast<Layer<D>&>(target_layer);
     connector.connect(*this, tgt);
   }
 
   template <int D>
-  Ntree<D,index> * Layer<D>::get_global_positions_ntree() const
+  Ntree<D,index> * Layer<D>::get_global_positions_ntree()
   {
     if (cached_ntree_layer_ == get_gid()) {
       assert(cached_ntree_);
@@ -408,7 +439,7 @@ namespace nest
   }
 
   template <int D>
-  std::vector<std::pair<Position<D>,index> >* Layer<D>::get_global_positions_vector() const
+  std::vector<std::pair<Position<D>,index> >* Layer<D>::get_global_positions_vector()
   {
     if (cached_vector_layer_ == get_gid()) {
       assert(cached_vector_);

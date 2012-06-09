@@ -73,6 +73,7 @@ namespace nest
     extern const Name sigma_x;
     extern const Name sigma_y;
     extern const Name rho;
+    extern const Name layers;
   }
 }
 

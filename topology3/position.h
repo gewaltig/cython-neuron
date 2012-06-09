@@ -41,6 +41,9 @@ namespace nest
   class Position
   {
   public:
+    template<int OD, class OT>
+    friend class Position;
+
     /**
      * Default constructor, initializing all coordinates to zero.
      */
@@ -96,13 +99,15 @@ namespace nest
      * Elementwise addition.
      * @returns elementwise sum of coordinates.
      */
-    Position operator+(const Position &other) const;
+    template <class OT>
+    Position operator+(const Position<D,OT> &other) const;
 
     /**
      * Elementwise subtraction.
      * @returns elementwise difference of coordinates.
      */
-    Position operator-(const Position &other) const;
+    template <class OT>
+    Position operator-(const Position<D,OT> &other) const;
 
     /**
      * Unary minus.
@@ -114,13 +119,27 @@ namespace nest
      * Elementwise multiplication.
      * @returns elementwise product of coordinates.
      */
-    Position operator*(const Position &other) const;
+    template <class OT>
+    Position operator*(const Position<D,OT> &other) const;
 
     /**
      * Elementwise division.
      * @returns elementwise quotient of coordinates.
      */
-    Position operator/(const Position &other) const;
+    template <class OT>
+    Position operator/(const Position<D,OT> &other) const;
+
+    /**
+     * Elementwise addition with scalar
+     * @returns position vector with scalar added to all coordinates
+     */
+    Position operator+(const T &) const;
+
+    /**
+     * Elementwise subtraction with scalar
+     * @returns position vector with scalar subtracted from all coordinates
+     */
+    Position operator-(const T &) const;
 
     /**
      * Multiplication with scalar
@@ -139,28 +158,44 @@ namespace nest
      * @returns the Position itself after adding the other Position
      * elementwise.
      */
-    Position &operator+=(const Position &);
+    template <class OT>
+    Position &operator+=(const Position<D,OT> &);
 
     /**
      * In-place elementwise subtraction.
      * @returns the Position itself after subtracting the other Position
      * elementwise.
      */
-    Position &operator-=(const Position &);
+    template <class OT>
+    Position &operator-=(const Position<D,OT> &);
 
     /**
      * In-place elementwise multiplication.
      * @returns the Position itself after multiplying with the other
      * Position elementwise.
      */
-    Position &operator*=(const Position &);
+    template <class OT>
+    Position &operator*=(const Position<D,OT> &);
 
     /**
      * In-place elementwise division.
      * @returns the Position itself after dividing by the other Position
      * elementwise.
      */
-    Position &operator/=(const Position &);
+    template <class OT>
+    Position &operator/=(const Position<D,OT> &);
+
+    /**
+     * In-place elementwise addition with scalar.
+     * @returns the Position itself after adding the scalar to all coordinates.
+     */
+    Position &operator+=(const T &);
+
+    /**
+     * In-place elementwise subtraction with scalar.
+     * @returns the Position itself after subtracting the scalar from all coordinates.
+     */
+    Position &operator-=(const T &);
 
     /**
      * In-place multiplication by scalar.
@@ -296,7 +331,8 @@ namespace nest
   }
 
   template <int D, class T>
-  Position<D,T> Position<D,T>::operator+(const Position<D,T> &other) const
+  template <class OT>
+  Position<D,T> Position<D,T>::operator+(const Position<D,OT> &other) const
   {
     Position p = *this;
     p += other;
@@ -304,7 +340,8 @@ namespace nest
   }
 
   template <int D, class T>
-  Position<D,T> Position<D,T>::operator-(const Position<D,T> &other) const
+  template <class OT>
+  Position<D,T> Position<D,T>::operator-(const Position<D,OT> &other) const
   {
     Position p = *this;
     p -= other;
@@ -320,7 +357,8 @@ namespace nest
   }
 
   template <int D, class T>
-  Position<D,T> Position<D,T>::operator*(const Position<D,T> &other) const
+  template <class OT>
+  Position<D,T> Position<D,T>::operator*(const Position<D,OT> &other) const
   {
     Position p = *this;
     p *= other;
@@ -328,10 +366,27 @@ namespace nest
   }
 
   template <int D, class T>
-  Position<D,T> Position<D,T>::operator/(const Position<D,T> &other) const
+  template <class OT>
+  Position<D,T> Position<D,T>::operator/(const Position<D,OT> &other) const
   {
     Position p = *this;
     p /= other;
+    return p;
+  }
+
+  template <int D, class T>
+  Position<D,T> Position<D,T>::operator+(const T &a) const
+  {
+    Position p = *this;
+    p += a;
+    return p;
+  }
+
+  template <int D, class T>
+  Position<D,T> Position<D,T>::operator-(const T &a) const
+  {
+    Position p = *this;
+    p -= a;
     return p;
   }
 
@@ -352,7 +407,8 @@ namespace nest
   }
 
   template <int D, class T>
-  Position<D,T> &Position<D,T>::operator+=(const Position<D,T> &other)
+  template <class OT>
+  Position<D,T> &Position<D,T>::operator+=(const Position<D,OT> &other)
   {
     for(int i=0;i<D;++i)
       x_[i] += other.x_[i];
@@ -360,7 +416,8 @@ namespace nest
   }
 
   template <int D, class T>
-  Position<D,T> &Position<D,T>::operator-=(const Position<D,T> &other)
+  template <class OT>
+  Position<D,T> &Position<D,T>::operator-=(const Position<D,OT> &other)
   {
     for(int i=0;i<D;++i)
       x_[i] -= other.x_[i];
@@ -368,7 +425,8 @@ namespace nest
   }
 
   template <int D, class T>
-  Position<D,T> &Position<D,T>::operator*=(const Position<D,T> &other)
+  template <class OT>
+  Position<D,T> &Position<D,T>::operator*=(const Position<D,OT> &other)
   {
     for(int i=0;i<D;++i)
       x_[i] *= other.x_[i];
@@ -376,10 +434,27 @@ namespace nest
   }
 
   template <int D, class T>
-  Position<D,T> &Position<D,T>::operator/=(const Position<D,T> &other)
+  template <class OT>
+  Position<D,T> &Position<D,T>::operator/=(const Position<D,OT> &other)
   {
     for(int i=0;i<D;++i)
       x_[i] /= other.x_[i];
+    return *this;
+  }
+
+  template <int D, class T>
+  Position<D,T> &Position<D,T>::operator+=(const T &a)
+  {
+    for(int i=0;i<D;++i)
+      x_[i] += a;
+    return *this;
+  }
+
+  template <int D, class T>
+  Position<D,T> &Position<D,T>::operator-=(const T &a)
+  {
+    for(int i=0;i<D;++i)
+      x_[i] -= a;
     return *this;
   }
 

@@ -24,7 +24,7 @@
 namespace nest
 {
   template<int D>
-  void ConnectionCreator::connect(const Layer<D>& source, const Layer<D>& target)
+  void ConnectionCreator::connect(Layer<D>& source, Layer<D>& target)
   {
     switch (type_) {
     case Target_driven:
@@ -74,7 +74,7 @@ namespace nest
   }
 
   template<int D>
-  void ConnectionCreator::target_driven_connect_(const Layer<D>& source, const Layer<D>& target)
+  void ConnectionCreator::target_driven_connect_(Layer<D>& source, Layer<D>& target)
   {
     // Target driven connect
     // For each local target node:
@@ -152,7 +152,7 @@ namespace nest
   }
 
   template<int D>
-  void ConnectionCreator::convergent_connect_(const Layer<D>& source, const Layer<D>& target)
+  void ConnectionCreator::convergent_connect_(Layer<D>& source, Layer<D>& target)
   {
     // Convergent connections (fixed fan in)
     //
@@ -274,7 +274,7 @@ namespace nest
 
 
   template<int D>
-  void ConnectionCreator::divergent_connect_(const Layer<D>& source, const Layer<D>& target)
+  void ConnectionCreator::divergent_connect_(Layer<D>& source, Layer<D>& target)
   {
     // Divergent connections (fixed fan out)
     //

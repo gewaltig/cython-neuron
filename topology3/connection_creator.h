@@ -71,18 +71,18 @@ namespace nest
      * @param target target layer.
      */
     template<int D>
-    void connect(const Layer<D>& source, const Layer<D>& target);
+    void connect(Layer<D>& source, Layer<D>& target);
 
   private:
 
     template<int D>
-    void target_driven_connect_(const Layer<D>& source, const Layer<D>& target);
+    void target_driven_connect_(Layer<D>& source, Layer<D>& target);
 
     template<int D>
-    void convergent_connect_(const Layer<D>& source, const Layer<D>& target);
+    void convergent_connect_(Layer<D>& source, Layer<D>& target);
 
     template<int D>
-    void divergent_connect_(const Layer<D>& source, const Layer<D>& target);
+    void divergent_connect_(Layer<D>& source, Layer<D>& target);
 
     /**
      * Calculate parameter values for this position.

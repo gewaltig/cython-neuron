@@ -28,6 +28,7 @@
 #include "topology3module.h"
 #include "layer.h"
 #include "free_layer.h"
+#include "grid_layer.h"
 #include "mask.h"
 #include "connection_creator_impl.h"
 #include "parameter.h"
@@ -221,6 +222,8 @@ namespace nest
 
     register_model<FreeLayer<2> >(net, "topology_layer_free");
     register_model<FreeLayer<3> >(net, "topology_layer_3d");
+    register_model<GridLayer<2> >(net, "topology_layer_grid");
+    register_model<GridLayer<3> >(net, "topology_layer_grid_3d");
 
     // Register mask types
     register_mask<BallMask<2> >("circular");
@@ -322,7 +325,7 @@ namespace nest
     if ( !layer )
       throw LayerExpected();
 
-    Token result = layer->get_position_vector(node->get_lid());
+    Token result = layer->get_position_vector(node->get_subnet_index());
 
     i->OStack.pop(1);
     i->OStack.push(result);

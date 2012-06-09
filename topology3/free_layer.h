@@ -34,14 +34,14 @@ namespace nest
   class FreeLayer: public Layer<D>
   {
   public:
-    const Position<D> & get_position(index lid) const;
+    Position<D> get_position(index lid) const;
     void set_status(const DictionaryDatum&);
     void get_status(DictionaryDatum&) const;
 
   protected:
     void update_bbox_(); ///< update bounding box (min/max coordinates)
-    void insert_global_positions_ntree_(Ntree<D,index> & tree) const;
-    void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec) const;
+    void insert_global_positions_ntree_(Ntree<D,index> & tree);
+    void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec);
 
     /// Vector of positions. Should match node vector in Subnet.
     std::vector<Position<D> > positions_;
@@ -125,7 +125,7 @@ namespace nest
   }
 
   template <int D>
-  const Position<D> & FreeLayer<D>::get_position(index lid) const
+  Position<D> FreeLayer<D>::get_position(index lid) const
   {
     return positions_[lid];
   }
@@ -155,7 +155,7 @@ namespace nest
   }
 
   template <int D>
-  void FreeLayer<D>::insert_global_positions_ntree_(Ntree<D,index> & tree) const
+  void FreeLayer<D>::insert_global_positions_ntree_(Ntree<D,index> & tree)
   {
 
     communicate_positions(this->nodes_, positions_, std::inserter(tree, tree.end()));
@@ -163,7 +163,7 @@ namespace nest
   }
 
   template <int D>
-  void FreeLayer<D>::insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec) const
+  void FreeLayer<D>::insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec)
   {
 
     communicate_positions(this->nodes_, positions_, std::back_inserter(vec));

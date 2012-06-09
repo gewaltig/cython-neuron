@@ -65,6 +65,7 @@ namespace nest
     const Name sigma_x("sigma_x");
     const Name sigma_y("sigma_y");
     const Name rho("rho");
+    const Name layers("layers");
   }
 }
 
