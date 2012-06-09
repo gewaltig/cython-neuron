@@ -88,14 +88,56 @@ namespace nest
       DictionaryDatum *dd = dynamic_cast<DictionaryDatum*>(t.datum());
       if (dd) {
 
-        assert((*dd)->size() == 1);  // FIXME: Fail gracefully
-        Name n = (*dd)->begin()->first;
-        DictionaryDatum mask_dict = getValue<DictionaryDatum>(*dd,n);
-        return create_mask(n,mask_dict);
+        std::vector<double_t> anchor;
+        bool has_anchor = false;
+        AbstractMask *mask = 0;
+
+        for(Dictionary::iterator dit = (*dd)->begin(); dit != (*dd)->end(); ++dit) {
+
+          if (dit->first == names::anchor) {
+
+            anchor = getValue<std::vector<double_t> >(dit->second);
+            has_anchor = true;
+
+          } else {
+
+            if (mask != 0) { // mask has already been defined
+              throw BadProperty("Mask definition dictionary contains extraneous items.");
+            }
+
+            mask = create_mask(dit->first,getValue<DictionaryDatum>(dit->second));
+
+          }
+        }
+
+        if (has_anchor) {
+
+          AbstractMask *amask;
+
+          switch(anchor.size()) {
+          case 2:
+            amask = new AnchoredMask<2>(dynamic_cast<Mask<2>&>(*mask),anchor);
+            break;
+          case 3:
+            amask = new AnchoredMask<3>(dynamic_cast<Mask<3>&>(*mask),anchor);
+            break;
+          default:
+            throw BadProperty("Anchor must be 2- or 3-dimensional.");
+          }
+
+          delete mask;
+          mask = amask;
+
+        }
+
+        return mask;
 
       } else {
+
         throw BadProperty("Mask must be masktype or dictionary.");
+
       }
+
     }
 
   }

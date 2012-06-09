@@ -27,6 +27,7 @@ libtopology3module_la_SOURCES= \
 			layer.h \
 			layer.cpp \
 			free_layer.h \
+			grid_layer.h \
 			mask.h \
 			mask.cpp \
 			ntree.h \

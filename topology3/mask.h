@@ -424,6 +424,44 @@ namespace nest
   };
 
 
+  /**
+   * Mask shifted by an anchor
+   */
+  template<int D>
+  class AnchoredMask : public Mask<D> {
+  public:
+    /**
+     * Construct the converse of the two given mask. A copy is made of the
+     * supplied Mask object.
+     */
+    AnchoredMask(const Mask<D> &m, Position<D> anchor): m_(m.clone()), anchor_(anchor) {}
+
+    /**
+     * Copy constructor
+     */
+    AnchoredMask(const AnchoredMask &m): m_(m.m_->clone()), anchor_(m.anchor_) {}
+
+    ~AnchoredMask()
+      { delete m_; }
+
+    bool inside(const Position<D> &p) const
+      { return m_->inside(p-anchor_); }
+
+    bool inside(const Position<D> &ll, const Position<D> &ur) const
+      { return m_->inside(ur-anchor_,ll-anchor_); }
+
+    bool outside(const Position<D> &ll, const Position<D> &ur) const
+      { return m_->outside(ur-anchor_,ll-anchor_); }
+
+    Mask<D> * clone() const
+      { return new AnchoredMask(*this); }
+
+  protected:
+    Mask<D> *m_;
+    Position<D> anchor_;
+  };
+
+
   template<int D>
   AbstractMask * Mask<D>::intersect_mask(const AbstractMask & other) const
   {
