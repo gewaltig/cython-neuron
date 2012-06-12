@@ -52,18 +52,18 @@ def
     Distance_a_i } bind
 def
 
-% /DumpLayerNodes [/ostreamtype /integertype]
-%   { true DumpLayerNodes_os_i_b } bind
-% def
+/DumpLayerNodes [/ostreamtype /integertype]
+  { DumpLayerNodes_os_i } bind
+def
 
 % /DumpLayerNodes_nowrite [/integertype]
 %   { false DumpLayerNodes_os_i_b } bind
 % def
 
 
-% /DumpLayerConnections [/ostreamtype /integertype /literaltype]
-%   /DumpLayerConnections_os_i_l load
-% def
+/DumpLayerConnections [/ostreamtype /integertype /literaltype]
+  /DumpLayerConnections_os_i_l load
+def
 
 /CreateMask [/literaltype /dictionarytype]
   /CreateMask_l_D load

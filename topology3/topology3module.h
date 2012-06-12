@@ -157,6 +157,18 @@ namespace nest
       void execute(SLIInterpreter *) const;
     } getvalue_a_Pfunction;
 
+    class DumpLayerNodes_os_iFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } dumplayernodes_os_ifunction;
+
+    class DumpLayerConnections_os_i_lFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } dumplayerconnections_os_i_lfunction;
+
     /**
      * Return a reference to the network managed by the topology module.
      */

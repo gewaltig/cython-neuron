@@ -246,6 +246,17 @@ namespace nest
     operator std::string() const;
 
     /**
+     * Print position to output stream.
+     *
+     * Format: Only as many coordinates as dimensions,
+     *         separated by spaces [default], no trailing space.
+     *
+     * @param out output stream
+     * @param sep separator character
+     */
+    void print(std::ostream& out, char sep = ' ') const;
+
+    /**
      * Output the Position to an ostream.
      */
     friend std::ostream & operator<< <>(std::ostream & os, const Position<D,T> & pos);
@@ -534,6 +545,14 @@ namespace nest
     std::stringstream ss;
     ss << *this;
     return ss.str();
+  }
+
+  template <int D, class T>
+  void Position<D,T>::print(std::ostream& out, char sep) const
+  {
+    out << x_[0];
+    for(int i=1;i<D;++i)
+      out << sep << x_[i];
   }
 
   template <int D, class T>

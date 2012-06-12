@@ -448,10 +448,10 @@ namespace nest
       { return m_->inside(p-anchor_); }
 
     bool inside(const Position<D> &ll, const Position<D> &ur) const
-      { return m_->inside(ur-anchor_,ll-anchor_); }
+      { return m_->inside(ll-anchor_,ur-anchor_); }
 
     bool outside(const Position<D> &ll, const Position<D> &ur) const
-      { return m_->outside(ur-anchor_,ll-anchor_); }
+      { return m_->outside(ll-anchor_,ur-anchor_); }
 
     Mask<D> * clone() const
       { return new AnchoredMask(*this); }

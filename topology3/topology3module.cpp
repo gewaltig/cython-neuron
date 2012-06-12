@@ -33,6 +33,7 @@
 #include "connection_creator_impl.h"
 #include "parameter.h"
 #include "lockptrdatum_impl.h"
+#include "iostreamdatum.h"
 
 namespace nest
 {
@@ -258,6 +259,12 @@ namespace nest
 
     i->createcommand("GetValue_a_P",
 		     &getvalue_a_Pfunction);
+
+    i->createcommand("DumpLayerNodes_os_i",
+		     &dumplayernodes_os_ifunction);
+
+    i->createcommand("DumpLayerConnections_os_i_l",
+		     &dumplayerconnections_os_i_lfunction);
 
     // Register layer types as models
     Network & net = get_network();
@@ -962,6 +969,128 @@ namespace nest
 
     i->OStack.pop(2);
     i->OStack.push(value);
+    i->EStack.pop();
+  }
+
+  /*
+    BeginDocumentation
+    
+    Name: topology::DumpLayerNodes - write information about layer nodes to file
+    
+    Synopsis: ostream layer_gid DumpLayerNodes -> ostream
+
+    Parameters:
+    ostream   - open output stream
+    layer_gid - topology layer
+		 
+    Description:
+    Write information about each element in the given layer to the
+    output stream. The file format is one line per element with the
+    following contents:
+
+    GID x-position y-position [z-position]
+
+    X and y position are given as physical coordinates in the extent,
+    not as grid positions. The number of decimals can be controlled by
+    calling setprecision on the output stream before calling DumpLayerNodes.
+
+    Note:
+    In distributed simulations, this function should only be called for
+    MPI rank 0. If you call it on several MPI ranks, you must use a
+    different file name on each.
+
+    Examples:
+
+    topology using
+    /my_layer << /rows 5 /columns 4 /elements /iaf_neuron >> CreateLayer def
+
+    (my_layer_dump.lyr) (w) file
+    my_layer DumpLayerNodes
+    close
+       
+    Author: Kittel Austvoll, Hans Ekkehard Plesser
+    
+    SeeAlso: topology::DumpLayerConnections, setprecision, modeldict
+  */
+  void Topology3Module::
+  DumpLayerNodes_os_iFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(2);
+    
+    const index layer_gid =  getValue<long_t>(i->OStack.pick(0));
+    OstreamDatum out = getValue<OstreamDatum>(i->OStack.pick(1));
+
+    AbstractLayer const * const layer = dynamic_cast<AbstractLayer*>(net_->get_node(layer_gid));
+
+    if( layer != 0 && out->good() )
+      layer->dump_nodes(*out);
+
+    i->OStack.pop(1);  // leave ostream on stack
+    i->EStack.pop();  
+  }
+
+  /*
+    BeginDocumentation
+    
+    Name: topology::DumpLayerConnections - prints a list of the connections of the nodes in the layer to file
+    
+    Synopsis: ostream source_layer_gid synapse_type DumpLayerConnections -> ostream
+
+    Parameters:
+    ostream          - open outputstream
+    source_layer_gid - topology layer
+    synapse_type     - synapse model (literal)
+		 
+    Description: 
+    Dumps information about all connections of the given type having their source in
+    the given layer to the given output stream. The data format is one line per connection as follows:
+
+    source_gid target_gid weight delay displacement[x,y,z]
+
+    where displacement are up to three coordinates of the vector from the source to
+    the target node. If targets do not have positions (eg spike detectors outside any layer),
+    NaN is written for each displacement coordinate.
+
+    Note:
+    For distributed simulations
+    - this function will dump the connections with local targets only.
+    - the user is responsible for writing to a different output stream (file)
+      on each MPI process.
+
+    Examples:
+
+    topology using
+    ...
+    (out.cnn) (w) file layer_gid /static_synapse PrintLayerConnections close
+       
+    Author: Kittel Austvoll, Hans Ekkehard Plesser
+    
+    SeeAlso: topology::DumpLayerNodes
+  */
+
+  void Topology3Module::
+  DumpLayerConnections_os_i_lFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(3);
+
+    OstreamDatum  out_file = getValue<OstreamDatum>(i->OStack.pick(2));
+    std::ostream& out = *out_file;
+
+    const index layer_gid = getValue<long_t>(i->OStack.pick(1));
+
+    const std::string synname = getValue<std::string>(i->OStack.pick(0));
+    const Token synapse = net_->get_synapsedict().lookup(synname);
+    if ( synapse.empty() )
+      throw UnknownSynapseType(synname);
+    const long synapse_id = static_cast<long>(synapse);
+
+    AbstractLayer* const layer = dynamic_cast<AbstractLayer*>(net_->get_node(layer_gid));
+    if (layer == NULL)
+      throw TypeMismatch("any layer type", "something else");
+
+    layer->dump_connections(out, synapse_id);
+
+    i->OStack.pop(2);  // leave ostream on stack
     i->EStack.pop();
   }
 

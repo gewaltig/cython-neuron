@@ -98,6 +98,23 @@ namespace nest
      */
     virtual AbstractNtree<index> * get_global_positions_ntree() = 0;
 
+    /**
+     * Write layer data to stream.
+     * For each node in layer, write one line to stream containing:
+     * GID x-position y-position [z-position]
+     * @param os     output stream
+     */
+    virtual void dump_nodes(std::ostream & os) const = 0;
+
+    /**
+     * Dumps information about all connections of the given type having their source in
+     * the given layer to the given output stream. For distributed simulations
+     * this function will dump the connections with local targets only.
+     * @param out output stream
+     * @param synapse_id type of connection
+     */
+    virtual void dump_connections(std::ostream & out, long synapse_id) = 0;
+
   protected:
     /**
      * GID for the single layer for which we cache global position information
@@ -126,13 +143,6 @@ namespace nest
 
   };
 
-  // It is necessary to declare the template for operator<< first in order
-  // to get the friend declaration to work
-  template <int D>
-  class Layer;
-
-  template <int D>
-  std::ostream & operator<<(std::ostream & os, const Layer<D> & pos);
 
   /**
    * Abstract base class for Layer of given dimension (D=2 or 3).
@@ -269,9 +279,17 @@ namespace nest
      * For each node in layer, write one line to stream containing:
      * GID x-position y-position [z-position]
      * @param os     output stream
-     * @param layer  layer to dump
      */
-    friend std::ostream & operator<< <>(std::ostream & os, const Layer & layer);
+    void dump_nodes(std::ostream & os) const;
+
+    /**
+     * Dumps information about all connections of the given type having their source in
+     * the given layer to the given output stream. For distributed simulations
+     * this function will dump the connections with local targets only.
+     * @param out output stream
+     * @param synapse_id type of connection
+     */
+    void dump_connections(std::ostream & out, long synapse_id);
 
     /**
      * Layers do not allow entry to the ChangeSubnet command, nodes can not
@@ -489,6 +507,67 @@ namespace nest
       delete cached_vector_;
     cached_vector_ = 0;
     cached_vector_layer_ = -1;
+  }
+
+  template <int D>
+  void Layer<D>::dump_nodes(std::ostream & out) const
+  {
+    for(index i=0;i<nodes_.size();++i) {
+      const index gid = nodes_[i]->get_gid();
+      out << gid << ' ';
+      get_position(i).print(out);
+      out << std::endl;
+    }
+  }
+
+  template <int D>
+  void Layer<D>::dump_connections(std::ostream & out, long synapse_id)
+  {
+    std::vector<std::pair<Position<D>,index> >* src_vec = get_global_positions_vector();
+
+    for(typename std::vector<std::pair<Position<D>,index> >::iterator src_iter=src_vec->begin();
+        src_iter != src_vec->end(); ++src_iter) {
+
+      const index source_gid = src_iter->second;
+      const Position<D> source_pos = src_iter->first;
+
+      DictionaryDatum dict = net_->get_connector_status(source_gid, synapse_id);
+
+      TokenArray targets = getValue<TokenArray>(dict, names::targets);
+      TokenArray weights = getValue<TokenArray>(dict, names::weights);
+      TokenArray delays  = getValue<TokenArray>(dict, names::delays);
+
+      assert(targets.size() == weights.size());
+      assert(targets.size() == delays.size());
+
+      // Print information about all local connections for current source
+      for ( size_t i = 0; i < targets.size(); ++i ) {
+        Node const * const target = net_->get_node(targets[i]);
+        assert(target);
+
+        // Print source, target, weight, delay, rports
+        out << source_gid << ' ' << targets[i] << ' '
+            << weights[i] << ' ' << delays[i];
+
+        Layer<D>* tgt_layer = dynamic_cast<Layer<D>*>(target->get_parent());
+        if (tgt_layer==0) {
+
+          // Happens if target does not belong to layer, eg spike_detector.
+          // We then print NaNs for the displacement.
+          for ( int n = 0 ; n < D ; ++n )
+            out << " NaN";
+
+        } else {
+
+          out << ' ';
+          tgt_layer->compute_displacement(source_pos, target->get_subnet_index()).print(out);
+
+        }
+
+        out << '\n';
+
+      }
+    }
   }
 
 } // namespace nest
