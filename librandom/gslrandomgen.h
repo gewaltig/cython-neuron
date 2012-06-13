@@ -36,7 +36,8 @@ namespace librandom {
 
   class GslRandomGen : public RandomGen
   {
-
+    friend class GSL_BinomialRandomDev;
+    
   public:
     explicit GslRandomGen(const gsl_rng_type *,  //!< given RNG, given seed
 		                      unsigned long);

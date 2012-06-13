@@ -27,6 +27,10 @@
 #include "gamma_randomdev.h"
 #include "uniformint_randomdev.h"
 
+#ifdef HAVE_GSL
+#include "gsl_binomial_randomdev.h"
+#endif
+
 SLIType RandomNumbers::RngType;
 SLIType RandomNumbers::RngFactoryType;
 SLIType RandomNumbers::RdvType;
@@ -97,6 +101,10 @@ void RandomNumbers::init(SLIInterpreter *i)
   register_rdv_<librandom::ExpRandomDev>("exponential", rdvdict);
   register_rdv_<librandom::GammaRandomDev>("gamma", rdvdict);
   register_rdv_<librandom::UniformIntRandomDev>("uniformint", rdvdict);
+
+#ifdef HAVE_GSL
+  register_rdv_<librandom::GSL_BinomialRandomDev>("gsl_binomial", rdvdict);
+#endif
 
   // create function
   i->createcommand("CreateRNG_gt_i", &createrngfunction);
