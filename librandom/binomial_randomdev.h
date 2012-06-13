@@ -7,7 +7,7 @@
 #include "config.h"
 
 #ifndef BINOMIAL_RANDOMDEV_H
-#define  BINOMIAL_RANDOMDEV_H
+#define BINOMIAL_RANDOMDEV_H
 
 #include <cmath>
 #include <vector>
@@ -49,8 +49,8 @@ namespace librandom {
                                                           
  Arguments:                                               
   - pointer to an RNG                                     
-  - parameter p (optional, default = 1)                   
-  - parameter n (optional, defautl = 1)                                       
+  - parameter p (optional, default = 0.5)                   
+  - parameter n (optional, default = 1)                                       
                                  
  @see Fishman, Sampling From the Binomial Distribution on a Computer, Journal of the American Statistical Association, Vol. 74, No. 366 (Jun., 1979), pp. 418-423
  @ingroup RandomDeviateGenerators
