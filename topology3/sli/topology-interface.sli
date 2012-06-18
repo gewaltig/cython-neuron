@@ -12,9 +12,9 @@ def
   /CreateLayer_D load
 def
 
-% /GetElement [/integertype /arraytype]
-%   /GetElement_i_ia load
-% def
+/GetElement [/integertype /arraytype]
+  /GetElement_i_ia load
+def
 
 /GetPosition [/integertype]
   /GetPosition_i load

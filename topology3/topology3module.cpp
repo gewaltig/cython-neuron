@@ -266,6 +266,9 @@ namespace nest
     i->createcommand("DumpLayerConnections_os_i_l",
 		     &dumplayerconnections_os_i_lfunction);
 
+    i->createcommand("GetElement_i_ia",
+		     &getelement_i_iafunction);
+
     // Register layer types as models
     Network & net = get_network();
 
@@ -1092,6 +1095,93 @@ namespace nest
 
     i->OStack.pop(2);  // leave ostream on stack
     i->EStack.pop();
+  }
+
+  /*
+    BeginDocumentation
+    
+    Name: topology::GetElement - return node GID at specified layer position
+    
+    Synopsis: layer_gid [array] GetElement -> node_gid
+
+    Parameters:
+    layer_gid     - topological layer
+    [array]       - position of node
+    node_gid      - node GID
+		 
+    Description: Retrieves node at the layer grid position 
+    given in [array]. [array] is on the format [column row].
+    The layer must be of grid type. Returns an array of GIDs
+    if there are several nodes per grid point.
+   
+    Examples:
+
+    topology using
+
+    %%Create layer
+    << /rows 5
+       /columns 4
+       /elements /iaf_neuron
+    >> /dictionary Set
+
+    dictionary CreateLayer /src Set 
+
+    src [2 3] GetElement
+       
+    Author: Kittel Austvoll, Håkon Enger
+  */
+  void Topology3Module::
+  GetElement_i_iaFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(2);
+
+    const index layer_gid = getValue<long_t>(i->OStack.pick(1));
+    TokenArray array = getValue<TokenArray>(i->OStack.pick(0));
+
+    std::vector<index> node_gids;
+
+    switch(array.size()) {
+    case 2:
+      {
+        GridLayer<2> *layer = 
+          dynamic_cast<GridLayer<2>*>(net_->get_node(layer_gid));
+        if (layer==0) {
+          throw TypeMismatch("grid layer node","something else");
+        }
+
+        node_gids = layer->get_nodes(Position<2,int_t>(static_cast<index>(array[0]), 
+                                                       static_cast<index>(array[1])));
+      }
+      break;
+
+    case 3:
+      {
+        GridLayer<3> *layer = 
+          dynamic_cast<GridLayer<3>*>(net_->get_node(layer_gid));
+        if (layer==0) {
+          throw TypeMismatch("grid layer node","something else");
+        }
+
+        node_gids = layer->get_nodes(Position<3,int_t>(static_cast<index>(array[0]), 
+                                                       static_cast<index>(array[1]),
+                                                       static_cast<index>(array[2])));
+      }
+      break;
+
+    default:
+	throw TypeMismatch("array with length 2 or 3", "something else");
+    }
+
+    i->OStack.pop(2);
+
+    // For compatibility reasons, return either single node or array
+    if (node_gids.size()==1) {
+      i->OStack.push(node_gids[0]);
+    } else {
+      i->OStack.push(node_gids);
+    }
+
+    i->EStack.pop();  
   }
 
   std::string LayerExpected::message()

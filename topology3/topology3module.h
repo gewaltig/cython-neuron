@@ -169,6 +169,12 @@ namespace nest
       void execute(SLIInterpreter *) const;
     } dumplayerconnections_os_i_lfunction;
 
+    class GetElement_i_iaFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } getelement_i_iafunction;
+
     /**
      * Return a reference to the network managed by the topology module.
      */
