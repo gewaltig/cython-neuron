@@ -35,15 +35,38 @@ namespace nest {
   {
     index length = 0;
     const char *layer_model_name = 0;
+    std::vector<long_t> element_ids;
+    std::string element_name;
+    Token element_model;
 
-    // FIXME: support arrays of elements
-    std::string element_name = getValue<std::string>(layer_dict, names::elements);
-    const Token element_model = 
-      net_->get_modeldict().lookup(element_name);
-    if ( element_model.empty() )
-      throw UnknownModelName(element_name);
+    const Token& t = layer_dict->lookup(names::elements);
+    ArrayDatum* ad = dynamic_cast<ArrayDatum *>(t.datum());
 
-    long_t element_id = static_cast<long>(element_model);
+    if (ad) {
+
+      for (Token* tp = ad->begin(); tp != ad->end(); ++tp) {
+
+        element_name = std::string(*tp);
+        element_model = net_->get_modeldict().lookup(element_name);
+
+        if ( element_model.empty() )
+          throw UnknownModelName(element_name);
+
+        element_ids.push_back(static_cast<long>(element_model));
+
+      }
+
+    } else {
+
+      element_name = getValue<std::string>(layer_dict, names::elements);
+      element_model = net_->get_modeldict().lookup(element_name);
+
+      if ( element_model.empty() )
+        throw UnknownModelName(element_name);
+
+      element_ids.push_back(static_cast<long>(element_model));
+
+    }
 
     if (layer_dict->known(names::positions)) {
       if (layer_dict->known(names::rows) or layer_dict->known(names::columns) or layer_dict->known(names::layers))
@@ -97,9 +120,10 @@ namespace nest {
     net_->go_to(layer_node);
 
     // Create layer nodes.
-    for(index n=0;n<length;++n)
-    {
-      net_->add_node(element_id);
+    for(size_t i=0;i<element_ids.size();++i) {
+      for(index n=0;n<length;++n) {
+        net_->add_node(element_ids[i]);
+      }
     }
 
     // Return to original subnet
@@ -109,6 +133,7 @@ namespace nest {
     AbstractLayer *layer = 
       dynamic_cast<AbstractLayer *>(net_->get_node(layer_node));
 
+    layer->depth_ = element_ids.size();
     layer->set_status(layer_dict);
 
     return layer_node;

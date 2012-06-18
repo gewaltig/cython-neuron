@@ -82,10 +82,10 @@ namespace nest
     // Read positions from dictionary
     if(d->known(names::positions)) {
       TokenArray pos = getValue<TokenArray>(d, names::positions);
-      if(this->global_size() != pos.size()) {
+      if(this->global_size()/this->depth_ != pos.size()) {
         std::stringstream expected;
         std::stringstream got;
-        expected << "position array with length " << this->global_size();
+        expected << "position array with length " << this->global_size()/this->depth_;
         got << "position array with length" << pos.size();
         throw TypeMismatch(expected.str(), got.str());
       }
@@ -93,11 +93,21 @@ namespace nest
       positions_.clear();
       positions_.reserve(this->local_size());
 
+      const index nodes_per_depth = this->global_size()/this->depth_;
+      const index first_lid = this->nodes_[0]->get_lid();
+
       for(vector<Node*>::iterator i = this->local_begin(); i != this->local_end(); ++i) {
+
+        if ( ((*i)->get_lid() != first_lid) &&
+             ((*i)->get_lid() % nodes_per_depth == first_lid ) ) {
+          break;
+        }
+
         std::vector<double_t> point =
-          getValue<std::vector<double_t> >(pos[(*i)->get_lid()]);
+          getValue<std::vector<double_t> >(pos[(*i)->get_lid() % nodes_per_depth]);
 
         positions_.push_back(Position<D>(point));
+
       }
 
       update_bbox_();
@@ -127,21 +137,21 @@ namespace nest
   template <int D>
   Position<D> FreeLayer<D>::get_position(index lid) const
   {
-    return positions_[lid];
+    return positions_[lid % positions_.size()];
   }
 
   template <int D,class Ins>
   static
   void communicate_positions(const std::vector<Node*>& nodes, const std::vector<Position<D> >& positions, Ins iter)
   {
-    assert(nodes.size() == positions.size());
+    assert(nodes.size() >= positions.size());
     
     std::vector<double_t> local_gid_pos((D+1)*nodes.size());
 
     for(index i = 0; i<nodes.size(); ++i) {
       local_gid_pos[(D+1)*i] = nodes[i]->get_gid();
       for(int j=0;j<D;++j)
-        local_gid_pos[(D+1)*i+j+1] = positions[i][j];
+        local_gid_pos[(D+1)*i+j+1] = positions[i % positions.size()][j];
     }
 
     std::vector<double_t> global_gid_pos;

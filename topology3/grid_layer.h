@@ -87,7 +87,7 @@ namespace nest
   template <int D>
   Position<D> GridLayer<D>::get_position(index sind) const
   {
-    index lid = this->nodes_[sind]->get_lid();
+    index lid = (this->nodes_[sind]->get_lid()) % this->depth_;
     Position<D,int_t> gridpos;
     for(int i=D-1;i>0;--i) {
       gridpos[i] = lid % dims_[i];

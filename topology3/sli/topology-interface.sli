@@ -20,9 +20,9 @@ def
   /GetPosition_i load
 def
 
-% /GetLayer [/integertype]
-%   /GetLayer_i load
-% def
+/GetLayer [/integertype]
+  { GetStatus /parent get } bind
+def
 
 /Displacement [/integertype /integertype]
   { exch GetPosition exch

@@ -408,6 +408,7 @@ namespace nest
 
     DictionaryDatum topology_dict(new Dictionary);
 
+    (*topology_dict)[names::depth] = depth_;
     (*topology_dict)[names::extent] = std::vector<double_t>(Layer<D>::extent_);
     (*topology_dict)[names::center] = std::vector<double_t>(Layer<D>::lower_left_ + Layer<D>::extent_/2);
 
