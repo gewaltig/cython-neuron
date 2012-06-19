@@ -32,6 +32,7 @@ libnest_la_SOURCES=\
 		communicator.h communicator_impl.h communicator.cpp\
 		sibling_container.h sibling_container.cpp\
 		subnet.h subnet.cpp\
+		multirange.h multirange.cpp\
 		connection.h connection.cpp\
 		connection_het_wd.h connection_het_wd.cpp\
 		connection_hom_wd.h connection_hom_wd.cpp\

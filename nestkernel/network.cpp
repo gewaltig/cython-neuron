@@ -368,7 +368,7 @@ index Network::add_node(index mod, long_t n)   //no_p
         current_->add_node(newnode);  // and into current subnet, thread 0.
       }
       else
-        current_->add_remote_node(mod);
+        current_->add_remote_node(gid,mod);
     }
   } 
   else if (!model->one_node_per_process())

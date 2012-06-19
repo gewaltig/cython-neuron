@@ -20,6 +20,7 @@
 #include <string>
 #include "node.h"
 #include "dictdatum.h"
+#include "multirange.h"
 
 /* BeginDocumentation
 
@@ -92,7 +93,7 @@ namespace nest{
      * Add a remote node to the subnet.
      * This function increments the next local id to be assigned.
      */ 
-    index add_remote_node(index mid);
+    index add_remote_node(index gid, index mid);
 
     /**
      * Return iterator to the first local child node.
@@ -184,6 +185,13 @@ namespace nest{
     vector<Node *> nodes_;
 
     /**
+     * GIDs of global child nodes.
+     * This Multirange contains the GIDs of all child nodes on all
+     * processes.
+     */
+    Multirange gids_;
+
+    /**
      * flag indicating if all children of this subnet have to
      * be created on the same virtual process or not. Use with
      * care. This may lead to severe performance problems!
@@ -198,7 +206,6 @@ namespace nest{
     DictionaryDatum customdict_; //!< user-defined dictionary for this node.
     // note that DictionaryDatum is a pointer and must be initialized in the constructor.
     bool homogeneous_;           //!< flag which indicates if the subnet contains different kinds of models.
-    index next_lid_;             //!< local index of next child
     index last_mid_;             //!< model index of last child
   };
 
@@ -208,16 +215,16 @@ namespace nest{
   inline
   index Subnet::add_node(Node *n)
   {
-    const index lid = next_lid_;
+    const index lid = gids_.size();
     const index mid = n->get_model_id();
     if ((homogeneous_) && (lid > 0))
       if (mid != last_mid_)
 	homogeneous_ = false;
-    n->set_lid_(next_lid_);
+    n->set_lid_(lid);
     n->set_subnet_index_(nodes_.size());
     nodes_.push_back(n);
     n->set_parent_(this);
-    next_lid_++;
+    gids_.push_back(n->get_gid());
     last_mid_ = mid;
     return lid;
   }
@@ -225,14 +232,14 @@ namespace nest{
    * Add a remote node to the subnet.
    */
   inline
-  index Subnet::add_remote_node(index mid)
+  index Subnet::add_remote_node(index gid, index mid)
   {
-    const index lid = next_lid_;
+    const index lid = gids_.size();
     if((homogeneous_) && (lid > 0))
       if (mid != last_mid_)
 	homogeneous_ = false;
     last_mid_ = mid;
-    next_lid_++;
+    gids_.push_back(gid);
     return lid;
   }
   
@@ -269,13 +276,13 @@ namespace nest{
   inline
   bool Subnet::global_empty() const
   {
-    return next_lid_ == 0;
+    return gids_.empty();
   }
 
   inline
   size_t Subnet::global_size() const
   {
-    return next_lid_;
+    return gids_.size();
   }
 
   inline
@@ -290,10 +297,10 @@ namespace nest{
     // defined for "dense" subnets only
     assert(local_size() == global_size());
 
-    if ( lid >= next_lid_ )
+    if ( lid >= nodes_.size() )
       throw UnknownNode();
 
-    return nodes_.at(lid);  // offset one between lid and index
+    return nodes_[lid];
   }
 
   inline 

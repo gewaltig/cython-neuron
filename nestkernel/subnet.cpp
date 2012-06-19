@@ -29,12 +29,12 @@
 nest::Subnet::Subnet()
   :Node(),
    nodes_(),
+   gids_(),
    children_on_same_vp_(false),
    children_vp_(0),
    label_(),
    customdict_(new Dictionary),
    homogeneous_(true),
-   next_lid_(0),
    last_mid_(0)
 {
   set(frozen);  // freeze subnet by default
@@ -43,12 +43,12 @@ nest::Subnet::Subnet()
 nest::Subnet::Subnet(const Subnet &c)
   :Node(c),
    nodes_(c.nodes_),
+   gids_(c.gids_),
    children_on_same_vp_(c.children_on_same_vp_),
    children_vp_(c.children_vp_),
    label_(c.label_),
    customdict_(new Dictionary(*(c.customdict_))),
    homogeneous_(c.homogeneous_),
-   next_lid_(c.next_lid_),
    last_mid_(c.last_mid_)
 {}
 
@@ -86,7 +86,7 @@ void nest::Subnet::get_status(DictionaryDatum& dict) const
 
 void nest::Subnet::get_dimensions_(std::vector<int> & dim) const
 {
-  dim.push_back(next_lid_);
+  dim.push_back(gids_.size());
   if(nodes_.empty())
     return;
   if(homogeneous_ && (dynamic_cast<Subnet *>(nodes_.at(0)) !=NULL))
