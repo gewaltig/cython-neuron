@@ -42,7 +42,14 @@ namespace nest
      * @param sind subnet index of node
      * @returns position of node identified by Subnet local index value.
      */
-    Position<D> get_position(index lid) const;
+    Position<D> get_position(index sind) const;
+
+    /**
+     * Get position of node. Also allowed for non-local nodes.
+     * @param lid local index of node
+     * @returns position of node identified by Subnet local index value.
+     */
+    Position<D> lid_to_position(index lid) const;
 
     /**
      * Returns nodes at a given discrete layerspace position.
@@ -99,9 +106,9 @@ namespace nest
   }
 
   template <int D>
-  Position<D> GridLayer<D>::get_position(index sind) const
+  Position<D> GridLayer<D>::lid_to_position(index lid) const
   {
-    index lid = (this->nodes_[sind]->get_lid()) % (this->global_size()/this->depth_);
+    lid %= this->global_size()/this->depth_;
     Position<D,int_t> gridpos;
     for(int i=D-1;i>0;--i) {
       gridpos[i] = lid % dims_[i];
@@ -110,6 +117,12 @@ namespace nest
     assert(lid < dims_[0]);
     gridpos[0] = lid;
     return this->lower_left_ + this->extent_/dims_ * gridpos + this->extent_/dims_ * 0.5;
+  }
+    
+  template <int D>
+  Position<D> GridLayer<D>::get_position(index sind) const
+  {
+    return lid_to_position(this->nodes_[sind]->get_lid());
   }
 
   template <int D>
@@ -137,7 +150,7 @@ namespace nest
   {
     index i = 0;
     for(Multirange::iterator gi = this->gids_.begin(); gi != this->gids_.end(); ++gi) {
-      *iter++ = std::pair<Position<D>,index>(get_position(i), *gi);
+      *iter++ = std::pair<Position<D>,index>(lid_to_position(i), *gi);
       ++i;
     }
   }

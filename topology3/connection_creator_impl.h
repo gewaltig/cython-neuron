@@ -84,12 +84,25 @@ namespace nest
 
     DictionaryDatum d = new Dictionary();
 
+    std::vector<Node*>::const_iterator target_begin;
+    std::vector<Node*>::const_iterator target_end;
+    if (target_filter_.select_depth()) {
+      target_begin = target.local_begin(target_filter_.depth);
+      target_end = target.local_end(target_filter_.depth);
+    } else {
+      target_begin = target.local_begin();
+      target_end = target.local_end();
+    }
+
     if (mask_.valid()) {
 
       const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
       Ntree<D,index> *ntree = source.get_global_positions_ntree();
 
-      for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
+      for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
+
+        if (target_filter_.select_model() && ((*tgt_it)->get_model_id() != target_filter_.model))
+          continue;
 
         index target_id = (*tgt_it)->get_gid();
         librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
@@ -123,7 +136,10 @@ namespace nest
       // no mask
 
       std::vector<std::pair<Position<D>,index> >* positions = source.get_global_positions_vector();
-      for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
+      for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
+
+        if (target_filter_.select_model() && ((*tgt_it)->get_model_id() != target_filter_.model))
+          continue;
 
         index target_id = (*tgt_it)->get_gid();
         librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
@@ -163,12 +179,25 @@ namespace nest
 
     DictionaryDatum d = new Dictionary();
 
+    std::vector<Node*>::const_iterator target_begin;
+    std::vector<Node*>::const_iterator target_end;
+    if (target_filter_.select_depth()) {
+      target_begin = target.local_begin(target_filter_.depth);
+      target_end = target.local_end(target_filter_.depth);
+    } else {
+      target_begin = target.local_begin();
+      target_end = target.local_end();
+    }
+
     if (mask_.valid()) {
 
       const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
       Ntree<D,index> *ntree = source.get_global_positions_ntree();
 
-      for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
+      for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
+
+        if (target_filter_.select_model() && ((*tgt_it)->get_model_id() != target_filter_.model))
+          continue;
 
         index target_id = (*tgt_it)->get_gid();
         librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
@@ -230,7 +259,10 @@ namespace nest
 
       std::vector<std::pair<Position<D>,index> >* positions = source.get_global_positions_vector();
 
-      for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
+      for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
+
+        if (target_filter_.select_model() && ((*tgt_it)->get_model_id() != target_filter_.model))
+          continue;
 
         index target_id = (*tgt_it)->get_gid();
         librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
@@ -285,6 +317,16 @@ namespace nest
     // 3. Draw number of connections to make using global rng
     // 4. Draw from local targets and make connections
 
+    std::vector<Node*>::const_iterator target_begin;
+    std::vector<Node*>::const_iterator target_end;
+    if (target_filter_.select_depth()) {
+      target_begin = target.local_begin(target_filter_.depth);
+      target_end = target.local_end(target_filter_.depth);
+    } else {
+      target_begin = target.local_begin();
+      target_end = target.local_end();
+    }
+
     std::vector<std::pair<Position<D>,index> >* sources = source.get_global_positions_vector();
     DictionaryDatum d = new Dictionary();
 
@@ -298,7 +340,10 @@ namespace nest
 
       // Find potential targets and probabilities
 
-      for (std::vector<Node*>::const_iterator tgt_it = target.local_begin();tgt_it != target.local_end();++tgt_it) {
+      for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
+
+        if (target_filter_.select_model() && ((*tgt_it)->get_model_id() != target_filter_.model))
+          continue;
 
         Position<D> target_displ = target.compute_displacement(source_pos, (*tgt_it)->get_subnet_index());
           

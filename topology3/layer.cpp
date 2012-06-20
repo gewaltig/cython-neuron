@@ -139,4 +139,52 @@ namespace nest {
     return layer_node;
   }
 
+  std::vector<Node*>::iterator AbstractLayer::local_begin(int_t depth)
+  {
+    index min_nodes_per_layer = local_size()/depth_;
+    index first_gid_at_depth = gids_[depth*(global_size()/depth_)];
+    std::vector<Node*>::iterator iter = local_begin();
+    for(iter += depth*min_nodes_per_layer; iter != local_end(); ++iter) {
+      if ((*iter)->get_gid() >= first_gid_at_depth)
+        break;
+    }
+    return iter;
+  }
+
+  std::vector<Node*>::iterator AbstractLayer::local_end(int_t depth)
+  {
+    index min_nodes_per_layer = local_size()/depth_;
+    index last_gid_at_depth = gids_[(depth+1)*(global_size()/depth_)-1];
+    std::vector<Node*>::iterator iter = local_begin();
+    for(iter += (depth+1)*min_nodes_per_layer; iter != local_end(); ++iter) {
+      if ((*iter)->get_gid() > last_gid_at_depth)
+        break;
+    }
+    return iter;
+  }
+
+  std::vector<Node*>::const_iterator AbstractLayer::local_begin(int_t depth) const
+  {
+    index min_nodes_per_layer = local_size()/depth_;
+    index first_gid_at_depth = gids_[depth*(global_size()/depth_)];
+    std::vector<Node*>::const_iterator iter = local_begin();
+    for(iter += depth*min_nodes_per_layer; iter != local_end(); ++iter) {
+      if ((*iter)->get_gid() >= first_gid_at_depth)
+        break;
+    }
+    return iter;
+  }
+
+  std::vector<Node*>::const_iterator AbstractLayer::local_end(int_t depth) const
+  {
+    index min_nodes_per_layer = local_size()/depth_;
+    index last_gid_at_depth = gids_[(depth+1)*(global_size()/depth_)-1];
+    std::vector<Node*>::const_iterator iter = local_begin();
+    for(iter += (depth+1)*min_nodes_per_layer; iter != local_end(); ++iter) {
+      if ((*iter)->get_gid() > last_gid_at_depth)
+        break;
+    }
+    return iter;
+  }
+
 } // namespace nest

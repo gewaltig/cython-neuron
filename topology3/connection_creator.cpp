@@ -54,6 +54,10 @@ namespace nest
 
         synapse_model_ = static_cast<index>(synmodel);
 
+      } else if (dit->first == names::targets) {
+
+        target_filter_ = getValue<DictionaryDatum>(dit->second);
+
       } else {
 
         parameters_[dit->first] = Topology3Module::create_parameter(dit->second);
@@ -86,5 +90,23 @@ namespace nest
 
   }
 
+  ConnectionCreator::Selector::Selector(const DictionaryDatum &d) :
+    depth(-1), model(-1)
+  {
+    updateValue<long_t>(d, names::lid, depth);
+
+    std::string modelname;
+    if(updateValue<std::string>(d, names::model, modelname)) {
+
+      const Token model_token =
+        Node::network()->get_modeldict().lookup(modelname);
+
+      if ( model_token.empty() )
+        throw UnknownModelName(modelname);
+
+      model = static_cast<long_t>(model_token);
+
+    }
+  }
 
 } // namespace nest

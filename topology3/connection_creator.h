@@ -90,7 +90,21 @@ namespace nest
     template<int D>
     void get_parameters_(const Position<D> & pos, librandom::RngPtr rng, DictionaryDatum d);
 
+    struct Selector {
+      Selector(): model(-1), depth(-1)
+        {}
+      Selector(const DictionaryDatum &);
+      bool select_model() const
+        { return model>=0; }
+      bool select_depth() const
+        { return depth>=0; }
+      long_t model;
+      long_t depth;
+    };
+
     ConnectionType type_;
+    Selector source_filter_;
+    Selector target_filter_;
     long_t number_of_connections_;
     lockPTR<AbstractMask> mask_;
     lockPTR<Parameter> kernel_;

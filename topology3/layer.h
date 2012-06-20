@@ -115,6 +115,37 @@ namespace nest
      */
     virtual void dump_connections(std::ostream & out, long synapse_id) = 0;
 
+    using Subnet::local_begin;
+    using Subnet::local_end;
+
+    /**
+     * Start of local children at given depth.
+     * @param depth layer depth
+     * @returns iterator for local nodes pointing to first node at given depth
+     */
+    std::vector<Node*>::iterator local_begin(int_t depth);
+
+    /**
+     * End of local children at given depth.
+     * @param depth layer depth
+     * @returns iterator for local nodes pointing to the end of the given depth
+     */
+    std::vector<Node*>::iterator local_end(int_t depth);
+
+    /**
+     * Start of local children at given depth.
+     * @param depth layer depth
+     * @returns iterator for local nodes pointing to first node at given depth
+     */
+    std::vector<Node*>::const_iterator local_begin(int_t depth) const;
+
+    /**
+     * End of local children at given depth.
+     * @param depth layer depth
+     * @returns iterator for local nodes pointing to the end of the given depth
+     */
+    std::vector<Node*>::const_iterator local_end(int_t depth) const;
+
   protected:
     /**
      * GID for the single layer for which we cache global position information
@@ -124,7 +155,7 @@ namespace nest
     /**
      * number of neurons at each position
      */
-    int depth_;
+    int_t depth_;
 
     /**
      * GID for the single layer for which we cache global position information
