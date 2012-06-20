@@ -115,10 +115,6 @@ namespace nest
   template <int D>
   std::vector<index> GridLayer<D>::get_nodes(Position<D,int_t> pos)
   {
-    LocalChildList localnodes(*this);
-    vector<Communicator::NodeAddressingData> globalnodes;
-    nest::Communicator::communicate(localnodes,globalnodes,true);
-
     std::vector<index> gids;
     index lid = 0;
     index layer_size = this->global_size()/this->depth_;
@@ -129,7 +125,7 @@ namespace nest
     }
 
     for(int d=0;d<this->depth_;++d) {
-      gids.push_back(globalnodes[lid + d*layer_size].get_gid());
+      gids.push_back(this->gids_[lid + d*layer_size]);
     }
 
     return gids;
@@ -139,13 +135,9 @@ namespace nest
   template <class Ins>
   void GridLayer<D>::insert_global_positions_(Ins iter)
   {
-    LocalChildList localnodes(*this);
-    vector<Communicator::NodeAddressingData> globalnodes;
-    nest::Communicator::communicate(localnodes,globalnodes,true);
-
     index i = 0;
-    for(vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n) {
-      *iter++ = std::pair<Position<D>,index>(get_position(i), n->get_gid());
+    for(Multirange::iterator gi = this->gids_.begin(); gi != this->gids_.end(); ++gi) {
+      *iter++ = std::pair<Position<D>,index>(get_position(i), *gi);
       ++i;
     }
   }
