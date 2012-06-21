@@ -74,6 +74,14 @@ namespace nest
 
         source_filter_ = getValue<DictionaryDatum>(dit->second);
 
+      } else if (dit->first == names::weights) {
+
+        parameters_[names::weight] = Topology3Module::create_parameter(dit->second);
+
+      } else if (dit->first == names::delays) {
+
+        parameters_[names::delay] = Topology3Module::create_parameter(dit->second);
+
       } else {
 
         parameters_[dit->first] = Topology3Module::create_parameter(dit->second);

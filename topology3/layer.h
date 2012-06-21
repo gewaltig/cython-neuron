@@ -268,6 +268,16 @@ namespace nest
     std::vector<double_t> get_position_vector(const index lid) const;
 
     /**
+     * Returns displacement of a position from another position. When using periodic
+     * boundary conditions, will return minimum displacement.
+     * @param from_pos  position vector in layer
+     * @param to_pos    position to which displacement is to be computed
+     * @returns vector pointing from from_pos to to_pos
+     */
+    virtual Position<D> compute_displacement(const Position<D>& from_pos,
+                                             const Position<D>& to_pos) const;
+
+    /**
      * Returns displacement of node from given position. When using periodic
      * boundary conditions, will return minimum displacement.
      * @param from_pos  position vector in layer
@@ -372,9 +382,9 @@ namespace nest
 
   template<int D>
   Position<D> Layer<D>::compute_displacement(const Position<D>& from_pos,
-                                             const index to) const
+                                             const Position<D>& to_pos) const
   {
-    Position<D> displ = get_position(to) - from_pos;
+    Position<D> displ = to_pos - from_pos;
     for(int i=0;i<D;++i) {
       if (periodic_[i]) {
         displ[i] = -0.5*extent_[i] + std::fmod(displ[i]+0.5*extent_[i], extent_[i]);
@@ -383,6 +393,13 @@ namespace nest
       }
     }
     return displ;
+  }
+
+  template<int D>
+  Position<D> Layer<D>::compute_displacement(const Position<D>& from_pos,
+                                             const index to) const
+  {
+    return compute_displacement(from_pos,get_position(to));
   }
 
   template<int D>

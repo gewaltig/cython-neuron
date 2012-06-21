@@ -116,7 +116,14 @@ namespace nest
     }
     assert(lid < dims_[0]);
     gridpos[0] = lid;
-    return this->lower_left_ + this->extent_/dims_ * gridpos + this->extent_/dims_ * 0.5;
+    // grid layer uses "matrix convention", i.e. reversed y axis
+    Position<D> ext = this->extent_;
+    Position<D> upper_left = this->lower_left_;
+    if (D>0) {
+      upper_left[1] += ext[1];
+      ext[1] = -ext[1];
+    }
+    return upper_left + ext/dims_ * gridpos + ext/dims_ * 0.5;
   }
     
   template <int D>

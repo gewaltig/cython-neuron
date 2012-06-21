@@ -116,7 +116,7 @@ namespace nest
               continue;
 
             if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
-              get_parameters_(iter->first - target_pos, rng, d);
+              get_parameters_(source.compute_displacement(target_pos,iter->first), rng, d);
               net_.connect(iter->second,target_id,d,synapse_model_);
             }
 
@@ -131,7 +131,7 @@ namespace nest
             if ((not allow_autapses_) and (iter->second == target_id))
               continue;
 
-            get_parameters_(iter->first - target_pos, rng, d);
+            get_parameters_(source.compute_displacement(target_pos,iter->first), rng, d);
             net_.connect(iter->second,target_id,d,synapse_model_);
           }
 
@@ -160,7 +160,7 @@ namespace nest
               continue;
 
             if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
-              get_parameters_(iter->first - target_pos, rng, d);
+              get_parameters_(source.compute_displacement(target_pos,iter->first), rng, d);
               net_.connect(iter->second,target_id,d,synapse_model_);
             }
           }
@@ -172,7 +172,7 @@ namespace nest
             if ((not allow_autapses_) and (iter->second == target_id))
               continue;
 
-            get_parameters_(iter->first - target_pos, rng, d);
+            get_parameters_(source.compute_displacement(target_pos,iter->first), rng, d);
             net_.connect(iter->second,target_id,d,synapse_model_);
           }
 
@@ -246,7 +246,7 @@ namespace nest
           for(int i=0;i<number_of_connections_;++i) {
             index random_id = lottery.get_random_id(rng);
             index source_id = sources[random_id];
-            get_parameters_(positions[random_id] - target_pos, rng, d);
+            get_parameters_(source.compute_displacement(target_pos,positions[random_id]), rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
           }
 
@@ -272,7 +272,7 @@ namespace nest
           for(int i=0;i<number_of_connections_;++i) {
             index random_id = rng->ulrand(sources.size());
             index source_id = sources[random_id];
-            get_parameters_(positions[random_id] - target_pos, rng, d);
+            get_parameters_(source.compute_displacement(target_pos,positions[random_id]), rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
           }
 
@@ -320,7 +320,7 @@ namespace nest
               continue;
             }
 
-            get_parameters_(source_pos - target_pos, rng, d);
+            get_parameters_(source.compute_displacement(target_pos,source_pos), rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
           }
 
@@ -338,7 +338,7 @@ namespace nest
               continue;
             }
 
-            get_parameters_(source_pos - target_pos, rng, d);
+            get_parameters_(source.compute_displacement(target_pos,source_pos), rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
           }
 
