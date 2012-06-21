@@ -27,6 +27,7 @@
 #include "topology_names.h"
 #include "ntree.h"
 #include "connection_creator.h"
+#include "selector.h"
 
 namespace nest
 {
@@ -96,7 +97,7 @@ namespace nest
      * Return an Ntree with the positions and GIDs of the nodes in this
      * layer.
      */
-    virtual AbstractNtree<index> * get_global_positions_ntree() = 0;
+    virtual AbstractNtree<index> * get_global_positions_ntree(Selector filter=Selector()) = 0;
 
     /**
      * Write layer data to stream.
@@ -292,9 +293,9 @@ namespace nest
     double_t compute_distance(const std::vector<double_t>& from_pos,
                               const index to) const;
 
-    Ntree<D,index> * get_global_positions_ntree();
+    Ntree<D,index> * get_global_positions_ntree(Selector filter=Selector());
 
-    std::vector<std::pair<Position<D>,index> >* get_global_positions_vector();
+    std::vector<std::pair<Position<D>,index> >* get_global_positions_vector(Selector filter=Selector());
 
     /**
      * Connect this layer to the given target layer. The actual connections
@@ -344,12 +345,12 @@ namespace nest
     /**
      * Insert global position info into ntree.
      */
-    virtual void insert_global_positions_ntree_(Ntree<D,index> & tree) = 0;
+    virtual void insert_global_positions_ntree_(Ntree<D,index> & tree, const Selector& filter) = 0;
 
     /**
      * Insert global position info into vector.
      */
-    virtual void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > &) = 0;
+    virtual void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > &, const Selector& filter) = 0;
 
     Position<D> lower_left_;  ///< lower left corner (minimum coordinates) of layer
     Position<D> extent_;      ///< size of layer
@@ -454,7 +455,7 @@ namespace nest
   }
 
   template <int D>
-  Ntree<D,index> * Layer<D>::get_global_positions_ntree()
+  Ntree<D,index> * Layer<D>::get_global_positions_ntree(Selector filter)
   {
     if (cached_ntree_layer_ == get_gid()) {
       assert(cached_ntree_);
@@ -477,19 +478,20 @@ namespace nest
 
     } else {
 
-      insert_global_positions_ntree_(*cached_ntree_);
+      insert_global_positions_ntree_(*cached_ntree_, filter);
 
     }
 
     clear_vector_cache_();
 
-    cached_ntree_layer_ = get_gid();
+    if ((not filter.select_model()) and (not filter.select_depth()))
+      cached_ntree_layer_ = get_gid();
 
     return cached_ntree_;
   }
 
   template <int D>
-  std::vector<std::pair<Position<D>,index> >* Layer<D>::get_global_positions_vector()
+  std::vector<std::pair<Position<D>,index> >* Layer<D>::get_global_positions_vector(Selector filter)
   {
     if (cached_vector_layer_ == get_gid()) {
       assert(cached_vector_);
@@ -512,13 +514,14 @@ namespace nest
 
     } else {
 
-      insert_global_positions_vector_(*cached_vector_);
+      insert_global_positions_vector_(*cached_vector_, filter);
 
     }
 
     clear_ntree_cache_();
 
-    cached_vector_layer_ = get_gid();
+    if ((not filter.select_model()) and (not filter.select_depth()))
+      cached_vector_layer_ = get_gid();
 
     return cached_vector_;
   }

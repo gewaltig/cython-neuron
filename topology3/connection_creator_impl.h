@@ -97,7 +97,7 @@ namespace nest
     if (mask_.valid()) {
 
       const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
-      Ntree<D,index> *ntree = source.get_global_positions_ntree();
+      Ntree<D,index> *ntree = source.get_global_positions_ntree(source_filter_);
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 
@@ -135,7 +135,7 @@ namespace nest
     } else {
       // no mask
 
-      std::vector<std::pair<Position<D>,index> >* positions = source.get_global_positions_vector();
+      std::vector<std::pair<Position<D>,index> >* positions = source.get_global_positions_vector(source_filter_);
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 
         if (target_filter_.select_model() && ((*tgt_it)->get_model_id() != target_filter_.model))
@@ -192,7 +192,7 @@ namespace nest
     if (mask_.valid()) {
 
       const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
-      Ntree<D,index> *ntree = source.get_global_positions_ntree();
+      Ntree<D,index> *ntree = source.get_global_positions_ntree(source_filter_);
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 
@@ -257,7 +257,7 @@ namespace nest
     } else {
       // no mask
 
-      std::vector<std::pair<Position<D>,index> >* positions = source.get_global_positions_vector();
+      std::vector<std::pair<Position<D>,index> >* positions = source.get_global_positions_vector(source_filter_);
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 
@@ -327,7 +327,7 @@ namespace nest
       target_end = target.local_end();
     }
 
-    std::vector<std::pair<Position<D>,index> >* sources = source.get_global_positions_vector();
+    std::vector<std::pair<Position<D>,index> >* sources = source.get_global_positions_vector(source_filter_);
     DictionaryDatum d = new Dictionary();
 
     for (typename std::vector<std::pair<Position<D>,index> >::iterator src_it = sources->begin(); src_it != sources->end(); ++src_it) {

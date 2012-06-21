@@ -40,8 +40,12 @@ namespace nest
 
   protected:
     void update_bbox_(); ///< update bounding box (min/max coordinates)
-    void insert_global_positions_ntree_(Ntree<D,index> & tree);
-    void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec);
+
+    template <class Ins>
+    void communicate_positions_(Ins iter, const Selector& filter);
+
+    void insert_global_positions_ntree_(Ntree<D,index> & tree, const Selector& filter);
+    void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec, const Selector& filter);
 
     /// Vector of positions. Should match node vector in Subnet.
     std::vector<Position<D> > positions_;
@@ -140,18 +144,34 @@ namespace nest
     return positions_[lid % positions_.size()];
   }
 
-  template <int D,class Ins>
-  static
-  void communicate_positions(const std::vector<Node*>& nodes, const std::vector<Position<D> >& positions, Ins iter)
+  template <int D>
+  template <class Ins>
+  void FreeLayer<D>::communicate_positions_(Ins iter, const Selector& filter)
   {
-    assert(nodes.size() >= positions.size());
+    assert(this->nodes_.size() >= positions_.size());
     
-    std::vector<double_t> local_gid_pos((D+1)*nodes.size());
+    std::vector<double_t> local_gid_pos;
+    std::vector<Node*>::const_iterator nodes_begin;
+    std::vector<Node*>::const_iterator nodes_end;
 
-    for(index i = 0; i<nodes.size(); ++i) {
-      local_gid_pos[(D+1)*i] = nodes[i]->get_gid();
+    if (filter.select_depth()) {
+      local_gid_pos.reserve((D+1)*(this->nodes_.size()/this->depth_ + 1));
+      nodes_begin = this->local_begin(filter.depth);
+      nodes_end = this->local_end(filter.depth);
+    } else {
+      local_gid_pos.reserve((D+1)*this->nodes_.size());
+      nodes_begin = this->local_begin();
+      nodes_end = this->local_end();
+    }
+
+    for(std::vector<Node*>::const_iterator node_it = nodes_begin; node_it != nodes_end; ++node_it) {
+
+      if (filter.select_model() && ((*node_it)->get_model_id() != filter.model))
+        continue;
+
+      local_gid_pos.push_back((*node_it)->get_gid());
       for(int j=0;j<D;++j)
-        local_gid_pos[(D+1)*i+j+1] = positions[i % positions.size()][j];
+        local_gid_pos.push_back(positions_[(*node_it)->get_subnet_index() % positions_.size()][j]);
     }
 
     std::vector<double_t> global_gid_pos;
@@ -165,18 +185,18 @@ namespace nest
   }
 
   template <int D>
-  void FreeLayer<D>::insert_global_positions_ntree_(Ntree<D,index> & tree)
+  void FreeLayer<D>::insert_global_positions_ntree_(Ntree<D,index> & tree, const Selector& filter)
   {
 
-    communicate_positions(this->nodes_, positions_, std::inserter(tree, tree.end()));
+    communicate_positions_(std::inserter(tree, tree.end()), filter);
 
   }
 
   template <int D>
-  void FreeLayer<D>::insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec)
+  void FreeLayer<D>::insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec, const Selector& filter)
   {
 
-    communicate_positions(this->nodes_, positions_, std::back_inserter(vec));
+    communicate_positions_(std::back_inserter(vec), filter);
 
     // should we sort the vector here?
 

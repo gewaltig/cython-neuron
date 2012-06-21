@@ -35,7 +35,9 @@ libtopology3module_la_SOURCES= \
 			vose.h \
 			vose.cpp \
 			parameter.h \
-			parameter.cpp
+			parameter.cpp \
+			selector.h \
+			selector.cpp
 
 # do not change anything below this line ------------------------------
 

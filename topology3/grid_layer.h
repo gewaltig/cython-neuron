@@ -66,9 +66,9 @@ namespace nest
     Position<D,index> dims_;   ///< number of nodes in each direction.
 
     template<class Ins>
-    void insert_global_positions_(Ins iter);
-    void insert_global_positions_ntree_(Ntree<D,index> & tree);
-    void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec);
+    void insert_global_positions_(Ins iter, const Selector& filter);
+    void insert_global_positions_ntree_(Ntree<D,index> & tree, const Selector& filter);
+    void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec, const Selector& filter);
   };
 
   template <int D>
@@ -146,25 +146,42 @@ namespace nest
 
   template <int D>
   template <class Ins>
-  void GridLayer<D>::insert_global_positions_(Ins iter)
+  void GridLayer<D>::insert_global_positions_(Ins iter, const Selector& filter)
   {
     index i = 0;
-    for(Multirange::iterator gi = this->gids_.begin(); gi != this->gids_.end(); ++gi) {
+    index lid_end = this->gids_.size();
+
+    if (filter.select_depth()) {
+      const index nodes_per_layer = this->gids_.size() / this->depth_;
+      i = nodes_per_layer * filter.depth;
+      lid_end = nodes_per_layer * (filter.depth+1);
+      if ((i >= this->gids_.size()) or (lid_end > this->gids_.size()))
+        throw BadProperty("Selected depth out of range");
+    }
+
+    Multirange::iterator gi = this->gids_.begin();
+    for (index j=0;j<i;++j)  // Advance iterator to first gid at selected depth
+      ++gi;
+
+    for(; (gi != this->gids_.end()) && (i < lid_end); ++gi, ++i) {
+
+      if (filter.select_model() && (this->net_->get_model_id_of_gid(*gi) != filter.model))
+        continue;
+
       *iter++ = std::pair<Position<D>,index>(lid_to_position(i), *gi);
-      ++i;
     }
   }
 
   template <int D>
-  void GridLayer<D>::insert_global_positions_ntree_(Ntree<D,index> & tree)
+  void GridLayer<D>::insert_global_positions_ntree_(Ntree<D,index> & tree, const Selector& filter)
   {
-    insert_global_positions_(std::inserter(tree, tree.end()));
+    insert_global_positions_(std::inserter(tree, tree.end()), filter);
   }
 
   template <int D>
-  void GridLayer<D>::insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec)
+  void GridLayer<D>::insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec, const Selector& filter)
   {
-    insert_global_positions_(std::back_inserter(vec));
+    insert_global_positions_(std::back_inserter(vec), filter);
   }
 
 } // namespace nest
