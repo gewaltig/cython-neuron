@@ -66,6 +66,8 @@ namespace nest
     const Name sigma_y("sigma_y");
     const Name rho("rho");
     const Name layers("layers");
+    const Name allow_autapses("allow_autapses");
+    const Name allow_multapses("allow_multapses");
   }
 }
 

@@ -92,6 +92,7 @@ namespace nest
     void get_parameters_(const Position<D> & pos, librandom::RngPtr rng, DictionaryDatum d);
 
     ConnectionType type_;
+    bool allow_autapses_;
     Selector source_filter_;
     Selector target_filter_;
     long_t number_of_connections_;

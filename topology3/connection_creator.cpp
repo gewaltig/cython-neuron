@@ -20,7 +20,15 @@ namespace nest
 {
 
   ConnectionCreator::ConnectionCreator(DictionaryDatum dict):
-    number_of_connections_(0),mask_(),synapse_model_(0),net_(Topology3Module::get_network())
+    allow_autapses_(true),
+    source_filter_(),
+    target_filter_(),
+    number_of_connections_(0),
+    mask_(),
+    kernel_(),
+    synapse_model_(0),
+    parameters_(),
+    net_(Topology3Module::get_network())
   {
     Name connection_type;
 
@@ -29,6 +37,10 @@ namespace nest
       if (dit->first == names::connection_type) {
 
         connection_type = getValue<std::string>(dit->second);
+
+      } else if (dit->first == names::allow_autapses) {
+
+        allow_autapses_ = getValue<bool>(dit->second);
 
       } else if (dit->first == names::number_of_connections) {
 

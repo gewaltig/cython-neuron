@@ -74,6 +74,8 @@ namespace nest
     extern const Name sigma_y;
     extern const Name rho;
     extern const Name layers;
+    extern const Name allow_autapses;
+    extern const Name allow_multapses;
   }
 }
 

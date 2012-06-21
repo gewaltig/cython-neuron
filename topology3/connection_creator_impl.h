@@ -112,6 +112,9 @@ namespace nest
 
           for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target_pos); iter!=ntree->masked_end(); ++iter) {
 
+            if ((not allow_autapses_) and (iter->second == target_id))
+              continue;
+
             if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
               get_parameters_(iter->first - target_pos, rng, d);
               net_.connect(iter->second,target_id,d,synapse_model_);
@@ -124,6 +127,10 @@ namespace nest
           // no kernel
 
           for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target_pos); iter!=ntree->masked_end(); ++iter) {
+
+            if ((not allow_autapses_) and (iter->second == target_id))
+              continue;
+
             get_parameters_(iter->first - target_pos, rng, d);
             net_.connect(iter->second,target_id,d,synapse_model_);
           }
@@ -148,6 +155,10 @@ namespace nest
         if (kernel_.valid()) {
 
           for(typename std::vector<std::pair<Position<D>,index> >::iterator iter=positions->begin();iter!=positions->end();++iter) {
+
+            if ((not allow_autapses_) and (iter->second == target_id))
+              continue;
+
             if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
               get_parameters_(iter->first - target_pos, rng, d);
               net_.connect(iter->second,target_id,d,synapse_model_);
@@ -157,6 +168,10 @@ namespace nest
         } else {
 
           for(typename std::vector<std::pair<Position<D>,index> >::iterator iter=positions->begin();iter!=positions->end();++iter) {
+
+            if ((not allow_autapses_) and (iter->second == target_id))
+              continue;
+
             get_parameters_(iter->first - target_pos, rng, d);
             net_.connect(iter->second,target_id,d,synapse_model_);
           }
@@ -211,27 +226,28 @@ namespace nest
           std::vector<double_t> probabilities;
 
           for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target.get_position((*tgt_it)->get_subnet_index()));iter!=ntree->masked_end();++iter) {
+
+            if ((not allow_autapses_) and (iter->second == target_id))
+              continue;
+
             positions.push_back(iter->first);
             sources.push_back(iter->second);
             probabilities.push_back(kernel_->value(iter->first - target_pos, rng));
           }
 
-          if (sources.size()==0) {
-
+          if ((sources.size()==0) or
+             ((not allow_autapses_) and (sources.size()==1) and (sources[0]==target_id)) ) {
             std::string msg = String::compose("Global target ID %1: No sources found inside mask.", target_id);
-            net_.message(SLIInterpreter::M_WARNING, "ConnectLayers", msg.c_str());
+            throw KernelException(msg.c_str());
+          }
 
-          } else {
+          Vose lottery(probabilities);
 
-            Vose lottery(probabilities);
-
-            for(int i=0;i<number_of_connections_;++i) {
-              index random_id = lottery.get_random_id(rng);
-              index source_id = sources[random_id];
-              get_parameters_(positions[random_id] - target_pos, rng, d);
-              net_.connect(source_id, target_id, d, synapse_model_);
-            }
-
+          for(int i=0;i<number_of_connections_;++i) {
+            index random_id = lottery.get_random_id(rng);
+            index source_id = sources[random_id];
+            get_parameters_(positions[random_id] - target_pos, rng, d);
+            net_.connect(source_id, target_id, d, synapse_model_);
           }
 
         } else {
@@ -239,8 +255,18 @@ namespace nest
           // no kernel
 
           for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target.get_position((*tgt_it)->get_subnet_index()));iter!=ntree->masked_end();++iter) {
+
+            if ((not allow_autapses_) and (iter->second == target_id))
+              continue;
+
             positions.push_back(iter->first);
             sources.push_back(iter->second);
+          }
+
+          if ((sources.size()==0) or
+             ((not allow_autapses_) and (sources.size()==1) and (sources[0]==target_id)) ) {
+            std::string msg = String::compose("Global target ID %1: No sources found inside mask.", target_id);
+            throw KernelException(msg.c_str());
           }
 
           for(int i=0;i<number_of_connections_;++i) {
@@ -268,6 +294,12 @@ namespace nest
         librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
         Position<D> target_pos = target.get_position((*tgt_it)->get_subnet_index());
 
+        if ( (positions->size()==0) or
+             ((not allow_autapses_) and (positions->size()==1) and ((*positions)[0].second==target_id)) ) {
+          std::string msg = String::compose("Global target ID %1: No sources found.", target_id);
+          throw KernelException(msg.c_str());
+        }
+
         if (kernel_.valid()) {
 
           std::vector<double_t> probabilities;
@@ -282,6 +314,12 @@ namespace nest
             index random_id = lottery.get_random_id(rng);
             Position<D> source_pos = (*positions)[random_id].first;
             index source_id = (*positions)[random_id].second;
+
+            if ((not allow_autapses_) and (source_id == target_id)) {
+              --i;
+              continue;
+            }
+
             get_parameters_(source_pos - target_pos, rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
           }
@@ -294,6 +332,12 @@ namespace nest
             index random_id = rng->ulrand(positions->size());
             Position<D> source_pos = (*positions)[random_id].first;
             index source_id = (*positions)[random_id].second;
+
+            if ((not allow_autapses_) and (source_id == target_id)) {
+              --i;
+              continue;
+            }
+
             get_parameters_(source_pos - target_pos, rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
           }
@@ -345,8 +389,11 @@ namespace nest
         if (target_filter_.select_model() && ((*tgt_it)->get_model_id() != target_filter_.model))
           continue;
 
+        if ((not allow_autapses_) and (source_id == (*tgt_it)->get_gid()))
+          continue;
+
         Position<D> target_displ = target.compute_displacement(source_pos, (*tgt_it)->get_subnet_index());
-          
+
         if (mask_.valid() && !mask_->inside(target_displ))
           continue;
 
