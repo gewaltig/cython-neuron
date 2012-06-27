@@ -253,7 +253,8 @@ namespace nest
     /**
      * @returns a bitmask specifying which directions are periodic
      */
-    int get_periodic_mask() const;
+     std::bitset<D> get_periodic_mask() const
+      { return periodic_; }
 
     /**
      * Get position of node. Only possible for local nodes.
@@ -303,7 +304,22 @@ namespace nest
     double_t compute_distance(const std::vector<double_t>& from_pos,
                               const index to) const;
 
+    /**
+     * Get positions for all nodes in layer, including nodes on other MPI
+     * processes. The positions will be cached so that subsequent calls for
+     * the same layer are fast. One one layer is cached at the time, so the
+     * user should group together all ConnectLayer calls using the same
+     * pool layer.
+     */
     Ntree<D,index> * get_global_positions_ntree(Selector filter=Selector());
+
+    /**
+     * Get positions globally, overriding the dimensions of the layer and
+     * the periodic flags. The supplied lower left corner and extent
+     * coordinates are only used for the dimensions where the supplied
+     * periodic flag is set.
+     */
+    Ntree<D,index> * get_global_positions_ntree(Selector filter, std::bitset<D> periodic, Position<D> lower_left, Position<D> extent);
 
     std::vector<std::pair<Position<D>,index> >* get_global_positions_vector(Selector filter=Selector());
 
@@ -351,6 +367,8 @@ namespace nest
      * Clear the cache for global position information
      */
     void clear_vector_cache_() const;
+
+    Ntree<D,index> * do_get_global_positions_ntree_(const Selector& filter);
 
     /**
      * Insert global position info into ntree.
@@ -474,7 +492,7 @@ namespace nest
   template <int D>
   Ntree<D,index> * Layer<D>::get_global_positions_ntree(Selector filter)
   {
-    if (cached_ntree_layer_ == get_gid()) {
+    if ((not filter.select_model()) and (not filter.select_depth()) and (cached_ntree_layer_ == get_gid())) {
       assert(cached_ntree_);
       return cached_ntree_;
     }
@@ -483,7 +501,36 @@ namespace nest
 
     cached_ntree_ = new Ntree<D,index>(this->lower_left_, this->extent_, this->periodic_);
 
-    if (cached_vector_layer_ == get_gid()) {
+    return do_get_global_positions_ntree_(filter);
+  }
+
+  template <int D>
+  Ntree<D,index> * Layer<D>::get_global_positions_ntree(Selector filter, std::bitset<D> periodic, Position<D> lower_left, Position<D> extent)
+  {
+    clear_ntree_cache_();
+    clear_vector_cache_();
+
+    // Keep layer geometry for non-periodic dimensions
+    for(int i=0;i<D;++i) {
+      if (not periodic[i]) {
+        extent[i] = extent_[i];
+        lower_left[i] = lower_left_[i];
+      }
+    }
+
+    cached_ntree_ = new Ntree<D,index>(this->lower_left_, extent, periodic);
+
+    do_get_global_positions_ntree_(filter);
+
+    cached_ntree_layer_ = -1; // Do not use cache since the periodic bits and extents were altered.
+
+    return cached_ntree_;
+  }
+
+  template <int D>
+  Ntree<D,index> * Layer<D>::do_get_global_positions_ntree_(const Selector& filter)
+  {
+    if ((not filter.select_model()) and (not filter.select_depth()) and (cached_vector_layer_ == get_gid())) {
       // Convert from vector to Ntree
     
       typename std::insert_iterator<Ntree<D,index> > to = std::inserter(*cached_ntree_, cached_ntree_->end());

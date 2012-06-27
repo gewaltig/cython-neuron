@@ -44,19 +44,7 @@ namespace nest
 
     case Source_driven:
 
-      // Reverse the mask and parameters and use target driven connect,
-      // which is more efficient.
-      if (mask_.valid()) {
-        const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
-        mask_ = lockPTR<AbstractMask>(new ConverseMask<D>(mask_ref));
-      }
-      for(ParameterMap::iterator iter=parameters_.begin(); iter != parameters_.end(); ++iter) {
-        parameters_[iter->first] = lockPTR<Parameter>(new ConverseParameter(*iter->second));
-      }
-
-      type_ = Target_driven;
-
-      target_driven_connect_(source, target);
+      source_driven_connect_(source, target);
       break;
 
     default:
@@ -173,6 +161,120 @@ namespace nest
               continue;
 
             get_parameters_(source.compute_displacement(target_pos,iter->first), rng, d);
+            net_.connect(iter->second,target_id,d,synapse_model_);
+          }
+
+        }
+      }
+    }
+
+  }
+
+  template<int D>
+  void ConnectionCreator::source_driven_connect_(Layer<D>& source, Layer<D>& target)
+  {
+    // Source driven connect is actually implemented as target driven,
+    // but with displacements computed in the target layer. The Mask has been
+    // reversed so that it can be applied to the source instead of the target.
+    // For each local target node:
+    //  1. Apply (Converse)Mask to source layer
+    //  2. For each source node: Compute probability, draw random number, make
+    //     connection conditionally
+
+    DictionaryDatum d = new Dictionary();
+
+    std::vector<Node*>::const_iterator target_begin;
+    std::vector<Node*>::const_iterator target_end;
+    if (target_filter_.select_depth()) {
+      target_begin = target.local_begin(target_filter_.depth);
+      target_end = target.local_end(target_filter_.depth);
+    } else {
+      target_begin = target.local_begin();
+      target_end = target.local_end();
+    }
+
+    if (mask_.valid()) {
+
+      const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
+
+      lockPTR<Mask<D> > mask = lockPTR<Mask<D> >(new ConverseMask<D>(mask_ref));
+
+      Ntree<D,index> *ntree = source.get_global_positions_ntree(source_filter_,target.get_periodic_mask(),target.get_lower_left(),target.get_extent());
+
+      for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
+
+        if (target_filter_.select_model() && ((*tgt_it)->get_model_id() != target_filter_.model))
+          continue;
+
+        index target_id = (*tgt_it)->get_gid();
+        librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
+        Position<D> target_pos = target.get_position((*tgt_it)->get_subnet_index());
+
+        if (kernel_.valid()) {
+
+          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(*mask,target_pos); iter!=ntree->masked_end(); ++iter) {
+
+            if ((not allow_autapses_) and (iter->second == target_id))
+              continue;
+
+            if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
+              get_parameters_(target.compute_displacement(iter->first, target_pos), rng, d);
+              net_.connect(iter->second,target_id,d,synapse_model_);
+            }
+
+          }
+
+        } else {
+
+          // no kernel
+
+          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(*mask,target_pos); iter!=ntree->masked_end(); ++iter) {
+
+            if ((not allow_autapses_) and (iter->second == target_id))
+              continue;
+
+            get_parameters_(target.compute_displacement(iter->first,target_pos), rng, d);
+            net_.connect(iter->second,target_id,d,synapse_model_);
+          }
+
+        }
+
+      }
+
+    } else {
+      // no mask
+
+      std::vector<std::pair<Position<D>,index> >* positions = source.get_global_positions_vector(source_filter_);
+      for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
+
+        if (target_filter_.select_model() && ((*tgt_it)->get_model_id() != target_filter_.model))
+          continue;
+
+        index target_id = (*tgt_it)->get_gid();
+        librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
+        Position<D> target_pos = target.get_position((*tgt_it)->get_subnet_index());
+
+        if (kernel_.valid()) {
+
+          for(typename std::vector<std::pair<Position<D>,index> >::iterator iter=positions->begin();iter!=positions->end();++iter) {
+
+            if ((not allow_autapses_) and (iter->second == target_id))
+              continue;
+
+            if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
+              get_parameters_(target.compute_displacement(iter->first,target_pos), rng, d);
+              net_.connect(iter->second,target_id,d,synapse_model_);
+            }
+          }
+
+        } else {
+
+          for(typename std::vector<std::pair<Position<D>,index> >::iterator iter=positions->begin();iter!=positions->end();++iter) {
+
+            if ((not allow_autapses_) and (iter->second == target_id))
+              continue;
+
+            get_parameters_(target.compute_displacement(iter->first,target_pos), rng, d);
             net_.connect(iter->second,target_id,d,synapse_model_);
           }
 

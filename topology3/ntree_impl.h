@@ -350,8 +350,22 @@ namespace nest {
   }
 
   template<int D, class T, int max_capacity>
-  typename Ntree<D,T,max_capacity>::iterator Ntree<D,T,max_capacity>::insert(const Position<D>& pos, const T& node)
+  typename Ntree<D,T,max_capacity>::iterator Ntree<D,T,max_capacity>::insert(Position<D> pos, const T& node)
   {
+    if (periodic_.any()) {
+      // Map position into standard range when using periodic b.c.
+      // Only necessary when inserting positions during source driven connect when target
+      // has periodic b.c. May be inefficient.
+
+      for(int i=0;i<D;++i) {
+        if (periodic_[i]) {
+          pos[i] = lower_left_[i] + std::fmod(pos[i]-lower_left_[i], extent_[i]);
+          if (pos[i]<lower_left_[i])
+            pos[i] += extent_[i];
+        }
+      }
+    }
+
     if (leaf_ && (nodes_.size()>=max_capacity))
       split_();
 

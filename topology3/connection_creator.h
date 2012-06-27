@@ -80,6 +80,9 @@ namespace nest
     void target_driven_connect_(Layer<D>& source, Layer<D>& target);
 
     template<int D>
+    void source_driven_connect_(Layer<D>& source, Layer<D>& target);
+
+    template<int D>
     void convergent_connect_(Layer<D>& source, Layer<D>& target);
 
     template<int D>

@@ -233,7 +233,7 @@ namespace nest
      * Inserts node in correct leaf in quadtree.
      * @returns iterator pointing to inserted node.
      */
-    iterator insert(const Position<D>& pos, const T& node);
+    iterator insert(Position<D> pos, const T& node);
 
     /**
      * std::multimap like insert method
