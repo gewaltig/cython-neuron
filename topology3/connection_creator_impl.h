@@ -338,18 +338,23 @@ namespace nest
           }
 
           if ((sources.size()==0) or
-             ((not allow_autapses_) and (sources.size()==1) and (sources[0]==target_id)) ) {
-            std::string msg = String::compose("Global target ID %1: No sources found inside mask.", target_id);
+              ((not allow_multapses_) and (sources.size()<number_of_connections_)) ) {
+            std::string msg = String::compose("Global target ID %1: Not enough sources found inside mask", target_id);
             throw KernelException(msg.c_str());
           }
 
           Vose lottery(probabilities);
-
+          std::vector<bool> is_selected(sources.size());
           for(int i=0;i<number_of_connections_;++i) {
             index random_id = lottery.get_random_id(rng);
+            if ((not allow_multapses_) and (is_selected[random_id])) {
+              --i;
+              continue;
+            }
             index source_id = sources[random_id];
             get_parameters_(source.compute_displacement(target_pos,positions[random_id]), rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
+            is_selected[random_id] = true;
           }
 
         } else {
@@ -366,16 +371,22 @@ namespace nest
           }
 
           if ((sources.size()==0) or
-             ((not allow_autapses_) and (sources.size()==1) and (sources[0]==target_id)) ) {
-            std::string msg = String::compose("Global target ID %1: No sources found inside mask.", target_id);
+              ((not allow_multapses_) and (sources.size()<number_of_connections_)) ) {
+            std::string msg = String::compose("Global target ID %1: Not enough sources found inside mask", target_id);
             throw KernelException(msg.c_str());
           }
 
+          std::vector<bool> is_selected(sources.size());
           for(int i=0;i<number_of_connections_;++i) {
             index random_id = rng->ulrand(sources.size());
+            if ((not allow_multapses_) and (is_selected[random_id])) {
+              --i;
+              continue;
+            }
             index source_id = sources[random_id];
             get_parameters_(source.compute_displacement(target_pos,positions[random_id]), rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
+            is_selected[random_id] = true;
           }
 
         }
@@ -397,8 +408,9 @@ namespace nest
         Position<D> target_pos = target.get_position((*tgt_it)->get_subnet_index());
 
         if ( (positions->size()==0) or
-             ((not allow_autapses_) and (positions->size()==1) and ((*positions)[0].second==target_id)) ) {
-          std::string msg = String::compose("Global target ID %1: No sources found.", target_id);
+             ((not allow_autapses_) and (positions->size()==1) and ((*positions)[0].second==target_id)) or
+             ((not allow_multapses_) and (positions->size()<number_of_connections_)) ) {
+          std::string msg = String::compose("Global target ID %1: Not enough sources found", target_id);
           throw KernelException(msg.c_str());
         }
 
@@ -412,36 +424,48 @@ namespace nest
 
           Vose lottery(probabilities);
 
+          std::vector<bool> is_selected(positions->size());
           for(int i=0;i<number_of_connections_;++i) {
             index random_id = lottery.get_random_id(rng);
-            Position<D> source_pos = (*positions)[random_id].first;
-            index source_id = (*positions)[random_id].second;
+            if ((not allow_multapses_) and (is_selected[random_id])) {
+              --i;
+              continue;
+            }
 
+            index source_id = (*positions)[random_id].second;
             if ((not allow_autapses_) and (source_id == target_id)) {
               --i;
               continue;
             }
 
+            Position<D> source_pos = (*positions)[random_id].first;
             get_parameters_(source.compute_displacement(target_pos,source_pos), rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
+            is_selected[random_id] = true;
           }
 
         } else {
 
           // no kernel
 
+          std::vector<bool> is_selected(positions->size());
           for(int i=0;i<number_of_connections_;++i) {
             index random_id = rng->ulrand(positions->size());
-            Position<D> source_pos = (*positions)[random_id].first;
-            index source_id = (*positions)[random_id].second;
+            if ((not allow_multapses_) and (is_selected[random_id])) {
+              --i;
+              continue;
+            }
 
+            index source_id = (*positions)[random_id].second;
             if ((not allow_autapses_) and (source_id == target_id)) {
               --i;
               continue;
             }
 
+            Position<D> source_pos = (*positions)[random_id].first;
             get_parameters_(source.compute_displacement(target_pos,source_pos), rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
+            is_selected[random_id] = true;
           }
 
         }
@@ -527,15 +551,30 @@ namespace nest
       }
       num_connections[num_connections.size()-1] = total_connections;
 
+      if (num_connections[Communicator::get_rank()]==0)
+        continue;
+
+      if ((targets.size()==0) or
+          ((not allow_multapses_) and (targets.size()<num_connections[Communicator::get_rank()])) ) {
+        std::string msg = String::compose("Global source ID %1: Not enough targets found", source_id);
+        throw KernelException(msg.c_str());
+      }
+
       // Draw targets
       Vose lottery(probabilities);
+      std::vector<bool> is_selected(targets.size());
       for(long_t i=0;i<num_connections[Communicator::get_rank()];++i) {
         index random_id = lottery.get_random_id(net_.get_rng(net_.get_node(targets[0])->get_thread())); // FIXME: Can not use grng here!
+        if ((not allow_multapses_) and (is_selected[random_id])) {
+          --i;
+          continue;
+        }
         Position<D> target_displ = displacements[random_id];
         index target_id = targets[random_id];
         librandom::RngPtr rng = net_.get_rng(net_.get_node(target_id)->get_thread());
         get_parameters_(target_displ, rng, d);
         net_.connect(source_id, target_id, d, synapse_model_);
+        is_selected[random_id] = true;
       }
 
     }

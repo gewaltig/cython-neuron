@@ -21,6 +21,7 @@ namespace nest
 
   ConnectionCreator::ConnectionCreator(DictionaryDatum dict):
     allow_autapses_(true),
+    allow_multapses_(true),
     source_filter_(),
     target_filter_(),
     number_of_connections_(0),
@@ -41,6 +42,10 @@ namespace nest
       } else if (dit->first == names::allow_autapses) {
 
         allow_autapses_ = getValue<bool>(dit->second);
+
+      } else if (dit->first == names::allow_multapses) {
+
+        allow_multapses_ = getValue<bool>(dit->second);
 
       } else if (dit->first == names::number_of_connections) {
 
