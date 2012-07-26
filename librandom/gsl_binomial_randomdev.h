@@ -44,7 +44,7 @@ Author: Jochen Martin Eppler
 namespace librandom {
 
 /**
- Class GSL_BinomialRNG
+ Class GSL_BinomialRandomDev
 
  Generates an RNG which returns Binomial(k;p;n)
  distributed random numbers out of an RNG which returns
@@ -60,12 +60,6 @@ namespace librandom {
  @see http://www.gnu.org/software/gsl/manual/html_node/The-Binomial-Distribution.html
  @ingroup RandomDeviateGenerators
 */
-
-/* ----------------------------------------------------------------
- * Draw a binomial random number using the GSL function
- *     gsl_ran_binomial 
- * Stable URL: http://www.gnu.org/software/gsl/manual/html_node/The-Binomial-Distribution.html
- * ---------------------------------------------------------------- */
 
 class GSL_BinomialRandomDev : public RandomDev
   {
