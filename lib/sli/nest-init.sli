@@ -1460,7 +1460,7 @@ def
 
 
 % can only be defined here because on bg processes.sli is not included
-statusdict /platform get (bg/p) eq
+statusdict /platform get dup (bg/p) eq exch (bg/q) eq or
 {
- /memory_thisjob {memory_thisjob_bgp} def
+ /memory_thisjob {memory_thisjob_bg} def
 } if

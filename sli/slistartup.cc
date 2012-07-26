@@ -353,46 +353,47 @@ void SLIStartup::init(SLIInterpreter *i)
   statusdict->insert(hostvendor_name,Token(new StringDatum(SLI_HOSTVENDOR)));
   statusdict->insert(hostcpu_name,Token(new StringDatum(SLI_HOSTCPU)));
 
-
-
-//expose platform model for code branches without assuming configure leads to a unique setting
-{
+  // expose platform model for code branching without assuming
+  // configure leads to a unique setting
   std::string platform;
 
-#ifdef IS_BLUEGENE
-  if (platform=="") platform="bg"; 
-#endif
-
 #ifdef IS_BLUEGENE_L
-  platform+="/l";
+  platform += "bg/l";
 #endif
 
 #ifdef IS_BLUEGENE_P
-  platform+="/p";
+  platform += "bg/p";
 #endif
 
-  if (platform=="") platform="default";
+#ifdef IS_BLUEGENE_Q
+  platform += "bg/q";
+#endif
+
+#ifdef IS_K
+  platform = "k";
+#endif
+
+  if (platform == "")
+    platform = "default";
 
   statusdict->insert(platform_name, Token(new StringDatum(platform)));
-}
 
-//expose threading model without assuming configure leads to a unique setting
-{
+  // expose threading model without assuming configure leads to a
+  // unique setting
   std::string threading;
 
 #ifdef HAVE_PTHREADS
-  threading+="pthreads";
+  threading += "pthreads";
 #endif
 
 #ifdef _OPENMP
-  threading+="openmp";
+  threading += "openmp";
 #endif
 
-  if (threading=="") threading="no";
+  if (threading == "")
+      threading = "no";
 
   statusdict->insert(threading_name, Token(new StringDatum(threading)));
-}
-
 
 #ifdef HAVE_MPI
   statusdict->insert(have_mpi_name, Token(new BoolDatum(true)));

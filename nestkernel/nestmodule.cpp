@@ -39,28 +39,17 @@
 #include "communicator_impl.h"
 #include "genericmodel.h"
 
-// This may differ on other Blue Gene/P systems and was only tested on
-// the JUGENE system at the Research Center Juelich
-#ifdef IS_BLUEGENE_P
-
+#if defined IS_BLUEGENE_P || defined IS_BLUEGENE_Q
 extern "C"
 {
-  // these functions are defined in get_mem_bgp.c
-  // they need to reside in a plain c file, because the
-  // paragmas defined in the bgp header files interfere
-  // with c++, causing "undefined references to non-virtual thunk"
-  // MH 12-02-22, redid fix by JME 12-01-27, changeset 9497
-  long get_heap_mem_bgp();
-  long get_stack_mem_bgp();
+  // These functions are defined in the file "bg_get_mem.c". They need
+  // to reside in a plain C file, because the #pragmas defined in the
+  // BG header files interfere with C++, causing "undefined reference
+  // to non-virtual thunk" MH 12-02-22, redid fix by JME 12-01-27.
+  long bg_get_heap_mem();
+  long bg_get_stack_mem();
 }
-
-// For getrusage
-#include <sys/resource.h>
-#include <common/bgp_personality.h>
-#include <common/bgp_personality_inlines.h>
-#include <spi/kernel_interface.h>
-
-#endif /* #ifdef IS_BLUEGENE_P */
+#endif
 
 extern int SLIsignalflag;
 
@@ -1094,28 +1083,23 @@ namespace nest
   }
 
 
-#ifdef IS_BLUEGENE_P
+#if defined IS_BLUEGENE_P || defined IS_BLUEGENE_Q
   /* BeginDocumentation
-     Name memory_thisjob_bgp - Reports memory usage on Blue Gene/P system
+     Name memory_thisjob_bg - Reports memory usage on Blue Gene/P/Q systems
      Description:
-     BGPMemInfo returns a dictionary with the heap and stack memory
-     usage of a process in Bytes. This function has only been tested
-     on JUGENE the Blue Gene/P at the Research Center in Juelich.
+     BGMemInfo returns a dictionary with the heap and stack memory
+     usage of a process in Bytes.
      Availability: NEST
      Author: Jochen Martin Eppler
   */
-  void NestModule::MemoryThisjobBgpFunction::execute(SLIInterpreter *i) const
+  void NestModule::MemoryThisjobBgFunction::execute(SLIInterpreter *i) const
   {
-    long heap_memory = get_heap_mem_bgp();
-    long stack_memory = get_stack_mem_bgp();
-    
     DictionaryDatum dict(new Dictionary);
-    (*dict)["heap"] = heap_memory;
-    (*dict)["stack"] = stack_memory;
 
-    struct rusage usage;
-    if (getrusage(RUSAGE_SELF, &usage) == 0)
-      (*dict)["ru_maxrss"] = usage.ru_maxrss;
+    unsigned long heap_memory = bg_get_heap_mem();
+    (*dict)["heap"] = heap_memory;
+    unsigned long stack_memory = bg_get_stack_mem();
+    (*dict)["stack"] = stack_memory;
   
     i->OStack.push(dict);
     i->EStack.pop();
@@ -1563,8 +1547,8 @@ namespace nest
 
     i->createcommand("MemoryInfo", &memoryinfofunction);
 
-#ifdef IS_BLUEGENE_P
-    i->createcommand("memory_thisjob_bgp", &memorythisjobbgpfunction);
+#if defined IS_BLUEGENE_P || defined IS_BLUEGENE_Q
+    i->createcommand("memory_thisjob_bg", &memorythisjobbgfunction);
 #endif
    
     i->createcommand("PrintNetwork", &printnetworkfunction);
