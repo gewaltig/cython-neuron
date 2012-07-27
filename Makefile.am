@@ -84,4 +84,4 @@ install-data-hook: install-exec install-slidoc-recursive
 nobase_pkgdata_DATA=\
 	extras/emacs/sli.el.in \
 	extras/emacs/postscript-sli.el \
-	extras/emacs/psvn.el \
+	extras/emacs/psvn.el
