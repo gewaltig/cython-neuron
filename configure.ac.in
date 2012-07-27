@@ -976,7 +976,6 @@ AC_CONFIG_FILES(lib/Makefile)
 AC_CONFIG_FILES(nestkernel/Makefile)
 AC_CONFIG_FILES(nest/Makefile)
 AC_CONFIG_FILES(extras/nest-config)
-AC_CONFIG_FILES(extras/petafx/configure_fx.py)
 AC_CONFIG_FILES(testsuite/do_tests.sh)
 
 # In the following loop, we need to have

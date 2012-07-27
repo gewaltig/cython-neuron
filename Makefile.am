@@ -80,10 +80,8 @@ install-data-hook: install-exec install-slidoc-recursive
 	@INSTALL_PROGRAM@ @PKGSRCDIR@/extras/nest_indirect $(DESTDIR)$(exec_prefix)/bin/
 	@INSTALL_PROGRAM@ -m 644 @PKGSRCDIR@/README $(DESTDIR)@PKGDOCDIR@/
 	@INSTALL_PROGRAM@ -m 644 @PKGSRCDIR@/NEWS $(DESTDIR)@PKGDOCDIR@/
-	@INSTALL_PROGRAM@ -m 644 @PKGBUILDDIR@/extras/petafx/configure_fx.py $(DESTDIR)@PKGDATADIR@/extras
 
 nobase_pkgdata_DATA=\
 	extras/emacs/sli.el.in \
 	extras/emacs/postscript-sli.el \
 	extras/emacs/psvn.el \
-	extras/petafx/configure_fx.py.in
