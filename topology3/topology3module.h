@@ -91,11 +91,11 @@ namespace nest
       void execute(SLIInterpreter *) const;
     } connectlayers_i_i_Dfunction;
 
-    class CreateMask_l_DFunction: public SLIFunction
+    class CreateMask_DFunction: public SLIFunction
     {
     public:
       void execute(SLIInterpreter *) const;
-    } createmask_l_Dfunction;
+    } createmask_Dfunction;
 
     class Inside_a_MFunction: public SLIFunction
     {
@@ -145,11 +145,11 @@ namespace nest
       void execute(SLIInterpreter *) const;
     } sub_P_Pfunction;
 
-    class CreateParameter_l_DFunction: public SLIFunction
+    class CreateParameter_DFunction: public SLIFunction
     {
     public:
       void execute(SLIInterpreter *) const;
-    } createparameter_l_Dfunction;
+    } createparameter_Dfunction;
 
     class GetValue_a_PFunction: public SLIFunction
     {
@@ -174,6 +174,12 @@ namespace nest
     public:
       void execute(SLIInterpreter *) const;
     } getelement_i_iafunction;
+
+    class Cvdict_MFunction: public SLIFunction
+    {
+    public:
+      void execute(SLIInterpreter *) const;
+    } cvdict_Mfunction;
 
     /**
      * Return a reference to the network managed by the topology module.

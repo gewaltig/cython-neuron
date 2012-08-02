@@ -65,8 +65,8 @@ def
   /DumpLayerConnections_os_i_l load
 def
 
-/CreateMask [/literaltype /dictionarytype]
-  /CreateMask_l_D load
+/CreateMask [/dictionarytype]
+  /CreateMask_D load
 def
 
 /Inside [/arraytype /masktype]
@@ -109,14 +109,25 @@ def
   /GetGlobalChildren_i_M_a load
 def
   
-/CreateParameter [/literaltype /dictionarytype]
-  /CreateParameter_l_D load
+/CreateParameter [/dictionarytype]
+  /CreateParameter_D load
+def
+
+/CreateParameter [/doubletype]
+  /CreateParameter_D load
 def
 
 /GetValue [/arraytype /parametertype]
   /GetValue_a_P load
 def
+
+/cvdict [/masktype]
+  /cvdict_M load
+def
   
+/get [/masktype /literaltype] {exch cvdict_M exch get} def
+/get [/masktype /arraytype] {exch cvdict_M exch get} def
+
 % ------------------------------------------------------------------------------
 
 end % namespace topology

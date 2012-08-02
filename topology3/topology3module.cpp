@@ -27,6 +27,7 @@
 #include "communicator_impl.h"
 #include "topology3module.h"
 #include "layer.h"
+#include "layer_impl.h"
 #include "free_layer.h"
 #include "grid_layer.h"
 #include "mask.h"
@@ -221,8 +222,8 @@ namespace nest
     i->createcommand("Distance_a_i",
 		     &distance_a_ifunction);
 
-    i->createcommand("CreateMask_l_D",
-		     &createmask_l_Dfunction);
+    i->createcommand("CreateMask_D",
+		     &createmask_Dfunction);
 
     i->createcommand("Inside_a_M",
 		     &inside_a_Mfunction);
@@ -254,8 +255,8 @@ namespace nest
     i->createcommand("ConnectLayers_i_i_D",
 		     &connectlayers_i_i_Dfunction);
 
-    i->createcommand("CreateParameter_l_D",
-		     &createparameter_l_Dfunction);
+    i->createcommand("CreateParameter_D",
+		     &createparameter_Dfunction);
 
     i->createcommand("GetValue_a_P",
 		     &getvalue_a_Pfunction);
@@ -268,6 +269,9 @@ namespace nest
 
     i->createcommand("GetElement_i_ia",
 		     &getelement_i_iafunction);
+
+    i->createcommand("cvdict_M",
+                     &cvdict_Mfunction);
 
     // Register layer types as models
     Network & net = get_network();
@@ -528,7 +532,7 @@ namespace nest
     Name: topology::CreateMask - create a spatial mask
 
     Synopsis:
-    /type dict CreateMask -> mask
+    << /type dict >> CreateMask -> mask
 
     Parameters:
     /type - mask type
@@ -542,18 +546,13 @@ namespace nest
 
     Author: Håkon Enger
   */
-  void Topology3Module::CreateMask_l_DFunction::execute(SLIInterpreter *i) const
+  void Topology3Module::CreateMask_DFunction::execute(SLIInterpreter *i) const
   {
-    i->assert_stack_load(2);
+    i->assert_stack_load(1);
 
-    const Name masktype = getValue<Name>(i->OStack.pick(1));    
-    DictionaryDatum mask_dict =
-      getValue<DictionaryDatum>(i->OStack.pick(0));
+    MaskDatum datum( create_mask(i->OStack.pick(0)) );
 
-    
-    MaskDatum datum( create_mask(masktype,mask_dict) );
-
-    i->OStack.pop(2);
+    i->OStack.pop(1);
     i->OStack.push(datum);
     i->EStack.pop();
   }
@@ -912,7 +911,7 @@ namespace nest
     Name: topology::CreateParameter - create a spatial function
 
     Synopsis:
-    /type dict CreateParameter -> parameter
+    << /type dict >> CreateParameter -> parameter
 
     Parameters:
     /type - parameter type
@@ -927,18 +926,13 @@ namespace nest
 
     Author: Håkon Enger
   */
-  void Topology3Module::CreateParameter_l_DFunction::execute(SLIInterpreter *i) const
+  void Topology3Module::CreateParameter_DFunction::execute(SLIInterpreter *i) const
   {
-    i->assert_stack_load(2);
+    i->assert_stack_load(1);
 
-    const Name paramtype = getValue<Name>(i->OStack.pick(1));    
-    DictionaryDatum param_dict =
-      getValue<DictionaryDatum>(i->OStack.pick(0));
+    ParameterDatum datum( create_parameter(i->OStack.pick(0)) );
 
-    
-    ParameterDatum datum( create_parameter(paramtype,param_dict) );
-
-    i->OStack.pop(2);
+    i->OStack.pop(1);
     i->OStack.push(datum);
     i->EStack.pop();
   }
@@ -1182,6 +1176,18 @@ namespace nest
     }
 
     i->EStack.pop();  
+  }
+
+  void Topology3Module::Cvdict_MFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(1);
+
+    MaskDatum mask = getValue<MaskDatum>(i->OStack.pick(0));
+    DictionaryDatum dict = mask->get_dict();
+
+    i->OStack.pop();
+    i->OStack.push(dict);
+    i->EStack.pop();
   }
 
   std::string LayerExpected::message()

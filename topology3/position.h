@@ -265,6 +265,21 @@ namespace nest
     T x_[D];
   };
 
+  /**
+   * A box is defined by the lower left corner (minimum coordinates) and
+   * the upper right corner (maximum coordinates).
+   */
+  template<int D>
+  struct Box
+  {
+    Box(const Position<D> &ll, const Position<D> &ur) :
+      lower_left(ll), upper_right(ur)
+      {}
+
+    Position<D> lower_left;
+    Position<D> upper_right;
+  };
+
   template <int D, class T>
   Position<D,T>::Position()
   {

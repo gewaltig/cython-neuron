@@ -39,7 +39,6 @@ namespace nest
     void get_status(DictionaryDatum&) const;
 
   protected:
-    void update_bbox_(); ///< update bounding box (min/max coordinates)
 
     template <class Ins>
     void communicate_positions_(Ins iter, const Selector& filter);
@@ -52,37 +51,10 @@ namespace nest
   };
 
   template <int D>
-  void FreeLayer<D>::update_bbox_()
-  {
-    // Find max and min coordinates
-    Position<D> max_pos, min_pos;
-
-    for (int i=0; i<D; ++i) {
-      max_pos[i] = std::numeric_limits<double_t>::min();
-      min_pos[i] = std::numeric_limits<double_t>::max();
-    }
-
-    for (typename std::vector<Position<D> >::iterator p = positions_.begin();
-        p != positions_.end();
-        ++p) {
-      for (int i=0; i<D; ++i) {
-
-        if ((*p)[i] < min_pos[i])
-          min_pos[i] = (*p)[i];
-
-        if ((*p)[i] > max_pos[i])
-          max_pos[i] = (*p)[i];
-
-      }
-    }
-
-    Layer<D>::lower_left_ = min_pos;
-    Layer<D>::extent_ = max_pos - min_pos;
-  }
-
-  template <int D>
   void FreeLayer<D>::set_status(const DictionaryDatum &d)
   {
+    Layer<D>::set_status(d);
+
     // Read positions from dictionary
     if(d->known(names::positions)) {
       TokenArray pos = getValue<TokenArray>(d, names::positions);
@@ -107,19 +79,17 @@ namespace nest
           break;
         }
 
-        std::vector<double_t> point =
+        Position<D> point =
           getValue<std::vector<double_t> >(pos[(*i)->get_lid() % nodes_per_depth]);
 
-        positions_.push_back(Position<D>(point));
+        if (not ((point >= this->lower_left_) and (point < this->lower_left_+this->extent_)))
+          throw BadProperty("Node position outside of layer");
+
+        positions_.push_back(point);
 
       }
 
-      update_bbox_();
-      // extent and center will get overwritten by Layer::set_status
-      // if given by the user
     }
-
-    Layer<D>::set_status(d);
   }
 
   template <int D>

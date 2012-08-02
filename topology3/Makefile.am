@@ -25,6 +25,7 @@ libtopology3module_la_SOURCES= \
 			generic_factory.h \
 			position.h \
 			layer.h \
+			layer_impl.h \
 			layer.cpp \
 			free_layer.h \
 			grid_layer.h \

@@ -133,13 +133,13 @@ namespace nest {
     allin_top_ = 0;
     ntree_ = top_;
 
-    if (mask_->outside(ntree_->lower_left_-anchor_,ntree_->lower_left_-anchor_+ntree_->extent_)) {
+    if (mask_->outside(Box<D>(ntree_->lower_left_-anchor_,ntree_->lower_left_-anchor_+ntree_->extent_))) {
 
       next_anchor_();
 
     } else {
 
-      if (mask_->inside(ntree_->lower_left_-anchor_, ntree_->lower_left_-anchor_+ntree_->extent_)) {
+      if (mask_->inside(Box<D>(ntree_->lower_left_-anchor_, ntree_->lower_left_-anchor_+ntree_->extent_))) {
         first_leaf_inside_();
       } else {
         first_leaf_();
@@ -231,11 +231,11 @@ namespace nest {
       // Move to next sibling
       ntree_ = ntree_->parent_->children_[ntree_->my_subquad_+1];
 
-      if (mask_->inside(ntree_->lower_left_-anchor_, ntree_->lower_left_-anchor_+ntree_->extent_)) {
+      if (mask_->inside(Box<D>(ntree_->lower_left_-anchor_, ntree_->lower_left_-anchor_+ntree_->extent_))) {
         return first_leaf_inside_();
       }
 
-    } while (mask_->outside(ntree_->lower_left_-anchor_, ntree_->lower_left_-anchor_+ntree_->extent_));
+    } while (mask_->outside(Box<D>(ntree_->lower_left_-anchor_, ntree_->lower_left_-anchor_+ntree_->extent_)));
 
     return first_leaf_();
   }
@@ -247,11 +247,11 @@ namespace nest {
 
       ntree_ = ntree_->children_[0];
 
-      if (mask_->inside(ntree_->lower_left_-anchor_, ntree_->lower_left_-anchor_+ntree_->extent_)) {
+      if (mask_->inside(Box<D>(ntree_->lower_left_-anchor_, ntree_->lower_left_-anchor_+ntree_->extent_))) {
         return first_leaf_inside_();
       }
 
-      if (mask_->outside(ntree_->lower_left_-anchor_,ntree_->lower_left_-anchor_+ntree_->extent_)) {
+      if (mask_->outside(Box<D>(ntree_->lower_left_-anchor_,ntree_->lower_left_-anchor_+ntree_->extent_))) {
         return next_leaf_();
       }
 
@@ -327,10 +327,10 @@ namespace nest {
   template<int D, class T, int max_capacity>
   void Ntree<D,T,max_capacity>::append_nodes_(std::vector<std::pair<Position<D>,T> >&v, const Mask<D> &mask, const Position<D> &anchor)
   {
-    if (mask.outside(lower_left_-anchor, lower_left_-anchor+extent_))
+    if (mask.outside(Box<D>(lower_left_-anchor, lower_left_-anchor+extent_)))
       return;
 
-    if (mask.inside(lower_left_-anchor, lower_left_-anchor+extent_))
+    if (mask.inside(Box<D>(lower_left_-anchor, lower_left_-anchor+extent_)))
       return append_nodes_(v);
 
     if (leaf_) {

@@ -19,44 +19,44 @@
 namespace nest
 {
   template<>
-  bool BallMask<2>::inside(const Position<2> &ll, const Position<2> &ur) const
+  bool BallMask<2>::inside(const Box<2> &b) const
   {
-    Position<2> p = ll;
+    Position<2> p = b.lower_left;
 
     // Test if all corners are inside circle
 
     if (!inside(p)) return false;       // (0,0)
-    p[0] = ur[0];
+    p[0] = b.upper_right[0];
     if (!inside(p)) return false;       // (0,1)
-    p[1] = ur[1];
+    p[1] = b.upper_right[1];
     if (!inside(p)) return false;       // (1,1)
-    p[0] = ll[0];
+    p[0] = b.lower_left[0];
     if (!inside(p)) return false;       // (1,0)
 
     return true;
   }
 
   template<>
-  bool BallMask<3>::inside(const Position<3> &ll, const Position<3> &ur) const
+  bool BallMask<3>::inside(const Box<3> &b) const
   {
-    Position<3> p = ll;
+    Position<3> p = b.lower_left;
 
     // Test if all corners are inside sphere
 
     if (!inside(p)) return false;       // (0,0,0)
-    p[0] = ur[0];
+    p[0] = b.upper_right[0];
     if (!inside(p)) return false;       // (0,0,1)
-    p[1] = ur[1];
+    p[1] = b.upper_right[1];
     if (!inside(p)) return false;       // (0,1,1)
-    p[0] = ll[0];
+    p[0] = b.lower_left[0];
     if (!inside(p)) return false;       // (0,1,0)
-    p[2] = ur[2];
+    p[2] = b.upper_right[2];
     if (!inside(p)) return false;       // (1,1,0)
-    p[0] = ur[0];
+    p[0] = b.upper_right[0];
     if (!inside(p)) return false;       // (1,1,1)
-    p[1] = ll[1];
+    p[1] = b.lower_left[1];
     if (!inside(p)) return false;       // (1,0,1)
-    p[0] = ll[0];
+    p[0] = b.lower_left[0];
     if (!inside(p)) return false;       // (1,0,0)
 
     return true;
