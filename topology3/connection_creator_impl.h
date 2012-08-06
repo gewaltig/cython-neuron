@@ -504,9 +504,9 @@ namespace nest
 
       Position<D> source_pos = src_it->first;
       index source_id = src_it->second;
-      std::vector<index> targets;
-      std::vector<Position<D> > displacements;
-      std::vector<double_t> probabilities;
+      std::vector<std::vector<index> > targets(net_.get_num_threads());
+      std::vector<std::vector<Position<D> > > displacements(net_.get_num_threads());
+      std::vector<std::vector<double_t> > probabilities(net_.get_num_threads());
 
       // Find potential targets and probabilities
 
@@ -525,56 +525,67 @@ namespace nest
 
         librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
 
-        targets.push_back((*tgt_it)->get_gid());
-        displacements.push_back(target_displ);
+        targets[(*tgt_it)->get_thread()].push_back((*tgt_it)->get_gid());
+        displacements[(*tgt_it)->get_thread()].push_back(target_displ);
 
         if (kernel_.valid())
-          probabilities.push_back(kernel_->value(target_displ, rng));
+          probabilities[(*tgt_it)->get_thread()].push_back(kernel_->value(target_displ, rng));
         else
-          probabilities.push_back(1.0);
+          probabilities[(*tgt_it)->get_thread()].push_back(1.0);
       }
 
       // Find local and global "probability"
-      double_t local_probability = std::accumulate(probabilities.begin(),probabilities.end(),0.0);
+      std::vector<double_t> local_probability(net_.get_num_threads());
+      for(int i=0;i<net_.get_num_threads();++i)
+        local_probability[i] = std::accumulate(probabilities[i].begin(),probabilities[i].end(),0.0);
+      std::vector<int> disp(Communicator::get_num_processes());
+      for(std::vector<int>::iterator disp_it = disp.begin()+1;disp_it != disp.end();++disp_it)
+        *disp_it = *(disp_it-1) + net_.get_num_threads();
       std::vector<double_t> global_probabilities;
-      Communicator::communicate(local_probability,global_probabilities);
+      Communicator::communicate(local_probability,global_probabilities,disp);
       double_t total_probability = std::accumulate(global_probabilities.begin(),global_probabilities.end(),0.0);
 
-      // Draw how many connections to make on each process
+      // Draw how many connections to make on each virtual process
       std::vector<long_t> num_connections(global_probabilities.size());
       long_t total_connections = number_of_connections_;
-      for(index i=0;i<num_connections.size()-1;++i) {
+      for(index vp=0;vp<num_connections.size()-1;++vp) {
+        index i = (vp%Communicator::get_num_processes())*net_.get_num_threads() + vp/Communicator::get_num_processes();
         librandom::BinomialRandomDev brng(net_.get_grng(), global_probabilities[i]/total_probability, total_connections);
-        num_connections[i] = brng.uldev();
-        total_connections -= num_connections[i];
+        num_connections[vp] = brng.uldev();
+        total_connections -= num_connections[vp];
+        total_probability -= global_probabilities[i];
         if (total_connections==0) break;
       }
       num_connections[num_connections.size()-1] = total_connections;
 
-      if (num_connections[Communicator::get_rank()]==0)
-        continue;
+      for(int thr=0;thr<net_.get_num_threads();++thr) {
 
-      if ((targets.size()==0) or
-          ((not allow_multapses_) and (targets.size()<num_connections[Communicator::get_rank()])) ) {
-        std::string msg = String::compose("Global source ID %1: Not enough targets found", source_id);
-        throw KernelException(msg.c_str());
-      }
-
-      // Draw targets
-      Vose lottery(probabilities);
-      std::vector<bool> is_selected(targets.size());
-      for(long_t i=0;i<num_connections[Communicator::get_rank()];++i) {
-        index random_id = lottery.get_random_id(net_.get_rng(net_.get_node(targets[0])->get_thread())); // FIXME: Can not use grng here!
-        if ((not allow_multapses_) and (is_selected[random_id])) {
-          --i;
+        if (num_connections[net_.thread_to_vp(thr)]==0)
           continue;
+
+        if ((targets[thr].size()==0) or
+            ((not allow_multapses_) and (targets[thr].size()<num_connections[net_.thread_to_vp(thr)])) ) {
+          std::string msg = String::compose("Global source ID %1: Not enough targets found", source_id);
+          throw KernelException(msg.c_str());
         }
-        Position<D> target_displ = displacements[random_id];
-        index target_id = targets[random_id];
-        librandom::RngPtr rng = net_.get_rng(net_.get_node(target_id)->get_thread());
-        get_parameters_(target_displ, rng, d);
-        net_.connect(source_id, target_id, d, synapse_model_);
-        is_selected[random_id] = true;
+
+        // Draw targets
+        Vose lottery(probabilities[thr]);
+        std::vector<bool> is_selected(targets[thr].size());
+        for(long_t i=0;i<num_connections[net_.thread_to_vp(thr)];++i) {
+          index random_id = lottery.get_random_id(net_.get_rng(thr));
+          if ((not allow_multapses_) and (is_selected[random_id])) {
+            --i;
+            continue;
+          }
+          Position<D> target_displ = displacements[thr][random_id];
+          index target_id = targets[thr][random_id];
+          librandom::RngPtr rng = net_.get_rng(thr);
+          get_parameters_(target_displ, rng, d);
+          net_.connect(source_id, target_id, d, synapse_model_);
+          is_selected[random_id] = true;
+        }
+
       }
 
     }
