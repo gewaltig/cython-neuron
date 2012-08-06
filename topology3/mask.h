@@ -206,6 +206,11 @@ namespace nest
     Mask<D> * clone() const
       { return new BoxMask(*this); }
 
+    /**
+     * @returns the name of this mask type.
+     */
+    static Name get_name();
+
   protected:
     Position<D> lower_left_;
     Position<D> upper_right_;
@@ -268,6 +273,11 @@ namespace nest
 
     Mask<D> * clone() const
       { return new BallMask(*this); }
+
+    /**
+     * @returns the name of this mask type.
+     */
+    static Name get_name();
 
   protected:
     Position<D> center_;
@@ -464,6 +474,8 @@ namespace nest
     bool outside(const Box<D> &b) const
       { return m_->outside(Box<D>(b.lower_left-anchor_,b.upper_right-anchor_)); }
 
+    DictionaryDatum get_dict() const;
+
     Mask<D> * clone() const
       { return new AnchoredMask(*this); }
 
@@ -497,6 +509,20 @@ namespace nest
     return new DifferenceMask<D>(*this,*other_d);
   }
 
+  template<>
+  inline
+  Name BoxMask<2>::get_name()
+  {
+    return names::rectangular;
+  }
+
+  template<>
+  inline
+  Name BoxMask<3>::get_name()
+  {
+    return names::box;
+  }
+
   template<int D>
   BoxMask<D>::BoxMask(const DictionaryDatum& d)
   {
@@ -508,9 +534,25 @@ namespace nest
   DictionaryDatum BoxMask<D>::get_dict() const
   {
     DictionaryDatum d(new Dictionary);
-    def<std::vector<double_t> >(d, names::lower_left, lower_left_);
-    def<std::vector<double_t> >(d, names::upper_right, upper_right_);
+    DictionaryDatum maskd(new Dictionary);
+    def<DictionaryDatum>(d, get_name(), maskd);
+    def<std::vector<double_t> >(maskd, names::lower_left, lower_left_);
+    def<std::vector<double_t> >(maskd, names::upper_right, upper_right_);
     return d;
+  }
+
+  template<>
+  inline
+  Name BallMask<2>::get_name()
+  {
+    return names::circular;
+  }
+
+  template<>
+  inline
+  Name BallMask<3>::get_name()
+  {
+    return names::spherical;
   }
 
   template<int D>
@@ -526,8 +568,18 @@ namespace nest
   DictionaryDatum BallMask<D>::get_dict() const
   {
     DictionaryDatum d(new Dictionary);
-    def<double_t>(d, names::radius, radius_);
-    def<std::vector<double_t> >(d, names::anchor, center_);
+    DictionaryDatum maskd(new Dictionary);
+    def<DictionaryDatum>(d, get_name(), maskd);
+    def<double_t>(maskd, names::radius, radius_);
+    def<std::vector<double_t> >(maskd, names::anchor, center_);
+    return d;
+  }
+
+  template<int D>
+  DictionaryDatum AnchoredMask<D>::get_dict() const
+  {
+    DictionaryDatum d = m_->get_dict();
+    def<std::vector<double_t> >(d, names::anchor, anchor_);
     return d;
   }
 

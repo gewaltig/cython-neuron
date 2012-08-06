@@ -82,7 +82,7 @@ namespace nest {
       if (pos.size() == 2)
         layer_model_name = "topology_layer_free";
       else if (pos.size() == 3)
-        layer_model_name = "topology_layer_3d";
+        layer_model_name = "topology_layer_free_3d";
       else
         throw BadProperty("Positions must have 2 or 3 coordinates.");
 

@@ -76,6 +76,12 @@ namespace nest
     extern const Name layers;
     extern const Name allow_autapses;
     extern const Name allow_multapses;
+    extern const Name circular;
+    extern const Name spherical;
+    extern const Name rectangular;
+    extern const Name box;
+    extern const Name volume;
+    extern const Name doughnut;
   }
 }
 

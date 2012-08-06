@@ -190,6 +190,8 @@ namespace nest
     typedef GenericFactory<AbstractMask>::CreatorFunction MaskCreatorFunction;
 
     template<class T>
+    static bool register_mask();
+    template<class T>
     static bool register_mask(const Name & name);
     static bool register_mask(const Name& name, MaskCreatorFunction creator);
 
@@ -246,6 +248,13 @@ namespace nest
   {
     assert(net_ != 0);
     return *net_;
+  }
+
+  template<class T>
+  inline
+  bool Topology3Module::register_mask()
+  {
+    return mask_factory_().register_subtype<T>(T::get_name());
   }
 
   template<class T>

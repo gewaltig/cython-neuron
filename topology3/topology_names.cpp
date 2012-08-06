@@ -68,6 +68,12 @@ namespace nest
     const Name layers("layers");
     const Name allow_autapses("allow_autapses");
     const Name allow_multapses("allow_multapses");
+    const Name circular("circular");
+    const Name spherical("spherical");
+    const Name rectangular("rectangular");
+    const Name box("box");
+    const Name volume("volume");
+    const Name doughnut("doughnut");
   }
 }
 

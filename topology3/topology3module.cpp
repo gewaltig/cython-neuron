@@ -277,15 +277,15 @@ namespace nest
     Network & net = get_network();
 
     register_model<FreeLayer<2> >(net, "topology_layer_free");
-    register_model<FreeLayer<3> >(net, "topology_layer_3d");
+    register_model<FreeLayer<3> >(net, "topology_layer_free_3d");
     register_model<GridLayer<2> >(net, "topology_layer_grid");
     register_model<GridLayer<3> >(net, "topology_layer_grid_3d");
 
     // Register mask types
-    register_mask<BallMask<2> >("circular");
-    register_mask<BallMask<3> >("spherical");
-    register_mask<BoxMask<2> >("rectangular");
-    register_mask<BoxMask<3> >("box");
+    register_mask<BallMask<2> >();
+    register_mask<BallMask<3> >();
+    register_mask<BoxMask<2> >();
+    register_mask<BoxMask<3> >();
     register_mask<BoxMask<3> >("volume");  // For compatibility with topo 2.0
     register_mask("doughnut",create_doughnut);
 
