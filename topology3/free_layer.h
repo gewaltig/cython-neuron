@@ -19,6 +19,7 @@
 
 #include <limits>
 #include <sstream>
+#include <algorithm>
 #include "layer.h"
 #include "topology_names.h"
 #include "dictutils.h"
@@ -162,13 +163,20 @@ namespace nest
 
   }
 
+  template<int D>
+  static bool gid_less(const std::pair<Position<D>,index>& a, const std::pair<Position<D>,index>& b)
+  {
+    return a.second < b.second;
+  }
+
   template <int D>
   void FreeLayer<D>::insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec, const Selector& filter)
   {
 
     communicate_positions_(std::back_inserter(vec), filter);
 
-    // should we sort the vector here?
+    // Sort vector to ensure consistent results
+    std::sort(vec.begin(),vec.end(),gid_less<D>);
 
   }
 
