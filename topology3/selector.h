@@ -23,6 +23,9 @@
 namespace nest
 {
 
+  /**
+   * Contains rules for selecting nodes from a layer when connecting.
+   */
   struct Selector {
     Selector(): model(-1), depth(-1)
       {}
@@ -31,6 +34,8 @@ namespace nest
       { return model>=0; }
     bool select_depth() const
       { return depth>=0; }
+    bool operator==(const Selector & other)
+      { return (other.model==model) and (other.depth==depth); }
     long_t model;
     long_t depth;
   };

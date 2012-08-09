@@ -309,7 +309,6 @@ namespace nest
     if (mask_.valid()) {
 
       const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
-      Ntree<D,index> *ntree = source.get_global_positions_ntree(source_filter_);
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 
@@ -320,39 +319,46 @@ namespace nest
         librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
         Position<D> target_pos = target.get_position((*tgt_it)->get_subnet_index());
 
-        std::vector<index> sources;
-        std::vector<Position<D> > positions;
+        std::vector<std::pair<Position<D>,index> > positions =
+            source.get_global_positions_vector(source_filter_, mask_ref,
+                                               target.get_position((*tgt_it)->get_subnet_index()));
 
         if (kernel_.valid()) {
 
           std::vector<double_t> probabilities;
 
-          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target.get_position((*tgt_it)->get_subnet_index()));iter!=ntree->masked_end();++iter) {
+          
+          for(typename std::vector<std::pair<Position<D>,index> >::iterator iter=positions.begin();iter!=positions.end();++iter) {
 
-            if ((not allow_autapses_) and (iter->second == target_id))
-              continue;
-
-            positions.push_back(iter->first);
-            sources.push_back(iter->second);
             probabilities.push_back(kernel_->value(iter->first - target_pos, rng));
+
           }
 
-          if ((sources.size()==0) or
-              ((not allow_multapses_) and (sources.size()<number_of_connections_)) ) {
+          if ((positions.size()==0) or
+              ((not allow_autapses_) and (positions.size()==1) and (positions[0].second==target_id)) or
+              ((not allow_multapses_) and (positions.size()<number_of_connections_)) ) {
             std::string msg = String::compose("Global target ID %1: Not enough sources found inside mask", target_id);
             throw KernelException(msg.c_str());
           }
 
           Vose lottery(probabilities);
-          std::vector<bool> is_selected(sources.size());
+
+          std::vector<bool> is_selected(positions.size());
+
           for(int i=0;i<number_of_connections_;++i) {
             index random_id = lottery.get_random_id(rng);
             if ((not allow_multapses_) and (is_selected[random_id])) {
               --i;
               continue;
             }
-            index source_id = sources[random_id];
-            get_parameters_(source.compute_displacement(target_pos,positions[random_id]), rng, d);
+
+            index source_id = positions[random_id].second;
+            if ((not allow_autapses_) and (source_id == target_id)) {
+              --i;
+              continue;
+            }
+
+            get_parameters_(source.compute_displacement(target_pos,positions[random_id].first), rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
             is_selected[random_id] = true;
           }
@@ -361,30 +367,22 @@ namespace nest
 
           // no kernel
 
-          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target.get_position((*tgt_it)->get_subnet_index()));iter!=ntree->masked_end();++iter) {
-
-            if ((not allow_autapses_) and (iter->second == target_id))
-              continue;
-
-            positions.push_back(iter->first);
-            sources.push_back(iter->second);
-          }
-
-          if ((sources.size()==0) or
-              ((not allow_multapses_) and (sources.size()<number_of_connections_)) ) {
+          if ((positions.size()==0) or
+              ((not allow_autapses_) and (positions.size()==1) and (positions[0].second==target_id)) or
+              ((not allow_multapses_) and (positions.size()<number_of_connections_)) ) {
             std::string msg = String::compose("Global target ID %1: Not enough sources found inside mask", target_id);
             throw KernelException(msg.c_str());
           }
 
-          std::vector<bool> is_selected(sources.size());
+          std::vector<bool> is_selected(positions.size());
           for(int i=0;i<number_of_connections_;++i) {
-            index random_id = rng->ulrand(sources.size());
+            index random_id = rng->ulrand(positions.size());
             if ((not allow_multapses_) and (is_selected[random_id])) {
               --i;
               continue;
             }
-            index source_id = sources[random_id];
-            get_parameters_(source.compute_displacement(target_pos,positions[random_id]), rng, d);
+            index source_id = positions[random_id].second;
+            get_parameters_(source.compute_displacement(target_pos,positions[random_id].first), rng, d);
             net_.connect(source_id, target_id, d, synapse_model_);
             is_selected[random_id] = true;
           }

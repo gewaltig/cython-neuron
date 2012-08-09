@@ -303,6 +303,8 @@ namespace nest
 
     std::vector<std::pair<Position<D>,index> >* get_global_positions_vector(Selector filter=Selector());
 
+    std::vector<std::pair<Position<D>,index> > get_global_positions_vector(Selector filter, const Mask<D>& mask, const Position<D>& anchor);
+
     /**
      * Connect this layer to the given target layer. The actual connections
      * are made in class ConnectionCreator.
@@ -369,6 +371,7 @@ namespace nest
      */
     static Ntree<D,index> * cached_ntree_;
     static std::vector<std::pair<Position<D>,index> > * cached_vector_;
+    static Selector cached_selector_;
 
   };
 

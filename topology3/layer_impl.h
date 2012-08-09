@@ -28,6 +28,9 @@ namespace nest {
   std::vector<std::pair<Position<D>,index> > * Layer<D>::cached_vector_ = 0;
 
   template<int D>
+  Selector Layer<D>::cached_selector_;
+
+  template<int D>
   Position<D> Layer<D>::compute_displacement(const Position<D>& from_pos,
                                              const Position<D>& to_pos) const
   {
@@ -92,7 +95,7 @@ namespace nest {
   template <int D>
   Ntree<D,index> * Layer<D>::get_global_positions_ntree(Selector filter)
   {
-    if ((not filter.select_model()) and (not filter.select_depth()) and (cached_ntree_layer_ == get_gid())) {
+    if ((cached_ntree_layer_ == get_gid()) and (cached_selector_ == filter)) {
       assert(cached_ntree_);
       return cached_ntree_;
     }
@@ -130,7 +133,7 @@ namespace nest {
   template <int D>
   Ntree<D,index> * Layer<D>::do_get_global_positions_ntree_(const Selector& filter)
   {
-    if ((not filter.select_model()) and (not filter.select_depth()) and (cached_vector_layer_ == get_gid())) {
+    if ((cached_vector_layer_ == get_gid()) and (cached_selector_ == filter)) {
       // Convert from vector to Ntree
     
       typename std::insert_iterator<Ntree<D,index> > to = std::inserter(*cached_ntree_, cached_ntree_->end());
@@ -148,8 +151,8 @@ namespace nest {
 
     clear_vector_cache_();
 
-    if ((not filter.select_model()) and (not filter.select_depth()))
-      cached_ntree_layer_ = get_gid();
+    cached_ntree_layer_ = get_gid();
+    cached_selector_ = filter;
 
     return cached_ntree_;
   }
@@ -157,7 +160,7 @@ namespace nest {
   template <int D>
   std::vector<std::pair<Position<D>,index> >* Layer<D>::get_global_positions_vector(Selector filter)
   {
-    if (cached_vector_layer_ == get_gid()) {
+    if ((cached_vector_layer_ == get_gid()) and (cached_selector_ == filter)) {
       assert(cached_vector_);
       return cached_vector_;
     }
@@ -166,7 +169,7 @@ namespace nest {
 
     cached_vector_ = new std::vector<std::pair<Position<D>,index> >;
 
-    if (cached_ntree_layer_ == get_gid()) {
+    if ((cached_ntree_layer_ == get_gid()) and (cached_selector_ == filter)) {
       // Convert from NTree to vector
 
       typename std::back_insert_iterator<std::vector<std::pair<Position<D>,index> > > to = std::back_inserter(*cached_vector_);
@@ -184,10 +187,23 @@ namespace nest {
 
     clear_ntree_cache_();
 
-    if ((not filter.select_model()) and (not filter.select_depth()))
-      cached_vector_layer_ = get_gid();
+    cached_vector_layer_ = get_gid();
+    cached_selector_ = filter;
 
     return cached_vector_;
+  }
+
+  template <int D>
+  std::vector<std::pair<Position<D>,index> > Layer<D>::get_global_positions_vector(Selector filter, const Mask<D>& mask, const Position<D>& anchor)
+  {
+    Ntree<D,index> *ntree = get_global_positions_ntree(filter);
+    std::vector<std::pair<Position<D>,index> > positions;
+
+    for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask,anchor);iter!=ntree->masked_end();++iter) {
+      positions.push_back(*iter);
+    }
+
+    return positions;
   }
 
   template <int D>
