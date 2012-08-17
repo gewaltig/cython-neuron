@@ -455,6 +455,9 @@ index Network::add_node(index mod, long_t n)   //no_p
   }
   else
   {
+    nodes_.resize(max_gid);
+    model->reserve(0, n); // Model::reserve() reserves memory for n ADDITIONAL nodes on thread t
+
     for(index gid = min_gid; gid < max_gid; ++gid)
     {
       //std::cout << "gid " << gid << ", size of nodes " << nodes_.size() << std::endl;
