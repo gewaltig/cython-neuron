@@ -110,7 +110,7 @@ namespace nest {
    * Valid port numbers start at zero (0.
    * The value -1 is used for invalid or unassigned ports.
    */
-  typedef char rport;
+  typedef long_t rport;
 
   /**
    * Connection port number to distinguis outgoing connections.
