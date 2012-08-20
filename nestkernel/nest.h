@@ -111,7 +111,6 @@ namespace nest {
    * The value -1 is used for invalid or unassigned ports.
    */
 #ifdef HAVE_MUSIC
-  #error hej
   typedef long_t rport;
 #else
   typedef char rport;
