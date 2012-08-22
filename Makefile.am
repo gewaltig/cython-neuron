@@ -85,3 +85,7 @@ nobase_pkgdata_DATA=\
 	extras/emacs/sli.el.in \
 	extras/emacs/postscript-sli.el \
 	extras/emacs/psvn.el
+
+uninstall:
+	@echo "make: uninstall target is not supported, use isolated prefix or a package manager instead!"
+	@exit 1
