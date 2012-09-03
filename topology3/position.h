@@ -261,7 +261,7 @@ namespace nest
      */
     friend std::ostream & operator<< <>(std::ostream & os, const Position<D,T> & pos);
 
-  private:
+  protected:
     T x_[D];
   };
 
@@ -279,6 +279,51 @@ namespace nest
     Position<D> lower_left;
     Position<D> upper_right;
   };
+
+  /**
+   * An index into a multidimensional array.
+   */
+  template<int D>
+  class MultiIndex: public Position<D,int> {
+  public:
+    MultiIndex() :
+      Position<D,int>(), lower_left_(), upper_right_()
+      {}
+
+    MultiIndex(const Position<D,int>& ur) :
+      Position<D,int>(), lower_left_(), upper_right_(ur)
+      {}
+
+    MultiIndex(const Position<D,int>& ll, const Position<D,int>& ur) :
+      Position<D,int>(ll), lower_left_(ll), upper_right_(ur)
+      {}
+
+    MultiIndex & operator++()
+      {
+        for(int i=0;i<D;++i) {
+          this->x_[i]++;
+          if (this->x_[i]<upper_right_[i])
+            return *this;
+          this->x_[i] = lower_left_[i];
+        }
+        // If we reach this point, we are outside of bounds
+        for(int i=0;i<D;++i)
+          this->x_[i] = upper_right_[i];
+        return *this;
+      }
+
+    MultiIndex operator++(int)
+      {
+        MultiIndex tmp = *this;
+        ++*this;
+        return tmp;
+      }
+
+  private:
+    Position<D,int> lower_left_;
+    Position<D,int> upper_right_;
+  };
+
 
   template <int D, class T>
   Position<D,T>::Position()

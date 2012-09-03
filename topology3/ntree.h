@@ -106,7 +106,7 @@ namespace nest
       /**
        * Postfix increment operator.
        */
-      iterator & operator++(int)
+      iterator operator++(int)
         {
           iterator tmp = *this;
           ++*this;
@@ -164,7 +164,7 @@ namespace nest
       /**
        * Postfix increment operator.
        */
-      masked_iterator & operator++(int)
+      masked_iterator operator++(int)
         {
           masked_iterator tmp = *this;
           ++*this;

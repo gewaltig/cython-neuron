@@ -112,6 +112,12 @@ namespace nest
     virtual bool outside(const Box<D> &) const = 0;
 
     /**
+     * The whole mask is inside (i.e., false everywhere outside) the bounding box.
+     * @returns bounding box
+     */
+    virtual Box<D> get_bbox() const = 0;
+
+    /**
      * Clone method.
      * @returns dynamically allocated copy of mask object
      */
@@ -120,41 +126,6 @@ namespace nest
     AbstractMask * intersect_mask(const AbstractMask & other) const;
     AbstractMask * union_mask(const AbstractMask & other) const;
     AbstractMask * minus_mask(const AbstractMask & other) const;
-  };
-
-  /**
-   * Mask which covers all of space
-   */
-  template<int D>
-  class AllMask : public Mask<D>
-  {
-  public:
-
-    ~AllMask()
-      {}
-
-    using Mask<D>::inside;
-
-    /**
-     * @returns true always for this mask.
-     */
-    bool inside(const Position<D> &) const
-      { return true; }
-
-    /**
-     * @returns true always for this mask
-     */
-    bool inside(const Box<D> &) const
-      { return true; }
-
-    /**
-     * @returns false always for this mask
-     */
-    bool outside(const Box<D> &) const
-      { return false; }
-
-    Mask<D> * clone() const
-      { return new AllMask(); }
   };
 
   /**
@@ -200,6 +171,9 @@ namespace nest
           }
           return false;
       }
+
+    Box<D> get_bbox() const
+      { return Box<D>(lower_left_, upper_right_); }
 
     DictionaryDatum get_dict() const;
 
@@ -269,6 +243,16 @@ namespace nest
         return false;
       }
 
+    Box<D> get_bbox() const
+      {
+        Box<D> bb(center_, center_);
+        for (int i=0; i<D; ++i) {
+          bb.lower_left[i] -= radius_;
+          bb.upper_right[i] += radius_;
+        }
+        return bb;
+      }
+
     DictionaryDatum get_dict() const;
 
     Mask<D> * clone() const
@@ -318,6 +302,19 @@ namespace nest
     bool outside(const Box<D> &b) const
       { return mask1_->outside(b) || mask2_->outside(b); }
 
+    Box<D> get_bbox() const
+      {
+        Box<D> bb = mask1_->get_bbox();
+        Box<D> bb2 = mask2_->get_bbox();
+        for (int i=0; i<D; ++i) {
+          if (bb2.lower_left[i] > bb.lower_left[i])
+            bb.lower_left[i] = bb2.lower_left[i];
+          if (bb2.upper_right[i] < bb.upper_right[i])
+            bb.upper_right[i] = bb2.upper_right[i];
+        }
+        return bb;
+      }
+
     Mask<D> * clone() const
       { return new IntersectionMask(*this); }
 
@@ -358,6 +355,19 @@ namespace nest
 
     bool outside(const Box<D> &b) const
     { return mask1_->outside(b) && mask2_->outside(b); }
+
+    Box<D> get_bbox() const
+      {
+        Box<D> bb = mask1_->get_bbox();
+        Box<D> bb2 = mask2_->get_bbox();
+        for (int i=0; i<D; ++i) {
+          if (bb2.lower_left[i] < bb.lower_left[i])
+            bb.lower_left[i] = bb2.lower_left[i];
+          if (bb2.upper_right[i] > bb.upper_right[i])
+            bb.upper_right[i] = bb2.upper_right[i];
+        }
+        return bb;
+      }
 
     Mask<D> * clone() const
       { return new UnionMask(*this); }
@@ -400,6 +410,9 @@ namespace nest
     bool outside(const Box<D> &b) const
       { return mask1_->outside(b) || mask2_->inside(b); }
 
+    Box<D> get_bbox() const
+      { return mask1_->get_bbox(); }
+
     Mask<D> * clone() const
       { return new DifferenceMask(*this); }
 
@@ -437,6 +450,12 @@ namespace nest
     bool outside(const Box<D> &b) const
       { return m_->outside(Box<D>(-b.upper_right,-b.lower_left)); }
 
+    Box<D> get_bbox() const
+      {
+        Box<D> bb = m_->get_bbox();
+        return Box<D>(-bb.upper_right, -bb.lower_left);
+      }
+
     Mask<D> * clone() const
       { return new ConverseMask(*this); }
 
@@ -473,6 +492,12 @@ namespace nest
 
     bool outside(const Box<D> &b) const
       { return m_->outside(Box<D>(b.lower_left-anchor_,b.upper_right-anchor_)); }
+
+    Box<D> get_bbox() const
+      {
+        Box<D> bb = m_->get_bbox();
+        return Box<D>(bb.lower_left+anchor_, bb.upper_right+anchor_);
+      }
 
     DictionaryDatum get_dict() const;
 

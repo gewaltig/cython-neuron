@@ -303,7 +303,7 @@ namespace nest
 
     std::vector<std::pair<Position<D>,index> >* get_global_positions_vector(Selector filter=Selector());
 
-    std::vector<std::pair<Position<D>,index> > get_global_positions_vector(Selector filter, const Mask<D>& mask, const Position<D>& anchor);
+    virtual std::vector<std::pair<Position<D>,index> > get_global_positions_vector(Selector filter, const Mask<D>& mask, const Position<D>& anchor);
 
     /**
      * Connect this layer to the given target layer. The actual connections
