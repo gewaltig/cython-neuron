@@ -100,6 +100,14 @@ namespace nest
     virtual AbstractNtree<index> * get_global_positions_ntree(Selector filter=Selector()) = 0;
 
     /**
+     * Return a vector with the GIDs of the nodes inside the mask.
+     * @param mask    mask to apply.
+     * @param anchor  position to center mask in.
+     * @returns nodes in layer inside mask.
+     */
+    virtual std::vector<index> get_global_nodes(const AbstractMask &mask, const std::vector<double_t> &anchor) = 0;
+
+    /**
      * Write layer data to stream.
      * For each node in layer, write one line to stream containing:
      * GID x-position y-position [z-position]
@@ -304,6 +312,11 @@ namespace nest
     std::vector<std::pair<Position<D>,index> >* get_global_positions_vector(Selector filter=Selector());
 
     virtual std::vector<std::pair<Position<D>,index> > get_global_positions_vector(Selector filter, const Mask<D>& mask, const Position<D>& anchor);
+
+    /**
+     * Return a vector with the GIDs of the nodes inside the mask.
+     */
+    std::vector<index> get_global_nodes(const AbstractMask &mask, const std::vector<double_t> &anchor);
 
     /**
      * Connect this layer to the given target layer. The actual connections

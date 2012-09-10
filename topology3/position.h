@@ -74,6 +74,9 @@ namespace nest
      */
     Position(const Position & other);
 
+    template<class U>
+    Position(const Position<D,U>& other);
+
     /**
      * @returns the Position as a std::vector
      */
@@ -215,6 +218,11 @@ namespace nest
     bool operator==(const Position &y) const;
 
     /**
+     * @returns true if not all coordinates are equal
+     */
+    bool operator!=(const Position &y) const;
+
+    /**
      * @returns true if all coordinates are less
      */
     bool operator<(const Position &y) const;
@@ -272,6 +280,7 @@ namespace nest
   template<int D>
   struct Box
   {
+    Box() {}
     Box(const Position<D> &ll, const Position<D> &ur) :
       lower_left(ll), upper_right(ur)
       {}
@@ -319,6 +328,11 @@ namespace nest
         return tmp;
       }
 
+    Position<D,int> get_lower_left() const
+      { return lower_left_; }
+    Position<D,int> get_upper_right() const
+      { return upper_right_; }
+
   private:
     Position<D,int> lower_left_;
     Position<D,int> upper_right_;
@@ -326,6 +340,7 @@ namespace nest
 
 
   template <int D, class T>
+  inline
   Position<D,T>::Position()
   {
     for(int i=0;i<D;++i)
@@ -333,6 +348,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T>::Position(const T& x, const T& y)
   {
     assert(D==2);
@@ -341,6 +357,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T>::Position(const T& x, const T& y, const T& z)
   {
     assert(D==3);
@@ -350,6 +367,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T>::Position(const T * const y)
   {
     for(int i=0;i<D;++i)
@@ -357,6 +375,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T>::Position(const std::vector<T> &y)
   {
     assert(y.size() == D); // FIXME: should fail more gracefully
@@ -364,7 +383,17 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T>::Position(const Position<D,T> & other)
+  {
+    for(int i=0;i<D;++i)
+      x_[i] = other.x_[i];
+  }
+
+  template <int D, class T>
+  template <class U>
+  inline
+  Position<D,T>::Position(const Position<D,U> & other)
   {
     for(int i=0;i<D;++i)
       x_[i] = other.x_[i];
@@ -382,12 +411,14 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   T & Position<D,T>::operator[](int i)
   {
     return x_[i];
   }
 
   template <int D, class T>
+  inline
   const T & Position<D,T>::operator[](int i) const
   {
     return x_[i];
@@ -403,6 +434,7 @@ namespace nest
 
   template <int D, class T>
   template <class OT>
+  inline
   Position<D,T> Position<D,T>::operator+(const Position<D,OT> &other) const
   {
     Position p = *this;
@@ -412,6 +444,7 @@ namespace nest
 
   template <int D, class T>
   template <class OT>
+  inline
   Position<D,T> Position<D,T>::operator-(const Position<D,OT> &other) const
   {
     Position p = *this;
@@ -420,6 +453,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T> Position<D,T>::operator-() const
   {
     Position p;
@@ -429,6 +463,7 @@ namespace nest
 
   template <int D, class T>
   template <class OT>
+  inline
   Position<D,T> Position<D,T>::operator*(const Position<D,OT> &other) const
   {
     Position p = *this;
@@ -438,6 +473,7 @@ namespace nest
 
   template <int D, class T>
   template <class OT>
+  inline
   Position<D,T> Position<D,T>::operator/(const Position<D,OT> &other) const
   {
     Position p = *this;
@@ -446,6 +482,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T> Position<D,T>::operator+(const T &a) const
   {
     Position p = *this;
@@ -454,6 +491,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T> Position<D,T>::operator-(const T &a) const
   {
     Position p = *this;
@@ -462,6 +500,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T> Position<D,T>::operator*(const T &a) const
   {
     Position p = *this;
@@ -470,6 +509,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T> Position<D,T>::operator/(const T &a) const
   {
     Position p = *this;
@@ -479,6 +519,7 @@ namespace nest
 
   template <int D, class T>
   template <class OT>
+  inline
   Position<D,T> &Position<D,T>::operator+=(const Position<D,OT> &other)
   {
     for(int i=0;i<D;++i)
@@ -488,6 +529,7 @@ namespace nest
 
   template <int D, class T>
   template <class OT>
+  inline
   Position<D,T> &Position<D,T>::operator-=(const Position<D,OT> &other)
   {
     for(int i=0;i<D;++i)
@@ -497,6 +539,7 @@ namespace nest
 
   template <int D, class T>
   template <class OT>
+  inline
   Position<D,T> &Position<D,T>::operator*=(const Position<D,OT> &other)
   {
     for(int i=0;i<D;++i)
@@ -506,6 +549,7 @@ namespace nest
 
   template <int D, class T>
   template <class OT>
+  inline
   Position<D,T> &Position<D,T>::operator/=(const Position<D,OT> &other)
   {
     for(int i=0;i<D;++i)
@@ -514,6 +558,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T> &Position<D,T>::operator+=(const T &a)
   {
     for(int i=0;i<D;++i)
@@ -522,6 +567,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T> &Position<D,T>::operator-=(const T &a)
   {
     for(int i=0;i<D;++i)
@@ -530,6 +576,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T> &Position<D,T>::operator*=(const T &a)
   {
     for(int i=0;i<D;++i)
@@ -538,6 +585,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   Position<D,T> &Position<D,T>::operator/=(const T &a)
   {
     for(int i=0;i<D;++i)
@@ -546,6 +594,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   bool Position<D,T>::operator==(const Position<D,T> &y) const
   {
     for(int i=0;i<D;++i) {
@@ -555,6 +604,17 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
+  bool Position<D,T>::operator!=(const Position<D,T> &y) const
+  {
+    for(int i=0;i<D;++i) {
+      if (x_[i] != y.x_[i]) return true;
+    }
+    return false;
+  }
+
+  template <int D, class T>
+  inline
   bool Position<D,T>::operator<(const Position<D,T> &y) const
   {
     for(int i=0;i<D;++i) {
@@ -564,6 +624,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   bool Position<D,T>::operator>(const Position<D,T> &y) const
   {
     for(int i=0;i<D;++i) {
@@ -573,6 +634,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   bool Position<D,T>::operator<=(const Position<D,T> &y) const
   {
     for(int i=0;i<D;++i) {
@@ -582,6 +644,7 @@ namespace nest
   }
 
   template <int D, class T>
+  inline
   bool Position<D,T>::operator>=(const Position<D,T> &y) const
   {
     for(int i=0;i<D;++i) {

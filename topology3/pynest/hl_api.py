@@ -116,13 +116,14 @@ class Mask(object):
         return topology_func("Inside",point,self._datum)
 
 
-def CreateMask(masktype,specs):
+def CreateMask(masktype,specs,anchor=None):
     """
     Create a spatial mask according the the given specifications.
 
     Parameters
     ----------
     specs: dict
+    anchor: list
 
     Returns
     -------
@@ -134,8 +135,10 @@ def CreateMask(masktype,specs):
     --------
     nest.help("topology::CreateMask")
     """
-    cmd = "/%s exch CreateMask" % masktype
-    return Mask(topology_func(cmd,specs))
+    if anchor is None:
+        return Mask(topology_func('CreateMask',{masktype:specs}))
+    else:
+        return Mask(topology_func('CreateMask',{masktype:specs,'anchor':anchor}))
 
 
 class Parameter(object):

@@ -408,30 +408,6 @@ namespace nest {
     leaf_ = false;
   }
 
-  template<int D, class T, int max_capacity>
-  std::vector<T> Ntree<D,T,max_capacity>::get_nodes_only()
-  {
-    std::vector<T> result;
-    for(iterator i=begin(); i != end(); ++i) {
-      result.push_back(i->second);
-    }
-
-    return result;
-  }
-
-  template<int D, class T, int max_capacity>
-  std::vector<T> Ntree<D,T,max_capacity>::get_nodes_only(const AbstractMask &mask, const std::vector<double_t> &anchor)
-  {
-    std::vector<std::pair<Position<D>,T> > result_pairs;
-    append_nodes_(result_pairs,dynamic_cast<const Mask<D>&>(mask),Position<D>(anchor));
-
-    std::vector<T> result;
-    for(typename std::vector<std::pair<Position<D>,T> >::iterator i=result_pairs.begin(); i != result_pairs.end(); ++i) {
-      result.push_back(i->second);
-    }
-    return result;
-  }
-
 }
 
 #endif

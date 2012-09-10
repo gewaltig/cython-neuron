@@ -28,6 +28,66 @@ namespace nest
   class GridLayer: public Layer<D>
   {
   public:
+    typedef Position<D> key_type;
+    typedef index mapped_type;
+    typedef std::pair<Position<D>,index> value_type;
+    typedef value_type& reference;
+    typedef const value_type& const_reference;
+
+    /**
+     * Iterator iterating over the nodes inside a Mask.
+     */
+    class masked_iterator {
+    public:
+      /**
+       * Constructor for an invalid iterator
+       */
+      masked_iterator(const GridLayer<D> & layer) :
+        layer_(layer), node_(), depth_(-1)
+        {}
+
+      /**
+       * Initialize an iterator to point to the first node inside the mask.
+       */
+      masked_iterator(const GridLayer<D> & layer, const Mask<D> &mask, const Position<D> &anchor, const Selector & filter);
+
+      value_type operator*();
+
+      /**
+       * Move the iterator to the next node within the mask. May cause the
+       * iterator to become invalid if there are no more nodes.
+       */
+      masked_iterator & operator++();
+
+      /**
+       * Postfix increment operator.
+       */
+      masked_iterator operator++(int)
+        {
+          masked_iterator tmp = *this;
+          ++*this;
+          return tmp;
+        }
+
+      /**
+       * Iterators are equal if they point to the same node in the same layer.
+       */
+      bool operator==(const masked_iterator &other) const
+        { return (other.layer_.get_gid()==layer_.get_gid()) && (other.node_==node_) && (other.depth_==depth_); }
+      bool operator!=(const masked_iterator &other) const
+        { return (other.layer_.get_gid()!=layer_.get_gid()) || (other.node_!=node_) || (other.depth_!=depth_); }
+
+    protected:
+
+      const GridLayer<D> & layer_;
+      int_t layer_size_;
+      const Mask<D> * mask_;
+      Position<D> anchor_;
+      Selector filter_;
+      MultiIndex<D> node_;
+      int_t depth_;
+    };
+
     GridLayer():
       Layer<D>()
       {}
@@ -64,6 +124,9 @@ namespace nest
     std::vector<index> get_nodes(Position<D,int_t> pos);
 
     std::vector<std::pair<Position<D>,index> > get_global_positions_vector(Selector filter, const Mask<D>& mask, const Position<D>& anchor);
+
+    masked_iterator masked_begin(const Mask<D> &mask, const Position<D> &anchor, const Selector & filter);
+    masked_iterator masked_end();
 
     void set_status(const DictionaryDatum &d);
     void get_status(DictionaryDatum &d) const;
@@ -212,60 +275,105 @@ namespace nest
   }
 
   template <int D>
-  std::vector<std::pair<Position<D>,index> > GridLayer<D>::get_global_positions_vector(Selector filter, const Mask<D>& mask, const Position<D>& anchor)
+  inline
+  typename GridLayer<D>::masked_iterator GridLayer<D>::masked_begin(const Mask<D> &mask, const Position<D> &anchor, const Selector & filter)
   {
+    return masked_iterator(*this, mask, anchor, filter);
+  }
+
+  template <int D>
+  inline
+  typename GridLayer<D>::masked_iterator GridLayer<D>::masked_end()
+  {
+    return masked_iterator(*this);
+  }
+
+  template <int D>
+  GridLayer<D>::masked_iterator::masked_iterator(const GridLayer<D> & layer, const Mask<D> &mask, const Position<D> &anchor, const Selector & filter) :
+    layer_(layer), mask_(&mask), anchor_(anchor), filter_(filter)
+  {
+    layer_size_ = layer.global_size()/layer.depth_;
+
     Position<D,int> ll;
     Position<D,int> ur;
     Box<D> bbox=mask.get_bbox();
     bbox.lower_left += anchor;
     bbox.upper_right += anchor;
-    // grid layer uses "matrix convention", i.e. reversed y axis
-    Position<D> ext = this->extent_;
-    Position<D> upper_left = this->lower_left_;
-    if (D>1) {
-      upper_left[1] += ext[1];
-      ext[1] = -ext[1];
-    }
-    ext /= dims_;
     for(int i=0;i<D;++i) {
-      ll[i] = std::min(index(std::max(ceil((bbox.lower_left[i] - upper_left[i])/ext[i] - 0.5), 0.0)), dims_[i]);
-      ur[i] = std::min(index(std::max(round((bbox.upper_right[i] - upper_left[i])/ext[i]), 0.0)), dims_[i]);
+      ll[i] = std::min(index(std::max(ceil((bbox.lower_left[i] - layer.lower_left_[i])*layer_.dims_[i]/layer.extent_[i] - 0.5), 0.0)), layer.dims_[i]);
+      ur[i] = std::min(index(std::max(round((bbox.upper_right[i] - layer.lower_left_[i])*layer_.dims_[i]/layer.extent_[i]), 0.0)), layer.dims_[i]);
     }
     if (D>1) {
-      std::swap(ll[1],ur[1]);
+      // grid layer uses "matrix convention", i.e. reversed y axis
+      int tmp = ll[1];
+      ll[1] = layer.dims_[1] - ur[1];
+      ur[1] = layer.dims_[1] - tmp;
     }
 
+    node_ = MultiIndex<D>(ll,ur);
+
+    if (filter_.select_depth()) 
+      depth_ = filter_.depth;
+    else
+      depth_ = 0;
+
+    if ((not mask_->inside(layer_.gridpos_to_position(node_)-anchor_)) or
+        (filter_.select_model() && (layer_.net_->get_model_id_of_gid(layer_.gids_[depth_*layer_size_]) != filter_.model)))
+      ++(*this);
+  
+  }
+
+  template <int D>
+  inline
+  std::pair<Position<D>,index> GridLayer<D>::masked_iterator::operator*()
+  {
+    assert(depth_>=0);
+    return std::pair<Position<D>,index>(layer_.gridpos_to_position(node_),
+                                        layer_.gids_[layer_.gridpos_to_lid(node_) + depth_*layer_size_]);
+  }
+
+  template <int D>
+  typename GridLayer<D>::masked_iterator & GridLayer<D>::masked_iterator::operator++()
+  {
+    if (depth_ == -1) return *this;  // Invalid (end) iterator
+
+    if (not filter_.select_depth()) {
+      depth_++;
+      if (depth_ >= layer_.depth_) {
+        depth_ = 0;
+      } else {
+        if (filter_.select_model() && (layer_.net_->get_model_id_of_gid(layer_.gids_[depth_*layer_size_]) != filter_.model))
+          return operator++();
+        else
+          return *this;
+      }
+    }
+
+    do {
+      ++node_;
+
+      if (node_ == node_.get_upper_right()) {
+        // Mark as invalid
+        depth_ = -1;
+        node_ = MultiIndex<D>();
+        return *this;
+      }
+
+    } while (not mask_->inside(layer_.gridpos_to_position(node_)-anchor_));
+
+    if (filter_.select_model() && (layer_.net_->get_model_id_of_gid(layer_.gids_[depth_*layer_size_]) != filter_.model))
+      return operator++();
+
+    return *this;
+  }
+
+  template <int D>
+  std::vector<std::pair<Position<D>,index> > GridLayer<D>::get_global_positions_vector(Selector filter, const Mask<D>& mask, const Position<D>& anchor)
+  {
     std::vector<std::pair<Position<D>,index> > positions;
 
-    // FIXME: selection
-    index layer_size = this->global_size()/this->depth_;
-
-    if (filter.select_depth()) {
-
-      const index d = filter.depth;
-
-      for(MultiIndex<D> mi = MultiIndex<D>(ll,ur); mi<ur; ++mi) {
-        Position<D> pos = gridpos_to_position(mi);
-        if (mask.inside(pos-anchor)) {
-          index lid = gridpos_to_lid(mi);
-          positions.push_back(std::pair<Position<D>,index>(pos,this->gids_[lid + d*layer_size]));
-        }
-      }
-
-    } else {
-
-      for(int d=0;d<this->depth_;++d) {
-        if (filter.select_model() && (this->net_->get_model_id_of_gid(this->gids_[d*layer_size]) != filter.model))
-          continue;
-        
-        for(MultiIndex<D> mi = MultiIndex<D>(ll,ur); mi<ur; ++mi) {
-          Position<D> pos = gridpos_to_position(mi);
-          if (mask.inside(pos-anchor)) {
-            index lid = gridpos_to_lid(mi);
-            positions.push_back(std::pair<Position<D>,index>(pos,this->gids_[lid + d*layer_size]));
-          }
-        }
-      }
+    for(typename GridLayer<D>::masked_iterator mi = masked_begin(mask,anchor,filter); mi != masked_end(); ++mi) {
+      positions.push_back(*mi);
     }
 
     return positions;

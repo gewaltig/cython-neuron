@@ -207,6 +207,17 @@ namespace nest {
   }
 
   template <int D>
+  std::vector<index> Layer<D>::get_global_nodes(const AbstractMask &mask, const std::vector<double_t> &anchor)
+  {
+    Ntree<D,index> *ntree = get_global_positions_ntree();
+    std::vector<index> nodes;
+    for(typename Ntree<D,index>::masked_iterator i=ntree->masked_begin(dynamic_cast<const Mask<D>&>(mask),anchor); i != ntree->masked_end(); ++i) {
+      nodes.push_back(i->second);
+    }
+    return nodes;
+  }
+
+  template <int D>
   void Layer<D>::dump_nodes(std::ostream & out) const
   {
     for(index i=0;i<nodes_.size();++i) {

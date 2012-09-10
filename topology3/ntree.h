@@ -37,16 +37,6 @@ namespace nest
   class AbstractNtree
   {
   public:
-    /**
-     * @returns member nodes in ntree without positions.
-     */
-    virtual std::vector<T> get_nodes_only() = 0;
-
-    /**
-     * Applies a Mask to this ntree.
-     * @returns member nodes in ntree inside mask without positions.
-     */
-    virtual std::vector<T> get_nodes_only(const AbstractMask &mask, const std::vector<double_t> &anchor) = 0;
   };
 
   /**
@@ -257,19 +247,6 @@ namespace nest
      * @returns member nodes in ntree inside mask.
      */
     std::vector<value_type> get_nodes(const Mask<D> &mask, const Position<D> &anchor);
-
-    /**
-     * @returns member nodes in ntree without positions.
-     */
-    std::vector<T> get_nodes_only();
-
-    /**
-     * Applies a Mask to this ntree.
-     * @param mask    mask to apply.
-     * @param anchor  position to center mask in.
-     * @returns member nodes in ntree inside mask without positions.
-     */
-    std::vector<T> get_nodes_only(const AbstractMask &mask, const std::vector<double_t> &anchor);
 
     /**
      * This function returns a node iterator which will traverse the

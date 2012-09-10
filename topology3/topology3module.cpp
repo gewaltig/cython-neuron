@@ -697,8 +697,7 @@ namespace nest
     if (layer == NULL)
       throw LayerExpected();
 
-    AbstractNtree<index> *tree = layer->get_global_positions_ntree();
-    std::vector<index> gids = tree->get_nodes_only(mask,anchor);
+    std::vector<index> gids = layer->get_global_nodes(mask,anchor);
 
     ArrayDatum result;
     result.reserve(gids.size());

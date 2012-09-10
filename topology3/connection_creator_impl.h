@@ -103,7 +103,7 @@ namespace nest
             if ((not allow_autapses_) and (iter->second == target_id))
               continue;
 
-            if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
+            if (rng->drand() < kernel_->value(source.compute_displacement(target_pos,iter->first), rng)) {
               get_parameters_(source.compute_displacement(target_pos,iter->first), rng, d);
               net_.connect(iter->second,target_id,d,synapse_model_);
             }
@@ -147,7 +147,7 @@ namespace nest
             if ((not allow_autapses_) and (iter->second == target_id))
               continue;
 
-            if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
+            if (rng->drand() < kernel_->value(source.compute_displacement(target_pos,iter->first), rng)) {
               get_parameters_(source.compute_displacement(target_pos,iter->first), rng, d);
               net_.connect(iter->second,target_id,d,synapse_model_);
             }
@@ -217,7 +217,7 @@ namespace nest
             if ((not allow_autapses_) and (iter->second == target_id))
               continue;
 
-            if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
+            if (rng->drand() < kernel_->value(target.compute_displacement(iter->first, target_pos), rng)) {
               get_parameters_(target.compute_displacement(iter->first, target_pos), rng, d);
               net_.connect(iter->second,target_id,d,synapse_model_);
             }
@@ -261,7 +261,7 @@ namespace nest
             if ((not allow_autapses_) and (iter->second == target_id))
               continue;
 
-            if (rng->drand() < kernel_->value(iter->first - target_pos, rng)) {
+            if (rng->drand() < kernel_->value(target.compute_displacement(iter->first,target_pos), rng)) {
               get_parameters_(target.compute_displacement(iter->first,target_pos), rng, d);
               net_.connect(iter->second,target_id,d,synapse_model_);
             }
@@ -330,7 +330,7 @@ namespace nest
           
           for(typename std::vector<std::pair<Position<D>,index> >::iterator iter=positions.begin();iter!=positions.end();++iter) {
 
-            probabilities.push_back(kernel_->value(iter->first - target_pos, rng));
+              probabilities.push_back(kernel_->value(source.compute_displacement(target_pos,iter->first), rng));
 
           }
 
@@ -417,7 +417,7 @@ namespace nest
           std::vector<double_t> probabilities;
 
           for(typename std::vector<std::pair<Position<D>,index> >::iterator iter=positions->begin();iter!=positions->end();++iter) {
-            probabilities.push_back(kernel_->value(iter->first - target_pos, rng));
+            probabilities.push_back(kernel_->value(source.compute_displacement(target_pos,iter->first), rng));
           }
 
           Vose lottery(probabilities);
@@ -552,7 +552,7 @@ namespace nest
         num_connections[vp] = brng.uldev();
         total_connections -= num_connections[vp];
         total_probability -= global_probabilities[i];
-        if (total_connections==0) break;
+        if (total_connections<=0) break;
       }
       num_connections[num_connections.size()-1] = total_connections;
 
