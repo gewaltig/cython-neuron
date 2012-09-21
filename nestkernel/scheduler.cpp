@@ -305,10 +305,7 @@ void nest::Scheduler::clear_nodes_vec_()
 {
   nodes_vec_.resize(n_threads_);
   for(index t = 0; t < n_threads_; ++t)
-  {
     nodes_vec_[t].clear();
-    nodes_vec_[t].reserve(net_.size() / n_threads_);
-  }
 }
 
 void nest::Scheduler::simulate(Time const & t)
@@ -824,6 +821,16 @@ void nest::Scheduler::prepare_nodes()
   for (index t = 0; t < n_threads_; ++t)
   {
 #endif
+
+    size_t num_thread_local_nodes = 0;
+    for (size_t idx = 0; idx < net_.size(); ++idx)
+    {
+      Node* node = net_.get_node(idx);
+      if (static_cast<index>(node->get_thread()) == t || node->num_thread_siblings_() > 0)
+        num_thread_local_nodes++;
+    }
+    nodes_vec_[t].reserve(num_thread_local_nodes);
+
     for(index n = 0; n < net_.size(); ++n)
     {
       if (net_.is_local_gid(n) && net_.nodes_[n] != 0)
