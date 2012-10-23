@@ -183,6 +183,8 @@ namespace nest
 
   };
 
+  template<int D>
+  class MaskedLayer;
 
   /**
    * Abstract base class for Layer of given dimension (D=2 or 3).
@@ -386,7 +388,54 @@ namespace nest
     static std::vector<std::pair<Position<D>,index> > * cached_vector_;
     static Selector cached_selector_;
 
+    friend class MaskedLayer<D>;
   };
+
+  template<int D>
+  class MaskedLayer {
+  public:
+
+    MaskedLayer(Layer<D>& layer, Selector filter, const Mask<D>& mask);
+    MaskedLayer(Layer<D>& layer, Selector filter, const Mask<D>& mask, std::bitset<D> periodic, Position<D> lower_left, Position<D> extent);
+    ~MaskedLayer();
+    typename Ntree<D,index>::masked_iterator begin(const Position<D>& anchor);
+    typename Ntree<D,index>::masked_iterator end();
+
+  protected:
+    Ntree<D,index> * ntree_;
+    const Mask<D>& mask_;
+  };
+
+  template<int D>
+  inline
+  MaskedLayer<D>::MaskedLayer(Layer<D>& layer, Selector filter, const Mask<D>& mask):
+    ntree_(layer.get_global_positions_ntree(filter)), mask_(mask)
+  {}
+
+  template<int D>
+  inline
+  MaskedLayer<D>::MaskedLayer(Layer<D>& layer, Selector filter, const Mask<D>& mask, std::bitset<D> periodic, Position<D> lower_left, Position<D> extent):
+    ntree_(layer.get_global_positions_ntree(filter, periodic, lower_left, extent)), mask_(mask)
+  {}
+
+  template<int D>
+  inline
+  MaskedLayer<D>::~MaskedLayer()
+  {}
+
+  template<int D>
+  inline
+  typename Ntree<D,index>::masked_iterator MaskedLayer<D>::begin(const Position<D>& anchor)
+  {
+    return ntree_->masked_begin(mask_,anchor);
+  }
+
+  template<int D>
+  inline
+  typename Ntree<D,index>::masked_iterator MaskedLayer<D>::end()
+  {
+    return ntree_->masked_end();
+  }
 
   template<int D>
   inline

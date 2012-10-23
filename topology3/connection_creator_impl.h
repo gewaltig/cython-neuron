@@ -85,7 +85,7 @@ namespace nest
     if (mask_.valid()) {
 
       const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
-      Ntree<D,index> *ntree = source.get_global_positions_ntree(source_filter_);
+      MaskedLayer<D> masked_layer(source,source_filter_,mask_ref);
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 
@@ -98,7 +98,7 @@ namespace nest
 
         if (kernel_.valid()) {
 
-          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target_pos); iter!=ntree->masked_end(); ++iter) {
+          for(typename Ntree<D,index>::masked_iterator iter=masked_layer.begin(target_pos); iter!=masked_layer.end(); ++iter) {
 
             if ((not allow_autapses_) and (iter->second == target_id))
               continue;
@@ -114,7 +114,7 @@ namespace nest
 
           // no kernel
 
-          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask_ref,target_pos); iter!=ntree->masked_end(); ++iter) {
+          for(typename Ntree<D,index>::masked_iterator iter=masked_layer.begin(target_pos); iter!=masked_layer.end(); ++iter) {
 
             if ((not allow_autapses_) and (iter->second == target_id))
               continue;
@@ -199,7 +199,7 @@ namespace nest
 
       lockPTR<Mask<D> > mask = lockPTR<Mask<D> >(new ConverseMask<D>(mask_ref));
 
-      Ntree<D,index> *ntree = source.get_global_positions_ntree(source_filter_,target.get_periodic_mask(),target.get_lower_left(),target.get_extent());
+      MaskedLayer<D> masked_layer(source,source_filter_,*mask,target.get_periodic_mask(),target.get_lower_left(),target.get_extent());
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 
@@ -212,7 +212,7 @@ namespace nest
 
         if (kernel_.valid()) {
 
-          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(*mask,target_pos); iter!=ntree->masked_end(); ++iter) {
+          for(typename Ntree<D,index>::masked_iterator iter=masked_layer.begin(target_pos); iter!=masked_layer.end(); ++iter) {
 
             if ((not allow_autapses_) and (iter->second == target_id))
               continue;
@@ -228,7 +228,7 @@ namespace nest
 
           // no kernel
 
-          for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(*mask,target_pos); iter!=ntree->masked_end(); ++iter) {
+          for(typename Ntree<D,index>::masked_iterator iter=masked_layer.begin(target_pos); iter!=masked_layer.end(); ++iter) {
 
             if ((not allow_autapses_) and (iter->second == target_id))
               continue;
