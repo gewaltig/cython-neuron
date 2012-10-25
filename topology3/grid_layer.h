@@ -128,6 +128,8 @@ namespace nest
     masked_iterator masked_begin(const Mask<D> &mask, const Position<D> &anchor, const Selector & filter);
     masked_iterator masked_end();
 
+    Position<D,index> get_dims() const;
+
     void set_status(const DictionaryDatum &d);
     void get_status(DictionaryDatum &d) const;
 
@@ -139,6 +141,12 @@ namespace nest
     void insert_global_positions_ntree_(Ntree<D,index> & tree, const Selector& filter);
     void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec, const Selector& filter);
   };
+
+  template <int D>
+  Position<D,index> GridLayer<D>::get_dims() const
+  {
+    return dims_;
+  }
 
   template <int D>
   void GridLayer<D>::set_status(const DictionaryDatum &d)

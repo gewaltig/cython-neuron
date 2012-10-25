@@ -143,6 +143,8 @@ namespace nest
      */
     BoxMask(const DictionaryDatum&);
 
+    BoxMask(const Position<D>& lower_left, const Position<D>& upper_right);
+
     ~BoxMask()
       {}
 
@@ -555,6 +557,12 @@ namespace nest
     upper_right_ = getValue<std::vector<double_t> >(d, names::upper_right);
   }
 
+  template<int D>
+  inline
+  BoxMask<D>::BoxMask(const Position<D>& lower_left, const Position<D>&upper_right):
+    lower_left_(lower_left), upper_right_(upper_right)
+  {}
+  
   template<int D>
   DictionaryDatum BoxMask<D>::get_dict() const
   {

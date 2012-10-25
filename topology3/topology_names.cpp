@@ -66,6 +66,7 @@ namespace nest
     const Name sigma_y("sigma_y");
     const Name rho("rho");
     const Name layers("layers");
+    const Name layer("layer");
     const Name allow_autapses("allow_autapses");
     const Name allow_multapses("allow_multapses");
     const Name circular("circular");
@@ -74,6 +75,7 @@ namespace nest
     const Name box("box");
     const Name volume("volume");
     const Name doughnut("doughnut");
+    const Name grid("grid");
   }
 }
 

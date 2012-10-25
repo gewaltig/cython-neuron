@@ -313,7 +313,7 @@ namespace nest
 
     std::vector<std::pair<Position<D>,index> >* get_global_positions_vector(Selector filter=Selector());
 
-    virtual std::vector<std::pair<Position<D>,index> > get_global_positions_vector(Selector filter, const Mask<D>& mask, const Position<D>& anchor);
+    virtual std::vector<std::pair<Position<D>,index> > get_global_positions_vector(Selector filter, const AbstractMask& mask, const Position<D>& anchor);
 
     /**
      * Return a vector with the GIDs of the nodes inside the mask.
@@ -395,39 +395,49 @@ namespace nest
   class MaskedLayer {
   public:
 
-    MaskedLayer(Layer<D>& layer, Selector filter, const Mask<D>& mask);
-    MaskedLayer(Layer<D>& layer, Selector filter, const Mask<D>& mask, std::bitset<D> periodic, Position<D> lower_left, Position<D> extent);
+    MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask);
+    MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask, Layer<D>& target);
     ~MaskedLayer();
     typename Ntree<D,index>::masked_iterator begin(const Position<D>& anchor);
     typename Ntree<D,index>::masked_iterator end();
 
   protected:
+
+    void adapt_grid_mask_(Layer<D>& layer);
+
     Ntree<D,index> * ntree_;
-    const Mask<D>& mask_;
+    const AbstractMask* mask_;
+    Mask<D> * new_mask;
   };
 
   template<int D>
   inline
-  MaskedLayer<D>::MaskedLayer(Layer<D>& layer, Selector filter, const Mask<D>& mask):
-    ntree_(layer.get_global_positions_ntree(filter)), mask_(mask)
-  {}
+  MaskedLayer<D>::MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask):
+    ntree_(layer.get_global_positions_ntree(filter)), mask_(&mask), new_mask(0)
+  {
+    adapt_grid_mask_(layer);
+  }
 
   template<int D>
   inline
-  MaskedLayer<D>::MaskedLayer(Layer<D>& layer, Selector filter, const Mask<D>& mask, std::bitset<D> periodic, Position<D> lower_left, Position<D> extent):
-    ntree_(layer.get_global_positions_ntree(filter, periodic, lower_left, extent)), mask_(mask)
-  {}
+  MaskedLayer<D>::MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask, Layer<D>& target):
+    ntree_(layer.get_global_positions_ntree(filter, target.get_periodic_mask(), target.get_lower_left(), target.get_extent())), mask_(&mask), new_mask(0)
+  {
+    adapt_grid_mask_(target);
+  }
 
   template<int D>
   inline
   MaskedLayer<D>::~MaskedLayer()
-  {}
+  {
+    delete new_mask;
+  }
 
   template<int D>
   inline
   typename Ntree<D,index>::masked_iterator MaskedLayer<D>::begin(const Position<D>& anchor)
   {
-    return ntree_->masked_begin(mask_,anchor);
+    return ntree_->masked_begin(dynamic_cast<const Mask<D>&>(*mask_),anchor);
   }
 
   template<int D>

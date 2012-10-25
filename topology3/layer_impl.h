@@ -18,6 +18,8 @@
  */
 
 #include "layer.h"
+#include "grid_layer.h"
+#include "grid_mask.h"
 
 namespace nest {
 
@@ -194,12 +196,12 @@ namespace nest {
   }
 
   template <int D>
-  std::vector<std::pair<Position<D>,index> > Layer<D>::get_global_positions_vector(Selector filter, const Mask<D>& mask, const Position<D>& anchor)
+  std::vector<std::pair<Position<D>,index> > Layer<D>::get_global_positions_vector(Selector filter, const AbstractMask& mask, const Position<D>& anchor)
   {
-    Ntree<D,index> *ntree = get_global_positions_ntree(filter);
+    MaskedLayer<D> masked_layer(*this,filter,mask);
     std::vector<std::pair<Position<D>,index> > positions;
 
-    for(typename Ntree<D,index>::masked_iterator iter=ntree->masked_begin(mask,anchor);iter!=ntree->masked_end();++iter) {
+    for(typename Ntree<D,index>::masked_iterator iter=masked_layer.begin(anchor);iter!=masked_layer.end();++iter) {
       positions.push_back(*iter);
     }
 
@@ -209,9 +211,9 @@ namespace nest {
   template <int D>
   std::vector<index> Layer<D>::get_global_nodes(const AbstractMask &mask, const std::vector<double_t> &anchor)
   {
-    Ntree<D,index> *ntree = get_global_positions_ntree();
+    MaskedLayer<D> masked_layer(*this,Selector(),mask);
     std::vector<index> nodes;
-    for(typename Ntree<D,index>::masked_iterator i=ntree->masked_begin(dynamic_cast<const Mask<D>&>(mask),anchor); i != ntree->masked_end(); ++i) {
+    for(typename Ntree<D,index>::masked_iterator i=masked_layer.begin(anchor); i != masked_layer.end(); ++i) {
       nodes.push_back(i->second);
     }
     return nodes;
@@ -275,6 +277,32 @@ namespace nest {
         out << '\n';
 
       }
+    }
+  }
+
+  template<int D>
+  void MaskedLayer<D>::adapt_grid_mask_(Layer<D>& layer)
+  {
+    const GridMask<D>* grid_mask = dynamic_cast<const GridMask<D>*>(mask_);
+    if (grid_mask) {
+      GridLayer<D>* grid_layer = dynamic_cast<GridLayer<D>*>(&layer);
+      if (grid_layer==0) {
+        throw BadProperty("Grid masks can only be used with grid layers.");
+      }
+
+      Position<D> ext = grid_layer->get_extent();
+      Position<D,index> dims = grid_layer->get_dims();
+
+      Position<D> lower_left = ext/dims * grid_mask->get_upper_left() - ext/dims * 0.5;
+      Position<D> upper_right = ext/dims * grid_mask->get_lower_right() - ext/dims * 0.5;
+
+      double_t y = lower_left[1];
+      lower_left[1] = -upper_right[1];
+      upper_right[1] = -y;      
+
+      new_mask = new BoxMask<D>(lower_left, upper_right);
+
+      mask_ = new_mask;
     }
   }
 

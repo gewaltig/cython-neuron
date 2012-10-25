@@ -31,6 +31,7 @@
 #include "free_layer.h"
 #include "grid_layer.h"
 #include "mask.h"
+#include "grid_mask.h"
 #include "connection_creator_impl.h"
 #include "parameter.h"
 #include "lockptrdatum_impl.h"
@@ -90,7 +91,7 @@ namespace nest
       DictionaryDatum *dd = dynamic_cast<DictionaryDatum*>(t.datum());
       if (dd) {
 
-        std::vector<double_t> anchor;
+        Token anchor_token;
         bool has_anchor = false;
         AbstractMask *mask = 0;
 
@@ -98,7 +99,7 @@ namespace nest
 
           if (dit->first == names::anchor) {
 
-            anchor = getValue<std::vector<double_t> >(dit->second);
+            anchor_token = dit->second;
             has_anchor = true;
 
           } else {
@@ -114,22 +115,52 @@ namespace nest
 
         if (has_anchor) {
 
-          AbstractMask *amask;
+          try {
 
-          switch(anchor.size()) {
-          case 2:
-            amask = new AnchoredMask<2>(dynamic_cast<Mask<2>&>(*mask),anchor);
-            break;
-          case 3:
-            amask = new AnchoredMask<3>(dynamic_cast<Mask<3>&>(*mask),anchor);
-            break;
-          default:
-            throw BadProperty("Anchor must be 2- or 3-dimensional.");
+            std::vector<double_t> anchor = getValue<std::vector<double_t> >(anchor_token);
+            AbstractMask *amask;
+
+            switch(anchor.size()) {
+            case 2:
+              amask = new AnchoredMask<2>(dynamic_cast<Mask<2>&>(*mask),anchor);
+              break;
+            case 3:
+              amask = new AnchoredMask<3>(dynamic_cast<Mask<3>&>(*mask),anchor);
+              break;
+            default:
+              throw BadProperty("Anchor must be 2- or 3-dimensional.");
+            }
+
+            delete mask;
+            mask = amask;
+
+          } catch (TypeMismatch e) {
+
+            DictionaryDatum ad = getValue<DictionaryDatum>(anchor_token);
+
+            int_t dim = 2;
+            int_t column = getValue<long>(ad, names::column) - 1;
+            int_t row = getValue<long>(ad, names::row) - 1;
+            int_t layer;
+            if (ad->known(names::layer)) {
+              layer = getValue<long>(ad,names::layer) - 1;
+              dim = 3;
+            }
+            switch(dim) {
+            case 2:
+              {
+                GridMask<2>& grid_mask_2d = dynamic_cast<GridMask<2>&>(*mask);
+                grid_mask_2d.set_anchor(Position<2,int_t>(column,row));
+              }
+              break;
+            case 3:
+              {
+                GridMask<3>& grid_mask_3d = dynamic_cast<GridMask<3>&>(*mask);
+                grid_mask_3d.set_anchor(Position<3,int_t>(column,row,layer));
+              }
+              break;
+            }
           }
-
-          delete mask;
-          mask = amask;
-
         }
 
         return mask;
@@ -288,6 +319,7 @@ namespace nest
     register_mask<BoxMask<3> >();
     register_mask<BoxMask<3> >("volume");  // For compatibility with topo 2.0
     register_mask("doughnut",create_doughnut);
+    register_mask<GridMask<2> >();
 
     // Register parameter types
     register_parameter<ConstantParameter>("constant");

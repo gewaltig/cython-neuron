@@ -84,8 +84,7 @@ namespace nest
 
     if (mask_.valid()) {
 
-      const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
-      MaskedLayer<D> masked_layer(source,source_filter_,mask_ref);
+      MaskedLayer<D> masked_layer(source,source_filter_,*mask_);
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 
@@ -199,7 +198,7 @@ namespace nest
 
       lockPTR<Mask<D> > mask = lockPTR<Mask<D> >(new ConverseMask<D>(mask_ref));
 
-      MaskedLayer<D> masked_layer(source,source_filter_,*mask,target.get_periodic_mask(),target.get_lower_left(),target.get_extent());
+      MaskedLayer<D> masked_layer(source,source_filter_,*mask,target);
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 
