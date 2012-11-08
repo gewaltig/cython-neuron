@@ -1,10 +1,10 @@
 // Copyright (c) 2010, Google Inc.
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
-// 
+//
 //     * Redistributions of source code must retain the above copyright
 // notice, this list of conditions and the following disclaimer.
 //     * Redistributions in binary form must reproduce the above
@@ -14,7 +14,7 @@
 //     * Neither the name of Google Inc. nor the names of its
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -28,15 +28,14 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ---
-// Author: Guilin Chen
 
 #ifndef UTIL_GTL_LIBC_ALLOCATOR_WITH_REALLOC_H_
 #define UTIL_GTL_LIBC_ALLOCATOR_WITH_REALLOC_H_
 
 #include <sparseconfig.h>
-
 #include <stdlib.h>           // for malloc/realloc/free
 #include <stddef.h>           // for ptrdiff_t
+#include <new>                // for placement new
 
 _START_GOOGLE_NAMESPACE_
 
@@ -62,7 +61,7 @@ class libc_allocator_with_realloc {
   pointer allocate(size_type n, const_pointer = 0) {
     return static_cast<pointer>(malloc(n * sizeof(value_type)));
   }
-  void deallocate(pointer p, size_type n) {
+  void deallocate(pointer p, size_type) {
     free(p);
   }
   pointer reallocate(pointer p, size_type n) {

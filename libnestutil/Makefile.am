@@ -18,10 +18,12 @@ libnestutil_la_SOURCES= \
 		instance.h \
 		mutex.h \
 		lockptr.h \
-		sparsetable.h \
 		sparseconfig.h \
-		libc_allocator_with_realloc.h \
+		template_util.h \
 		type_traits.h \
+		libc_allocator_with_realloc.h \
+		hashtable-common.h \
+		sparsetable.h \
 		compose.hpp
 
 
