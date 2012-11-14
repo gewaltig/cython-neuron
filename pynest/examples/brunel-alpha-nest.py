@@ -92,11 +92,11 @@ noise=nest.Create("poisson_generator")
 espikes=nest.Create("spike_detector")
 ispikes=nest.Create("spike_detector")
 
-nest.SetStatus([espikes],[{"label": "brunel-py-ex",
+nest.SetStatus(espikes,[{"label": "brunel-py-ex",
                    "withtime": True,
                    "withgid": True}])
 
-nest.SetStatus([ispikes],[{"label": "brunel-py-in",
+nest.SetStatus(ispikes,[{"label": "brunel-py-in",
                    "withtime": True,
                    "withgid": True}])
 
