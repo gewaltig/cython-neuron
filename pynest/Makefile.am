@@ -16,7 +16,7 @@ MAKEFLAGS= @MAKE_FLAGS@
 
 EXTRA_DIST= setup.py.in do_tests.py.in \
 	nest examples \
-	LICENSE.PyNEST README.PyNEST \
+	README.PyNEST \
 	pynestkernel.cpp \
 	checkpython.py \
 	pydatum.h \
@@ -41,7 +41,6 @@ install-exec-hook:
 
 install-data-hook: install-exec
 	@INSTALL_PROGRAM@ -m 644 @PKGSRCDIR@/pynest/README.PyNEST $(DESTDIR)@PKGDOCDIR@/
-	@INSTALL_PROGRAM@ -m 644 @PKGSRCDIR@/pynest/LICENSE.PyNEST $(DESTDIR)@PKGDOCDIR@/
 	mkdir -p $(DESTDIR)@PKGDATADIR@/extras
 	@INSTALL_PROGRAM@ do_tests.py $(DESTDIR)@PKGDATADIR@/extras/
 	for dir in @SLI_SUBDIRS@; do \

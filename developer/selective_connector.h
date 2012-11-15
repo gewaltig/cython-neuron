@@ -105,6 +105,17 @@ class SelectiveConnectorBase : public Connector
   std::vector<long>* find_connections(DictionaryDatum params) const;
 
   /**
+   * Return a list of ports. 
+   * Return the list of ports that connect to the provided post_gid.
+   */
+  void get_connections(size_t source_gid, size_t thrd, size_t synapse_id, ArrayDatum &conns) const;
+  void get_connections(size_t source_gid, size_t target_gid, size_t thrd, size_t synapse_id, ArrayDatum &conns) const;
+
+  size_t get_num_connections() const
+  {
+    return connections_.size();
+  }
+  /**
    * Get properties for all connections handled by this connector.
    * \param d dictionary to store properties in.
    */ 
@@ -263,6 +274,21 @@ std::vector<long>* SelectiveConnectorBase< ConnectionT, CommonPropertiesT, Conne
 	(use_postgid && connections_[i].get_target()->get_gid() == static_cast<index>(postgid)))
       p->push_back(i);        
   return p;
+}
+
+template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
+void SelectiveConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::get_connections(size_t source_gid, size_t thrd, size_t synapse_id, ArrayDatum &conns) const
+{
+  for (size_t prt = 0; prt < connections_.size(); ++prt)
+      conns.push_back(new ConnectionDatum(ConnectionID(source_gid, connections_[prt].get_target()->get_gid() , thrd, synapse_id, prt)));        
+}
+
+template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
+  void SelectiveConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::get_connections(size_t source_gid, size_t target_gid, size_t thrd, size_t synapse_id, ArrayDatum &conns) const
+{
+  for (size_t prt = 0; prt < connections_.size(); ++prt)
+    if (connections_[prt].get_target()->get_gid() == target_gid)
+      conns.push_back(new ConnectionDatum(ConnectionID(source_gid,target_gid,thrd,synapse_id,prt)));        
 }
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 

@@ -1,18 +1,23 @@
 
 /*
- *  datumtopythonconverter.h
+ *  datumtopythonconverter.cpp
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -64,7 +69,7 @@ void DatumToPythonConverter::convert_me(ArrayDatum &ad)
   py_object_ = PyList_New(ad.size());
 
   DatumToPythonConverter dpc;
-
+  
   int i = 0;
   for(Token *idx = ad.begin(); idx != ad.end(); ++idx) {
     // recurse to convert this element in the array
@@ -130,16 +135,16 @@ void DatumToPythonConverter::convert_me(IntVectorDatum &ivd)
 
 // PyArray_SimpleNew is a drop-in replacement for PyArray_FromDims
 #if (NPY_VERSION >= 0x01000009)
-// PyArray_SimpleNew takes ``npy_intp*`` dims instead of ``int*`` dims
+// PyArray_SimpleNew takes ``npy_intp*`` dims instead of ``long*`` dims
 // which matters on 64-bit systems and it does not initialize the
 // memory to zero.
   npy_intp npydims = dims;
-  array = (PyArrayObject*)PyArray_SimpleNew(1, &npydims, PyArray_INT);
+  array = (PyArrayObject*)PyArray_SimpleNew(1, &npydims, PyArray_LONG);
 #else
-  array = (PyArrayObject*)PyArray_FromDims(1, &dims, PyArray_INT);
+  array = (PyArrayObject*)PyArray_FromDims(1, &dims, PyArray_LONG);
 #endif
 
-  std::copy( ivd->begin(), ivd->end(), reinterpret_cast<int*>(array->data) );
+  std::copy( ivd->begin(), ivd->end(), reinterpret_cast<long*>(array->data) );
   py_object_ = (PyObject*) array;
 #else
   py_object_ = PyList_New(dims);
@@ -151,8 +156,39 @@ void DatumToPythonConverter::convert_me(IntVectorDatum &ivd)
 
 void DatumToPythonConverter::convert_me(ConnectionDatum &cd)
 {
-  DictionaryDatum dict = cd.get_dict();
-  convert_me(dict);
+    const int dims=5;
+#ifdef HAVE_NUMPY
+  PyArrayObject *array;
+
+// PyArray_SimpleNew is a drop-in replacement for PyArray_FromDims
+#if (NPY_VERSION >= 0x01000009)
+// PyArray_SimpleNew takes ``npy_intp*`` dims instead of ``long*`` dims
+// which matters on 64-bit systems and it does not initialize the
+// memory to zero.
+npy_intp npydims = dims;
+
+  array = (PyArrayObject*)PyArray_SimpleNew(1, &npydims, PyArray_LONG);
+#else
+  array = (PyArrayObject*)PyArray_FromDims(1, &dims, PyArray_LONG);
+#endif
+  long *val=reinterpret_cast<long*>(array->data);
+  *val++= cd.get_source_gid();
+  *val++= cd.get_target_gid();
+  *val++= cd.get_target_thread();
+  *val++= cd.get_synapse_type_id();
+  *val++= cd.get_port();
+
+  py_object_ = (PyObject*) array;
+#else
+  py_object_ = PyList_New(dims);
+  int i=0;
+  PyList_SetItem(py_object_, i++, PyInt_FromLong(cd.get_source_gid()));
+  PyList_SetItem(py_object_, i++, PyInt_FromLong(cd.get_target_gid()));
+  PyList_SetItem(py_object_, i++, PyInt_FromLong(cd.get_target_thread()));
+  PyList_SetItem(py_object_, i++, PyInt_FromLong(cd.get_synapse_type_id()));
+  PyList_SetItem(py_object_, i++, PyInt_FromLong(cd.get_port()));
+#endif //HAVE_NUMPY
+
 }
 
 PyObject *DatumToPythonConverter::convert(Datum &d)

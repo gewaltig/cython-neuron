@@ -21,7 +21,7 @@ Name: testsuite::ticket-564 - Regression test for OpenMP-parallel problems on OS
 Synopsis: (ticket-564) run -> NEST exits if test fails
 
 Description: 
-This test usess RandomConvergentConnect to connect a net of 100 neurons
+This test uses RandomConvergentConnect to connect a net of 100 neurons
 to itself, with 100 connections per neuron, a total of 10000 connections.
 This is repeated 10 times, and the resulting number of connections checked. 
  
@@ -49,7 +49,7 @@ M_ERROR setverbosity
     /local_nodes net GetLocalNodes def
     nodes local_nodes C RandomConvergentConnect
 
-    0 /num_connections get
+    0 /num_connections get dup ==
   } Table
   dup ==
   true exch { ConnExpected eq and } Fold

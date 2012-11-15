@@ -63,9 +63,11 @@ libdevelopermodule_la_SOURCES= \
 			iaf_psc_alpha_mod.cpp iaf_psc_alpha_mod.h\
 			iaf_psc_alpha_norec.cpp iaf_psc_alpha_norec.h\
 		        iaf_psc_alpha_dynth.cpp iaf_psc_alpha_dynth.h\
-			izhikevich.cpp izhikevich.h\
 			spike_dilutor.cpp spike_dilutor.h\
-			lossy_connection.cpp lossy_connection.h
+			lossy_connection.cpp lossy_connection.h\
+                        individual_spike_generator.cpp individual_spike_generator.h\
+		        tsodyks2_stdp_doublet_connection.h tsodyks2_stdp_doublet_connection.cpp
+
 
 
 # Please leave this separating blank line. It is needed for the build tools on the PETA fx machine to work. MH 2010-11-4

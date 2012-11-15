@@ -150,8 +150,6 @@ namespace nest
       /** Vector of neuron id's representing the critic. */
       std::vector<long_t> critic_neurons_;
 
-     
-      
       /** x and y position of reward state */
       long_t specialx_, specialy_;
 
@@ -265,7 +263,7 @@ inline
 void environment_cliff::get_status(DictionaryDatum &d) const
 {
   P_.get(d);
-  
+  (*d)["type"] = "other";
 }
 
 /*

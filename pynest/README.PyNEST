@@ -28,3 +28,5 @@ out more about NEST, type nest.helpdesk().
 
 For more information on the usage of PyNEST, the homepage of the NEST
 Initiative at http://www.nest-initiative.org/index.php/PyNEST
+
+The PyNEST Python module is included in NEST with kind permission by Eilif Muller.

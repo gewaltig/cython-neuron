@@ -1,16 +1,22 @@
 /*
  *  slistartup.cc
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -216,6 +222,7 @@ SLIStartup::SLIStartup(int argc, char** argv)
   exitcode_success_name("success"),
   exitcode_scripterror_name("scripterror"),
   exitcode_abort_name("abort"),
+  exitcode_userabort_name("userabort"),
   exitcode_segfault_name("segfault"),
   exitcode_exception_name("exception"),
   exitcode_fatal_name("fatal"),
@@ -432,6 +439,14 @@ void SLIStartup::init(SLIInterpreter *i)
   architecturedict->insert(pointersize_name,Token(new IntegerDatum( sizeof(void *) )));
   architecturedict->insert(intsize_name,    Token(new IntegerDatum( sizeof(int)    )));
   architecturedict->insert(longsize_name,   Token(new IntegerDatum( sizeof(long)   )));
+  architecturedict->insert("Token",   Token(new IntegerDatum( sizeof(Token)   )));
+  architecturedict->insert("TokenMap",   Token(new IntegerDatum( sizeof(TokenMap)   )));
+  architecturedict->insert("Dictionary",   Token(new IntegerDatum( sizeof(Dictionary)   )));
+  architecturedict->insert("DictionaryDatum",   Token(new IntegerDatum( sizeof(DictionaryDatum)   )));
+  architecturedict->insert("IntegerDatum",   Token(new IntegerDatum( sizeof(IntegerDatum)   )));
+  architecturedict->insert("ArrayDatum",   Token(new IntegerDatum( sizeof(ArrayDatum)   )));
+  architecturedict->insert("TokenArray",   Token(new IntegerDatum( sizeof(TokenArray)   )));
+  architecturedict->insert("TokenArrayObj",   Token(new IntegerDatum( sizeof(TokenArrayObj)   )));
 
   statusdict->insert(architecturedict_name, architecturedict); 
 
@@ -441,6 +456,7 @@ void SLIStartup::init(SLIInterpreter *i)
   exitcodes->insert(exitcode_success_name,Token(new IntegerDatum(EXIT_SUCCESS)));
   exitcodes->insert(exitcode_scripterror_name,Token(new IntegerDatum(126)));
   exitcodes->insert(exitcode_abort_name,Token(new IntegerDatum(SLI_EXITCODE_ABORT)));
+  exitcodes->insert(exitcode_userabort_name,Token(new IntegerDatum(15)));
   exitcodes->insert(exitcode_segfault_name,Token(new IntegerDatum(SLI_EXITCODE_SEGFAULT)));
   exitcodes->insert(exitcode_exception_name,Token(new IntegerDatum(125)));
   exitcodes->insert(exitcode_fatal_name,Token(new IntegerDatum(127)));

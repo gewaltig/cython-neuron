@@ -1,16 +1,22 @@
 /*
  *  pp_psc_delta.cpp
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004-2011 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  Multimeter support by Yury V. Zaytsev.
  *
@@ -127,9 +133,6 @@ void nest::pp_psc_delta::Parameters_::set(const DictionaryDatum& d)
 
   if ( tau_sfa_ <= 0 )
     throw BadProperty("All time constants must be strictly positive.");
-
-  if ( q_sfa_ < 0 )
-    throw BadProperty("Adaptive threshold jump must be zero or positive.");
 
   if ( t_ref_remaining_ < 0)
     throw BadProperty("Remaining refractory time can not be negative");
@@ -255,7 +258,7 @@ void nest::pp_psc_delta::update(Time const & origin, const long_t from, const lo
 
     S_.y3_ = V_.P30_*(S_.y0_ + P_.I_e_) + V_.P33_*S_.y3_ + B_.spikes_.get_value(lag);
 
-    if (P_.q_sfa_ > 0.0)
+    if (P_.q_sfa_ != 0.0)
       S_.q_ = V_.Q33_ * S_.q_;
 
     if ( S_.r_ == 0 )
@@ -268,7 +271,7 @@ void nest::pp_psc_delta::update(Time const & origin, const long_t from, const lo
 
       double_t V_eff;
 
-      if (P_.q_sfa_ > 0.0)
+      if (P_.q_sfa_ != 0.0)
         V_eff = S_.y3_ - S_.q_;
       else
         V_eff = S_.y3_;
@@ -303,7 +306,7 @@ void nest::pp_psc_delta::update(Time const & origin, const long_t from, const lo
             S_.r_ = V_.DeadTimeCounts_;
 
           // Increment the adaptive threshold
-          if (P_.q_sfa_ > 0.0)
+          if (P_.q_sfa_ != 0.0)
             S_.q_ += P_.q_sfa_;
 
           // And send the spike event

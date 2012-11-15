@@ -6,8 +6,6 @@
  *  This code is a C++ adaptation of the code published by Knuth on his
  *  website, http://www-cs-faculty.stanford.edu/~knuth/programs/rng.c,
  *  retrieved 8 Jan 2008. See also Knuth's header comment below.
- *
- *  @copy This file is part of NEST.
  */
  
 /* Header comment by  D E Knuth ------------------------------------------ */

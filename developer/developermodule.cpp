@@ -69,16 +69,18 @@
 #include "theta_neuron.h"
 #include "theta_neuron_ps.h"
 #include "iaf_chs_2007.h"
-#include "izhikevich.h"
 
 #include "iaf_psc_delta_canon_cvv.h"
 #include "iaf_psc_delta_nodelay.h"
 #include "pif_psc_delta_canon_cvv.h"
+#include "tsodyks2_stdp_doublet_connection.h"
 // #include "iaf_psc_delta_canon_stepcurr.h"
 // #include "iaf_psc_alpha_canon_nr.h"
 // #include "iaf_psc_exp_canon.h"
 
 #include "spike_dilutor.h"
+#include "individual_spike_generator.h"
+
 
 #ifdef HAVE_GSL
 #include "inh_gamma_generator.h"
@@ -949,11 +951,11 @@ BeginDocumentation
 
     register_model<theta_neuron>(*net_, "theta_neuron");
     register_model<theta_neuron_ps>(*net_, "theta_neuron_ps");
-    register_model<izhikevich>(*net_, "izhikevich");
     // register_model<iaf_psc_alpha_canon_nr>(*net_, "iaf_psc_alpha_canon_nr");
     // register_model<iaf_psc_exp_canon>(*net_, "iaf_psc_exp_canon");
 
     register_model<spike_dilutor>(*net_, "spike_dilutor");
+    register_model<individual_spike_generator>(*net_, "individual_spike_generator");
 
     i->createcommand("RandomPopulationConnect_ia_ia_i_d_l",
 		     &rpopulationconnect_ia_ia_i_d_lfunction);
@@ -1026,6 +1028,8 @@ BeginDocumentation
     register_prototype_connection<SchemmelS1Connection>(*net_, "schemmel_s1_synapse");
 
     register_prototype_connection<STDPTripletConnection>(*net_, "stdp_triplet_synapse");
+
+    register_prototype_connection<Tsodyks2STDPDoubletConnection>(*net_, "tsodyks2_stdp_doublet_synapse");
 
     // register_prototype_connection_commonproperties<PolicyConnection, PolicyCommonProperties>(*net_, "policy_synapse");
 

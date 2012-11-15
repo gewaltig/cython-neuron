@@ -1,16 +1,22 @@
 /*
  *  tarrayobj.cc
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -27,7 +33,7 @@ size_t TokenArrayObj::allocations=0;
 
 TokenArrayObj::TokenArrayObj(size_t s, const Token &t, size_t alloc)
         :p(NULL),begin_of_free_storage(NULL),
-         end_of_free_storage(NULL),alloc_block_size(ARRAY_ALLOC_SIZE),refs(1)
+         end_of_free_storage(NULL),alloc_block_size(ARRAY_ALLOC_SIZE),refs_(1)
 {
     size_t a = (alloc == 0)? s : alloc;
     
@@ -37,7 +43,7 @@ TokenArrayObj::TokenArrayObj(size_t s, const Token &t, size_t alloc)
 
 TokenArrayObj::TokenArrayObj(const TokenArrayObj &a)
         :p(NULL),begin_of_free_storage(NULL),
-         end_of_free_storage(NULL),alloc_block_size(ARRAY_ALLOC_SIZE),refs(1)
+         end_of_free_storage(NULL),alloc_block_size(ARRAY_ALLOC_SIZE),refs_(1)
 {
     if(a.p != NULL)
     {

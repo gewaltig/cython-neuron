@@ -1,16 +1,22 @@
 /*
  *  layer_unrestricted.cpp
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2008 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -47,6 +53,13 @@ namespace nest
     quadrant_max_nodes_(100) // @todo Find the best value for this parameter.
   {}
 
+  LayerUnrestricted::LayerUnrestricted(int dim):
+    Layer(dim),
+    positions_(),
+    tree_(),
+    quadrant_max_nodes_(100) // @todo Find the best value for this parameter.
+  {}
+
   LayerUnrestricted::LayerUnrestricted(const LayerUnrestricted& l):
     Layer(l),
     positions_(l.positions_),
@@ -72,8 +85,6 @@ namespace nest
     tree_(),
     quadrant_max_nodes_(100)
   {
-    Position<double_t> dpd = l.get_dpd();
-
     // Generate position vector based upon fixed grid layer dimensions
     // We can iterate here over the global size, since LayerRegular::get_position()
     // only does arithmetic on numbers.

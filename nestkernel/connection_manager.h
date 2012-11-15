@@ -1,16 +1,22 @@
 /*
  *  connection_manager.h
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2005 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -103,6 +109,25 @@ public:
   ArrayDatum find_connections(DictionaryDatum params);
 //   void find_connections(ArrayDatum& connectome, thread t, index source, index syn_id, DictionaryDatum params);
   void find_connections(ArrayDatum& connectome, thread t, index source, int syn_vec_index, index syn_id, DictionaryDatum params);
+  /**
+   * Return connections between pairs of neurons.
+   * The params dictionary can have the following entries:
+   * 'source' a token array with GIDs of source neurons.
+   * 'target' a token array with GIDs of target neuron.
+   * If either of these does not exist, all neuron are used for the respective entry.
+   * 'synapse_model' name of the synapse model, or all synapse models are searched.
+   * The function then iterates all entries in source and collects the connection IDs to all neurons in target.
+   * get_connections will eventually replace find_connections.
+   */
+  ArrayDatum get_connections(DictionaryDatum params) const;
+
+  void get_connections(ArrayDatum& connectome, TokenArray const *source, TokenArray const *target, size_t syn_id) const;
+
+  /**
+   * Return connections between source and any neuron on thread t.
+   */
+  void get_connections(ArrayDatum& connectome, index source, thread t,  index syn_id) const;
+
   // aka CopyModel for synapse models
   index copy_synapse_prototype(index old_id, std::string new_name);
 
@@ -127,10 +152,11 @@ public:
   void connect(Node& s, Node& r, index s_gid, thread tid, index syn);
   void connect(Node& s, Node& r, index s_gid, thread tid, double_t w, double_t d, index syn);
   void connect(Node& s, Node& r, index s_gid, thread tid, DictionaryDatum& p, index syn);
+
   /** 
    * Experimental bulk connector. see documentation in network.h
    */
-  bool connect(DictionaryDatum &d);
+  bool connect(ArrayDatum &d);
 
   void send(thread t, index sgid, Event& e);
 

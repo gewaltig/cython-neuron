@@ -1,16 +1,22 @@
 /*
  *  network.h
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -241,6 +247,20 @@ SeeAlso: Simulate, Node
     index add_node(index m, long_t n = 1);
 
     /**
+     * Restore nodes from an array of status dictionaries.
+     * The following entries must be present in each dictionary:
+     * /model - with the name or index of a neuron mode.
+     * 
+     * The following entries are optional:
+     * /parent - the node is created in the parent subnet
+     * 
+     * Restore nodes uses the current working node as root. Thus, all
+     * GIDs in the status dictionaties are offset by the GID of the current
+     * working node. This allows entire subnetworks to be copied.
+     */
+    void restore_nodes(ArrayDatum &);
+
+    /**
      * Set the state (observable dynamic variables) of a node to model defaults.
      * @see Node::init_state()
      */
@@ -287,7 +307,12 @@ SeeAlso: Simulate, Node
      */ 
     bool connect(index s, index r, DictionaryDatum& d, index syn);
 
-    // void subnet_connect(Subnet &, Subnet &, int, index syn);
+    void subnet_connect(Subnet &, Subnet &, int, index syn);
+
+    /**
+     * Connect from an array of dictionaries.
+     */
+    void connect(ArrayDatum& connectome);
 
     void divergent_connect(index s, const TokenArray r, const TokenArray weights, const TokenArray delays, index syn);
     /**
@@ -322,6 +347,7 @@ SeeAlso: Simulate, Node
     void set_connector_status(Node& node, index sc, thread tid, DictionaryDatum& d);
 
     ArrayDatum find_connections(DictionaryDatum dict);
+    ArrayDatum get_connections(DictionaryDatum dict);
 
     Subnet * get_root() const;        ///< return root subnet.
     Subnet * get_cwn() const;         ///< current working node.
@@ -812,6 +838,12 @@ SeeAlso: Simulate, Node
     connection_manager_.connect(s, r, sgid, t, p, syn);
   }
 
+  inline 
+  void Network::connect(ArrayDatum &connectome)
+  {
+    connection_manager_.connect(connectome);
+  }
+
   inline
   DictionaryDatum Network::get_synapse_status(index gid, index syn, port p, thread tid)
   {
@@ -846,6 +878,12 @@ SeeAlso: Simulate, Node
   ArrayDatum Network::find_connections(DictionaryDatum params)
   {
     return connection_manager_.find_connections(params);
+  }
+
+  inline
+  ArrayDatum Network::get_connections(DictionaryDatum params)
+  {
+    return connection_manager_.get_connections(params);
   }
   
   inline

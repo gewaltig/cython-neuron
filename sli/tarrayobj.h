@@ -1,16 +1,22 @@
 /*
  *  tarrayobj.h
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -34,7 +40,8 @@ class TokenArrayObj
   Token* p;
   Token* begin_of_free_storage;
   Token* end_of_free_storage;
-  size_t alloc_block_size;
+  unsigned int alloc_block_size;
+  unsigned int refs_;
   
 //  bool homogeneous;
 
@@ -42,13 +49,12 @@ class TokenArrayObj
     
   static size_t allocations;
  public:
-    unsigned int refs;
     
     TokenArrayObj(void)
             :p(NULL),begin_of_free_storage(NULL),
              end_of_free_storage(NULL),
              alloc_block_size(ARRAY_ALLOC_SIZE), 
-	     refs(1)
+	     refs_(1)
     {};
     
     TokenArrayObj(size_t , const Token & = Token(), size_t =  0);
@@ -99,9 +105,27 @@ class TokenArrayObj
     
     bool shrink(void);
     bool reserve(size_t);
+
     unsigned int references(void)
     {
-      return refs;
+      return refs_;
+    }
+
+    unsigned int remove_reference()
+    {
+      --refs_;
+      if(refs_==0)
+	{
+	  delete this;
+	  return 0;
+	}
+      
+      return refs_;
+    }
+
+    unsigned int add_reference()
+    {
+      return ++refs_;
     }
 
     void resize(size_t, size_t, const Token & = Token());

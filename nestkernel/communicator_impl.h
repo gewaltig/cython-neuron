@@ -145,12 +145,14 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
         DictionaryDatum node_status = net.get_status(gid);
         for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
         {
-          const Token token = node_status->lookup(i->first);
-          if (   token == params->getvoid()
-              || not ( token == i->second || token.matches_as_string(i->second) ) )
+          if (node_status->known(i->first))
           {
-            match = false;
-            break;
+            const Token token = node_status->lookup(i->first);
+            if (not ( token == i->second || token.matches_as_string(i->second) ))
+            {
+              match = false;
+              break;
+            }
           }
         }
         if (match)
@@ -210,12 +212,14 @@ void nest::Communicator::communicate(const NodeListType& local_nodes,
         DictionaryDatum node_status = net.get_status(gid);
         for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
         {
-          const Token token = node_status->lookup(i->first);
-          if (   token == params->getvoid()
-              || not ( token == i->second || token.matches_as_string(i->second) ) )
+          if (node_status->known(i->first))
           {
-            match = false;
-            break;
+            const Token token = node_status->lookup(i->first);
+            if (not ( token == i->second || token.matches_as_string(i->second) ))
+            {
+              match = false;
+              break;
+            }
           }
         }
         if (match)
@@ -258,12 +262,14 @@ void nest::Communicator::communicate(const NodeListType& local_nodes, vector<Nod
       node_status->info(std::cout);
       for (Dictionary::iterator i = params->begin(); i != params->end(); ++i)
       {
-        const Token token = node_status->lookup(i->first);
-        if (   token == params->getvoid()
-            || not ( token == i->second || token.matches_as_string(i->second) ) )
+        if (node_status->known(i->first))
         {
-          match = false;
-          break;
+          const Token token = node_status->lookup(i->first);
+          if (not ( token == i->second || token.matches_as_string(i->second) ))
+          {
+            match = false;
+            break;
+          }
         }
       }
       if (match)

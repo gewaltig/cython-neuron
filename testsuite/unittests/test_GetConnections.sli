@@ -1,0 +1,68 @@
+/*
+ *  test_GetConnections.sli
+ *
+ *  This file is part of NEST.
+ *
+ *  Copyright (C) 2004 The NEST Initiative
+ *
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+/* BeginDocumentation
+   Name: testsuite::test_GetConnections - sli script to test if GetConnections works as expected
+
+   Synopsis: (test_getConnections) run
+
+   Description:
+
+   This test generates 100 iaf_neurons and connects them with different synapses.
+
+   SeeAlso: GetConnections
+
+   FirstVersion: May 2012
+   Author: Marc-Oliver Gewaltig
+ */
+
+/unittest (7488) require
+/unittest using
+
+/iaf_neuron 100 Create /n Set
+
+/sources [ 1 2 99 {} for ] def
+/targets [ 2 2 100 {} for ] def
+
+[sources targets] {Connect true} MapThread ;
+
+% Retrieve all connections
+<< >> GetConnections 0 get {cva} Map /conn Set
+
+% extract the target entry from each connection id
+conn { 1 get } Map /conn_targets Set
+
+% this must match the original target list
+targets conn_targets eq assert_or_die
+
+% test if specific connections can be extracted
+<< /source [1 3 99] >> GetConnections_D 0 get cva
+{1 get } Map 
+[2 4 100] eq assert_or_die
+
+<< /target [2 4 100] >> GetConnections_D 0 get cva
+{0 get } Map % extract source gids 
+[1 3 99] eq assert_or_die
+
+
+
+endusing

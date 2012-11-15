@@ -1,16 +1,22 @@
 /*
  *  model.h
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -43,9 +49,14 @@ namespace nest
   {
   public:
 
-    Model(const std::string& name);
-
-    virtual ~Model(){}
+      Model(const std::string& name);
+      Model(const Model& m):
+      name_(m.name_),
+      type_id_(m.type_id_),
+      memory_(m.memory_)
+	  {}
+    
+      virtual ~Model(){}
 
     /**
      * Create clone with new name.
@@ -155,7 +166,19 @@ namespace nest
     virtual
     void set_model_id(int) =0;
     
-        
+    /**
+     * Set the model id on the prototype.
+     */
+    void set_type_id(index id)
+    {
+      type_id_=id;
+    }
+      
+    index get_type_id() const
+    {
+      return type_id_;
+    }
+	      
   private:
   
     virtual 
@@ -189,6 +212,14 @@ namespace nest
      * created by this model object.
      */
     std::string name_;
+
+    /**
+     * Identifier of the model C++ type.
+     * For pristine models, the type_id equals the model_id.
+     * For copied models, the type_id equals the type_id of the base model.
+     * This number is needed to automatically save and restore copied models.
+     */
+    index type_id_; 
 
     /**
      * Memory for all nodes sorted by threads.

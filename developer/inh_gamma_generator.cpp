@@ -249,7 +249,7 @@ void nest::inh_gamma_generator::calibrate()
   // so we must loop over b and find max of 1/b  -> that is rmax
 
   rmax_ = 0.0;
-  for (int i=0;i<P_.b_.size();i++) {
+  for (size_t i=0; i<P_.b_.size(); i++) {
     if (1.0/P_.b_[i]>rmax_) rmax_ = 1.0/P_.b_[i];
   }
   rmax_ *= 1.02;  // 2% margin for safety.
@@ -271,9 +271,8 @@ void nest::inh_gamma_generator::update(Time const & sliceT0, const long_t from, 
     return;
   }
 
-  const Time  tstart = sliceT0 + Time::step(from);
-  const Time  tstop  = sliceT0 + Time::step(to);
-  const Time& origin = device_.get_origin();
+  const Time tstop  = sliceT0 + Time::step(to);
+
   Time spike_time;
 
   double_t t_bin_stop;

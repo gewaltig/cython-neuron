@@ -1,16 +1,22 @@
 /*
  *  connection_manager.cpp
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2005 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -19,6 +25,11 @@
 #include "network.h"
 #include "nest_time.h"
 #include "connectiondatum.h"
+#include <algorithm>
+// OpenMP
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 namespace nest
 {
@@ -296,7 +307,6 @@ void ConnectionManager::set_connector_status(Node& node, index syn_id, thread ti
 ArrayDatum ConnectionManager::find_connections(DictionaryDatum params)
 {
   ArrayDatum connectome;
-  
   ulong_t source=0L;
   bool have_source = updateValue<long>(params, names::source, source);
   if (have_source)
@@ -349,8 +359,218 @@ void ConnectionManager::find_connections(ArrayDatum& connectome, thread t, index
 {
   std::vector<long>* p = connections_[t].get(source)[syn_vec_index].connector->find_connections(params);
   for (size_t i = 0; i < p->size(); ++i)
-    connectome.push_back(ConnectionDatum(ConnectionID(source, t, syn_id, (*p)[i])));
+    connectome.push_back(ConnectionDatum(ConnectionID(source, 0, t, syn_id, (*p)[i])));
   delete p;
+}
+
+ArrayDatum ConnectionManager::get_connections(DictionaryDatum params) const
+{
+  ArrayDatum connectome;
+
+  const Token source_t=   params->lookup(names::source);
+  const Token target_t=   params->lookup(names::target);
+  const Token syn_model_t=params->lookup(names::synapse_type);
+  const TokenArray *source_a=0;
+  const TokenArray *target_a=0;
+
+
+  if (not source_t.empty())
+      source_a=dynamic_cast<TokenArray const*>(source_t.datum());
+  if (not target_t.empty())
+      target_a=dynamic_cast<TokenArray const*>(target_t.datum());
+
+  size_t syn_id = 0;
+
+#ifdef _OPENMP
+  std::string msg;
+  msg = String::compose( "Setting OpenMP num_threads to %1.",net_.get_num_threads());
+  net_.message(SLIInterpreter::M_INFO, "ConnectionManager::get_connections", msg);
+  omp_set_num_threads(net_.get_num_threads());
+#endif
+
+  // First we check, whether a synapse model is given.
+  // If not, we will iterate all.
+  if (not syn_model_t.empty())
+  {
+      Name synmodel_name = getValue<Name>(syn_model_t);
+      const Token synmodel = synapsedict_->lookup(synmodel_name);
+      if (!synmodel.empty())
+	  syn_id = static_cast<size_t>(synmodel);
+      else
+	  throw UnknownModelName(synmodel_name.toString());
+      get_connections(connectome, source_a, target_a, syn_id);
+  }
+  else
+  {  
+      for (syn_id = 0; syn_id < prototypes_.size(); ++syn_id)
+	{
+	  ArrayDatum conn;
+	  get_connections(conn, source_a, target_a, syn_id);
+	  if (conn.size()>0)
+	    connectome.push_back(new ArrayDatum(conn));
+	}
+  }
+
+  return connectome;
+}
+
+void ConnectionManager::get_connections(ArrayDatum& connectome, TokenArray const *source, TokenArray const *target, size_t syn_id) const
+{ 
+    connectome.reserve(prototypes_[syn_id]->get_num_connections());
+
+    if ( source==0 and target == 0)
+    {
+#ifdef _OPENMP
+#pragma omp parallel
+	{
+	    thread t=omp_get_thread_num();
+#else
+        for (thread t = 0; t < net_.get_num_threads(); ++t)
+	{
+#endif
+	    ArrayDatum conns_in_thread;
+	    size_t num_connections_in_thread=0;
+	    // Count how many connections we will have.
+	    for(index source_id=1; source_id< connections_[t].size();++source_id)
+	    {
+              int syn_vec_index = get_syn_vec_index(t, source_id, syn_id);
+              if(syn_vec_index > -1)
+                num_connections_in_thread += connections_[t].get(source_id)[syn_vec_index].connector->get_num_connections();
+	    }
+		
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+	    conns_in_thread.reserve(num_connections_in_thread);
+	    for (index source_id=1; source_id< connections_[t].size(); ++source_id)
+	    {
+              int syn_vec_index = get_syn_vec_index(t, source_id, syn_id);
+              if(syn_vec_index > -1)
+                get_connections(conns_in_thread, source_id, t, syn_id);
+	    }
+	    if (conns_in_thread.size()>0)
+	    {
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+	       connectome.append_move(conns_in_thread);
+	    }
+	}
+	return;
+    }
+    else if(source == 0 and target !=0)
+    {
+	connectome.reserve(prototypes_[syn_id]->get_num_connections());
+#ifdef _OPENMP
+#pragma omp parallel
+	{
+	    thread t=omp_get_thread_num();
+#else
+	for (thread t = 0; t < net_.get_num_threads(); ++t)
+	{
+#endif
+	    ArrayDatum conns_in_thread;
+	    size_t num_connections_in_thread=0;
+	    // Count how many connections we will have maximally.
+	    for(index source_id=1; source_id< connections_[t].size();++source_id)
+	    {
+              int syn_vec_index = get_syn_vec_index(t, source_id, syn_id);
+              if(syn_vec_index > -1)
+                num_connections_in_thread += connections_[t].get(source_id)[syn_vec_index].connector->get_num_connections();
+	    }
+		
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+	    conns_in_thread.reserve(num_connections_in_thread);
+
+	    for (index source_id=1; source_id< connections_[t].size(); ++source_id)
+	    {
+              int syn_vec_index = get_syn_vec_index(t, source_id, syn_id);
+              if(syn_vec_index > -1)
+              {
+                for (index t_id=0; t_id< target->size(); ++t_id)
+                {
+                  size_t target_id = target->get(t_id);
+                  connections_[t].get(source_id)[syn_vec_index].connector->get_connections(source_id, target_id, t, syn_id, conns_in_thread);
+                }
+              }
+	    }
+	    if (conns_in_thread.size()>0)
+	    {
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+	      connectome.append_move(conns_in_thread);
+	    }
+	}
+	return;
+      }
+      else if(source !=0 )
+      {
+#ifdef _OPENMP
+#pragma omp parallel
+	  {
+	      size_t t=omp_get_thread_num();
+#else
+	  for (size_t t = 0; t < net_.get_num_threads(); ++t)
+	  {
+#endif
+	      ArrayDatum conns_in_thread;
+	      size_t num_connections_in_thread=0;
+	      // Count how many connections we will have.
+	      for(index source_id=1; source_id< connections_[t].size();++source_id)
+	      {
+                int syn_vec_index = get_syn_vec_index(t, source_id, syn_id);
+                if(syn_vec_index > -1)
+                  num_connections_in_thread += connections_[t].get(source_id)[syn_vec_index].connector->get_num_connections();
+	      }
+		
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+	      conns_in_thread.reserve(num_connections_in_thread);
+	      for( index s=0; s< source->size(); ++s)
+	      {
+		  size_t source_id= source->get(s);
+                  int syn_vec_index = get_syn_vec_index(t, source_id, syn_id);
+                  if (source_id < connections_[t].size() && syn_vec_index > -1)
+		  {
+                    if (target == 0)
+                    {
+                      get_connections(conns_in_thread, source_id, t, syn_id);
+                    }
+                    else
+                    {
+                      for (index t_id=0; t_id< target->size(); ++t_id)
+                      {
+                        size_t target_id = target->get(t_id);
+                        connections_[t].get(source_id)[syn_vec_index].connector->get_connections(source_id, target_id, t, syn_id, conns_in_thread );
+                      }
+                    }
+		  }
+	      }
+	    
+	      if (conns_in_thread.size()>0)
+	      {
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+                connectome.append_move(conns_in_thread);
+	      }
+	  }
+	  return;
+     } // else
+}
+
+
+// Return connections to all targets 
+void ConnectionManager::get_connections(ArrayDatum& connectome, index source, thread t, index syn_id) const
+{
+  int syn_vec_index = get_syn_vec_index(t, source, syn_id);
+  size_t n_ports=connections_[t].get(source)[syn_vec_index].connector->get_num_connections(); 
+  connectome.reserve(n_ports);
+  connections_[t].get(source)[syn_vec_index].connector->get_connections(source,t,syn_id,connectome);
 }
 
 void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, index syn)
@@ -371,23 +591,55 @@ void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, Dicti
   connections_[tid].get(s_gid)[syn_vec_index].connector->register_connection(s, r, p);
 }
 
-/**
- * Connect, using a dictionary with arrays. 
- * This variant of connect combines the functionalities of 
- * - connect
- * - divergent_connect
- * - convergent_connect
- * The decision is based on the details of the dictionary entries source and target. 
- * If source and target are both either a GID or a list of GIDs with equal size, then source and target are connected one-to-one.
- * If source is a gid and target is a list of GIDs then divergent_connect is used.
- * If source is a list of GIDs and target is a GID, then convergent_connect is used.
- * At this stage, the task of connect is to separate the dictionary into one for each thread and then to forward the
- * connect call to the connectors who can then deal with the details of the connection.
- */
 
-bool ConnectionManager::connect(DictionaryDatum&)
+// connect with a list of connection status dicts
+bool ConnectionManager::connect(ArrayDatum& conns)
 {
-    return false;
+    std::string msg;
+// #ifdef _OPENMP
+//     msg = String::compose( "Setting OpenMP num_threads to %1.",net_.get_num_threads());
+//     net_.message(SLIInterpreter::M_INFO, "ConnectionManager::Connect", msg);
+//     omp_set_num_threads(net_.get_num_threads());
+// #endif
+
+// #ifdef _OPENMP
+// #pragma omp parallel shared
+
+// #endif
+    {
+	for(Token *ct=conns.begin(); ct != conns.end(); ++ct)
+	{
+	    DictionaryDatum cd=getValue<DictionaryDatum>(*ct);
+	    index target_gid=static_cast<size_t>((*cd)[names::target]);
+	    Node *target_node = net_.get_node(target_gid);
+	    size_t thr=target_node->get_thread();
+	    
+// #ifdef _OPENMP
+// 	    size_t my_thr=omp_get_thread_num();
+// 	    if(my_thr == thr)
+// #endif
+	    {		
+
+ 		size_t syn_id=0;
+ 		index source_gid=(*cd)[names::source];
+
+ 		Token synmodel = cd->lookup(names::synapse_type);
+ 		if(! synmodel.empty())
+ 		{
+ 		    std::string synmodel_name=getValue<std::string>(synmodel);
+ 		    synmodel = synapsedict_->lookup(synmodel_name);
+ 		    if (!synmodel.empty())
+ 			syn_id = static_cast<size_t>(synmodel);
+ 		    else
+ 			throw UnknownModelName(synmodel_name);
+ 		}
+ 		Node *source_node = net_.get_node(source_gid);
+//#pragma omp critical
+ 		connect(*source_node, *target_node, source_gid, thr, cd, syn_id);
+	    }
+	}
+    }
+    return true;
 }
 
 void ConnectionManager::send(thread t, index sgid, Event& e)

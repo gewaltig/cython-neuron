@@ -1,6 +1,32 @@
 /*
- * This file is part of NEST.
+ *  Built-in implementation of Knuth's LFG generator.
+ *  This code is a C++ adaptation of the code published by Knuth on his
+ *  website, http://www-cs-faculty.stanford.edu/~knuth/programs/rng.c,
+ *  retrieved 8 Jan 2008. See also Knuth's header comment below.
  */
+ 
+/* Header comment by  D E Knuth ------------------------------------------ */
+
+/*    This program by D E Knuth is in the public domain and freely copyable.
+ *    It is explained in Seminumerical Algorithms, 3rd edition, Section 3.6
+ *    (or in the errata to the 2nd edition --- see
+ *        http://www-cs-faculty.stanford.edu/~knuth/taocp.html
+ *    in the changes to Volume 2 on pages 171 and following).              */
+
+/*    N.B. The MODIFICATIONS introduced in the 9th printing (2002) are
+      included here; there's no backwards compatibility with the original. */
+
+/*    This version also adopts Brendan McKay's suggestion to
+      accommodate naive users who forget to call ran_start(seed).          */
+
+/*    If you find any bugs, please report them immediately to
+ *                 taocp@cs.stanford.edu
+ *    (and you will be rewarded if the bug is genuine). Thanks!            */
+
+/************ see the book for explanations and caveats! *******************/
+/************ in particular, you need two's complement arithmetic **********/
+
+/* End of Header comment by  D E Knuth ----------------------------------- */
 
 #include "knuthlfg.h"
 

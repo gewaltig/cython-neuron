@@ -1,8 +1,6 @@
 # Add title to page
 # Add bars marking versions to ChangeLog.html
 # Include stylesheet NestChangeLog.css directly in file
-#
-# (C) 2006 NEST Initiative
 
 # replace stylesheet link with file
 /<link rel="stylesheet" href="svn2html.css" type="text\/css"\/>/ {

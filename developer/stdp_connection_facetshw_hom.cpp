@@ -33,12 +33,13 @@ namespace nest
     tau_plus_(20.0),
     tau_minus_(20.0),
 
+    Wmax_(100.0),
+
     no_synapses_(0),
     synapses_per_driver_(50),
-    driver_readout_time_(36.0), //in ms
-    hardware_stage_(3),
+    driver_readout_time_(15.0), //in ms
+    hardware_stage_(3)
 
-    Wmax_(100.0)
   {
     lookuptable_causal_.resize(16);
     lookuptable_acausal_.resize(16);

@@ -1,16 +1,22 @@
 /*
  *  dictutils.cc
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -19,7 +25,7 @@
 void initialize_property_array(DictionaryDatum &d, Name propname)
 {
   Token t = d->lookup(propname);
-  if (t == d->getvoid())
+  if (t.empty())
   {
     ArrayDatum arrd;
     def<ArrayDatum>(d, propname, arrd);
@@ -29,7 +35,7 @@ void initialize_property_array(DictionaryDatum &d, Name propname)
 void initialize_property_doublevector(DictionaryDatum &d, Name propname)
 {
   Token t = d->lookup(propname);
-  if (t == d->getvoid())
+  if (t.empty())
   {
     DoubleVectorDatum arrd(new std::vector<double>);
     def<DoubleVectorDatum>(d, propname, arrd);
@@ -39,17 +45,16 @@ void initialize_property_doublevector(DictionaryDatum &d, Name propname)
 void initialize_property_intvector(DictionaryDatum &d, Name propname)
 {
   Token t = d->lookup(propname);
-  if (t == d->getvoid())
+  if (t.empty())
   {
     IntVectorDatum arrd(new std::vector<long>);
     def<IntVectorDatum>(d, propname, arrd);
-  }
+  } 
 }
 
 void provide_property(DictionaryDatum &d, Name propname, const std::vector<double> &prop)
 {
-  Token t = d->lookup(propname);
-  assert (t != d->getvoid());
+  Token t = d->lookup2(propname);
 
   DoubleVectorDatum* arrd = dynamic_cast<DoubleVectorDatum*>(t.datum());
   assert(arrd != 0);
@@ -63,8 +68,7 @@ void provide_property(DictionaryDatum &d, Name propname, const std::vector<doubl
 
 void provide_property(DictionaryDatum &d, Name propname, const std::vector<long> &prop)
 {
-  Token t = d->lookup(propname);
-  assert (t != d->getvoid());
+  Token t = d->lookup2(propname);
 
   IntVectorDatum* arrd = dynamic_cast<IntVectorDatum*>(t.datum());
   assert(arrd != 0);
@@ -77,8 +81,7 @@ void provide_property(DictionaryDatum &d, Name propname, const std::vector<long>
 
 void accumulate_property(DictionaryDatum &d, Name propname, const std::vector<double> &prop)
 {
-  Token t = d->lookup(propname);
-  assert (t != d->getvoid());
+  Token t = d->lookup2(propname);
 
   DoubleVectorDatum* arrd = dynamic_cast<DoubleVectorDatum*>(t.datum());
   assert(arrd != 0);

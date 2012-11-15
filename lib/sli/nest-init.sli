@@ -1,16 +1,22 @@
 /*
  *  nest-init.sli
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004-2008 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -255,6 +261,52 @@ def
   Connect_main
 } def
 
+/* BeginDocumentation
+   Name: GetConnections - Retrieve connections between nodes
+
+   Synopsis:
+   << >>                         GetConnections -> [ [ con1 con2 .. ] [...] ]
+   << /source [gid1 gid2 ...] >> GetConnections -> [ [ con1 con2 .. ] [...] ]
+   << /source [gid1 gid2 ...] 
+      /target [gid1 gid2 ...] >> GetConnections -> [ [ con1 con2 .. ] [...] ]
+
+   Parameters:
+   A dictionary, that may contain the following fields:
+   /source  - array with GIDs of presynaptic nodes whose connections are sought. 
+              If not given, all neurons are searched as sources.
+   /target  - array with GIDs of post-synaptic nodes whose connections are sought.
+   /synapse_mode - return only conections of this type.
+                 - if not given all synapse types are returned. 
+
+   Description:
+   1. If called with an emty dictionary, GetConnections returns all connections of the network, as nested array.
+      Where the first sub-array conains the connections of synapse id 0, the second sub-array the connections of 
+      synapse id 1 and so forth.
+   2. The optinal parameters /source and /target can be used to filter for specific pre- and post-synaptic neurons.
+   3. In OpenMP mode, GetConnections can work with threads.
+   4. Each connection is represented as an IntVectorDatum which can be converted to a sli list with the command cva.
+   5. The anatomy of a connection object is:
+      [source-gid target-gid target-thread synapse-id port]
+   6.Connection objects are consumed by SetSynapseStatus, GetSynapse, and DataConnect
+
+   SeeAlso: DataConnect
+*/
+
+/* BeginDocumentation
+Name: DataConnect - Create connections from parameter arrays
+Synopsis:
+ [<< synapse_status1 >> <<synapse_status2>> ... ] DataConnect -> -
+gid << /target [gid1 gid2 ...] /weight [w1 w2 ...] /param1 [vals] >> /synapse DataConnect
+*/
+/DataConnect trie
+  [/integertype /dictionarytype /literaltype] /DataConnect_ load addtotrie
+  [/integertype /dictionarytype /stringtype] /DataConnect_ load addtotrie
+  [/arraytype] /DataConnect_a load addtotrie 
+def
+
+/GetConnections [/dictionarytype] /GetConnections_D load def
+/GetSynapseStatus [/arraytype] /GetStatus_a load def
+/SetSynapseStatus [/arraytype /arraytype] /SetStatus_aa load def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1458,9 +1510,94 @@ def
 [/integertype /integertype] { true TimeCommunication_i_i_b } bind addtotrie
 def
 
-
 % can only be defined here because on bg processes.sli is not included
 statusdict /platform get dup (bg/p) eq exch (bg/q) eq or
 {
  /memory_thisjob {memory_thisjob_bg} def
 } if
+
+/* BeginDocumentation
+Name - RestoreNodes - Restore nodes from an array of status dictionaries.
+Description:
+RestoreNodes takes an array of status dictionaries and creates nodes with these properties.
+RestoreNodes assumes that the status dictionaries belong to a consecutive range of nodes.
+
+The new nodes are created inside the current subnet and maintain their local subnet structure.
+Thus, RestoreNodes can be used to copy a range of neurons to different locations.
+*/
+
+/RestoreNodes [/arraytype] /RestoreNodes_a load def
+
+/* BeginDocumentation
+Name: SaveModels - Retrieve the state of all models.
+Description: 
+*/
+
+/SaveModels
+{
+  << >> begin
+  modeldict cva 2 Partition size /n_models Set
+  n_models 1 add % proxy model is not in modeldict
+  array /models Set
+  {
+    models exch
+    arrayload ; exch
+    put /models Set
+ } forall 
+
+ [
+ models
+ {
+   dup type /literaltype eq
+   { GetDefaults } { pop } ifelse
+ } forall 
+ ] 
+ end
+} def
+
+/* BeginDocumentation
+Name: RestoreModels - Restore saved models from an array of status dictionaries.
+Description:
+*/
+/RestoreModels
+[/arraytype]
+{
+ << >> begin
+  /models Set
+  0 GetStatus /dict_miss_is_error get /dict_err Set
+  0 << /dict_miss_is_error false >> SetStatus
+  /old_verbosity verbosity def
+  M_ERROR setverbosity
+  /restoremodel
+  {
+    begin
+    model type_id neq
+    {
+      type_id model currentdict CopyModel
+    }
+    {
+      type_id /a2eif_cond_exp_HW neq        % these models
+      type_id /topology_layer_3d neq and    % these models
+      type_id /topology_layer_free neq and  % break when
+      type_id /topology_layer_grid neq and  % their status is changed
+      {  model currentdict SetDefaults } if
+    } ifelse
+    end
+  } def
+  models
+  {
+    restoremodel
+  } forall
+  old_verbosity setverbosity
+  0 << /dict_miss_is_error dict_err >> SetStatus
+  end
+} def
+
+/cva [/connectiontype] /cva_C load def
+
+
+/abort
+{
+  statusdict /exitcodes get /userabort get
+  statusdict /is_mpi get { MPI_Abort }{ quit_i } ifelse
+} bind def

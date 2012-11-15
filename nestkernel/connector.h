@@ -1,16 +1,22 @@
 /*
  *  connector.h
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -41,6 +47,19 @@ class Connector
   virtual void register_connection(Node&, Node&, double_t, double_t) = 0;
   virtual void register_connection(Node&, Node&, DictionaryDatum&) = 0;
   virtual std::vector<long>* find_connections(DictionaryDatum) const = 0;
+  /**
+   * Return a list of all connections. 
+   * Return the list of ports that connect to the provided.
+   */
+  virtual void get_connections(size_t source_gid, size_t thrd, size_t synapse_id, ArrayDatum &conns) const=0;
+
+  /**
+   * Return a list of ports. 
+   * Return the list of ports that connect to the provided post_gid.
+   */
+  virtual void get_connections(size_t source_gid, size_t target_gid, size_t thrd, size_t synapse_id, ArrayDatum &conns) const=0;
+
+  virtual size_t get_num_connections() const =0;
   virtual void get_status(DictionaryDatum & d) const = 0;
   virtual void set_status(const DictionaryDatum & d) = 0;
   virtual void get_synapse_status(DictionaryDatum & d, port p) const = 0;

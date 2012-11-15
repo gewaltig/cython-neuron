@@ -277,7 +277,7 @@ inline
 void environment_gauss::get_status(DictionaryDatum &d) const
 {
   P_.get(d);
-  
+  (*d)["type"] = "other";
 }
 
 /*

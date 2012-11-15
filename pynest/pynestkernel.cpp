@@ -1,6 +1,24 @@
 /*
  *  pynestkernel.cpp
  *
+ *  This file is part of NEST.
+ *
+ *  Copyright (C) 2004 The NEST Initiative
+ *
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *
  *  Interface between Python and the NEST simulation tool. 
  *  www.nest-initiative.org
  *
@@ -13,20 +31,7 @@
  *  Moritz Helias
  *  Jochen Martin Eppler
  *
- *  This file is part of NEST
- *
- *  Copyright (C) 2004-2009 by
- *  The NEST Initiative
- *
- *  See the file AUTHORS for details.
- *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
  */
-
-extern "C"
-{
 #include <Python.h>
 
 // If we're not using python 2.5
@@ -41,7 +46,7 @@ typedef int Py_ssize_t;
 #ifdef HAVE_NUMPY
 #include <numpy/arrayobject.h>
 #endif
-}
+
 
 #include "interpret.h"
 #include "network.h"
@@ -99,6 +104,8 @@ static PyObject *NESTError = NULL;
  * called recursively to covert PyObjs of PyObjs of PyObjs...
  * to Datums of Datums of Datums...
  */
+extern "C"
+{
 Datum* PyObj_ToDatum(PyObject *pObj)
 {
   if (PyInt_Check(pObj)) { // object is integer or bool
@@ -293,7 +300,7 @@ Datum* PyObj_ToDatum(PyObject *pObj)
 
 }
 
-
+}
 /**
  * Execute a SLI command, given as string. 
  */
@@ -415,86 +422,191 @@ static PyObject *logstdout(PyObject *, PyObject *args)
  */
 static PyObject *push_connection_datums(PyObject *, PyObject *args)
 {
-  PyObject *pObj;
-  if (!PyArg_ParseTuple(args, "O", &pObj))
-  {
-    PyErr_SetString(NESTError, "push_connection_datums(): Error parsing args.");
-    return NULL;
-  }
-
-  if (!PyList_Check(pObj) && !PyTuple_Check(pObj))
-  {
-    PyErr_SetString(NESTError, "push_connection_datums(): Argument must be a list of dictionaries.");
-    return NULL;
-  }
-
-  ArrayDatum connectome;
-  PyObject* subPyObj;
-
-  size_t size = (PyList_Check(pObj)) ? PyList_Size(pObj) : PyTuple_Size(pObj);
-  connectome.reserve(size);
- 
-  for (size_t i = 0; i < size; ++i)
-  {
-    subPyObj = (PyList_Check(pObj)) ? PyList_GetItem(pObj, i) : PyTuple_GetItem(pObj, i);
-
-    if (PyDict_Check(subPyObj))
+    PyObject *pObj;
+    if (!PyArg_ParseTuple(args, "O", &pObj))
     {
-      PyObject* subsubPyObj;
-      long source;
-      long target_thread;
-      long synapse_typeid;
-      long port;
-
-      subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::source.toString().c_str());
-      if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
-        source = PyInt_AsLong(subsubPyObj);
-      else
-      {
-        PyErr_SetString(NESTError, "push_connection_datums(): No source entry in dictionary.");
-        return NULL;
-      }
-
-      subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::target_thread.toString().c_str());
-      if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
-        target_thread = PyInt_AsLong(subsubPyObj);
-      else
-      {
-        PyErr_SetString(NESTError, "push_connection_datums(): No target_thread entry in dictionary.");
-        return NULL;
-      }
-
-      subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::synapse_typeid.toString().c_str());
-      if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
-        synapse_typeid = PyInt_AsLong(subsubPyObj);
-      else
-      {
-        PyErr_SetString(NESTError, "push_connection_datums(): No synapse_typeid entry in dictionary.");
-        return NULL;
-      }
-
-      subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::port.toString().c_str());
-      if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
-        port = PyInt_AsLong(subsubPyObj);
-      else
-      {
-        PyErr_SetString(NESTError, "push_connection_datums(): No port entry in dictionary.");
-        return NULL;
-      }
-
-      ConnectionDatum cd = ConnectionDatum(nest::ConnectionID(source, target_thread, synapse_typeid, port));
-      connectome.push_back(cd);
+	PyErr_SetString(NESTError, "push_connection_datums(): Error parsing args.");
+	return NULL;
     }
-    else
+    
+    if (!PyList_Check(pObj) && !PyTuple_Check(pObj))
     {
-      PyErr_SetString(NESTError, "push_connection_datums(): Argument must be a list of dictionaries.");
-      return NULL;
+	PyErr_SetString(NESTError, "push_connection_datums(): Argument must be a list of dictionaries or a list of lists/arrays with 5 elements.");
+	return NULL;
     }
-  }
+    
+    ArrayDatum connectome;
+    size_t size = (PyList_Check(pObj)) ? PyList_Size(pObj) : PyTuple_Size(pObj);
+    connectome.reserve(size);
+    
+    for (size_t i = 0; i < size; ++i)
+    {
+	PyObject* subPyObj = (PyList_Check(pObj)) ? PyList_GetItem(pObj, i) : PyTuple_GetItem(pObj, i);
+	
+	if (PyDict_Check(subPyObj))
+	{
+	    PyObject* subsubPyObj;
+	    long source;
+	    long target_thread;
+	    long synapse_typeid;
+	    long port;
+	    
+	    subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::source.toString().c_str());
+	    if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
+		source = PyInt_AsLong(subsubPyObj);
+	    else
+	    {
+		PyErr_SetString(NESTError, "push_connection_datums(): No source entry in dictionary.");
+		return NULL;
+	    }
+	    
+	    subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::target_thread.toString().c_str());
+	    if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
+		target_thread = PyInt_AsLong(subsubPyObj);
+	    else
+	    {
+		PyErr_SetString(NESTError, "push_connection_datums(): No target_thread entry in dictionary.");
+		return NULL;
+	    }
+	    
+	    subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::synapse_typeid.toString().c_str());
+	    if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
+		synapse_typeid = PyInt_AsLong(subsubPyObj);
+	    else
+	    {
+		PyErr_SetString(NESTError, "push_connection_datums(): No synapse_typeid entry in dictionary.");
+		return NULL;
+	    }
+	    
+	    subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::port.toString().c_str());
+	    if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
+		port = PyInt_AsLong(subsubPyObj);
+	    else
+	    {
+		PyErr_SetString(NESTError, "push_connection_datums(): No port entry in dictionary.");
+		return NULL;
+	    }
+	    
+	    ConnectionDatum cd = ConnectionDatum(nest::ConnectionID(source, target_thread, synapse_typeid, port));
+	    connectome.push_back(cd);
+	    continue;
+	} 
+#ifdef HAVE_NUMPY
+	else if (PyArray_Check(subPyObj) )
+	{
+	    size_t array_size = PyArray_Size(subPyObj);
+	    if(array_size!=5)
+	    {
+		std::string error = String::compose("push_connection_arrays(): At position %1 in connection ID list.",i)+
+		    "\n Connection ID must have exactly five entries.";
+		PyErr_SetString(NESTError, error.c_str());
+		return 0;
+	    }
+	    PyArrayObject *array = (PyArrayObject*) subPyObj;
+	    assert(array != 0);
+	    switch (array->descr->type_num)
+	    {
+	    case NPY_INT :
+	    {
+		PyArrayIterObject *iter= (PyArrayIterObject *)PyArray_IterNew(subPyObj);
+		assert(iter != 0);
 
-  pEngine->OStack.push(connectome);
-  return Py_BuildValue("");
+		int con[5];
+		while(iter->index < iter->size)
+		{
+		    con[iter->index]= *(int*)(iter->dataptr);
+		    PyArray_ITER_NEXT(iter);
+		}
+		delete iter ;
+		connectome.push_back(new ConnectionDatum(nest::ConnectionID(con[0],con[1],con[2], con[3], con[4])));
+		continue;
+	    }
+	    case NPY_LONG:
+	    {
+		PyArrayIterObject *iter= (PyArrayIterObject *)PyArray_IterNew(subPyObj);
+		assert(iter != 0);
+
+		long con[5];
+		while(iter->index < iter->size)
+		{
+		    con[iter->index]= *(long*)(iter->dataptr);
+		    PyArray_ITER_NEXT(iter);
+		}
+		delete iter ;
+		connectome.push_back(new ConnectionDatum(nest::ConnectionID(con[0],con[1],con[2], con[3], con[4])));
+		continue;
+	    }
+	    default:
+		std::string error = String::compose("push_connection_arrays(): At position %1 in connection ID list.",i)+
+		    "\n Connection ID must be a list or numpy array of five integers.";
+		PyErr_SetString(NESTError, error.c_str());
+		return 0;
+	    }
+	}
+#endif
+	else if (PyList_Check(subPyObj))
+	{
+	    size_t tuple_size = PyList_Size(subPyObj);
+	    //std::cerr << tuple_size << std::endl;
+	    if (tuple_size !=5)
+	    {
+		std::string error = String::compose("push_connection_arrays(): At position %1 in connection ID list.",i)+
+		    "\n Connection ID must have exactly five entries.";
+		PyErr_SetString(NESTError, error.c_str());
+		continue;
+	    }
+	    long con[5];
+	    for (long j=0; j<5; ++j)
+	    {
+		PyObject* itemPyObj = PyList_GetItem(subPyObj, j);
+		if(PyInt_Check(itemPyObj))
+		{
+		    con[j]=PyInt_AsLong(itemPyObj);
+		}
+#ifdef HAVE_NUMPY
+		else if (PyArray_CheckScalar(itemPyObj)) // handle numpy array scalars
+		{
+		    PyArray_Descr *typecode;
+		    typecode = PyArray_DescrFromScalar(itemPyObj);
+		    switch (typecode->type_num)
+		    {
+		    case NPY_INT:
+		    case NPY_LONG:
+			long val;
+			PyArray_ScalarAsCtype(itemPyObj, &val);
+			con[j]=val;
+			break;
+		    default:
+			std::string error = String::compose("push_connection_arrays(): At position %1: Unsupported Numpy array scalar type: '%2'.\n",
+							    i,typecode->type_num);
+			PyErr_SetString(NESTError, error.c_str());
+			return NULL;
+		    }
+		}
+#endif
+		else
+		{
+		    std::string error = String::compose("push_connection_arrays(): At position %1, %2 in connection ID list."
+							"\n Connection ID must be a list, tuple, or and array of five integers.",i,j);
+		    PyErr_SetString(NESTError, error.c_str());
+		    return 0;
+		}
+	    }
+	    connectome.push_back(new ConnectionDatum(nest::ConnectionID(con[0],con[1],con[2], con[3], con[4])));
+	    continue;
+	}
+	else {
+	    std::string error = String::compose("push_connection_arrays(): At position %1 in connection ID list.",i)+
+		"\n Connection ID must be a list, tuple, or array of five integers.";
+	    PyErr_SetString(NESTError, error.c_str());
+	    return 0;
+	}
+    }
+    
+    pEngine->OStack.push(connectome);
+    return Py_BuildValue("");
 }
+
 
 
 /**

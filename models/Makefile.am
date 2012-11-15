@@ -63,6 +63,7 @@ libmodelsmodule_la_SOURCES= \
 		smp_generator.cpp smp_generator.h \
 		sli_neuron.cpp sli_neuron.h\
 		ginzburg_neuron.cpp ginzburg_neuron.h\
+		izhikevich.cpp izhikevich.h\
 	 	modelsmodule.h modelsmodule.cpp
 
 AM_CPPFLAGS= -I$(top_srcdir)/libnestutil\

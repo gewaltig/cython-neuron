@@ -1,16 +1,22 @@
 /*
  *  dict.h
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -38,8 +44,6 @@ inline bool operator==(const TokenMap & x, const TokenMap &y)
  */
 class Dictionary :private TokenMap
 {
-  const Token VoidToken;
-
   /**
    * Helper class for lexicographical sorting of dictionary entries.
    * Provides comparison operator for ascending, case-insensitive 
@@ -66,8 +70,8 @@ class Dictionary :private TokenMap
   };
   
 public:
-  Dictionary(const Token &t = Token()) : VoidToken(t){}
-  Dictionary(const Dictionary &d) : TokenMap(d), VoidToken(d.VoidToken), refs_on_dictstack_(0) {}
+  Dictionary() {}
+  Dictionary(const Dictionary &d) : TokenMap(d), refs_on_dictstack_(0) {}
   ~Dictionary();
   
   using TokenMap::erase;
@@ -100,8 +104,6 @@ public:
   Token& operator[](const Name &);
   const Token& operator[](const char*) const;
   Token& operator[](const char *);
-  
-  const Token & getvoid(void) { return VoidToken; }
   
   bool empty(void) const { return TokenMap::empty(); }
       
@@ -211,19 +213,30 @@ public:
    * @note this is just the worker for all_accessed()
    * @see clear_access_flags(), all_accessed()
    */
-  bool all_accessed_(std::string&, std::string prefix = std::string()) const;
  
-  size_t refs_on_dictstack_; 
+  int refs_on_dictstack_; 
+  bool all_accessed_(std::string&, std::string prefix = std::string()) const;
+  static const Token VoidToken;
 };
 
 inline
-const Token & Dictionary::lookup(const Name &n) const
+const Token& Dictionary::lookup(const Name &n) const
 {
   TokenMap::const_iterator where = find(n);
   if(where != end())
     return (*where).second;
   else
-    return VoidToken;
+    return Dictionary::VoidToken;
+}
+
+inline
+const Token& Dictionary::lookup2(const Name &n) const
+{      
+  TokenMap::const_iterator where = find(n);
+  if(where != end())
+    return (*where).second;
+  else
+    throw UndefinedName(n.toString());
 }
 
 inline
@@ -242,17 +255,6 @@ Token& Dictionary::insert(const Name &n, const Token &t)
   return TokenMap::operator[](n) = t; 
 }
 
-/* inline */
-/* Dictionary::const_iterator Dictionary::begin() const */
-/* { */
-/*   return TokenMap::begin(); */
-/* } */
-
-/* inline */
-/* Dictionary::const_iterator Dictionary::end() const */
-/* { */
-/*   return TokenMap::end(); */
-/* } */
 
 inline
 const Token& Dictionary::operator[](const Name &n) const
@@ -279,14 +281,5 @@ Token& Dictionary::insert_move(const Name &n, Token &t)
   return result;
 }
 
-inline
-const Token& Dictionary::lookup2(const Name &n) const
-{      
-  TokenMap::const_iterator where = find(n);
-  if(where != end())
-    return (*where).second;
-  else
-    throw UndefinedName(n.toString());
-}
 
 #endif

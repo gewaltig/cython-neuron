@@ -17,10 +17,9 @@
 #
 #  The script requires SVN access and releasetools is sourcedir
 #
-#  (C) 2004 The NEST Inititative, Hans Ekkehard Plesser
-#
+#  11/2004 first version by Hans Ekkehard Plesser
 #  06/2006 modified by Moritz Helias for prerelease
-#  07/2006 modifige by Hans Ekkehard Plesser to use SVN
+#  07/2006 modified by Hans Ekkehard Plesser to use SVN
 #  08/2007 modified by Jochen Eppler to use SVN revision as patchlevel
 #  03/2009 modified by Jochen Eppler to allow tarballing branches
 #  11/2009 modified by Jochen Eppler to use the HTTPS repository

@@ -1,16 +1,22 @@
 /*
  *  izhikevich.h
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2009 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -30,33 +36,48 @@ namespace nest
   class Network;
 
   /* BeginDocumentation
-     Name: izhikevich -
+     Name: izhikevich - Izhikevich neuron model
 
      Description:
      Implementation of the simple spiking neuron model introduced by Izhikevich [1].
      The dynamics are given by:
-        dv/dt = 0.04*v^2 + 5*v + 140 - u + I
-	du/dt = a*(b*v - u)
+         dv/dt = 0.04*v^2 + 5*v + 140 - u + I
+	    du/dt = a*(b*v - u)
 
-	if v >= V_th
-	v is set to c
-	u is incremented by d
+	 if v >= V_th:
+ 	   v is set to c
+	   u is incremented by d
 
-	the potential jumps on each spike arrival by the weight of the spike.
+	 v jumps on each spike arrival by the weight of the spike. 
+   
+     As published in [1], the numerics differs from the standard forward Euler technique 
+     in two ways: 
+     1) the new value of u is calulated based on the new value of v, rather than the 
+        previous value
+     2) the variable v is updated using a time step half the size of that used to update 
+        variable u. 
+   
+     This model offers both forms of integration, they can be selected using the
+     boolean parameter consistent_integration. To reproduce some results published on 
+	 the basis of this model, it is necessary to use the published form of the dynamics.
+     In this case, consistent_integration must be set to false. For all other purposes,
+     it is recommended to use the standard technique for forward Euler integration. In 
+     this case, consistent_integration must be set to true (default).
 
 
      Parameters:
      The following parameters can be set in the status dictionary.
 
      V_m        double - Membrane potential in mV
-     U_m	double - Membrane potential recovery variable
+     U_m		double - Membrane potential recovery variable
      V_th       double - Spike threshold in mV.
      I_e        double - Constant input current in pA. (R=1)
      V_min      double - Absolute lower value for the membrane potential.
-     a		double - describes time scale of recovery variable
-     b		double - sensitivity of recovery variable
-     c		double - after-spike reset value of V_m
-     d		double - after-spike reset value of U_m
+     a			double - describes time scale of recovery variable
+     b			double - sensitivity of recovery variable
+     c			double - after-spike reset value of V_m
+     d			double - after-spike reset value of U_m
+	 consistent_integration		bool - use standard integration technique
 
 
      References:
@@ -66,9 +87,9 @@ namespace nest
      Sends: SpikeEvent
 
      Receives: SpikeEvent, CurrentEvent, DataLoggingRequest
-
-     Author:  January 2009, Hanuschkin; modified August 2011, Morrison
-     SeeAlso: iaf_psc_delta
+     FirstVersion: 2009
+     Author: Hanuschkin, Morrison, Kunkel
+     SeeAlso: iaf_psc_delta, mat2_psc_exp
   */
   class izhikevich : public Archiving_Node
   {
@@ -133,6 +154,7 @@ namespace nest
       /** Lower bound */
       double_t V_min_;
 
+	  /** Use standard integration numerics **/	
       bool consistent_integration_;
 
       Parameters_();  //!< Sets default parameter values

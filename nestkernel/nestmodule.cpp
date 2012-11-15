@@ -1,18 +1,22 @@
 /*
  *  nestmodule.cpp
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004-2008 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  First Version: April 2002
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -49,6 +53,10 @@ extern "C"
   long bg_get_heap_mem();
   long bg_get_stack_mem();
 }
+#endif
+
+#ifdef _OPENMP
+#include <omp.h>
 #endif
 
 extern int SLIsignalflag;
@@ -224,6 +232,65 @@ namespace nest
     i->EStack.pop();
   }
 
+  void NestModule::Cva_CFunction::execute(SLIInterpreter *i) const
+  {
+    ConnectionDatum conn = getValue<ConnectionDatum>(i->OStack.top());
+    ArrayDatum ad;
+    ad.push_back(conn.get_source_gid());
+    ad.push_back(conn.get_target_gid());
+    ad.push_back(conn.get_target_thread());
+    ad.push_back(conn.get_synapse_type_id());
+    ad.push_back(conn.get_port());
+    Token result(ad);
+    i->OStack.top().swap(result);
+    i->EStack.pop();
+  }
+ 
+  void NestModule::SetStatus_aaFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(2);
+
+    ArrayDatum dict_a = getValue<ArrayDatum>(i->OStack.top());
+    ArrayDatum conn_a = getValue<ArrayDatum>(i->OStack.pick(1));
+
+    if((dict_a.size() != 1) and (dict_a.size() != conn_a.size()))
+      { 
+	throw RangeCheck();
+      }
+    if (dict_a.size() ==1) // Broadcast
+      {
+	
+	DictionaryDatum dict = getValue<DictionaryDatum>(dict_a[0]);
+	const size_t n_conns=conn_a.size();
+	for(size_t con=0;con < n_conns; ++con)
+	  {
+	      ConnectionDatum con_id = getValue<ConnectionDatum>(conn_a[con]);
+	      get_network().set_synapse_status(con_id.get_source_gid(), // source_gid
+					       con_id.get_synapse_type_id(), // synapse_id
+					       con_id.get_port(), // port
+					       con_id.get_target_thread(), // target thread
+					       dict);
+	  }
+      }
+    else
+      {
+	const size_t n_conns=conn_a.size();
+	for(size_t con=0;con < n_conns; ++con)
+	  {
+	    DictionaryDatum dict = getValue<DictionaryDatum>(dict_a[con]);
+	    ConnectionDatum con_id = getValue<ConnectionDatum>(conn_a[con]);
+	    get_network().set_synapse_status(con_id.get_source_gid(), // source_gid
+					     con_id.get_synapse_type_id(), // synapse_id
+					     con_id.get_port(), // port
+					     con_id.get_target_thread(), // target thread
+					     dict);
+	  }
+      }
+    
+    i->OStack.pop(2);
+    i->EStack.pop();
+  }
+
   /* BeginDocumentation
      Name: GetStatus - return the property dictionary of a node or object
      Synopsis: 
@@ -285,18 +352,41 @@ namespace nest
     i->assert_stack_load(1);
 
     ConnectionDatum conn = getValue<ConnectionDatum>(i->OStack.pick(0));
-    DictionaryDatum conn_dict = conn.get_dict();
 
-    long synapse_id = getValue<long>(conn_dict, nest::names::synapse_typeid);
-    long port = getValue<long>(conn_dict, nest::names::port);
-    long gid = getValue<long>(conn_dict, nest::names::source);
-    thread tid = getValue<long>(conn_dict, nest::names::target_thread);
+    long gid=conn.get_source_gid();
     get_network().get_node(gid); // Just to check if the node exists
      
-    DictionaryDatum result_dict = get_network().get_synapse_status(gid, synapse_id, port, tid);
-    
+    DictionaryDatum result_dict = get_network().get_synapse_status(
+						     gid,
+						     conn.get_synapse_type_id(), 
+						     conn.get_port(),
+						     conn.get_target_thread());    
     i->OStack.pop();
     i->OStack.push(result_dict);
+    i->EStack.pop();
+  }
+
+  // [intvector1,...,intvector_n]  -> [dict1,.../dict_n] 
+  void NestModule::GetStatus_aFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(1);
+    const ArrayDatum conns = getValue<ArrayDatum>(i->OStack.pick(0));
+    size_t n_results=conns.size();
+    ArrayDatum result;
+    result.reserve(n_results);
+    for(size_t nt=0; nt< n_results; ++nt)
+    {
+	ConnectionDatum con_id= getValue<ConnectionDatum>(conns.get(nt));
+	DictionaryDatum result_dict = get_network().get_synapse_status(
+	    con_id.get_source_gid(),
+	    con_id.get_synapse_type_id(),
+	    con_id.get_port(),
+	    con_id.get_target_thread());
+	result.push_back(result_dict);
+    }
+
+    i->OStack.pop();
+    i->OStack.push(result);
     i->EStack.pop();
   }
 
@@ -405,6 +495,23 @@ namespace nest
     i->OStack.push(array);
     i->EStack.pop();
     }
+
+  // params: params
+  void NestModule::GetConnections_DFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(1);
+
+    DictionaryDatum dict = getValue<DictionaryDatum>(i->OStack.pick(0));
+
+    dict->clear_access_flags();
+
+    ArrayDatum array = get_network().get_connections(dict);
+    std::string missed;
+     
+    i->OStack.pop();
+    i->OStack.push(array);
+    i->EStack.pop();
+  }
 
   /* BeginDocumentation
      Name: Simulate - simulate n milliseconds
@@ -552,6 +659,15 @@ namespace nest
     const long last_node_id = get_network().add_node(model_id, n_nodes);
     i->OStack.pop(2);
     i->OStack.push(last_node_id);
+    i->EStack.pop();
+  }
+
+  void NestModule::RestoreNodes_aFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(1);
+    ArrayDatum node_list=getValue<ArrayDatum>(i->OStack.top());
+    get_network().restore_nodes(node_list);
+    i->OStack.pop();
     i->EStack.pop();
   }
 
@@ -876,6 +992,26 @@ namespace nest
 
     i->OStack.pop(3);
     i->EStack.pop();
+  }
+
+ /* BeginDocumentation
+     Name: DataConnect_a - Connect many neurons from a list of synapse status dictionaries.
+
+     Synopsis: 
+     [dict1, dict2, ..., dict_n ]  DataConnect_a -> -
+
+     Author: Marc-Oliver Gewaltig
+     FirstVersion: May 2012
+     SeeAlso: DataConnect, Connect
+  */
+  void NestModule::DataConnect_aFunction::execute(SLIInterpreter *i) const
+  {
+      i->assert_stack_load(1);
+      ArrayDatum connectome = getValue<ArrayDatum>(i->OStack.top());
+
+      get_network().connect(connectome);
+      i->OStack.pop();
+      i->EStack.pop();
   }
 
   /* BeginDocumentation
@@ -1341,6 +1477,32 @@ namespace nest
     i->EStack.pop();
   }
 
+#ifdef HAVE_MPI
+  /* BeginDocumentation
+     Name: abort - Abort all NEST processes gracefully.
+     Paramteres:
+     exitcode - The exitcode to quit with
+     Description:
+     This function can be run by the user to end all NEST processes as
+     gracefully as possible. If NEST is compiled without MPI support,
+     this will just call quit_i. If compiled with MPI support, it will
+     call MPI_Abort, which will kill all processes of the application
+     and thus prevents deadlocks. The exitcode is userabort in both
+     cases (see statusdict/exitcodes).
+     Availability: NEST 2.0
+     Author: Jochen Martin Eppler
+     FirstVersion: October 2012
+     SeeAlso: quit_i, quit, Rank, SyncProcesses, MPIProcessorName
+  */
+  void NestModule::MPIAbort_iFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(1); 
+    long exitcode = getValue<long>(i->OStack.pick(0));
+    Communicator::mpi_abort(exitcode);
+    i->EStack.pop();
+  }
+#endif
+
   /* BeginDocumentation
      Name: GetVpRNG - return random number generator associated to virtual process of node
      Synopsis:
@@ -1511,13 +1673,19 @@ namespace nest
     i->createcommand("GetLeaves_i_D_b",   &getleaves_i_D_bfunction);
     i->createcommand("GetChildren_i_D_b", &getchildren_i_D_bfunction);
 
+    i->createcommand("RestoreNodes_a", &restorenodes_afunction);
+
     i->createcommand("SetStatus_id", &setstatus_idfunction);
     i->createcommand("SetStatus_CD", &setstatus_CDfunction);
+    i->createcommand("SetStatus_aa", &setstatus_aafunction);
 
     i->createcommand("GetStatus_i",  &getstatus_ifunction);
     i->createcommand("GetStatus_C",  &getstatus_Cfunction);
+    i->createcommand("GetStatus_a",  &getstatus_afunction);
 
     i->createcommand("FindConnections_D", &findconnections_Dfunction);
+    i->createcommand("GetConnections_D", &getconnections_Dfunction);
+    i->createcommand("cva_C", &cva_cfunction);
 
     i->createcommand("Simulate_d",   &simulatefunction);
 
@@ -1534,6 +1702,7 @@ namespace nest
     i->createcommand("Connect_i_i_d_d_i", &connect_i_i_d_d_ifunction);
     i->createcommand("Connect_i_i_D_l", &connect_i_i_D_lfunction);
     i->createcommand("DataConnect_", &dataconnect_i_dict_ifunction);
+    i->createcommand("DataConnect_a", &dataconnect_afunction);
 
     i->createcommand("DivergentConnect_i_ia_a_a_l", &divergentconnect_i_ia_a_a_lfunction);
     i->createcommand("RandomDivergentConnect_i_i_ia_da_da_b_b_l", &rdivergentconnect_i_i_ia_da_da_b_b_lfunction);
@@ -1558,6 +1727,9 @@ namespace nest
     i->createcommand("SyncProcesses", &syncprocessesfunction);
     i->createcommand("TimeCommunication_i_i_b", &timecommunication_i_i_bfunction); 
     i->createcommand("ProcessorName", &processornamefunction);
+#ifdef HAVE_MPI
+    i->createcommand("MPI_Abort", &mpiabort_ifunction);
+#endif
    
     i->createcommand("GetVpRNG", &getvprngfunction);
     i->createcommand("GetGlobalRNG", &getglobalrngfunction);

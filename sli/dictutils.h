@@ -1,16 +1,22 @@
 /*
  *  dictutils.h
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -46,11 +52,11 @@ FT getValue(const DictionaryDatum &d, Name const n)
 {
   // We must take a reference, so that access information can be stored in the
   // token.
-  const Token& t = d->lookup(n);
+  const Token& t = d->lookup2(n);
   
-  if (t == d->getvoid())
-    throw UndefinedName(n.toString());
-
+  /* if (!t.empty()) */
+  /*   throw UndefinedName(n.toString()); */
+ 
   return getValue<FT>(t);
 }  
    
@@ -96,7 +102,7 @@ bool updateValue(DictionaryDatum const &d, Name const n, VT &value)
   // token.
   const Token& t = d->lookup(n);
 
-  if (t == d->getvoid())
+  if (t.empty())
     return false;
   
   value = getValue<FT>(t);
@@ -146,7 +152,7 @@ inline
 void append_property(DictionaryDatum &d, Name propname, const PropT &prop)
 {
   Token t = d->lookup(propname);
-  assert (t != d->getvoid());
+  assert (!t.empty());
 
   ArrayDatum* arrd = dynamic_cast<ArrayDatum*>(t.datum());
   assert(arrd != 0);
@@ -164,7 +170,7 @@ inline
 void append_property<std::vector<double> >(DictionaryDatum &d, Name propname, const std::vector<double> &prop)
 {
   Token t = d->lookup(propname);
-  assert (t != d->getvoid());
+  assert (!t.empty());
 
   DoubleVectorDatum* arrd = dynamic_cast<DoubleVectorDatum*>(t.datum());
   assert(arrd != 0);
@@ -182,7 +188,7 @@ inline
 void append_property<std::vector<long> >(DictionaryDatum &d, Name propname, const std::vector<long> &prop)
 {
   Token t = d->lookup(propname);
-  assert (t != d->getvoid());
+  assert (!t.empty());
 
   IntVectorDatum* arrd = dynamic_cast<IntVectorDatum*>(t.datum());
   assert(arrd != 0);

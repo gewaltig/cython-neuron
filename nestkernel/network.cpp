@@ -1,16 +1,22 @@
 /*
  *  network.cpp
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -64,12 +70,15 @@ Network::Network(SLIInterpreter &i)
 
   Model* model = new GenericModel<Subnet>("subnet");
   register_basis_model(*model);
+  model->set_type_id(0);
 
   siblingcontainer_model = new GenericModel<SiblingContainer>("siblingcontainer");
   register_basis_model(*siblingcontainer_model, true);
+  siblingcontainer_model->set_type_id(1);
 
   model = new GenericModel<proxynode>("proxynode");
   register_basis_model(*model, true);
+  model->set_type_id(2);
 
   synapsedict_ = new Dictionary();
   interpreter_.def("synapsedict", new DictionaryDatum(synapsedict_));
@@ -488,6 +497,40 @@ index Network::add_node(index mod, long_t n)   //no_p
   return max_gid - 1;
 }
 
+    void Network::restore_nodes(ArrayDatum &node_list)
+    {
+	Subnet *root= get_cwn();
+	const index gid_offset= size()-1;
+	Token *first=node_list.begin();
+	const Token *end=node_list.end();
+	if(first == end)
+	    return;
+	// We need to know the first and hopefully smallest GID to identify
+	// if a parent is in or outside the range of restored nodes.
+	// So we retrieve it here, from the first element of the node_list, assuming that
+	// the node GIDs are in ascending order.
+	DictionaryDatum node_props=getValue<DictionaryDatum>(*first);
+	const index min_gid=(*node_props)[names::global_id];
+
+	for (Token *node_t=first; node_t != end; ++node_t)
+	{
+	    DictionaryDatum node_props=getValue<DictionaryDatum>(*node_t);
+	    std::string model_name= (*node_props)[names::model];
+	    index model_id=get_model_id(model_name.c_str());
+	    index parent_gid=(*node_props)[names::parent];
+	    index local_parent_gid= parent_gid;
+	    if(parent_gid >= min_gid)            // if the parent is one of the restored nodes
+		local_parent_gid += gid_offset; // we must add the gid_offset
+	    go_to(local_parent_gid);
+	    index node_gid=add_node(model_id);
+	    Node *node_ptr=get_node(node_gid);
+	    // we call directly set_status on the node
+            // to bypass checking of unused dictionary items.
+	    node_ptr->set_status_base(node_props);
+	}
+	current_=root;
+    }
+    
 void Network::init_state(index GID)
 {
   Node *n= get_node(GID);
@@ -1544,7 +1587,7 @@ void Network::register_basis_model(Model& m, bool private_model)
   if ( !private_model && modeldict_->known(name) )
   {
     delete &m;
-    throw NamingConflict("A model called '" + name + "' already exists.\n"
+    throw NamingConflict("A model called '" + name + "' already exists. "
         "Please choose a different name!");
   }
   pristine_models_.push_back(std::pair<Model*, bool>(&m, private_model));
@@ -1564,6 +1607,7 @@ index Network::register_model(Model& m, bool private_model)
 
   const index id = models_.size();
   m.set_model_id(id);
+  m.set_type_id(id);
 
   pristine_models_.push_back(std::pair<Model*, bool>(&m, private_model));
   models_.push_back(m.clone(name));

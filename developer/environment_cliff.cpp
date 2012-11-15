@@ -42,6 +42,8 @@ namespace nest
       y_dim_         (0),
       refractor_     (0.), // ms
       input_neurons_ (0),
+      cliffx_        (0),
+      cliffy_        (0),
       neuron_west_   (0),
       neuron_east_   (0),
       neuron_south_  (0),
@@ -49,8 +51,6 @@ namespace nest
       critic_neurons_(0),
       specialx_      (0),
       specialy_      (0),
-      cliffx_        (0),
-      cliffy_        (0),
       warpx_         (-1),
       warpy_         (-1),
       special_reward_(0),
@@ -598,7 +598,7 @@ void nest::environment_cliff::special_moves(){
 
 
   //if previous position was cliff state, set reward to zero and move agent to new starting position
-   for(int i=0; i < P_.cliffx_.size(); i++)
+   for(size_t i=0; i < P_.cliffx_.size(); i++)
     {
       if(B_.old_agent_[1]==P_.cliffy_[i]){
 	if(B_.old_agent_[0]==P_.cliffx_[i]){
@@ -625,7 +625,7 @@ void nest::environment_cliff::special_moves(){
   }
   
   //if state is cliff state, set reward to punishment value
-  for (int i=0; i<P_.cliffx_.size(); i++){
+  for (size_t i=0; i<P_.cliffx_.size(); i++){
     if(B_.agenty_==P_.cliffy_[i]){
       if(B_.agentx_==P_.cliffx_[i]){
 	B_.reward_=P_.special_punishment_;

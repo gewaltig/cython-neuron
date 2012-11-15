@@ -1,4 +1,26 @@
 /*
+ *  ticket-349.sli
+ *
+ *  This file is part of NEST.
+ *
+ *  Copyright (C) 2004 The NEST Initiative
+ *
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+/*
  * Regression test for Ticket #349.
  *
  * Ensure that multimeter connects with entries in record_from list that do not match target node
@@ -7,8 +29,6 @@
  * Ensure that simulation does not crash when multimeter has empty record_from list. 
  *
  * Hans Ekkehard Plesser, 2009-07-02
- *
- * Copyright (C) 2009-$Year: $ The NEST Initiative
  *
  */
 
