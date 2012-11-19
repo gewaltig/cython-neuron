@@ -84,43 +84,50 @@ namespace nest {
 
   }
 
+  // Proper mod which returns non-negative numbers
+  static inline double_t mod(double_t x, double_t p)
+  {
+    x = std::fmod(x,p);
+    if (x<0)
+      x += p;
+    return x;
+  }
 
   template<int D, class T, int max_capacity>
   Ntree<D,T,max_capacity>::masked_iterator::masked_iterator(Ntree<D,T,max_capacity>& q, const Mask<D> &mask, const Position<D> &anchor):
     ntree_(&q), top_(&q), allin_top_(0), node_(0), mask_(&mask), anchor_(anchor), anchors_(), current_anchor_(0)
   {
     if (ntree_->periodic_.any()) {
-      // Add one image of anchor for each periodic dimension
-      // This assumes that the mask never extends beyond more than one half layer
-      // from the anchor in any direction.
+      Box<D> mask_bb = mask_->get_bbox();
 
+      // Move lower left corner of mask into main image of layer
       for(int i=0;i<D;++i) {
         if (ntree_->periodic_[i]) {
-          anchor_[i] = ntree_->lower_left_[i] + std::fmod(anchor_[i]-ntree_->lower_left_[i], ntree_->extent_[i]);
-          if (anchor_[i]<ntree_->lower_left_[i])
-            anchor_[i] += ntree_->extent_[i];
+          anchor_[i] = mod(anchor_[i] + mask_bb.lower_left[i] - ntree_->lower_left_[i], ntree_->extent_[i]) - mask_bb.lower_left[i] + ntree_->lower_left_[i];
         }
       }
       anchors_.push_back(anchor_);
 
+      // Add extra anchors for each dimension where this is needed
+      // (Assumes that the mask is not wider than the layer)
       for(int i=0;i<D;++i) {
         if (ntree_->periodic_[i]) {
           int n = anchors_.size();
-          if ((anchor_[i]-ntree_->lower_left_[i]) > 0.5*ntree_->extent_[i]) {
+          if ((anchor_[i] + mask_bb.upper_right[i] - ntree_->lower_left_[i]) > ntree_->extent_[i]) {
             for(int j=0;j<n;++j) {
               Position<D> p = anchors_[j];
               p[i] -= ntree_->extent_[i];
               anchors_.push_back(p);
             }
-          } else {
-            for(int j=0;j<n;++j) {
-              Position<D> p = anchors_[j];
-              p[i] += ntree_->extent_[i];
-              anchors_.push_back(p);
-            }
           }
         }
       }
+/*
+      for(int i=0;i<anchors_.size();++i) {
+        std::cout << anchors_[i] << std::endl;
+      }
+      std::cout << "---" << std::endl;
+*/
     }
 
     init_();

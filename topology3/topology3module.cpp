@@ -139,11 +139,11 @@ namespace nest
             DictionaryDatum ad = getValue<DictionaryDatum>(anchor_token);
 
             int_t dim = 2;
-            int_t column = getValue<long>(ad, names::column) - 1;
-            int_t row = getValue<long>(ad, names::row) - 1;
+            int_t column = getValue<long>(ad, names::column);
+            int_t row = getValue<long>(ad, names::row);
             int_t layer;
             if (ad->known(names::layer)) {
-              layer = getValue<long>(ad,names::layer) - 1;
+              layer = getValue<long>(ad,names::layer);
               dim = 3;
             }
             switch(dim) {
@@ -729,7 +729,7 @@ namespace nest
     if (layer == NULL)
       throw LayerExpected();
 
-    std::vector<index> gids = layer->get_global_nodes(mask,anchor);
+    std::vector<index> gids = layer->get_global_nodes(mask,anchor,false);
 
     ArrayDatum result;
     result.reserve(gids.size());

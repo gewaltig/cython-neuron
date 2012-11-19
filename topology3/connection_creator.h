@@ -97,6 +97,7 @@ namespace nest
     ConnectionType type_;
     bool allow_autapses_;
     bool allow_multapses_;
+    bool allow_oversized_;
     Selector source_filter_;
     Selector target_filter_;
     long_t number_of_connections_;

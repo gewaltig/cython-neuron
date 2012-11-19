@@ -94,18 +94,13 @@ namespace nest
     static index create_layer(const DictionaryDatum&);
 
     /**
-     * Return an Ntree with the positions and GIDs of the nodes in this
-     * layer.
-     */
-    virtual AbstractNtree<index> * get_global_positions_ntree(Selector filter=Selector()) = 0;
-
-    /**
      * Return a vector with the GIDs of the nodes inside the mask.
-     * @param mask    mask to apply.
-     * @param anchor  position to center mask in.
+     * @param mask            mask to apply.
+     * @param anchor          position to center mask in.
+     * @param allow_oversized allow mask to be greater than layer
      * @returns nodes in layer inside mask.
      */
-    virtual std::vector<index> get_global_nodes(const AbstractMask &mask, const std::vector<double_t> &anchor) = 0;
+    virtual std::vector<index> get_global_nodes(const AbstractMask &mask, const std::vector<double_t> &anchor, bool allow_oversized) = 0;
 
     /**
      * Write layer data to stream.
@@ -294,6 +289,12 @@ namespace nest
     double_t compute_distance(const std::vector<double_t>& from_pos,
                               const index to) const;
 
+
+    /**
+     * Get positions for local nodes in layer.
+     */
+    lockPTR<Ntree<D,index> > get_local_positions_ntree(Selector filter=Selector());
+
     /**
      * Get positions for all nodes in layer, including nodes on other MPI
      * processes. The positions will be cached so that subsequent calls for
@@ -301,7 +302,7 @@ namespace nest
      * user should group together all ConnectLayer calls using the same
      * pool layer.
      */
-    Ntree<D,index> * get_global_positions_ntree(Selector filter=Selector());
+    lockPTR<Ntree<D,index> > get_global_positions_ntree(Selector filter=Selector());
 
     /**
      * Get positions globally, overriding the dimensions of the layer and
@@ -309,16 +310,16 @@ namespace nest
      * coordinates are only used for the dimensions where the supplied
      * periodic flag is set.
      */
-    Ntree<D,index> * get_global_positions_ntree(Selector filter, std::bitset<D> periodic, Position<D> lower_left, Position<D> extent);
+    lockPTR<Ntree<D,index> > get_global_positions_ntree(Selector filter, std::bitset<D> periodic, Position<D> lower_left, Position<D> extent);
 
     std::vector<std::pair<Position<D>,index> >* get_global_positions_vector(Selector filter=Selector());
 
-    virtual std::vector<std::pair<Position<D>,index> > get_global_positions_vector(Selector filter, const AbstractMask& mask, const Position<D>& anchor);
+    virtual std::vector<std::pair<Position<D>,index> > get_global_positions_vector(Selector filter, const AbstractMask& mask, const Position<D>& anchor, bool allow_oversized);
 
     /**
      * Return a vector with the GIDs of the nodes inside the mask.
      */
-    std::vector<index> get_global_nodes(const AbstractMask &mask, const std::vector<double_t> &anchor);
+    std::vector<index> get_global_nodes(const AbstractMask &mask, const std::vector<double_t> &anchor, bool allow_oversized);
 
     /**
      * Connect this layer to the given target layer. The actual connections
@@ -365,7 +366,7 @@ namespace nest
      */
     void clear_vector_cache_() const;
 
-    Ntree<D,index> * do_get_global_positions_ntree_(const Selector& filter);
+    lockPTR<Ntree<D,index> > do_get_global_positions_ntree_(const Selector& filter);
 
     /**
      * Insert global position info into ntree.
@@ -377,6 +378,11 @@ namespace nest
      */
     virtual void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > &, const Selector& filter) = 0;
 
+    /**
+     * Insert local position info into ntree.
+     */
+    virtual void insert_local_positions_ntree_(Ntree<D,index> & tree, const Selector& filter) = 0;
+
     Position<D> lower_left_;  ///< lower left corner (minimum coordinates) of layer
     Position<D> extent_;      ///< size of layer
     std::bitset<D> periodic_; ///< periodic b.c.
@@ -384,7 +390,7 @@ namespace nest
     /**
      * Global position information for a single layer
      */
-    static Ntree<D,index> * cached_ntree_;
+    static lockPTR<Ntree<D,index> > cached_ntree_;
     static std::vector<std::pair<Position<D>,index> > * cached_vector_;
     static Selector cached_selector_;
 
@@ -395,42 +401,56 @@ namespace nest
   class MaskedLayer {
   public:
 
-    MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask);
-    MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask, Layer<D>& target);
+    MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask, bool include_global, bool allow_oversized);
+    MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask, bool include_global, bool allow_oversized, Layer<D>& target);
     ~MaskedLayer();
     typename Ntree<D,index>::masked_iterator begin(const Position<D>& anchor);
     typename Ntree<D,index>::masked_iterator end();
 
   protected:
 
-    void adapt_grid_mask_(Layer<D>& layer);
+    void check_mask_(Layer<D>& layer, bool allow_oversized);
 
-    Ntree<D,index> * ntree_;
+    lockPTR<Ntree<D,index> > ntree_;
     const AbstractMask* mask_;
-    Mask<D> * new_mask;
+    Mask<D> * new_mask_;
   };
 
   template<int D>
   inline
-  MaskedLayer<D>::MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask):
-    ntree_(layer.get_global_positions_ntree(filter)), mask_(&mask), new_mask(0)
+  MaskedLayer<D>::MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask, bool include_global, bool allow_oversized):
+    mask_(&mask), new_mask_(0)
   {
-    adapt_grid_mask_(layer);
+    if (include_global)
+      ntree_ = layer.get_global_positions_ntree(filter);
+    else
+      ntree_ = layer.get_local_positions_ntree(filter);
+
+    check_mask_(layer, allow_oversized);
   }
 
   template<int D>
   inline
-  MaskedLayer<D>::MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask, Layer<D>& target):
-    ntree_(layer.get_global_positions_ntree(filter, target.get_periodic_mask(), target.get_lower_left(), target.get_extent())), mask_(&mask), new_mask(0)
+  MaskedLayer<D>::MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask, bool include_global, bool allow_oversized, Layer<D>& target):
+    mask_(&mask), new_mask_(0)
   {
-    adapt_grid_mask_(target);
+    if (include_global)
+      ntree_ = layer.get_global_positions_ntree(filter, target.get_periodic_mask(), target.get_lower_left(), target.get_extent());
+    //else
+    //  ntree_ = layer.get_local_positions_ntree(filter, target.get_periodic_mask(), target.get_lower_left(), target.get_extent());
+
+    check_mask_(target, allow_oversized);
+    Mask<D>* conv_mask = new ConverseMask<D>(dynamic_cast<const Mask<D>&>(*mask_));
+    delete new_mask_;
+    new_mask_ = conv_mask;
+    mask_ = conv_mask;
   }
 
   template<int D>
   inline
   MaskedLayer<D>::~MaskedLayer()
   {
-    delete new_mask;
+    delete new_mask_;
   }
 
   template<int D>
@@ -523,9 +543,7 @@ namespace nest
   inline
   void Layer<D>::clear_ntree_cache_() const
   {
-    if (cached_ntree_ != 0)
-      delete cached_ntree_;
-    cached_ntree_ = 0;
+    cached_ntree_ = lockPTR<Ntree<D,index> >();
     cached_ntree_layer_ = -1;
   }
 

@@ -84,7 +84,7 @@ namespace nest
 
     if (mask_.valid()) {
 
-      MaskedLayer<D> masked_layer(source,source_filter_,*mask_);
+      MaskedLayer<D> masked_layer(source,source_filter_,*mask_,true,allow_oversized_);
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 
@@ -194,11 +194,7 @@ namespace nest
 
     if (mask_.valid()) {
 
-      const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
-
-      lockPTR<Mask<D> > mask = lockPTR<Mask<D> >(new ConverseMask<D>(mask_ref));
-
-      MaskedLayer<D> masked_layer(source,source_filter_,*mask,target);
+      MaskedLayer<D> masked_layer(source,source_filter_,*mask_,true,allow_oversized_,target);
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 
@@ -320,7 +316,8 @@ namespace nest
 
         std::vector<std::pair<Position<D>,index> > positions =
             source.get_global_positions_vector(source_filter_, mask_ref,
-                                               target.get_position((*tgt_it)->get_subnet_index()));
+                                               target.get_position((*tgt_it)->get_subnet_index()),
+                                               allow_oversized_);
 
         if (kernel_.valid()) {
 
@@ -484,15 +481,7 @@ namespace nest
     // 3. Draw number of connections to make using global rng
     // 4. Draw from local targets and make connections
 
-    std::vector<Node*>::const_iterator target_begin;
-    std::vector<Node*>::const_iterator target_end;
-    if (target_filter_.select_depth()) {
-      target_begin = target.local_begin(target_filter_.depth);
-      target_end = target.local_end(target_filter_.depth);
-    } else {
-      target_begin = target.local_begin();
-      target_end = target.local_end();
-    }
+    MaskedLayer<D> masked_target(target,target_filter_,*mask_,false,allow_oversized_);
 
     std::vector<std::pair<Position<D>,index> >* sources = source.get_global_positions_vector(source_filter_);
     DictionaryDatum d = new Dictionary();
@@ -507,28 +496,22 @@ namespace nest
 
       // Find potential targets and probabilities
 
-      for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
+      for(typename Ntree<D,index>::masked_iterator tgt_it=masked_target.begin(source_pos); tgt_it!=masked_target.end(); ++tgt_it) {
 
-        if (target_filter_.select_model() && ((*tgt_it)->get_model_id() != target_filter_.model))
+        if ((not allow_autapses_) and (source_id == tgt_it->second))
           continue;
 
-        if ((not allow_autapses_) and (source_id == (*tgt_it)->get_gid()))
-          continue;
+        Position<D> target_displ = target.compute_displacement(source_pos, tgt_it->first);
+        index target_thread = net_.get_node(tgt_it->second)->get_thread();
+        librandom::RngPtr rng = net_.get_rng(target_thread);
 
-        Position<D> target_displ = target.compute_displacement(source_pos, (*tgt_it)->get_subnet_index());
-
-        if (mask_.valid() && !mask_->inside(target_displ))
-          continue;
-
-        librandom::RngPtr rng = net_.get_rng((*tgt_it)->get_thread());
-
-        targets[(*tgt_it)->get_thread()].push_back((*tgt_it)->get_gid());
-        displacements[(*tgt_it)->get_thread()].push_back(target_displ);
+        targets[target_thread].push_back(tgt_it->second);
+        displacements[target_thread].push_back(target_displ);
 
         if (kernel_.valid())
-          probabilities[(*tgt_it)->get_thread()].push_back(kernel_->value(target_displ, rng));
+          probabilities[target_thread].push_back(kernel_->value(target_displ, rng));
         else
-          probabilities[(*tgt_it)->get_thread()].push_back(1.0);
+          probabilities[target_thread].push_back(1.0);
       }
 
       // Find local and global "probability"

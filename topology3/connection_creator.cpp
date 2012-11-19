@@ -47,6 +47,10 @@ namespace nest
 
         allow_multapses_ = getValue<bool>(dit->second);
 
+      } else if (dit->first == names::allow_oversized_mask) {
+
+        allow_oversized_ = getValue<bool>(dit->second);
+
       } else if (dit->first == names::number_of_connections) {
 
         number_of_connections_ = getValue<long_t>(dit->second);

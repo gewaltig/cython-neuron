@@ -46,6 +46,7 @@ namespace nest
 
     void insert_global_positions_ntree_(Ntree<D,index> & tree, const Selector& filter);
     void insert_global_positions_vector_(std::vector<std::pair<Position<D>,index> > & vec, const Selector& filter);
+    void insert_local_positions_ntree_(Ntree<D,index> & tree, const Selector& filter);
 
     /// Vector of positions. Should match node vector in Subnet.
     std::vector<Position<D> > positions_;
@@ -160,6 +161,32 @@ namespace nest
   {
 
     communicate_positions_(std::inserter(tree, tree.end()), filter);
+
+  }
+
+  template <int D>
+  void FreeLayer<D>::insert_local_positions_ntree_(Ntree<D,index> & tree, const Selector& filter)
+  {
+    assert(this->nodes_.size() >= positions_.size());
+    
+    std::vector<Node*>::const_iterator nodes_begin;
+    std::vector<Node*>::const_iterator nodes_end;
+
+    if (filter.select_depth()) {
+      nodes_begin = this->local_begin(filter.depth);
+      nodes_end = this->local_end(filter.depth);
+    } else {
+      nodes_begin = this->local_begin();
+      nodes_end = this->local_end();
+    }
+
+    for(std::vector<Node*>::const_iterator node_it = nodes_begin; node_it != nodes_end; ++node_it) {
+
+      if (filter.select_model() && ((*node_it)->get_model_id() != filter.model))
+        continue;
+
+      tree.insert(std::pair<Position<D>,index>(positions_[(*node_it)->get_subnet_index() % positions_.size()],(*node_it)->get_gid()));
+    }
 
   }
 

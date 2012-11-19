@@ -24,7 +24,7 @@
 namespace nest {
 
   template<int D>
-  Ntree<D,index> * Layer<D>::cached_ntree_ = 0;
+  lockPTR<Ntree<D,index> > Layer<D>::cached_ntree_;
 
   template<int D>
   std::vector<std::pair<Position<D>,index> > * Layer<D>::cached_vector_ = 0;
@@ -95,22 +95,34 @@ namespace nest {
   }
 
   template <int D>
-  Ntree<D,index> * Layer<D>::get_global_positions_ntree(Selector filter)
+  lockPTR<Ntree<D,index> > Layer<D>::get_local_positions_ntree(Selector filter)
+  {
+    clear_ntree_cache_();
+
+    cached_ntree_ = lockPTR<Ntree<D,index> >(new Ntree<D,index>(this->lower_left_, this->extent_, this->periodic_));
+
+    insert_local_positions_ntree_(*cached_ntree_, filter);
+
+    return cached_ntree_;
+  }
+
+  template <int D>
+  lockPTR<Ntree<D,index> > Layer<D>::get_global_positions_ntree(Selector filter)
   {
     if ((cached_ntree_layer_ == get_gid()) and (cached_selector_ == filter)) {
-      assert(cached_ntree_);
+      assert(cached_ntree_.valid());
       return cached_ntree_;
     }
 
     clear_ntree_cache_();
 
-    cached_ntree_ = new Ntree<D,index>(this->lower_left_, this->extent_, this->periodic_);
+    cached_ntree_ = lockPTR<Ntree<D,index> >(new Ntree<D,index>(this->lower_left_, this->extent_, this->periodic_));
 
     return do_get_global_positions_ntree_(filter);
   }
 
   template <int D>
-  Ntree<D,index> * Layer<D>::get_global_positions_ntree(Selector filter, std::bitset<D> periodic, Position<D> lower_left, Position<D> extent)
+  lockPTR<Ntree<D,index> > Layer<D>::get_global_positions_ntree(Selector filter, std::bitset<D> periodic, Position<D> lower_left, Position<D> extent)
   {
     clear_ntree_cache_();
     clear_vector_cache_();
@@ -123,7 +135,7 @@ namespace nest {
       }
     }
 
-    cached_ntree_ = new Ntree<D,index>(this->lower_left_, extent, periodic);
+    cached_ntree_ = lockPTR<Ntree<D,index> >(new Ntree<D,index>(this->lower_left_, extent, periodic));
 
     do_get_global_positions_ntree_(filter);
 
@@ -133,7 +145,7 @@ namespace nest {
   }
 
   template <int D>
-  Ntree<D,index> * Layer<D>::do_get_global_positions_ntree_(const Selector& filter)
+  lockPTR<Ntree<D,index> > Layer<D>::do_get_global_positions_ntree_(const Selector& filter)
   {
     if ((cached_vector_layer_ == get_gid()) and (cached_selector_ == filter)) {
       // Convert from vector to Ntree
@@ -196,9 +208,9 @@ namespace nest {
   }
 
   template <int D>
-  std::vector<std::pair<Position<D>,index> > Layer<D>::get_global_positions_vector(Selector filter, const AbstractMask& mask, const Position<D>& anchor)
+  std::vector<std::pair<Position<D>,index> > Layer<D>::get_global_positions_vector(Selector filter, const AbstractMask& mask, const Position<D>& anchor, bool allow_oversized)
   {
-    MaskedLayer<D> masked_layer(*this,filter,mask);
+    MaskedLayer<D> masked_layer(*this,filter,mask,true,allow_oversized);
     std::vector<std::pair<Position<D>,index> > positions;
 
     for(typename Ntree<D,index>::masked_iterator iter=masked_layer.begin(anchor);iter!=masked_layer.end();++iter) {
@@ -209,9 +221,9 @@ namespace nest {
   }
 
   template <int D>
-  std::vector<index> Layer<D>::get_global_nodes(const AbstractMask &mask, const std::vector<double_t> &anchor)
+  std::vector<index> Layer<D>::get_global_nodes(const AbstractMask &mask, const std::vector<double_t> &anchor, bool allow_oversized)
   {
-    MaskedLayer<D> masked_layer(*this,Selector(),mask);
+    MaskedLayer<D> masked_layer(*this,Selector(),mask,true,allow_oversized);
     std::vector<index> nodes;
     for(typename Ntree<D,index>::masked_iterator i=masked_layer.begin(anchor); i != masked_layer.end(); ++i) {
       nodes.push_back(i->second);
@@ -281,7 +293,7 @@ namespace nest {
   }
 
   template<int D>
-  void MaskedLayer<D>::adapt_grid_mask_(Layer<D>& layer)
+  void MaskedLayer<D>::check_mask_(Layer<D>& layer, bool allow_oversized)
   {
     const GridMask<D>* grid_mask = dynamic_cast<const GridMask<D>*>(mask_);
     if (grid_mask) {
@@ -293,6 +305,15 @@ namespace nest {
       Position<D> ext = grid_layer->get_extent();
       Position<D,index> dims = grid_layer->get_dims();
 
+      if (not allow_oversized) {
+        bool oversize = false;
+        for(int i=0;i<D;++i)
+          oversize |= layer.get_periodic_mask()[i] and (grid_mask->get_lower_right()[i]-grid_mask->get_upper_left()[i])>dims[i];
+
+        if (oversize)
+          throw BadProperty("Mask size must not exceed layer size; set allow_oversized_mask to override.");
+      }
+
       Position<D> lower_left = ext/dims * grid_mask->get_upper_left() - ext/dims * 0.5;
       Position<D> upper_right = ext/dims * grid_mask->get_lower_right() - ext/dims * 0.5;
 
@@ -300,9 +321,24 @@ namespace nest {
       lower_left[1] = -upper_right[1];
       upper_right[1] = -y;      
 
-      new_mask = new BoxMask<D>(lower_left, upper_right);
+      new_mask_ = new BoxMask<D>(lower_left, upper_right);
 
-      mask_ = new_mask;
+      mask_ = new_mask_;
+    } else {
+      const Mask<D>* mask = dynamic_cast<const Mask<D>*>(mask_);
+      if (mask==0) {
+        throw BadProperty("Mask is incompatible with layer.");
+      }
+
+      if (not allow_oversized) {
+        const Box<D> bb = mask->get_bbox();
+        bool oversize = false;
+        for(int i=0;i<D;++i)
+          oversize |= layer.get_periodic_mask()[i] and (bb.upper_right[i]-bb.lower_left[i])>layer.get_extent()[i];
+
+        if (oversize)
+          throw BadProperty("Mask size must not exceed layer size; set allow_oversized_mask to override.");
+      }
     }
   }
 
