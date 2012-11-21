@@ -305,7 +305,7 @@ namespace nest
      * Get positions for all nodes in layer, including nodes on other MPI
      * processes. The positions will be cached so that subsequent calls for
      * the same layer are fast. One one layer is cached at the time, so the
-     * user should group together all ConnectLayer calls using the same
+     * user should group together all ConnectLayers calls using the same
      * pool layer.
      */
     lockPTR<Ntree<D,index> > get_global_positions_ntree(Selector filter=Selector());
