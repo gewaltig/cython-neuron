@@ -1189,6 +1189,6 @@ if test $SLI_distributed = set; then
   echo
 fi
 
-echo "If you experience problems, see http://nest-initiative.org/index.php/FAQ,"
-echo "join the NEST user mailing list, or write to bugs@nest-initiative.org."
+echo "If you experience problems, see http://nest-initiative.org/index.php/FAQ, or join"
+echo "the user mailing list at http://nest-initiative.org/index.php/Software:Mailinglists"
 echo

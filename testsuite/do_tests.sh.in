@@ -80,7 +80,7 @@ ask_results ()
     echo "***     - '${TEST_OUTDIR}'"
     echo "***     - '${TEST_TMPDIR}'"
     echo "***"
-    echo "*** to bugs@nest-initiative.org ."
+    echo "*** to the nest_user@nest-initiative.org mailing list."
     echo "***"
     echo
 }

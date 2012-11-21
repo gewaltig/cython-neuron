@@ -1908,11 +1908,11 @@ void StartFunction::execute(SLIInterpreter *i) const
 {
     i->EStack.clear();
     i->message(SLIInterpreter::M_ERROR, "Start", "Something went wrong "
-      "during initialisation of NEST or one of its modules. Probably "
+      "during initialization of NEST or one of its modules. Probably "
       "there is a bug in the startup scripts. Please send the output "
-      "of NEST to bugs@nest-initiative.org or contact the NEST mailing "
-      "list for help. You can try to find the bug by re-starting NEST "
-      "with the option: --debug");
+      "of NEST to the nest_user@nest-initiative.org mailing list to help "
+      "us to diagnose the problem. You can try to find the bug by "
+      "re-starting NEST with the option: --debug");
 }
 
 void MessageFunction::execute(SLIInterpreter *i) const

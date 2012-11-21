@@ -159,7 +159,7 @@ Datum* PyObj_ToDatum(PyObject *pObj)
       default:
       {
         std::string error = String::compose("Unsupported Numpy array scalar type: '%1'.\n"
-                                            "If you think this is an error, tell us at bugs@nest-initiative.org",
+                                            "If you think this is an error, tell us at nest_user@nest-initiative.org",
                                             typecode->type_num);
         PyErr_SetString(NESTError, error.c_str());
         return NULL;
@@ -181,7 +181,7 @@ Datum* PyObj_ToDatum(PyObject *pObj)
     {
       std::string error = String::compose("The given Numpy array has an unsupported dimensionality of %1.\n"
                                           "Only one-dimensional arrays are supported. "
-                                          "If you think this is an error,\ntell us at bugs@nest-initiative.org",
+                                          "If you think this is an error,\ntell us at nest_user@nest-initiative.org",
                                           array->nd);
       PyErr_SetString(NESTError, error.c_str());
       return NULL;
@@ -231,7 +231,7 @@ Datum* PyObj_ToDatum(PyObject *pObj)
       default:
       {
         std::string error = String::compose("Unsupported Numpy array type: '%1'.\n"
-                                            "If you think this is an error, tell us at bugs@nest-initiative.org",
+                                            "If you think this is an error, tell us at nest_user@nest-initiative.org",
                                             array->descr->type_num);
         PyErr_SetString(NESTError, error.c_str());
         return NULL;
@@ -293,7 +293,7 @@ Datum* PyObj_ToDatum(PyObject *pObj)
   }
 
   std::string error = String::compose("Python object of type '%1' cannot be converted to SLI.\n"
-                                      "If you think this is an error, tell us at bugs@nest-initiative.org",
+                                      "If you think this is an error, tell us at nest_user@nest-initiative.org",
                                       pObj->ob_type->tp_name);
   PyErr_SetString(NESTError, error.c_str());
   return 0;
