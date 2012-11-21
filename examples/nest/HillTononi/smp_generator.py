@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # smp_generator.py
 #
@@ -18,6 +18,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with NEST.  If not, see <http://www.gnu.org/licenses/>.
+#
 """
 Short demonstration of the smp_generator for AC Poisson trains.
 """
@@ -56,5 +57,3 @@ for j in xrange(2):
     sp = nest.GetStatus([s[j]])[0]['events']['times']
     plt.subplot(212)
     plt.hist(sp, bins=20, range=[0, 200])
-
-plt.show()

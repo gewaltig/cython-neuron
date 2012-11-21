@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # ht_poisson.py
 #
@@ -18,6 +18,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with NEST.  If not, see <http://www.gnu.org/licenses/>.
+#
 """
 A small example using the ht_neuron.
 
@@ -99,4 +100,3 @@ pl.ylabel('Intrinsic current [pA]')
 pl.xlabel('Time [ms]')
 
 pl.plot()
-pl.show()

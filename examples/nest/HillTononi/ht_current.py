@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # ht_current.py
 #
@@ -18,6 +18,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with NEST.  If not, see <http://www.gnu.org/licenses/>.
+#
 """
 A small example using the ht_neuron.
 
@@ -112,5 +113,3 @@ pl.xlim([0, Tend])
 for k in xrange(len(t_switch)-1):
     iax.add_patch(pl.Rectangle([t_switch[k], -25], t_switch[k+1]-t_switch[k], 45,
                                ec='none', fc='w' if k%2 else '0.7'))
-
-pl.show()
