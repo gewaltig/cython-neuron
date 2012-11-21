@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 /*
  *  tsodyks_facilitating.py
@@ -96,7 +97,7 @@ dc_gen = nest.Create("dc_generator")
 volts=nest.Create("voltmeter")
 
 # create voltmeter:
-nest.SetStatus([volts],[{"label": "voltmeter","withtime": True,"withgid": True,
+nest.SetStatus(volts,[{"label": "voltmeter","withtime": True,"withgid": True,
                          "interval": 1.}])
 
 # connect dc_generator to neuron 1:
@@ -126,4 +127,3 @@ nest.Simulate(Tend)
 
 # print membrane potential of neuron 2:
 nest.voltage_trace.from_device(volts)
-nest.voltage_trace.show()

@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+#
 # brunel-alpha-numpy.py
 #
 # This file is part of NEST.
@@ -27,14 +28,13 @@ import nest.raster_plot
 
 import numpy
 from numpy import exp
- 
-import time
 
+import time
 
 def LambertWm1(x):
     nest.sli_push(x); nest.sli_run('LambertWm1'); y=nest.sli_pop()
     return y
-     
+
 def ComputePSPnorm(tauMem, CMem, tauSyn):
   """Compute the maximum of postsynaptic potential
      for a synaptic input current of unit amplitude
@@ -42,13 +42,12 @@ def ComputePSPnorm(tauMem, CMem, tauSyn):
 
   a = (tauMem / tauSyn)
   b = (1.0 / tauSyn - 1.0 / tauMem)
-    
+
   # time of maximum
   t_max = 1.0/b * ( -LambertWm1(-exp(-1.0/a)/a) - 1.0/a )
 
   # maximum of PSP for current of unit amplitude
   return exp(1.0)/(tauSyn*CMem*b) * ((exp(-t_max/tauMem) - exp(-t_max/tauSyn)) / b - t_max*exp(-t_max/tauSyn))
-
 
 nest.ResetKernel()
 
@@ -185,6 +184,5 @@ print "Excitatory rate   : %.2f Hz" % rate_ex
 print "Inhibitory rate   : %.2f Hz" % rate_in
 print "Building time     : %.2f s" % build_time
 print "Simulation time   : %.2f s" % sim_time
-    
+
 nest.raster_plot.from_device(espikes, hist=True)
-nest.raster_plot.show()

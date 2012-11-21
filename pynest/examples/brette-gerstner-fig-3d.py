@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+#
 # brette-gerstner-fig-3d.py
 #
 # This file is part of NEST.
@@ -50,4 +51,3 @@ nest.Simulate(1000.0)
 
 nest.voltage_trace.from_device(voltmeter)
 pylab.axis([0,1000,-85,0])
-nest.voltage_trace.show()

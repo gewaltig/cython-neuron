@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+#
 # brunel-delta-nest.py
 #
 # This file is part of NEST.
@@ -147,4 +148,3 @@ print "Building time     : %.2f s" % build_time
 print "Simulation time   : %.2f s" % sim_time
 
 nest.raster_plot.from_device(espikes, hist=True)
-nest.raster_plot.show()
