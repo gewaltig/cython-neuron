@@ -393,16 +393,16 @@ def GetElement(layers, locations):
     nodes = topology_func('/locs Set { /lyr Set locs { lyr exch GetElement } Map } Map',
                           layers, locations)
 
-    # nodes are nested lists of equal length, need to unpack
-    if len(nodes) == 1:
-        assert(len(layers)==1)
-        return nodes[0]
-    elif len(nodes[0]) == 1:
-        # all elements have length 1
-        assert(len(locations)==1)
-        return [n[0] for n in nodes]
-    else:
-        return nodes
+    # nodes is nested list, need to unpack
+    node_list = []
+    for nodes_in_lyr in nodes:
+        for nodes_at_loc in nodes_in_lyr:
+            if nest.is_sequencetype(nodes_at_loc):
+                node_list.extend(nodes_at_loc)
+            else:
+                node_list.append(nodes_at_loc)
+
+    return node_list
 
 
 def FindNearestElement(layers, locations, find_all=False):
