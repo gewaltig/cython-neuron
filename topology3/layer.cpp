@@ -25,6 +25,7 @@
 #include "grid_layer.h"
 #include "topology_names.h"
 #include "dictutils.h"
+#include "integerdatum.h"
 #include "exceptions.h"
 #include "network.h"
 
@@ -58,7 +59,17 @@ namespace nest {
         if ( element_model.empty() )
           throw UnknownModelName(element_name);
 
-        element_ids.push_back(static_cast<long>(element_model));
+        // Creates several nodes if the next element in
+        // the elements variable is a number.
+        if ((tp+1 != ad->end()) && dynamic_cast<IntegerDatum*>((tp+1)->datum())) {
+          // Select how many nodes that should be created.
+          const long_t number = getValue<long_t>(*(++tp));
+
+          for(long_t i=0;i<number;++i)
+            element_ids.push_back(static_cast<long>(element_model));
+        } else {
+          element_ids.push_back(static_cast<long>(element_model));
+        }
 
       }
 

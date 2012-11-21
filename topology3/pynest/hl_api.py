@@ -607,17 +607,21 @@ def DumpLayerNodes(layers, outname):
     
     Note
     ----
-    When calling this function from distributed simulations, only MPI Rank 0
-    will write data. It writes data for all nodes.
+    When calling this function from distributed simulations, each MPI process
+    will write data for its local nodes in succession to the same file. This
+    assumes that all MPI processes access the same file system.
     """
-    # Rank 0 actually writes. The other ranks need to communicate with Rank 0.
     topology_func("""
                   /oname Set 
                   /lyrs  Set 
-                  Rank 0 eq 
-                    { oname (w) file lyrs { DumpLayerNodes } forall close } 
-                    { lyrs { DumpLayerNodes_nowrite } forall } 
-                  ifelse
+                  0 1 NumProcesses 1 sub
+                    { Rank eq
+                        {   oname
+                            0 Rank eq {(w)} {(a)} ifelse
+                          ofsopen assert lyrs { DumpLayerNodes } forall close }
+                      if
+                      SyncProcesses }
+                  for
                   """,
                   layers, outname)
 
