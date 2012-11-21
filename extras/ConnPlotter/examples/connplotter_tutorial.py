@@ -216,7 +216,7 @@ for layer in s_layer:
 
 #! Create connections, need to insert variable names
 for conn in s_conn:
-    eval('topo.ConnectLayer(%s,%s,conn[2])' % (conn[0], conn[1]))
+    eval('topo.ConnectLayers(%s,%s,conn[2])' % (conn[0], conn[1]))
 
 nest.Simulate(10)
 #! **Ooops:*** Nothing happened? Well, it did, but pyreport cannot capture the 
@@ -240,14 +240,14 @@ Etgts = [t for t in alltgts if nest.GetStatus([t], 'model')[0] == 'E']
 Itgts = [t for t in alltgts if nest.GetStatus([t], 'model')[0] == 'I']
 
 # obtain positions of targets
-Etpos = zip(*[topo.GetPosition([n]) for n in Etgts])
-Itpos = zip(*[topo.GetPosition([n]) for n in Itgts])
+Etpos = zip(*topo.GetPosition(Etgts))
+Itpos = zip(*topo.GetPosition(Itgts))
 
 # plot excitatory
 pylab.clf()
 pylab.subplot(121)
 pylab.scatter(Etpos[0], Etpos[1]) 
-ctrpos = pylab.array(topo.GetPosition(E_id))
+ctrpos = pylab.array(topo.GetPosition(E_id)[0])
 ax = pylab.gca()
 ax.add_patch(pylab.Circle(ctrpos, radius=0.02, zorder = 99,
                           fc = 'r', alpha = 0.4, ec = 'none'))
@@ -263,7 +263,7 @@ ax.set(aspect='equal', xlim=[-0.5,0.5], ylim=[-0.5,0.5],
 # plot inhibitory
 pylab.subplot(122)
 pylab.scatter(Itpos[0], Itpos[1]) 
-ctrpos = topo.GetPosition(E_id)
+ctrpos = topo.GetPosition(E_id)[0]
 ax = pylab.gca()
 ax.add_patch(pylab.Circle(ctrpos, radius=0.02, zorder = 99,
                           fc = 'r', alpha = 0.4, ec = 'none'))
