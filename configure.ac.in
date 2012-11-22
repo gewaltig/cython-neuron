@@ -1108,7 +1108,7 @@ else
   echo "Use MPI             : No"
 fi
 
-if test x$MUSIC_INCLUDE != x; then
+if test x$MUSIC_LIBS != x; then
   echo "Use MUSIC           : Yes"
   echo "  MUSIC inlude      : $MUSIC_INCLUDE"
   echo "  MUSIC libs        : $MUSIC_LIBS"
