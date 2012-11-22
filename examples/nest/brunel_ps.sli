@@ -188,6 +188,7 @@ ResetKernel      % clear all existing network elements
 0 <<
     /resolution  dt
     /local_num_threads local_num_threads
+    /overwrite_files true
 >> SetStatus
 
 tic % start timer on construction

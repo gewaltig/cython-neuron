@@ -196,6 +196,7 @@ def
   <<
      /resolution  dt
      /total_num_virtual_procs virtual_processes
+     /overwrite_files true
   >> SetStatus
 
 
