@@ -197,14 +197,14 @@ tic % start timer on construction
   E_net ChangeSubnet                   % enter subnet
   /iaf_psc_alpha_canon NE Create       % create neurons in subnet
   ;                                    % pop gids returned by Create
-  [0] ChangeSubnet                     % return to full network
+  0 ChangeSubnet                     % return to full network
 
   (Creating inhibitory population.) =  % show message
   /I_net /subnet Create def            % create subnet
   I_net ChangeSubnet                   % enter subnet
   /iaf_psc_alpha_canon NI Create       % create neurons in subnet
   ;                                    % pop gids returned by Create
-  [0] ChangeSubnet                     % return to full network
+  0 ChangeSubnet                     % return to full network
 
   (Creating excitatory Poisson generator.) =
   /expoisson /poisson_generator_ps Create def
@@ -248,10 +248,10 @@ tic % start timer on construction
   % lists from the subnetworks
 
   % obtain array with GIDs of all excitatory neurons
-  /E_neurons E_net GetNodes def
+  /E_neurons E_net GetGlobalNodes def
 
   % obtain array with GIDs of all inhibitory neurons
-  /I_neurons I_net GetNodes def
+  /I_neurons I_net GetGlobalNodes def
 
   % all neurons
   /allNeurons E_neurons I_neurons join def
