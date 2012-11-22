@@ -314,7 +314,7 @@ namespace nest {
       if (not allow_oversized) {
         bool oversize = false;
         for(int i=0;i<D;++i)
-          oversize |= layer.get_periodic_mask()[i] and (grid_mask->get_lower_right()[i]-grid_mask->get_upper_left()[i])>dims[i];
+          oversize |= layer.get_periodic_mask()[i] and (grid_mask->get_lower_right()[i]-grid_mask->get_upper_left()[i])>(int)dims[i];
 
         if (oversize)
           throw BadProperty("Mask size must not exceed layer size; set allow_oversized_mask to override.");

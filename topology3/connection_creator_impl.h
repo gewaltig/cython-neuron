@@ -347,7 +347,7 @@ namespace nest
 
           std::vector<bool> is_selected(positions.size());
 
-          for(int i=0;i<number_of_connections_;++i) {
+          for(int i=0;i<(int)number_of_connections_;++i) {
             index random_id = lottery.get_random_id(rng);
             if ((not allow_multapses_) and (is_selected[random_id])) {
               --i;
@@ -377,7 +377,7 @@ namespace nest
           }
 
           std::vector<bool> is_selected(positions.size());
-          for(int i=0;i<number_of_connections_;++i) {
+          for(int i=0;i<(int)number_of_connections_;++i) {
             index random_id = rng->ulrand(positions.size());
             if ((not allow_multapses_) and (is_selected[random_id])) {
               --i;
@@ -425,7 +425,7 @@ namespace nest
           Vose lottery(probabilities);
 
           std::vector<bool> is_selected(positions->size());
-          for(int i=0;i<number_of_connections_;++i) {
+          for(int i=0;i<(int)number_of_connections_;++i) {
             index random_id = lottery.get_random_id(rng);
             if ((not allow_multapses_) and (is_selected[random_id])) {
               --i;
@@ -449,7 +449,7 @@ namespace nest
           // no kernel
 
           std::vector<bool> is_selected(positions->size());
-          for(int i=0;i<number_of_connections_;++i) {
+          for(int i=0;i<(int)number_of_connections_;++i) {
             index random_id = rng->ulrand(positions->size());
             if ((not allow_multapses_) and (is_selected[random_id])) {
               --i;
@@ -532,7 +532,7 @@ namespace nest
       double_t total_probability = std::accumulate(global_probabilities.begin(),global_probabilities.end(),0.0);
 
       // Draw how many connections to make on each virtual process
-      std::vector<long_t> num_connections(global_probabilities.size());
+      std::vector<index> num_connections(global_probabilities.size());
       long_t total_connections = number_of_connections_;
       for(index vp=0;vp<num_connections.size()-1;++vp) {
         index i = (vp%Communicator::get_num_processes())*net_.get_num_threads() + vp/Communicator::get_num_processes();
@@ -558,7 +558,7 @@ namespace nest
         // Draw targets
         Vose lottery(probabilities[thr]);
         std::vector<bool> is_selected(targets[thr].size());
-        for(long_t i=0;i<num_connections[net_.thread_to_vp(thr)];++i) {
+        for(long_t i=0;i<(long_t)num_connections[net_.thread_to_vp(thr)];++i) {
           index random_id = lottery.get_random_id(net_.get_rng(thr));
           if ((not allow_multapses_) and (is_selected[random_id])) {
             --i;

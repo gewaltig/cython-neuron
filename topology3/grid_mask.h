@@ -49,7 +49,7 @@ namespace nest
      */
     GridMask(const DictionaryDatum& d);
 
-    bool inside(const std::vector<double_t> &pt) const
+    bool inside(const std::vector<double_t> &) const
       { throw KernelException("Grid mask must be applied to a grid layer."); }
 
     void set_anchor(const Position<D,int_t>&);

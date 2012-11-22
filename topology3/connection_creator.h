@@ -106,7 +106,7 @@ namespace nest
     bool allow_oversized_;
     Selector source_filter_;
     Selector target_filter_;
-    long_t number_of_connections_;
+    index number_of_connections_;
     lockPTR<AbstractMask> mask_;
     lockPTR<Parameter> kernel_;
     index synapse_model_;

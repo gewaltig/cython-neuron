@@ -293,7 +293,7 @@ namespace nest
 
     for(; (gi != this->gids_.end()) && (i < lid_end); ++gi, ++i) {
 
-      if (filter.select_model() && (this->net_->get_model_id_of_gid(*gi) != filter.model))
+        if (filter.select_model() && ((int)this->net_->get_model_id_of_gid(*gi) != filter.model))
         continue;
 
       *iter++ = std::pair<Position<D>,index>(lid_to_position(i), *gi);
