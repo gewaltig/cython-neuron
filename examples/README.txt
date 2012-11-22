@@ -1,5 +1,0 @@
-Examples
-========
-
-This directory contains some sample SLI programs illustrating the
-use of the NEST simulator.
