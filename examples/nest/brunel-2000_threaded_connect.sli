@@ -169,11 +169,23 @@ ComputePSPnorm /J_max_unit Set
 ResetKernel      % clear all existing network elements
 M_WARNING setverbosity
 
-% Number of threads per program instance.
-% When using MPI, the mpirun call determines the number
-% of MPI processes (=program instances). The total number
-% of virtual processes is #MPI processes x local_num_threads.
-/local_num_threads statusdict/userargs :: 0 get (=) breakup 1 get int def
+% Number of threads per program instance. When using MPI, the mpirun
+% call determines the number of MPI processes (= program instances).
+% The total number of virtual processes is
+%     #MPI processes x local_num_threads.
+%
+% The number of local_num_threads can be given to the script using
+% the --userargs commandline switch like this:
+%     nest --userargs=threads=4 script.sli
+%
+% If it is not given, it defaults to 2
+statusdict/userargs :: size
+{
+  0 get (=) breakup 1 get int /local_num_threads Set
+}
+{
+  2 /local_num_threads Set
+} ifelse
 
 % set resolution and total/local number of threads
 0 << 
