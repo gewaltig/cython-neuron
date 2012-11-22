@@ -121,4 +121,5 @@
 cuba_params using % here we activate the definitions in the dictionary
 
 /parameters_set true def
-(benchmark) run
+statusdict/argv :: size 1 gt { 1 get dirname } { () } ifelse
+(benchmark.sli) join run
