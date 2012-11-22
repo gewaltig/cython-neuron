@@ -295,7 +295,7 @@ namespace nest
      * Copy constructor
      */
     IntersectionMask(const IntersectionMask &m):
-      mask1_(m.mask1_->clone()), mask2_(m.mask2_->clone())
+      Mask<D>(m), mask1_(m.mask1_->clone()), mask2_(m.mask2_->clone())
       {}
 
     ~IntersectionMask()
@@ -349,7 +349,7 @@ namespace nest
      * Copy constructor
      */
     UnionMask(const UnionMask &m):
-      mask1_(m.mask1_->clone()), mask2_(m.mask2_->clone())
+      Mask<D>(m), mask1_(m.mask1_->clone()), mask2_(m.mask2_->clone())
       {}
 
     ~UnionMask()
@@ -403,7 +403,7 @@ namespace nest
      * Copy constructor
      */
     DifferenceMask(const DifferenceMask &m):
-      mask1_(m.mask1_->clone()), mask2_(m.mask2_->clone())
+      Mask<D>(m), mask1_(m.mask1_->clone()), mask2_(m.mask2_->clone())
       {}
 
     ~DifferenceMask()
@@ -444,7 +444,7 @@ namespace nest
     /**
      * Copy constructor
      */
-    ConverseMask(const ConverseMask &m): m_(m.m_->clone()) {}
+    ConverseMask(const ConverseMask &m): Mask<D>(m), m_(m.m_->clone()) {}
 
     ~ConverseMask()
       { delete m_; }
@@ -487,7 +487,7 @@ namespace nest
     /**
      * Copy constructor
      */
-    AnchoredMask(const AnchoredMask &m): m_(m.m_->clone()), anchor_(m.anchor_) {}
+    AnchoredMask(const AnchoredMask &m): Mask<D>(m), m_(m.m_->clone()), anchor_(m.anchor_) {}
 
     ~AnchoredMask()
       { delete m_; }

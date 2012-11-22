@@ -487,6 +487,7 @@ namespace nest
   template<int D>
   inline
   Layer<D>::Layer(const Layer &l) :
+      AbstractLayer(l),
       lower_left_(l.lower_left_),
       extent_(l.extent_),
       periodic_(l.periodic_)

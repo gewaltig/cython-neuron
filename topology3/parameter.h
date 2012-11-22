@@ -306,7 +306,7 @@ namespace nest
       {}
 
     AnchoredParameter(const AnchoredParameter &p):
-      p_(p.p_->clone()), anchor_(p.anchor_)
+      Parameter(p), p_(p.p_->clone()), anchor_(p.anchor_)
       {}
 
     ~AnchoredParameter()
@@ -346,6 +346,7 @@ namespace nest
      * Copy constructor.
      */
     ProductParameter(const ProductParameter &p):
+      Parameter(p),
       parameter1_(p.parameter1_->clone()), parameter2_(p.parameter2_->clone())
       {}
 
@@ -387,6 +388,7 @@ namespace nest
      * Copy constructor.
      */
     QuotientParameter(const QuotientParameter &p):
+      Parameter(p),
       parameter1_(p.parameter1_->clone()), parameter2_(p.parameter2_->clone())
       {}
 
@@ -428,6 +430,7 @@ namespace nest
      * Copy constructor.
      */
     SumParameter(const SumParameter &p):
+      Parameter(p),
       parameter1_(p.parameter1_->clone()), parameter2_(p.parameter2_->clone())
       {}
 
@@ -469,6 +472,7 @@ namespace nest
      * Copy constructor.
      */
     DifferenceParameter(const DifferenceParameter &p):
+      Parameter(p),
       parameter1_(p.parameter1_->clone()), parameter2_(p.parameter2_->clone())
       {}
 
@@ -510,7 +514,7 @@ namespace nest
      * Copy constructor.
      */
     ConverseParameter(const ConverseParameter &p):
-      p_(p.p_->clone())
+      Parameter(p), p_(p.p_->clone())
       {}
 
     ~ConverseParameter()
