@@ -114,3 +114,6 @@
 >> def
 
 hh_coba_params using % here we activate the definitions in the dictionary
+
+/parameters_set true def
+(benchmark) run

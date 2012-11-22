@@ -118,3 +118,6 @@ cuba_ps_params using % here we activate the definitions in the dictionary
   <<
      /off_grid_spiking true
   >> SetStatus
+
+/parameters_set true def
+(benchmark) run

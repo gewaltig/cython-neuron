@@ -1,5 +1,5 @@
 /*
-    run_benchmark.sli
+    benchmark.sli
 
     Copyright (C) 2004 The NEST Initiative
     This file is free software; you can redistribute it and/or modify
@@ -61,7 +61,7 @@
 
    If the number of threads is set to greater than one, the benchmarks can
    be run in a distributed fashion using mpirun, e.g.
-g
+
      mpirun -np 2 nest coba.sli run_benchmark.sli
 
    In addition to the four official benchmarks of the FACETS review, a fifth
@@ -114,6 +114,7 @@ def
   <<
      /resolution  dt
      /total_num_virtual_procs virtual_processes
+     /overwrite_files true
   >> SetStatus
 
   tic % start timer on construction
@@ -256,4 +257,8 @@ def
   (Simulation time   : ) =only SimCPUTime   =only ( s\n) =
 } def
 
-RunSimulation
+/parameters_set lookup {
+  RunSimulation
+} {
+  (Parameters are not set. Please call one of coba.sli, cuba_ps.sli, cuba.sli, cuba_stdp.sli, or hh_coba.sli.) M_ERROR message
+} ifelse
