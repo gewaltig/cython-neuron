@@ -295,3 +295,16 @@ def
 /CompareFiles trie
   [/stringtype /stringtype] /CompareFiles_s_s load addtotrie
 def
+
+
+/* BeginDocumentation
+  Name: dirname - strip last component from file name
+  Synopsis: string dirname -> string
+  Examples: (./../../test/dir/foo.sli) dirname -> (./../../test/dir/)
+  FirstVersion: November 2012
+  Author: Jochen M. Eppler and Yury V. Zaytsev
+*/
+
+/dirname {
+  ([^/]+$) 1 regcomp () 3 -1 roll regex_replace
+} def
