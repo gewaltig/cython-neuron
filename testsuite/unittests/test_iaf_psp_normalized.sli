@@ -56,7 +56,7 @@ References:
       Network Theory Limited.
 
 Author:  July 2009, Diesmann
-SeeAlso: testsuite::test_iaf_psp_peak, testsuite::test_iaf_psp, test_lambertw, LambertWm1
+SeeAlso: testsuite::test_iaf_psp_peak, testsuite::test_iaf_psp, testsuite::test_lambertw, LambertWm1
 */
 
 

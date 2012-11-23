@@ -112,6 +112,14 @@ SeeAlso: regexec, regcomp
   [/regextype /integertype] /regerror_ load addtotrie
 def
 
+/* BeginDocumentation
+
+Name: regexdict - dictionary with flags and codes for regular expressions
+Synopsis: -
+Description: This dictionary provides flags and codes signaling 
+    properties of or results from regular expression evaluations.
+SeeAlso: regexec
+*/
 
 /* BeginDocumentation
 Name: regexec - compare string and regular expression 

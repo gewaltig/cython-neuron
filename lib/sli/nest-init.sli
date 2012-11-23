@@ -949,7 +949,7 @@ def
    Author: Marc-Oliver Gewaltig
    FirstVersion: 20.6.02
 
-   SeeAlso: Create, LayoutArray, NetworkDimensions
+   SeeAlso: Create, LayoutArray
 */
 
 /LayoutNetwork_l_a_dict
@@ -1225,10 +1225,11 @@ def
          a subnet that fulfill the conditions given in the dictionary, or of
          all nodes if no dictionary given.
    Synopsis:
-     gid [<<dict>>]  GetGlobalNodes -> [<<...>> <<...>> ...]
+     gid [<<dict>>]  GetGlobalNodesInfo -> [<<...>> <<...>> ...]
    Parameters:
      gid      - id of a subnet
      <<dict>> - Dictionary of selection properties
+   Returns:
      [<<...>>...]  - Array with dicts containing /global_id, /vp, /parent
    Description:
    This function recursively traverses a subnet and returns the gid, vp
@@ -1240,7 +1241,7 @@ def
 
    Author: Marc-Oliver Gewaltig, Abigail Morrison
 
-   SeeAlso: GetNodes
+   SeeAlso: GetGlobalNodes, GetLocalNodes
 */
 
 /GetGlobalNodesInfo trie
@@ -1258,6 +1259,7 @@ def
    Parameters:
      gid      - id of a subnet
      <<dict>> - Dictionary of selection properties
+   Returns:
      [gid..]  - Array with the global ids of all child nodes.
    Description:
    This function recursively traverses a subnet and returns the global
@@ -1270,7 +1272,7 @@ def
 
    Author: Marc-Oliver Gewaltig, Abigail Morrison
 
-   SeeAlso: GetLocalNodes, GetGlobalLeaves, GetGlobalChildren
+   SeeAlso: GetGlobalNodesInfo, GetLocalNodes, GetGlobalLeaves, GetGlobalChildren
 */
 
 /GetGlobalNodes trie
@@ -1282,10 +1284,11 @@ def
    Name: GetLocalNodes - Return IDs of all local nodes of a subnet that fulfill the
          conditions given in the dictionary, or all nodes if no dictionary given.
    Synopsis:
-     gid   GetLocalNodes -> [gid1 ... gidn]
+     gid [<<dict>>]  GetLocalNodes -> [gid1 ... gidn]
    Parameters:
      gid     - id of a subnet
-     <<dict>> - Dictionary of selection properties	
+     <<dict>> - Dictionary of selection properties
+   Returns:	
      [gid..] - Array with the global ids of all local child nodes.
    Description:
    This function is equivalent to GetGlobalNodes, but returns only those
@@ -1307,11 +1310,12 @@ def
          that fulfill the conditions given in the dictionary, or all nodes if no 
 	 dictionary given.
    Synopsis:
-   gid   GetGlobalChildren -> [gid1 ... gidn]
+   gid [<<dict>>]  GetGlobalChildren -> [gid1 ... gidn]
 
    Parameters:
    gid     - id of a subnet
    <<dict>> - Dictionary of selection properties	
+   Returns:
    [gid..] - Array with the global ids of all child nodes.
 
    Description:
@@ -1334,10 +1338,11 @@ def
    	 that fulfill the conditions given in the dictionary, or all children if no 
 	 dictionary given.
    Synopsis:
-   gid   GetLocalChildren -> [gid1 ... gidn]
+   gid [<<dict>>]  GetLocalChildren -> [gid1 ... gidn]
    Parameters:
    gid     - id of a subnet
-   <<dict>> - Dictionary of selection properties	
+   <<dict>> - Dictionary of selection properties
+   Returns:	
    [gid..] - Array with the global ids of all local child nodes.
 
    Description:
@@ -1360,10 +1365,11 @@ def
    Name: GetGlobalLeaves - Return IDs of all leaves of a subnet that fulfill the 
    	 conditions given in the dictionary, or all leaves if no dictionary given.
    Synopsis:
-   gid   GetGlobalLeaves -> [gid1 ... gidn]
+   gid [<<dict>>]  GetGlobalLeaves -> [gid1 ... gidn]
    Parameters:
    gid     - id of a subnet
    <<dict>> - Dictionary of selection properties	
+   Returns:
    [gid..] - Array with the global ids of all leaf nodes.
 
    Description:
@@ -1391,10 +1397,11 @@ def
    Name: GetLocalLeaves - Return IDs of all local leaves of a subnet that fulfill the 
    	 conditions given in the dictionary, or all leaves if no dictionary given.
    Synopsis:
-   gid   GetLocalLeaves -> [gid1 ... gidn]
+   gid [<<dict>>]  GetLocalLeaves -> [gid1 ... gidn]
    Parameters:
    gid     - id of a subnet
-   <<dict>> - Dictionary of selection properties	
+   <<dict>> - Dictionary of selection properties
+   Returns:	
    [gid..] - Array with the global ids of all local leaf nodes.
 
    Description:
@@ -1472,7 +1479,7 @@ Note:
 In parallel simulations, this function collects data across all processes
 and can thus take a lot of time and consume huge amounts of memory.
 
-SeeAlso: GetLeaves, GetNodes, GetChildren
+SeeAlso: GetGlobalNodes, GetLocalNodes, GetGlobalLeaves, GetLocalLeaves, GetGlobalChildren, GetLocalChildren
 */
 /GetNetwork trie
 [/integertype /integertype] /GetNetwork_i_i load addtotrie

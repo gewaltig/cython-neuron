@@ -118,7 +118,7 @@ namespace nest{
      Receives: SpikeEvent, CurrentEvent, DataLoggingRequest
 
      Author:  September 1999, Diesmann, Gewaltig
-     SeeAlso: iaf_cond_neuron, testsuite::test_iaf, lifb_cond_neuron, iaf_rev_neuron
+     SeeAlso: iaf_psc_alpha, iaf_psc_exp, iaf_neuron, iaf_psc_delta_canon
   */
 
   /**

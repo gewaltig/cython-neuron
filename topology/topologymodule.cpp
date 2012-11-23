@@ -339,7 +339,7 @@ namespace nest
 
   /*BeginDocumentation
 
-    Name: CreateLayer - create a spatial layer of nodes
+    Name: topology::CreateLayer - create a spatial layer of nodes
 
     Synopsis:
     dict CreateLayer -> layer

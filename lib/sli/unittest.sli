@@ -613,7 +613,7 @@ Author: Diesmann
 
 FirstVersion: 090716
 
-SeeAlso: unittest::send_distributed_result, unittest::collect_distributed_results, unittest::distributed_assert_or_die, nest_indirect
+SeeAlso: unittest:::send_distributed, unittest:::collect_distributed_results, unittest::distributed_assert_or_die, nest_indirect
 */
 /mpirun_self
 {
@@ -658,7 +658,7 @@ def
 /* 
 Name: :send_distributed - Package and send message from parallel run
 
-Synposis: [result] flag send_distributed -> - 
+Synposis: [result] flag :send_distributed -> - 
 
 Description:
 
@@ -680,7 +680,7 @@ collect_distributed_results.
 
 Note: result can be a dict, but must not contain dicts
 
-SeeAlso: unittest:mpirun_self, unittest::collect_distributed_results
+SeeAlso: unittest:mpirun_self, unittest:::collect_distributed_results
 */
 /:send_distributed
 {
@@ -814,15 +814,15 @@ SeeAlso: unittest:mpirun_self, unittest::collect_distributed_results
 /* 
 Name: :collect_distributed_results - Collects results from spawned parallel runs
 
-Synopsis: istream num_procs mode collect_distributed_results -> array status
+Synopsis: istream num_procs mode :collect_distributed_results -> array status
 
 Description:
 
-The input argument to collect_distributed_results are the istream
+The input argument to :collect_distributed_results are the istream
 returned by mpirun_self and the number of mpi processes started.
-collect_distributed_results reads from this istream the output of all
+:collect_distributed_results reads from this istream the output of all
 ranks in the parallel process executed by mpirun_self. The individual
-processes should send results by calling unittest::send_distributed_result.
+processes should send results by calling unittest:::send_distributed.
 
 If mode is 
   /none no MPI process should send a result 
@@ -935,7 +935,7 @@ Author: Diesmann
 
 FirstVersion: 090715
 
-SeeAlso: distributed_invariant_assert_or_die, nest_indirect, mpirun_self, assert_or_die, have_mpi, is_mpi
+SeeAlso: unittest::distributed_invariant_assert_or_die, nest_indirect, unittest::mpirun_self, unittest::assert_or_die
 */
 /distributed_assert_or_die 
 [/arraytype /proceduretype /proceduretype]
@@ -1000,7 +1000,7 @@ Author: Diesmann
 
 FirstVersion: 100925
 
-SeeAlso: distributed_assert_or_die, nest_indirect, mpirun_self, assert_or_die, have_mpi, is_mpi
+SeeAlso: unittest::distributed_assert_or_die, nest_indirect, unittest::mpirun_self, unittest::assert_or_die
 */
 /distributed_invariant_assert_or_die
 [/arraytype /proceduretype]
@@ -1052,7 +1052,7 @@ Author: Diesmann
 
 FirstVersion: 100925
 
-SeeAlso: distributed_assert_or_die, distributed_invariant_collect_assert_or_die, nest_indirect, mpirun_self, assert_or_die
+SeeAlso: unittest::distributed_assert_or_die, unittest::distributed_invariant_collect_assert_or_die, nest_indirect, unittest::mpirun_self, unittest::assert_or_die
 */
 /distributed_collect_assert_or_die 
 [/arraytype /proceduretype /proceduretype]
@@ -1122,7 +1122,7 @@ Author: Diesmann
 
 FirstVersion: 100925
 
-SeeAlso: distributed_assert_or_die, distributed_collect_assert_or_die, nest_indirect, mpirun_self, assert_or_die
+SeeAlso: unittest::distributed_assert_or_die, unittest::distributed_collect_assert_or_die, nest_indirect, unittest::mpirun_self, unittest::assert_or_die
 */
 /distributed_process_invariant_collect_assert_or_die
 [/arraytype /proceduretype]
@@ -1212,7 +1212,7 @@ Author: Plesser
 
 FirstVersion: 2012-05-22
 
-SeeAlso: distributed_assert_or_die, distributed_collect_assert_or_die, nest_indirect, mpirun_self, assert_or_die
+SeeAlso: unittest::distributed_assert_or_die, unittest::distributed_collect_assert_or_die, nest_indirect, unittest::mpirun_self, unittest::assert_or_die
 */
 /distributed_process_invariant_events_assert_or_die
 [/arraytype /proceduretype]
@@ -1274,7 +1274,7 @@ Author: Diesmann
 
 FirstVersion: 100925
 
-SeeAlso: distributed_assert_or_die, distributed_collect_assert_or_die, nest_indirect, mpirun_self, assert_or_die
+SeeAlso: unittest::distributed_assert_or_die, unittest::distributed_collect_assert_or_die, nest_indirect, unittest::mpirun_self, unittest::assert_or_die
 */
 /distributed_rank_invariant_collect_assert_or_die
 [/arraytype /proceduretype]
@@ -1303,7 +1303,7 @@ Author: Diesmann
 
 FirstVersion: 100918
 
-SeeAlso:  unittest::distributed_assert_or_die, nest_indirect, mpirun_self, assert_or_die, have_mpi, is_mpi
+SeeAlso:  unittest::distributed_assert_or_die, nest_indirect, unittest::mpirun_self, unittest::assert_or_die
 */
 
 /distributed_pass_or_die

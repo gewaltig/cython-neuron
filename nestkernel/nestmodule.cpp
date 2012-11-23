@@ -1221,7 +1221,7 @@ namespace nest
 
 #if defined IS_BLUEGENE_P || defined IS_BLUEGENE_Q
   /* BeginDocumentation
-     Name memory_thisjob_bg - Reports memory usage on Blue Gene/P/Q systems
+     Name: memory_thisjob_bg - Reports memory usage on Blue Gene/P/Q systems
      Description:
      BGMemInfo returns a dictionary with the heap and stack memory
      usage of a process in Bytes.
@@ -1244,7 +1244,6 @@ namespace nest
 
   /* BeginDocumentation
      Name: PrintNetwork - Print network tree in readable form.
-     Description:
      Synopsis: 
      gid depth  PrintNetwork -> -
      Parameters: 
@@ -1386,7 +1385,9 @@ namespace nest
   }
 
   /* BeginDocumentation
-     Name: Rank - Return the MPI rank (MPI_Comm_rank) of the process.
+     Name: Rank - Return the MPI rank of the process.
+     Synopsis: Rank -> int
+     Description: Returns the rank of the MPI process (MPI_Comm_rank) executing the command.
      Availability: NEST 2.0
      Author: Jochen Martin Eppler
      FirstVersion: January 2006
@@ -1399,7 +1400,9 @@ namespace nest
   }
 
   /* BeginDocumentation
-     Name: NumProcesses - Return the number of MPI processes (MPI_Comm_size).
+     Name: NumProcesses - Return the number of MPI processes.
+     Synopsis: NumProcesses -> int
+     Description: Returns the numnber of MPI processes (MPI_Comm_size).
      Availability: NEST 2.0
      Author: Jochen Martin Eppler
      FirstVersion: January 2006
@@ -1413,6 +1416,7 @@ namespace nest
 
   /* BeginDocumentation
      Name: SyncProcesses - Synchronize all MPI processes.
+     Synopsis: SyncProcesses -> -
      Availability: NEST 2.0
      Author: Alexander Hanuschkin
      FirstVersion: April 2009
@@ -1458,13 +1462,14 @@ namespace nest
   } 
 
   /* BeginDocumentation
-     Name: ProcessorName - Returns a unique specifier for the actual node (MPI_Get_processor_name).
+     Name: ProcessorName - Returns a unique specifier for the actual node.
+     Synopsis: ProcessorName -> string
      Availability: NEST 2.0
      Author: Alexander Hanuschkin
      FirstVersion: April 2009
      Description:
      This function returns the name of the processor it was called
-     on. See MPI documentation for more details. If NEST is not
+     on (MPI_Get_processor_name). See MPI documentation for more details. If NEST is not
      compiled with MPI support, this function returns the hostname of
      the machine as returned by the POSIX function gethostname().
      Examples:
@@ -1492,7 +1497,7 @@ namespace nest
      Availability: NEST 2.0
      Author: Jochen Martin Eppler
      FirstVersion: October 2012
-     SeeAlso: quit_i, quit, Rank, SyncProcesses, MPIProcessorName
+     SeeAlso: quit, Rank, SyncProcesses, ProcessorName
   */
   void NestModule::MPIAbort_iFunction::execute(SLIInterpreter *i) const
   {

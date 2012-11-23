@@ -107,7 +107,7 @@ Sends: SpikeEvent
 
 Receives: SpikeEvent, CurrentEvent, DataLoggingRequest
 
-SeeAlso: iaf_psc_alpha, iaf_psc_alpha_presc, iaf_psc_delta_presc
+SeeAlso: iaf_psc_alpha, iaf_psc_alpha_presc
 
 */ 
 

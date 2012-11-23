@@ -21,7 +21,7 @@
  */
 
  /* BeginDocumentation
-Name: testsuite::test_distributed_rank_invariant_collect_assert_or_die - self test of distributed_rank_invariant_collect_assert_or_die
+Name: testsuite::fail_distributed_rank_invariant_collect_assert_or_die - self test of distributed_rank_invariant_collect_assert_or_die
 
 Synopsis: nest_indirect distributed_rank_invariant_collect_assert_or_die.sli -> -
 
@@ -34,8 +34,8 @@ Description:
  compare the set of results to the one of the same simulation carried
  out with a different number of jobs.
 
-Author:  September 2010, Diesmann
-SeeAlso: testsuite::distributed_collect_assert_or_die
+Author:  September 2010, Diesmann; May 2012, Plesser
+SeeAlso: testsuite::crash_distributed_rank_invariant_collect_assert_or_die, testsuite::test_distributed_rank_invariant_collect_assert_or_die
 */
 
 

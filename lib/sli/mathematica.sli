@@ -4525,7 +4525,7 @@ References:
     & Rossi, F. (2006). GNU Scientific Library Reference Manual (2nd Ed.).
     Network Theory Limited.
 
-SeeAlso: LambertWm1, LambertW0, test_lambertw, CompileMath
+SeeAlso: LambertWm1, LambertW0, testsuite::test_lambertw, CompileMath
 */
 /LambertW
 [/doubletype /doubletype] [/x /start]
@@ -4582,7 +4582,7 @@ References:
 [3] Wikipedia (2009). Lambert W function ---wikipedia, the free encyclopedia.
 
 
-SeeAlso: LambertWm1, LambertW, test_lambertw
+SeeAlso: LambertWm1, LambertW, testsuite::test_lambertw
 */
 statusdict/have_gsl :: not
 {
@@ -4633,7 +4633,7 @@ References:
     & Rossi, F. (2006). GNU Scientific Library Reference Manual (2nd Ed.).
     Network Theory Limited.
 [3] Wikipedia (2009). Lambert W function ---wikipedia, the free encyclopedia.
-SeeAlso: LambertW0, LambertW, test_lambertw
+SeeAlso: LambertW0, LambertW, testsuite::test_lambertw
 */
 statusdict/have_gsl :: not
 {

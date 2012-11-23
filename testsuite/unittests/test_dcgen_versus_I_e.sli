@@ -30,7 +30,7 @@
    The approach is to simulate both situations for some time and compare membrane potentials at the end;
    Any model which supports current events and setting I_e is checked, other models are skipped.
 
-   SeeAlso: test_iaf_i0.sli
+   SeeAlso: testsuite::test_iaf_i0
 
    FirstVersion: January 2011
    Author: Sven Schrader

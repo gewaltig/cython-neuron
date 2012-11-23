@@ -57,8 +57,7 @@ Note:
 Author:
    Jan 2011, Moritz Deger
 
-SeeAlso: ppd_sup_generator, poisson_generator_ps, spike_generator, 
-         Device, StimulatingDevice
+SeeAlso: ppd_sup_generator, poisson_generator_ps, spike_generator, Device, StimulatingDevice
 */
 
 namespace nest{

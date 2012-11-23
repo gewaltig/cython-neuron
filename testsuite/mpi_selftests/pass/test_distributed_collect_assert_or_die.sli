@@ -33,8 +33,8 @@ Description:
  able to collect the results of an arbitrary number of jobs and
  checks whether all jobs return true for all runs.
 
-Author:  September 2010, Diesmann
-SeeAlso: testsuite::distributed_collect_assert_or_die
+Author:  September 2010, Diesmann; May 2012, Plesser
+SeeAlso: unittest::distributed_collect_assert_or_die, testsuite::crash_distributed_collect_assert_or_die, testsuite::fail_distributed_collect_assert_or_die
 */
 
 

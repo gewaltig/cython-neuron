@@ -21,7 +21,7 @@
  */
 
  /* BeginDocumentation
-Name: testsuite::test_distributed_pass_or_die - self test of distributed_pass_or_die
+Name: testsuite::fail_distributed_pass_or_die - self test of distributed_pass_or_die
 
 Synopsis: nest_indirect distributed_pass_or_die.sli -> -
 
@@ -34,7 +34,7 @@ Description:
  case if the code for all jobs completes and leaves the stack empty.
 
 Author:  September 2010, Diesmann; May 2012, Plesser
-SeeAlso: testsuite::distributed_collect_assert_or_die
+SeeAlso: testsuite::crash_distributed_pass_or_die, testsuite::test_distributed_pass_or_die
 */
 
 

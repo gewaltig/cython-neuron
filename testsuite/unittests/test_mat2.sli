@@ -56,7 +56,7 @@
     see the SeeAlso key below.
 
     Author:  October 2009, T. Pfeil
-    SeeAlso: test_mat2, testsuite::test_iaf, testsuite::test_iaf_i0, testsuite::test_iaf_i0_refractory, testsuite::test_iaf_dc
+    SeeAlso: testsuite::test_iaf, testsuite::test_iaf_i0, testsuite::test_iaf_i0_refractory, testsuite::test_iaf_dc
 */
 
 

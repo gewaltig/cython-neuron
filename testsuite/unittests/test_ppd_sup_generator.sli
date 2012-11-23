@@ -61,7 +61,7 @@ Remarks:
 
 
 Author:  June 2011, Moritz Deger
-SeeAlso: test_pp_psc_delta.sli, test_poisson_generator_ps
+SeeAlso: ppd_sup_generator, testsuite::test_pp_psc_delta, testsuite::test_poisson_generator_ps
 */
 
 

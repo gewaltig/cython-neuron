@@ -34,8 +34,8 @@ Description:
  compare the set of results to the one of the same simulation carried
  out with a different number of jobs.
 
-Author:  September 2010, Diesmann
-SeeAlso: testsuite::distributed_collect_assert_or_die
+Author:  September 2010, Diesmann; May 2012, Plesser
+SeeAlso: testsuite::fail_distributed_process_invariant_events_assert_or_die, testsuite::test_distributed_process_invariant_events_assert_or_die
 */
 
 

@@ -58,7 +58,7 @@ Remarks:
 
 
 Author:  June 2011, Moritz Deger
-SeeAlso: test_ppd_sup_generator.sli
+SeeAlso: gamma_sup_generator, testsuite::test_ppd_sup_generator
 */
 
 

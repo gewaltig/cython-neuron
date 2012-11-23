@@ -30,7 +30,7 @@
 
     Author: Marc-Oliver Gewaltig
     FirstVersion: January 2009
-    SeeAlso: testsuite::iaf_neuron, sli_neuron 
+    SeeAlso: testsuite::test_iaf, sli_neuron 
 */
 
 

@@ -34,7 +34,7 @@ Description:
  case if the code for all jobs completes and leaves the stack empty.
 
 Author:  September 2010, Diesmann; May 2012, Plesser
-SeeAlso: testsuite::distributed_collect_assert_or_die
+SeeAlso: unittest::distributed_pass_or_die, testsuite::crash_distributed_pass_or_die, testsuite::fail_distributed_pass_or_die
 */
 
 

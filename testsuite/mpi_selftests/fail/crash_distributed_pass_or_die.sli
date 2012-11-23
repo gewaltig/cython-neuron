@@ -33,7 +33,7 @@ Description:
  checks whether all jobs return true for all runs.
 
 Author:  September 2010, Diesmann; May 2012, Plesser
-SeeAlso: testsuite::distributed_collect_pass_or_die
+SeeAlso: testsuite::fail_distributed_pass_or_die, testsuite::test_distributed_pass_or_die
 */
 
 
