@@ -315,13 +315,9 @@ namespace nest {
   template<int D, class T, int max_capacity>
   int Ntree<D,T,max_capacity>::subquad_(const Position<D>& pos)
   {
-    Position<D> offset = pos - lower_left_;
-
-    offset /= extent_/2;
-
     int r = 0;
     for(int i=0;i<D;++i)
-      r += (1<<i) * int(offset[i]);
+      r += (1<<i) * (pos[i]<lower_left_[i]+extent_[i]/2?0:1);
 
     return r;
   }

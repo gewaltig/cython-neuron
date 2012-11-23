@@ -425,7 +425,7 @@ structure of the layer.
 So far, we have considered layers in which each element was a single
 model neuron. Topology can also create layers with \emph{composite
   elements}\index{composite element}, i.e., layers in which each
-element is a (possibly nested) collection of model neurons, or, in
+element is a collection of model neurons, or, in
 general NEST network nodes.
 
 Construction of layers with composite elements proceeds exactly as for
@@ -460,13 +460,11 @@ Note the following points:
 \item Each element is implemented as a \lstinline!subnet!.
 \item All nodes within a composite element have identical positions,
   namely the position of the layer element.
-\item It is possible to create layers with nested, composite elements,
-  e.g.,
-\lstinputlisting[linerange=layer8-end]{user_manual_scripts/layers.py}
-\lstinputlisting[linerange=layer8-end]{user_manual_scripts/layers.log}
-  but such nested networks gobble up a lot of memory for subnet
-  constructs and provide no practical advantages. See the next section
-  for design recommendations for more complex layers.
+\item In a previous version of the topology module it was possible to
+  create layers with nested, composite elements, but such nested networks
+  gobble up a lot of memory for subnet constructs and provide no practical
+  advantages, so this is no longer supported. See the next section for
+  design recommendations for more complex layers.
 \end{itemize}
 
 \subsection{Designing layers}\label{sec:layerdesign}
@@ -484,23 +482,9 @@ and one interneuron. All pyramidal cells are modeled as NEST
 interneurons are \lstinline!iaf_neuron!s with threshold voltage
 $V_{\text{th}}=-52$mV. 
 \end{quote}
-How should you implement such a network using the Topology module? At
-first sight it appears tempting to reproduce the nested structure
-suggested by the model description:
-%
-\lstinputlisting[linerange=layer9-end]{user_manual_scripts/layers.py}
-%
-There are two shortcomings to this approach:
-\begin{itemize}
-\item The resulting layer will contain many subnets with only four
-  neurons each, resulting in a significant memory overhead.
-\item It is cumbersome to address the various subpopulations to create
-  selective connections, e.g., from L2/3 pyramidal cells to L4 interneurons.
-\end{itemize}
-We thus advise against this nesting approach.
-
-A more efficient approach is to create different models for the
-neurons in each layer and then define the microcolumn as one ``flat''
+How should you implement such a network using the Topology module?
+The recommended approach is to create different models for the
+neurons in each layer and then define the microcolumn as one
 composite element:
 %
 \lstinputlisting[linerange=layer10-end]{user_manual_scripts/layers.py}

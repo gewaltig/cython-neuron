@@ -277,32 +277,6 @@ print "#{ end #}"
 
 nest.ResetKernel()
 
-#{ layer8 #}
-l = tp.CreateLayer({'rows': 1, 'columns': 2,
-                    'elements': [['iaf_cond_alpha', 10,
-                                  'poisson_generator'], 2,
-                                 'noise_generator', 2]})
-#{ end #}
-
-print "#{ layer8 #}"
-nest.PrintNetwork(depth=4)
-print "#{ end #}"
-
-# --------------------------------------------------
-
-nest.ResetKernel()
-
-#{ layer9 #}
-nest.CopyModel('iaf_neuron', 'pyr')
-nest.CopyModel('iaf_neuron', 'in', {'V_th': -52.})
-l = tp.CreateLayer({'rows': 20, 'columns' : 20, 'extent': [0.5, 0.5],
-                    'elements': [['pyr', 3, 'in'], 3]})
-#{ end #}
-
-# --------------------------------------------------
-
-nest.ResetKernel()
-
 #{ layer10 #}
 for lyr in ['L23', 'L4', 'L56']:
     nest.CopyModel('iaf_neuron', lyr+'pyr')
