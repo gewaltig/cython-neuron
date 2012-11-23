@@ -13,10 +13,9 @@
 #! :Note: For best results, you should run this script with PyReport by Gael Varoquaux,
 #!        available from http://gael-varoquaux.info/computers/pyreport/
 #!
-#!        As I assume that most people will try plain python (or ipython) first, the
-#!        default setup is for plain python, though. Please set using_pyreport to True
-#!        if you want to run the script through pyreport. Otherwise, figures will not
-#!        be captured properly.
+#!        Please set using_pyreport to True if you want to run the
+#!        script through pyreport. Otherwise, figures will not be captured
+#!        correctly.
 
 using_pyreport = False
 
@@ -615,10 +614,7 @@ pylab.show()
 #! If not using pyreport, we finally show and block
 if not using_pyreport:
     print
-    print "The connplotter_tutorial script is done. Enjoy the figures!"
+    print "The connplotter_tutorial script is done. Call pylab.show() and enjoy the figures!"
     print "You may need to close all figures manually to get the Python prompt back."
     print
     pylab.show = pylab_show
-    pylab.show()
-    
-    
