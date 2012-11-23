@@ -24,20 +24,18 @@
 
 # PYTHONPATH must be set appropriately
 
-# remove old output
-rm -rf conv div
-
-# create directories
-mkdir -p conv/{1,2,4} div/{1,2,4}
-
 # run tests
-for dir in 'conv' 'div'
+tests='convergent divergent'
+for testtype in $tests
 do
-  cd $dir
+  rm -rf $testtype
+  mkdir $testtype
+  cd $testtype
   for n in 1 2 4 
   do
+    mkdir $n
     cd $n
-    mpirun -np $n python ../../topo_mpi_test_${dir}.py > /dev/null
+    mpirun -np $n python ../../topo_mpi_test.py $testtype > /dev/null
     cd ..
   done
   diff -qs 1 2
@@ -46,7 +44,7 @@ do
 done
 
 # remove output
-rm -rf conv div
+rm -rf $tests
 
 
 # run regression test for #516 --- will hang on failure
