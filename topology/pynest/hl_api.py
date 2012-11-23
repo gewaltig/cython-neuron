@@ -588,6 +588,23 @@ def Distance(from_arg, to_arg):
     from_arg, to_arg = _check_displacement_args(from_arg, to_arg, 'Distance')
     return topology_func('{ Distance } MapThread', [from_arg, to_arg])
 
+
+def _rank_specific_filename(basename):
+    """Returns file name decorated with rank."""
+   
+    if nest.NumProcesses() == 1:
+        return basename
+    else:
+        from numpy import log10, ceil
+        np = nest.NumProcesses()
+        np_digs = int(ceil(log10(np)))  # for pretty formatting
+        rk = nest.Rank()
+        dot = basename.find('.')
+        if dot < 0:
+            return '%s-%0*d' % (basename, np_digs, rk)
+        else:
+            return '%s-%0*d%s' % (basename[:dot], np_digs, rk, basename[dot:])
+
     
 def DumpLayerNodes(layers, outname):
     """
@@ -608,23 +625,19 @@ def DumpLayerNodes(layers, outname):
     
     Note
     ----
-    When calling this function from distributed simulations, each MPI process
-    will write data for its local nodes in succession to the same file. This
-    assumes that all MPI processes access the same file system.
+    If calling this function from a distributed simulation, this function
+    will write to one file per MPI rank. File names are formed by inserting
+    the MPI Rank into the file name before the file name suffix. Each file
+    stores data for nodes local to that file.
+
+    See also
+    --------
+    DumpLayerConnections
     """
     topology_func("""
-                  /oname Set 
-                  /lyrs  Set 
-                  0 1 NumProcesses 1 sub
-                    { Rank eq
-                        {   oname
-                            0 Rank eq {(w)} {(a)} ifelse
-                          ofsopen assert lyrs { DumpLayerNodes } forall close }
-                      if
-                      SyncProcesses }
-                  for
+                  (w) file exch { DumpLayerNodes } forall close
                   """,
-                  layers, outname)
+                  layers, _rank_specific_filename(outname))
 
 
 def DumpLayerConnections(layers, synapse_model, outname):
@@ -652,28 +665,20 @@ def DumpLayerConnections(layers, synapse_model, outname):
     If calling this function from a distributed simulation, this function
     will write to one file per MPI rank. File names are formed by inserting
     the MPI Rank into the file name before the file name suffix. Each file
-    stores data for connections local to that file. 
+    stores data for connections local to that file.
+
+    See also
+    --------
+    DumpLayerNodes
     """
-    if nest.NumProcesses() == 1:
-        outfile = outname
-    else:
-        from numpy import log10, ceil
-        np = nest.NumProcesses()
-        np_digs = int(ceil(log10(np)))  # for pretty formatting
-        rk = nest.Rank()
-        dot = outname.find('.')
-        if dot < 0:
-            outfile = '%s-%0*d' % (outname, np_digs, rk)
-        else:
-            outfile = '%s-%0*d%s' % (outname[:dot], np_digs, rk, outname[dot:])
-                
+
     topology_func("""
                   /oname  Set 
                   cvlit /synmod Set
                   /lyrs   Set 
                   oname (w) file lyrs { synmod DumpLayerConnections } forall close  
                   """,
-                  layers, synapse_model, outfile)
+                  layers, synapse_model, _rank_specific_filename(outname))
 
 
 def FindCenterElement(layers):
