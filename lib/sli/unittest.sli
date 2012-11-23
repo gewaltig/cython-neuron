@@ -613,7 +613,7 @@ Author: Diesmann
 
 FirstVersion: 090716
 
-SeeAlso: unittest:::send_distributed, unittest:::collect_distributed_results, unittest::distributed_assert_or_die, nest_indirect
+SeeAlso: unittest::distributed_assert_or_die, nest_indirect
 */
 /mpirun_self
 {
@@ -676,11 +676,11 @@ where FLAG is (passed), (result) or (error), RANK is the MPI rank of
 the executing process and RESULT AS STRING is present only for the
 /result flag an is the result of calling pcvs on the result argument
 to send_distributed.  This message is suitable for collection by
-collect_distributed_results.
+:collect_distributed_results.
 
 Note: result can be a dict, but must not contain dicts
 
-SeeAlso: unittest:mpirun_self, unittest:::collect_distributed_results
+SeeAlso: unittest:mpirun_self
 */
 /:send_distributed
 {
@@ -822,7 +822,7 @@ The input argument to :collect_distributed_results are the istream
 returned by mpirun_self and the number of mpi processes started.
 :collect_distributed_results reads from this istream the output of all
 ranks in the parallel process executed by mpirun_self. The individual
-processes should send results by calling unittest:::send_distributed.
+processes should send results by calling :send_distributed.
 
 If mode is 
   /none no MPI process should send a result 
@@ -834,7 +834,7 @@ The array returned contains one string result sent, in arbitrary order.
 status is true if the requirements according to mode are fulfilled. status
 may be false if one or several parallel processes have crashed.
 
-SeeAlso: unittest:::send_distributed, unittest::mpirun_self
+SeeAlso: unittest::mpirun_self
 */
 /:collect_distributed_results
 {  
@@ -1032,7 +1032,7 @@ the simulations using the comparison function supplied by the second
 procedure. If the second procedure is not given it requires that all
 jobs of all runs return true.
 
-A variant of this function distributed_invariant_collect_assert_or_die
+A variant of this function distributed_collect_assert_or_die
 requires that the contents of all sets of results is identical. The
 order of the results in each set is irrelevant.
 
@@ -1052,7 +1052,7 @@ Author: Diesmann
 
 FirstVersion: 100925
 
-SeeAlso: unittest::distributed_assert_or_die, unittest::distributed_invariant_collect_assert_or_die, nest_indirect, unittest::mpirun_self, unittest::assert_or_die
+SeeAlso: unittest::distributed_assert_or_die, unittest::distributed_collect_assert_or_die, nest_indirect, unittest::mpirun_self, unittest::assert_or_die
 */
 /distributed_collect_assert_or_die 
 [/arraytype /proceduretype /proceduretype]
