@@ -30,11 +30,11 @@
 #include "position.h"
 #include "dictdatum.h"
 #include "dictutils.h"
-#include "topology3module.h"
+#include "topologymodule.h"
 
 namespace nest
 {
-  class Topology3Module;
+  class TopologyModule;
 
   /**
    * Abstract base class for parameters
@@ -91,7 +91,7 @@ namespace nest
     virtual Parameter* subtract_parameter(const Parameter & other) const;
   };
 
-  typedef lockPTRDatum<Parameter, &Topology3Module::ParameterType> ParameterDatum;
+  typedef lockPTRDatum<Parameter, &TopologyModule::ParameterType> ParameterDatum;
 
   /**
    * Parameter with constant value.

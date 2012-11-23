@@ -69,7 +69,7 @@ def showTextTable(connPattern, fileTrunk):
         devnull = open('/dev/null', 'w')
         subp.call(['pdflatex', fileTrunk], stdout=devnull, stderr=subp.STDOUT)
         # need wrapper, since pdfcrop does not begin with #!
-        subp.call(['pdfcrop_wrapper.sh', fileTrunk+'.pdf'], 
+        subp.call(['pdfcrop '+fileTrunk+'.pdf '+fileTrunk+'-crop.pdf'], shell=True,
                   stdout=devnull, stderr=subp.STDOUT)
         devnull.close()
         os.rename(fileTrunk+'-crop.pdf', fileTrunk+'.pdf')
@@ -231,7 +231,7 @@ B_top = nest.GetStatus(RG, 'topology')[0]
 ctr_id = topo.GetElement(RG, [B_top['rows']/2, B_top['columns']/2])
 
 # find excitatory element in B
-E_id = [gid for gid in nest.GetLeaves(ctr_id)[0] 
+E_id = [gid for gid in ctr_id
         if nest.GetStatus([gid], 'model')[0] == 'E']
 
 # get all targets, split into excitatory and inhibitory

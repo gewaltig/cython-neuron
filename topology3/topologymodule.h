@@ -1,8 +1,8 @@
-#ifndef TOPOLOGY3MODULE_H
-#define TOPOLOGY3MODULE_H
+#ifndef TOPOLOGYMODULE_H
+#define TOPOLOGYMODULE_H
 
 /*
- *  topology3module.h
+ *  topologymodule.h
  *
  *  This file is part of NEST.
  *
@@ -38,12 +38,12 @@ namespace nest
   template<int D>
   class Layer;
 
-  class Topology3Module: public SLIModule
+  class TopologyModule: public SLIModule
   {
   public:
 
-    Topology3Module(Network&);
-    ~Topology3Module();
+    TopologyModule(Network&);
+    ~TopologyModule();
 
     /**
      * Initialize module by registering models with the network.
@@ -201,7 +201,7 @@ namespace nest
     static bool register_mask(const Name & name);
     static bool register_mask(const Name& name, MaskCreatorFunction creator);
 
-    static lockPTRDatum<AbstractMask, &Topology3Module::MaskType> /*MaskDatum*/ create_mask(const Token &);
+    static lockPTRDatum<AbstractMask, &TopologyModule::MaskType> /*MaskDatum*/ create_mask(const Token &);
     static AbstractMask *create_mask(const Name& name, const DictionaryDatum &d);
 
     typedef GenericFactory<Parameter> ParameterFactory;
@@ -211,7 +211,7 @@ namespace nest
     static bool register_parameter(const Name & name);
     static bool register_parameter(const Name& name, ParameterCreatorFunction creator);
 
-    static lockPTRDatum<Parameter, &Topology3Module::ParameterType> /*ParameterDatum*/ create_parameter(const Token &);
+    static lockPTRDatum<Parameter, &TopologyModule::ParameterType> /*ParameterDatum*/ create_parameter(const Token &);
     static Parameter *create_parameter(const Name& name, const DictionaryDatum &d);
 
   private:
@@ -250,7 +250,7 @@ namespace nest
   };
 
   inline
-  Network &Topology3Module::get_network()
+  Network &TopologyModule::get_network()
   {
     assert(net_ != 0);
     return *net_;
@@ -258,39 +258,39 @@ namespace nest
 
   template<class T>
   inline
-  bool Topology3Module::register_mask()
+  bool TopologyModule::register_mask()
   {
     return mask_factory_().register_subtype<T>(T::get_name());
   }
 
   template<class T>
   inline
-  bool Topology3Module::register_mask(const Name& name)
+  bool TopologyModule::register_mask(const Name& name)
   {
     return mask_factory_().register_subtype<T>(name);
   }
 
   inline
-  bool Topology3Module::register_mask(const Name& name, MaskCreatorFunction creator)
+  bool TopologyModule::register_mask(const Name& name, MaskCreatorFunction creator)
   {
     return mask_factory_().register_subtype(name, creator);
   }
 
   inline
-  AbstractMask *Topology3Module::create_mask(const Name& name, const DictionaryDatum &d)
+  AbstractMask *TopologyModule::create_mask(const Name& name, const DictionaryDatum &d)
   {
     return mask_factory_().create(name,d);
   }
 
   template<class T>
   inline
-  bool Topology3Module::register_parameter(const Name& name)
+  bool TopologyModule::register_parameter(const Name& name)
   {
     return parameter_factory_().register_subtype<T>(name);
   }
 
   inline
-  bool Topology3Module::register_parameter(const Name& name, ParameterCreatorFunction creator)
+  bool TopologyModule::register_parameter(const Name& name, ParameterCreatorFunction creator)
   {
     return parameter_factory_().register_subtype(name, creator);
   }

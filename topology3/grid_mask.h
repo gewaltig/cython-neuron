@@ -28,7 +28,7 @@
 #include "position.h"
 #include "dictdatum.h"
 #include "dictutils.h"
-#include "topology3module.h"
+#include "topologymodule.h"
 #include "mask.h"
 
 namespace nest

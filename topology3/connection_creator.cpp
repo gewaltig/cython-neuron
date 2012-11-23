@@ -35,7 +35,7 @@ namespace nest
     kernel_(),
     synapse_model_(0),
     parameters_(),
-    net_(Topology3Module::get_network())
+    net_(TopologyModule::get_network())
   {
     Name connection_type;
 
@@ -63,11 +63,11 @@ namespace nest
 
       } else if (dit->first == names::mask) {
 
-        mask_ = Topology3Module::create_mask(dit->second);
+        mask_ = TopologyModule::create_mask(dit->second);
 
       } else if (dit->first == names::kernel) {
 
-        kernel_ = Topology3Module::create_parameter(dit->second);
+        kernel_ = TopologyModule::create_parameter(dit->second);
 
       } else if (dit->first == names::synapse_model) {
 
@@ -91,15 +91,15 @@ namespace nest
 
       } else if (dit->first == names::weights) {
 
-        parameters_[names::weight] = Topology3Module::create_parameter(dit->second);
+        parameters_[names::weight] = TopologyModule::create_parameter(dit->second);
 
       } else if (dit->first == names::delays) {
 
-        parameters_[names::delay] = Topology3Module::create_parameter(dit->second);
+        parameters_[names::delay] = TopologyModule::create_parameter(dit->second);
 
       } else {
 
-        parameters_[dit->first] = Topology3Module::create_parameter(dit->second);
+        parameters_[dit->first] = TopologyModule::create_parameter(dit->second);
 
       }
 

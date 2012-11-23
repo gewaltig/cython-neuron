@@ -28,11 +28,11 @@
 #include "position.h"
 #include "dictdatum.h"
 #include "dictutils.h"
-#include "topology3module.h"
+#include "topologymodule.h"
 
 namespace nest
 {
-  class Topology3Module;
+  class TopologyModule;
 
   /**
    * Abstract base class for masks with unspecified dimension.
@@ -80,7 +80,7 @@ namespace nest
 
   };
 
-  typedef lockPTRDatum<AbstractMask, &Topology3Module::MaskType> MaskDatum;
+  typedef lockPTRDatum<AbstractMask, &TopologyModule::MaskType> MaskDatum;
 
   /**
    * Abstract base class for masks with given dimension.

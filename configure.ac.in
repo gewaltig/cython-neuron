@@ -778,22 +778,6 @@ SLI_NONPUBLIC_MODULES=""
 SLI_PUBLIC_DYNMODULES=""
 SLI_NONPUBLIC_DYNMODULES=""
 
-## BEGIN CUT FROM RELEASE -------------- DO NOT EDIT THIS LINE
-AC_MSG_CHECKING(whether we should compile topology3)
-AC_ARG_ENABLE([topology3],
-	[AS_HELP_STRING([--enable-topology3],
-	 [Enable the next version of the topology module. Use at your own risk!])],
-	[configure_topology3=yes
-	 SLI_PUBLIC_MODULES=`echo $SLI_PUBLIC_MODULES | sed s/topology//`
-	 SLI_NONPUBLIC_MODULES="$SLI_NONPUBLIC_MODULES topology3"],
-	[configure_topology3=no])
-if test "x$configure_topology3" = xno ; then
-  AC_MSG_RESULT(no)
-else
-  AC_MSG_RESULT(yes)
-fi
-## END   CUT FROM RELEASE -------------- DO NOT EDIT THIS LINE
-
 # Now go through all candidates and set up necessary variables and directories
 # NOTE: We only include those modules that shall be loaded automatically.
 #       The _NOLOAD modules will only be included with the SUBDIRS below.
@@ -992,6 +976,9 @@ for dir in $NEED_MAKEFILE_DIRS; do
       ;;
     topology)
       AC_CONFIG_FILES(topology/Makefile)
+      if test "$HAVE_PYTHON" = yes; then
+        AC_CONFIG_FILES(topology/setup.py)
+      fi
       ;;
     topology/doc)
       AC_CONFIG_FILES(topology/doc/Makefile)
@@ -1003,12 +990,6 @@ for dir in $NEED_MAKEFILE_DIRS; do
 ## INSERT CODE FOR CANDIDATES HERE ----- DO NOT EDIT THIS LINE
     developer)
       AC_CONFIG_FILES(developer/Makefile)
-      ;;
-    topology3)
-      AC_CONFIG_FILES(topology3/Makefile)
-      if test "$HAVE_PYTHON" = yes; then
-        AC_CONFIG_FILES(topology3/setup.py)
-      fi
       ;;
 ## END   CUT FROM RELEASE -------------- DO NOT EDIT THIS LINE
   esac

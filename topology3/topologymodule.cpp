@@ -1,5 +1,5 @@
 /*
- *  topology3module.cpp
+ *  topologymodule.cpp
  *
  *  This file is part of NEST.
  *
@@ -31,7 +31,7 @@
 #include "genericmodel.h"
 #include "communicator.h"
 #include "communicator_impl.h"
-#include "topology3module.h"
+#include "topologymodule.h"
 #include "layer.h"
 #include "layer_impl.h"
 #include "free_layer.h"
@@ -45,12 +45,12 @@
 
 namespace nest
 {
-  SLIType Topology3Module::MaskType;
-  SLIType Topology3Module::ParameterType;
+  SLIType TopologyModule::MaskType;
+  SLIType TopologyModule::ParameterType;
 
-  Network *Topology3Module::net_;
+  Network *TopologyModule::net_;
 
-  Topology3Module::Topology3Module(Network& net)
+  TopologyModule::TopologyModule(Network& net)
   {
     net_ = &net;
     MaskType.settypename("masktype");
@@ -59,35 +59,35 @@ namespace nest
     ParameterType.setdefaultaction(SLIInterpreter::datatypefunction);
   }
 
-  Topology3Module::~Topology3Module()
+  TopologyModule::~TopologyModule()
   {
   }
 
-  const std::string Topology3Module::name(void) const
+  const std::string TopologyModule::name(void) const
   {
-    return std::string("Topology3Module"); // Return name of the module
+    return std::string("TopologyModule"); // Return name of the module
   }
 
-  const std::string Topology3Module::commandstring(void) const
+  const std::string TopologyModule::commandstring(void) const
   {
     return
       std::string("/topology /C++ ($Revision$) provide-component "
 		  "/topology-interface /SLI (6203) require-component ");
   }
 
-  GenericFactory<AbstractMask> &Topology3Module::mask_factory_(void)
+  GenericFactory<AbstractMask> &TopologyModule::mask_factory_(void)
   {
     static GenericFactory<AbstractMask> factory;
     return factory;
   }
 
-  GenericFactory<Parameter> &Topology3Module::parameter_factory_(void)
+  GenericFactory<Parameter> &TopologyModule::parameter_factory_(void)
   {
     static GenericFactory<Parameter> factory;
     return factory;
   }
 
-  MaskDatum Topology3Module::create_mask(const Token & t)
+  MaskDatum TopologyModule::create_mask(const Token & t)
   {
     MaskDatum *maskd = dynamic_cast<MaskDatum*>(t.datum());
     if (maskd) {
@@ -181,7 +181,7 @@ namespace nest
 
   }
 
-  ParameterDatum Topology3Module::create_parameter(const Token & t)
+  ParameterDatum TopologyModule::create_parameter(const Token & t)
   {
     ParameterDatum *pd = dynamic_cast<ParameterDatum*>(t.datum());
     if (pd)
@@ -206,7 +206,7 @@ namespace nest
 
   }
 
-  Parameter *Topology3Module::create_parameter(const Name& name, const DictionaryDatum &d)
+  Parameter *TopologyModule::create_parameter(const Name& name, const DictionaryDatum &d)
   {
     Parameter *param = parameter_factory_().create(name,d);
 
@@ -243,7 +243,7 @@ namespace nest
       return new DifferenceMask<2>(outer_circle, inner_circle);
   }
 
-  void Topology3Module::init(SLIInterpreter *i)
+  void TopologyModule::init(SLIInterpreter *i)
   {
     // Register the topology functions as SLI commands.
 
@@ -359,7 +359,7 @@ namespace nest
 
     Author: Håkon Enger, Kittel Austvoll
   */
-  void Topology3Module::CreateLayer_DFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::CreateLayer_DFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(1);
 
@@ -403,7 +403,7 @@ namespace nest
     Author: Kittel Austvoll
   */
 
-  void Topology3Module::GetPosition_iFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::GetPosition_iFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(1);
 
@@ -470,7 +470,7 @@ namespace nest
 
     See also: Distance, GetPosition
   */
-  void Topology3Module::Displacement_a_iFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::Displacement_a_iFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
@@ -539,7 +539,7 @@ namespace nest
 
     See also: Displacement, GetPosition
   */
-  void Topology3Module::Distance_a_iFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::Distance_a_iFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
@@ -584,7 +584,7 @@ namespace nest
 
     Author: Håkon Enger
   */
-  void Topology3Module::CreateMask_DFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::CreateMask_DFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(1);
 
@@ -609,7 +609,7 @@ namespace nest
     Returns:
     bool - true if the point is inside the mask
   */
-  void Topology3Module::Inside_a_MFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::Inside_a_MFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
@@ -623,7 +623,7 @@ namespace nest
     i->EStack.pop();
   }
 
-  void Topology3Module::And_M_MFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::And_M_MFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
@@ -637,7 +637,7 @@ namespace nest
     i->EStack.pop();
   }
 
-  void Topology3Module::Or_M_MFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::Or_M_MFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
@@ -651,7 +651,7 @@ namespace nest
     i->EStack.pop();
   }
 
-  void Topology3Module::Sub_M_MFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::Sub_M_MFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
@@ -665,7 +665,7 @@ namespace nest
     i->EStack.pop();
   }
 
-  void Topology3Module::Mul_P_PFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::Mul_P_PFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
@@ -679,7 +679,7 @@ namespace nest
     i->EStack.pop();
   }
 
-  void Topology3Module::Div_P_PFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::Div_P_PFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
@@ -693,7 +693,7 @@ namespace nest
     i->EStack.pop();
   }
 
-  void Topology3Module::Add_P_PFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::Add_P_PFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
@@ -707,7 +707,7 @@ namespace nest
     i->EStack.pop();
   }
 
-  void Topology3Module::Sub_P_PFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::Sub_P_PFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
@@ -722,7 +722,7 @@ namespace nest
   }
 
 
-  void Topology3Module::GetGlobalChildren_i_M_aFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::GetGlobalChildren_i_M_aFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(3);
 
@@ -921,7 +921,7 @@ namespace nest
     
     SeeAlso: topology::CreateLayer
   */
-  void Topology3Module::ConnectLayers_i_i_DFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::ConnectLayers_i_i_DFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(3);
 
@@ -963,7 +963,7 @@ namespace nest
 
     Author: Håkon Enger
   */
-  void Topology3Module::CreateParameter_DFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::CreateParameter_DFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(1);
 
@@ -991,7 +991,7 @@ namespace nest
 
     Author: Håkon Enger
   */
-  void Topology3Module::GetValue_a_PFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::GetValue_a_PFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
 
@@ -1046,7 +1046,7 @@ namespace nest
     
     SeeAlso: topology::DumpLayerConnections, setprecision, modeldict
   */
-  void Topology3Module::
+  void TopologyModule::
   DumpLayerNodes_os_iFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
@@ -1102,7 +1102,7 @@ namespace nest
     SeeAlso: topology::DumpLayerNodes
   */
 
-  void Topology3Module::
+  void TopologyModule::
   DumpLayerConnections_os_i_lFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(3);
@@ -1161,7 +1161,7 @@ namespace nest
        
     Author: Kittel Austvoll, Håkon Enger
   */
-  void Topology3Module::
+  void TopologyModule::
   GetElement_i_iaFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(2);
@@ -1215,7 +1215,7 @@ namespace nest
     i->EStack.pop();  
   }
 
-  void Topology3Module::Cvdict_MFunction::execute(SLIInterpreter *i) const
+  void TopologyModule::Cvdict_MFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(1);
 

@@ -26,7 +26,7 @@
 #include <vector>
 #include "network.h"
 #include "position.h"
-#include "topology3module.h"
+#include "topologymodule.h"
 #include "topology_names.h"
 #include "vose.h"
 #include "mask.h"

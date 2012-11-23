@@ -1,4 +1,4 @@
-# Automake file for Topology3 module
+# Automake file for Topology module
 #
 # Headers from this directory are not to be installed upon
 # make install. They are therefore included in _SOURCES.
@@ -10,13 +10,13 @@ MAKEFLAGS= @MAKE_FLAGS@
 
 #SUBDIRS= doc examples
 
-noinst_LTLIBRARIES= libtopology3module.la
+noinst_LTLIBRARIES= libtopologymodule.la
 
 # Add one line for each h-cpp-file pair containing code for your
 # module. Remember the \ at the end of each but the last line!
-libtopology3module_la_SOURCES= \
-			topology3module.h \
-			topology3module.cpp \
+libtopologymodule_la_SOURCES= \
+			topologymodule.h \
+			topologymodule.cpp \
 			topology_names.h \
 			topology_names.cpp \
 			connection_creator.h \
@@ -43,7 +43,7 @@ libtopology3module_la_SOURCES= \
 
 # do not change anything below this line ------------------------------
 
-libtopology3module_la_CXXFLAGS= @AM_CXXFLAGS@
+libtopologymodule_la_CXXFLAGS= @AM_CXXFLAGS@
 
 AM_CPPFLAGS= -I$(top_srcdir)/libnestutil\
 	  -I$(top_srcdir)/librandom\
@@ -62,10 +62,10 @@ install-slidoc:
 #	$(DESTDIR)$(exec_prefix)/bin/sli --userargs=$(HELPDIRS) $(top_srcdir)/lib/sli/install-help.sli 2>&1 > @INSTALL_HELP_LOG@
 
 install-data-hook:
-	mkdir -p $(DESTDIR)@PKGDOCDIR@/topology3
-#	rm -rf $(DESTDIR)@PKGDOCDIR@/topology3/testsuite
-#	cp -r @PKGSRCDIR@/$(subdir)/testsuite $(DESTDIR)@PKGDOCDIR@/topology3
-#	rm -rf `find $(DESTDIR)@PKGDOCDIR@/topology3 -name .svn`
+	mkdir -p $(DESTDIR)@PKGDOCDIR@/topology
+#	rm -rf $(DESTDIR)@PKGDOCDIR@/topology/testsuite
+#	cp -r @PKGSRCDIR@/$(subdir)/testsuite $(DESTDIR)@PKGDOCDIR@/topology
+#	rm -rf `find $(DESTDIR)@PKGDOCDIR@/topology -name .svn`
 
 install-pynest-component:
 	@PYTHON_EXEC@ setup.py install --prefix=$(DESTDIR)@PYNEST_PREFIX@
