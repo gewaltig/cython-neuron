@@ -42,7 +42,7 @@ label (stringtype) -
   the node. From the SLI level, the FindNodes command may be used to
   find a subnet's address from it's label.
 number_of_children (integertype) -
-  The numbber of direct children of the subnet
+  The number of direct children of the subnet
 
   SeeAlso: modeldict, Node
 */
