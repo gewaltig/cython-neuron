@@ -190,7 +190,7 @@ pylab.show()
 
 #! Save pattern to file
 #! --------------------
-s_cp.plot(file='simple_example.png')
+#s_cp.plot(file='simple_example.png')
 
 #! This saves the detailed diagram to the given file. If you want to save
 #! the pattern in several file formats, you can pass a tuple of file names, 
