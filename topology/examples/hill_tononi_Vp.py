@@ -5,8 +5,8 @@
 #! :Author: Hans Ekkehard Plesser
 #! :Institution: Norwegian University of Life Sciences, Simula
 #!               Research Laboratory, RIKEN Brain Sciences Institute
-#! :Version: 0.3
-#! :Date: 09 February 2012
+#! :Version: 0.4
+#! :Date: 21 November 2012
 #! :Copyright: The NEST Initiative (2009-2012)
 #! :License: Creative Commons Attribution License
 #!
@@ -125,7 +125,7 @@
 #! Load pynest
 import nest
 
-#! Load NEST Topoplogy module, as of nest 1.9.r8375
+#! Load NEST Topoplogy module (NEST 2.2)
 import nest.topology as topo
 
 #! Make sure we start with a clean slate, even if we re-run the script
@@ -139,6 +139,7 @@ import math
 #! since `pyreport <http://gael-varoquaux.info/computers/pyreport/>`_ otherwise 
 #! does not capture plot output. 
 import pylab
+pylab.ion()
 
 #! Configurable Parameters
 #! =======================
@@ -165,8 +166,8 @@ Params = {'N'           :     40,
           'phi_dg'      :    0.0,
           'retDC'       :   30.0,
           'retAC'       :   30.0,
-          'simtime'     : 100.0,
-          'sim_interval':   5.0
+          'simtime'     :  100.0,
+          'sim_interval':    5.0
           }
 
 #! Neuron Models
@@ -313,7 +314,6 @@ nest.CopyModel('multimeter', 'RecordingNode',
                          'record_from': ['V_m'],
                          'record_to'  : ['memory'],
                          'withgid'    : True,
-                         'withpath'   : False,
                          'withtime'   : False})
 
 
@@ -387,9 +387,9 @@ Rp = topo.CreateLayer(layerProps)
 [nest.CopyModel('CtxInNeuron', layer+'in' ) for layer in ('L23','L4','L56')]
 
 #! Now we can create the populations, suffixes h and v indicate tuning
-layerProps.update({'elements': [['L23pyr', 2, 'L23in', 1],
-                                ['L4pyr' , 2, 'L4in' , 1],
-                                ['L56pyr', 2, 'L56in', 1]]})
+layerProps.update({'elements': ['L23pyr', 2, 'L23in', 1,
+                                'L4pyr' , 2, 'L4in' , 1,
+                                'L56pyr', 2, 'L56in', 1]})
 Vp_h = topo.CreateLayer(layerProps)
 Vp_v = topo.CreateLayer(layerProps)
 
@@ -737,52 +737,19 @@ for conn in [{"targets": {"model": "TpRelay"}},
 #! ---------------------
 
 #! As a very simple check on the connections created, we inspect
-#! the connections from the central node of various layers. We
-#! obtain all connections an plot the target neuron locations.
+#! the connections from the central node of various layers. 
 
-def connPlot(spop, smod, tmod, syn, titl):
-    '''Plot connections.
-       spop, smod  source population and model
-       tmod        target model
-       syn         synapse type
-       titl        figure title'''
+#! Connections from Retina to TpRelay
+topo.PlotTargets(topo.FindCenterElement(retina), Tp, 'TpRelay', 'AMPA')
+pylab.title('Connections Retina -> TpRelay')
+ 
+#! Connections from TpRelay to L4pyr in Vp (horizontally tuned)
+topo.PlotTargets(topo.FindCenterElement(Tp), Vp_h, 'L4pyr', 'AMPA')
+pylab.title('Connections TpRelay -> Vp(h) L4pyr')
 
-    # center location, cast to int since ``pyreport`` makes all div double
-    ctr = [int(Params["N"]/2), int(Params["N"]/2)]
-
-    # get element at center
-    src = topo.GetElement(spop, ctr)
-
-    # if center element is not individual neuron, find one
-    # neuron of desired model in center element
-    if nest.GetStatus(src, 'model')[0] == 'subnet':
-        src = [n for n in nest.GetLeaves(src)[0] 
-                 if nest.GetStatus([n],'model')[0]==smod][:1]
-
-    # get position (in degrees) of chosen source neuron
-    srcpos = topo.GetPosition(src)
-
-    # get all targets
-    tgts = nest.GetConnections(src, syn)[0]['targets']
-
-    # pick targets of correct model type, get their positions,
-    # convert list of (x,y) pairs to pair of x- and y-lists
-    pos = zip(*[topo.GetPosition([n]) 
-                for n in tgts if nest.GetStatus([n],
-                                                'model')[0]==tmod])
-
-    # plot source neuron in red, slightly larger, targets on blue
-    pylab.clf()
-    pylab.plot(pos[0], pos[1], 'bo', markersize=5, zorder=99, label='Targets')
-    pylab.plot(srcpos[:1], srcpos[1:], 'ro', markersize=10, 
-               markeredgecolor='r', zorder=1, label='Source')
-    axsz = Params['visSize']/2 + 0.2
-    pylab.axis([-axsz,axsz,-axsz,axsz])
-    pylab.title(titl)
-    pylab.legend()
-
-    # pylab.show() required for `pyreport`
-    pylab.show()
+#! Connections from TpRelay to L4pyr in Vp (vertically tuned)
+topo.PlotTargets(topo.FindCenterElement(Tp), Vp_v, 'L4pyr', 'AMPA')
+pylab.title('Connections TpRelay -> Vp(v) L4pyr')
 
 #! Recording devices
 #! =================
@@ -800,6 +767,7 @@ for name, loc, population, model in [('TpRelay'   , 1, Tp  , 'TpRelay'),
     tgts = [nd for nd in nest.GetLeaves(population)[0] 
             if nest.GetStatus([nd], 'model')[0]==model]
     nest.DivergentConnect(recorders[name][0], tgts) 
+
 
 #! Example simulation
 #! ====================
@@ -854,5 +822,6 @@ for t in pylab.arange(Params['sim_interval'], Params['simtime'], Params['sim_int
     pylab.show()
     pylab.draw()
 
+    
 #! just for some information at the end
 print nest.GetKernelStatus()
