@@ -17,11 +17,6 @@
 #! and the elimination of a number of connections, with no changes
 #! to the weights.
 #!
-#! Changes
-#! =======
-#! 2012-02-09: Replaced ac_poisson_generator with smp_generator
-#!             (this is just a name change)
-#! 
 #! Introduction
 #! ============
 #! 
@@ -126,8 +121,6 @@
 #! Ensure that we load NEST modules from the right place. You will not
 #! need this if you installed NEST in the standard location
 #! ``/usr/local`` or if your ``PYTHONPATH`` is set correctly.
-#import sys
-#sys.path = ["/Users/plesser/NEST/code/trunk/ins/lib/python2.5/site-packages"] + sys.path
 
 #! Load pynest
 import nest
@@ -790,12 +783,6 @@ def connPlot(spop, smod, tmod, syn, titl):
 
     # pylab.show() required for `pyreport`
     pylab.show()
-
-#! show Retina to TpRelay
-#connPlot(retina, '', 'TpRelay', 'AMPA', 'Connections Retina -> TpRelay')
-
-#! show TpRelay to L4pyr
-#connPlot(Tp, 'TpRelay', 'L4pyr', 'AMPA', 'Connections TpRelay -> Vp L4pyr')
 
 #! Recording devices
 #! =================
