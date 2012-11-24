@@ -408,18 +408,7 @@ nest.PrintNetwork()
 
 #! We can also try to plot a single layer in a network. For
 #! simplicity, we use Rp, which has only a single neuron per position.
-Rppos = zip(*[topo.GetPosition([n])[0] for n in nest.GetLeaves(Rp)[0]])
-#! The line above works as follows:
-#!
-#! 1. ``GetLeaves`` extracts all neurons from the `Rp` layer
-#! #. For each neuron ``n``, ``GetPosition`` obtains the position 
-#!    within the layer, in degrees.
-#! #. The list comprehension ``[... for n in ...]`` results in a list
-#!    of x-y-coordinate pairs. ``zip(*[...])`` turns this into one list
-#!    of x- and one list of y-coordinates, as needed by ``plot``.
-pylab.plot(Rppos[0], Rppos[1], 'o')
-axsz = Params['visSize']/2 + 0.2
-pylab.axis([-axsz,axsz,-axsz,axsz])
+topo.PlotLayer(Rp)
 pylab.title('Layer Rp')
 pylab.show()
 
@@ -742,14 +731,17 @@ for conn in [{"targets": {"model": "TpRelay"}},
 #! Connections from Retina to TpRelay
 topo.PlotTargets(topo.FindCenterElement(retina), Tp, 'TpRelay', 'AMPA')
 pylab.title('Connections Retina -> TpRelay')
- 
+pylab.show()
+
 #! Connections from TpRelay to L4pyr in Vp (horizontally tuned)
 topo.PlotTargets(topo.FindCenterElement(Tp), Vp_h, 'L4pyr', 'AMPA')
 pylab.title('Connections TpRelay -> Vp(h) L4pyr')
+pylab.show()
 
 #! Connections from TpRelay to L4pyr in Vp (vertically tuned)
 topo.PlotTargets(topo.FindCenterElement(Tp), Vp_v, 'L4pyr', 'AMPA')
 pylab.title('Connections TpRelay -> Vp(v) L4pyr')
+pylab.show()
 
 #! Recording devices
 #! =================
