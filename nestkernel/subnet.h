@@ -125,7 +125,7 @@ namespace nest{
      * Return the subnets's user label.
      * Each subnet can be given a user-defined string as a label, which
      * may be used to give a symbolic name to the node. From the SLI
-     * level, the GetNodes command may be used to find a subnet's
+     * level, the GetGlobalNodes command may be used to find a subnet's
      * GID from its label.
      */
     std::string get_label() const;
@@ -134,7 +134,7 @@ namespace nest{
      * Set the subnet's user label.
      * Each subnet can be given a user-defined string as a label, which
      * may be used to give a symbolic name to the node. From the SLI
-     * level, the GetNodes command may be used to find a subnet's
+     * level, the GetGlobalNodes command may be used to find a subnet's
      * GID from its label.
      */
     void set_label(std::string const);

@@ -4,6 +4,6 @@ nw GetLocalNodes ==
 nw GetLocalLeaves ==
 nw GetLocalChildren ==
 
-nw GetNodes ==
-nw GetLeaves ==
-nw GetChildren ==
+nw GetGlobalNodes ==
+nw GetGlobalLeaves ==
+nw GetGlobalChildren ==

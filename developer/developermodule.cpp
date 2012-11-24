@@ -188,7 +188,7 @@ namespace nest
    subnet Create /s Set
    s ChangeSubnet
    iaf_neuron 2000 Create
-   [0] ChangeSubnet s GetNodes /neurons Set ;
+   [0] ChangeSubnet s GetGlobalNodes /neurons Set ;
    neurons 100 20 50 RandomConnectSynfireInDegreeOutdegree
    /dt Set
    /ds Set
