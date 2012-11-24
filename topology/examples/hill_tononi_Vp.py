@@ -3,8 +3,7 @@
 #! ===========================================
 #!
 #! :Author: Hans Ekkehard Plesser
-#! :Institution: Norwegian University of Life Sciences, Simula
-#!               Research Laboratory, RIKEN Brain Sciences Institute
+#! :Institution: Norwegian University of Life Sciences
 #! :Version: 0.4
 #! :Date: 21 November 2012
 #! :Copyright: The NEST Initiative (2009-2012)
