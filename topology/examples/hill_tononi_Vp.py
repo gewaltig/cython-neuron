@@ -589,14 +589,17 @@ corRet.update({"sources": {"model": "L56pyr"}, "weights": 2.5})
 #! -----------------------------------------
 
 #! Cortico-cortical, same orientation
+print "Connecting: cortico-cortical, same orientation"
 [topo.ConnectLayers(Vp_h, Vp_h, conn) for conn in ccConnections]
 [topo.ConnectLayers(Vp_v, Vp_v, conn) for conn in ccConnections]
 
 #! Cortico-cortical, cross-orientation
+print "Connecting: cortico-cortical, other orientation"
 [topo.ConnectLayers(Vp_h, Vp_v, conn) for conn in ccxConnections]
 [topo.ConnectLayers(Vp_v, Vp_h, conn) for conn in ccxConnections]
 
 #! Cortico-thalamic connections
+print "Connecting: cortico-thalamic"
 [topo.ConnectLayers(Vp_h, Tp, conn) for conn in ctConnections]
 [topo.ConnectLayers(Vp_v, Tp, conn) for conn in ctConnections]
 topo.ConnectLayers(Vp_h, Rp, corRet) 
@@ -616,6 +619,8 @@ thalCorRect = {"connection_type": "convergent",
                "synapse_model": "AMPA",
                "weights": 5.0,
                "delays": {"uniform": {"min": 2.75, "max": 3.25}}}
+
+print "Connecting: thalamo-cortical"
 
 #! Horizontally tuned
 thalCorRect.update({"mask": {"rectangular": {"lower_left" : [-4.0*dpc, -1.0*dpc],
@@ -666,6 +671,8 @@ for conn in [{"targets": {"model": "L4pyr" }},
 thalBase = {"connection_type": "divergent",
             "delays": {"uniform": {"min": 1.75, "max": 2.25}}}
 
+print "Connecting: intra-thalamic"
+
 for src, tgt, conn in [(Tp, Rp, {"sources": {"model": "TpRelay"},
                                  "synapse_model": "AMPA",
                                  "mask": {"circular": {"radius": 2.0 * dpc}},
@@ -715,6 +722,8 @@ retThal = {"connection_type": "divergent",
            "weights": 10.0,
            "delays": 1.0}
 
+print "Connecting: retino-thalamic"
+
 for conn in [{"targets": {"model": "TpRelay"}},
              {"targets": {"model": "TpInter"}}]:
     retThal.update(conn)
@@ -749,6 +758,7 @@ pylab.show()
 #! we want to record from, we create one ``multimeter``, then select
 #! all nodes of the right model from the target population and
 #! connect. ``loc`` is the subplot location for the layer.
+print "Connecting: Recording devices"
 recorders = {}
 for name, loc, population, model in [('TpRelay'   , 1, Tp  , 'TpRelay'),
                                      ('Rp'        , 2, Rp  , 'RpNeuron'),
