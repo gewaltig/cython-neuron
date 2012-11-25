@@ -23,6 +23,7 @@
  *
  */
 
+#include <limits>
 #include "nest.h"
 #include "randomgen.h"
 #include "nest_names.h"
@@ -43,6 +44,31 @@ namespace nest
   {
   public:
     /**
+     * Default constructor
+     */
+    Parameter(): cutoff_(-std::numeric_limits<double>::infinity())
+      {}
+
+    /**
+     * Constructor
+     * @param cutoff Values less than the cutoff are set to zero.
+     */
+    Parameter(double_t cutoff): cutoff_(cutoff)
+      {}
+
+    /**
+     * Constructor
+     * Parameter that can be set in the Dictionary:
+     *  cutoff - Values less than the cutoff are set to zero.
+     * @param d dictionary with parameter values
+     */
+    Parameter(const DictionaryDatum& d)
+      {
+        cutoff_ = -std::numeric_limits<double>::infinity();
+        updateValue<double_t>(d, "cutoff", cutoff_);
+      }
+
+    /**
      * Virtual destructor
      */
     virtual ~Parameter()
@@ -51,12 +77,38 @@ namespace nest
     /**
      * @returns the value of the parameter at the given point.
      */
-    virtual double_t value(const Position<2> &, librandom::RngPtr&) const = 0;
+    double_t value(const Position<2> &p, librandom::RngPtr& rng) const
+      {
+        double_t val = raw_value(p,rng);
+        if (val<cutoff_)
+          return 0.0;
+        else
+          return val;
+      }
 
     /**
      * @returns the value of the parameter at the given point.
      */
-    virtual double_t value(const Position<3> &, librandom::RngPtr&) const = 0;
+    double_t value(const Position<3> &p, librandom::RngPtr& rng) const
+      {
+        double_t val = raw_value(p,rng);
+        if (val<cutoff_)
+          return 0.0;
+        else
+          return val;
+      }
+
+    /**
+     * Raw value disregarding cutoff.
+     * @returns the value of the parameter at the given point.
+     */
+    virtual double_t raw_value(const Position<2> &p, librandom::RngPtr&rng) const = 0;
+
+    /**
+     * Raw value disregarding cutoff.
+     * @returns the value of the parameter at the given point.
+     */
+    virtual double_t raw_value(const Position<3> &, librandom::RngPtr&) const = 0;
 
     /**
      * @returns the value of the parameter at the given point.
@@ -89,6 +141,9 @@ namespace nest
      * @returns a new dynamically allocated parameter.
      */
     virtual Parameter* subtract_parameter(const Parameter & other) const;
+
+  private:
+    double_t cutoff_;
   };
 
   typedef lockPTRDatum<Parameter, &TopologyModule::ParameterType> ParameterDatum;
@@ -99,10 +154,10 @@ namespace nest
   class ConstantParameter : public Parameter
   {
   public:
-    ConstantParameter(double_t value) : value_(value)
+    ConstantParameter(double_t value) : Parameter(), value_(value)
       {}
 
-    ConstantParameter(const DictionaryDatum& d)
+    ConstantParameter(const DictionaryDatum& d): Parameter(d)
       {
         value_ = getValue<double_t>(d, "value");
       }
@@ -110,14 +165,12 @@ namespace nest
     ~ConstantParameter()
       {}
 
-    using Parameter::value;
-
     /**
      * @returns the constant value of this parameter.
      */
-    double_t value(const Position<2> &, librandom::RngPtr&) const
+    double_t raw_value(const Position<2> &, librandom::RngPtr&) const
       { return value_; }
-    double_t value(const Position<3> &, librandom::RngPtr&) const
+    double_t raw_value(const Position<3> &, librandom::RngPtr&) const
       { return value_; }
 
     Parameter * clone() const
@@ -133,14 +186,21 @@ namespace nest
   class RadialParameter : public Parameter
   {
   public:
-    using Parameter::value;
+    RadialParameter(): Parameter()
+      {}
 
-    virtual double_t value(double_t) const = 0;
+    RadialParameter(double_t cutoff): Parameter(cutoff)
+      {}
 
-    double_t value(const Position<2> &p, librandom::RngPtr&) const
-      { return value(p.length()); }
-    double_t value(const Position<3> &p, librandom::RngPtr&) const
-      { return value(p.length()); }
+    RadialParameter(const DictionaryDatum &d): Parameter(d)
+      {}
+
+    virtual double_t raw_value(double_t) const = 0;
+
+    double_t raw_value(const Position<2> &p, librandom::RngPtr&) const
+      { return raw_value(p.length()); }
+    double_t raw_value(const Position<3> &p, librandom::RngPtr&) const
+      { return raw_value(p.length()); }
 
   };
 
@@ -151,6 +211,7 @@ namespace nest
   {
   public:
     LinearParameter(const DictionaryDatum& d):
+      RadialParameter(d),
       a_(1.0),
       c_(0.0)
       {
@@ -158,7 +219,7 @@ namespace nest
         updateValue<double_t>(d, names::c, c_);
       }
 
-    double_t value(double_t x) const
+    double_t raw_value(double_t x) const
       {
         return a_*x + c_;
       }
@@ -178,6 +239,7 @@ namespace nest
   {
   public:
     ExponentialParameter(const DictionaryDatum& d):
+      RadialParameter(d),
       a_(1.0),
       c_(0.0),
       tau_(1.0)
@@ -187,7 +249,7 @@ namespace nest
         updateValue<double_t>(d, names::tau, tau_);
       }
 
-    double_t value(double_t x) const
+    double_t raw_value(double_t x) const
       {
         return c_ + a_*std::exp(-x/tau_);
       }
@@ -207,6 +269,7 @@ namespace nest
   {
   public:
     GaussianParameter(const DictionaryDatum& d):
+      RadialParameter(d),
       c_(0.0),
       p_center_(1.0),
       mean_(0.0),
@@ -218,7 +281,7 @@ namespace nest
         updateValue<double_t>(d, names::sigma, sigma_);
       }
 
-    double_t value(double_t x) const
+    double_t raw_value(double_t x) const
       {
         return c_ + p_center_*
           std::exp(-std::pow(x - mean_,2)/(2*std::pow(sigma_,2)));
@@ -240,7 +303,7 @@ namespace nest
   public:
     Gaussian2DParameter(const DictionaryDatum& d);
 
-    double_t value(const Position<2>& pos, librandom::RngPtr&) const
+    double_t raw_value(const Position<2>& pos, librandom::RngPtr&) const
       {
         return c_ + 
           p_center_*std::exp(- (  (pos[0]-mean_x_)*(pos[0]-mean_x_)/(sigma_x_*sigma_x_)
@@ -249,9 +312,9 @@ namespace nest
                              /(2.*(1.-rho_*rho_)) );
       }
 
-    double_t value(const Position<3>& pos, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<3>& pos, librandom::RngPtr& rng) const
       {
-        return value(Position<2>(pos[0],pos[1]),rng);
+        return raw_value(Position<2>(pos[0],pos[1]),rng);
       }
 
     Parameter * clone() const
@@ -269,6 +332,7 @@ namespace nest
   public:
   public:
     UniformParameter(const DictionaryDatum& d):
+      Parameter(d),
       lower_(0.0),
       range_(1.0)
       {
@@ -277,12 +341,12 @@ namespace nest
         range_ += lower_;
       }
 
-    double_t value(const Position<2>&, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<2>&, librandom::RngPtr& rng) const
       {
         return lower_ + rng->drand()*range_;
       }
 
-    double_t value(const Position<3>&, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<3>&, librandom::RngPtr& rng) const
       {
         return lower_ + rng->drand()*range_;
       }
@@ -302,6 +366,7 @@ namespace nest
   class AnchoredParameter : public Parameter {
   public:
     AnchoredParameter(const Parameter& p, const Position<D>& anchor):
+      Parameter(p),
       p_(p.clone()), anchor_(anchor)
       {}
 
@@ -312,12 +377,12 @@ namespace nest
     ~AnchoredParameter()
       { delete p_; }
 
-    double_t value(const Position<D xor 1> &, librandom::RngPtr&) const
+    double_t raw_value(const Position<D xor 1> &, librandom::RngPtr&) const
       { throw BadProperty("Incorrect dimension."); }
 
-    double_t value(const Position<D> &p, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<D> &p, librandom::RngPtr& rng) const
       {
-        return p_->value(p-anchor_, rng);
+        return p_->raw_value(p-anchor_, rng);
       }
 
     Parameter * clone() const
@@ -339,6 +404,7 @@ namespace nest
      * of the supplied Parameter objects.
      */
     ProductParameter(const Parameter &m1, const Parameter &m2):
+      Parameter(),
       parameter1_(m1.clone()), parameter2_(m2.clone())
       {}
 
@@ -353,14 +419,12 @@ namespace nest
     ~ProductParameter()
       { delete parameter1_; delete parameter2_; }
 
-    using Parameter::value;
-
     /**
      * @returns the value of the product.
      */
-    double_t value(const Position<2> &p, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<2> &p, librandom::RngPtr& rng) const
       { return parameter1_->value(p,rng) * parameter2_->value(p,rng); }
-    double_t value(const Position<3> &p, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<3> &p, librandom::RngPtr& rng) const
       { return parameter1_->value(p,rng) * parameter2_->value(p,rng); }
 
     Parameter * clone() const
@@ -381,6 +445,7 @@ namespace nest
      * of the supplied Parameter objects.
      */
     QuotientParameter(const Parameter &m1, const Parameter &m2):
+      Parameter(),
       parameter1_(m1.clone()), parameter2_(m2.clone())
       {}
 
@@ -395,14 +460,12 @@ namespace nest
     ~QuotientParameter()
       { delete parameter1_; delete parameter2_; }
 
-    using Parameter::value;
-
     /**
      * @returns the value of the product.
      */
-    double_t value(const Position<2> &p, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<2> &p, librandom::RngPtr& rng) const
       { return parameter1_->value(p,rng) / parameter2_->value(p,rng); }
-    double_t value(const Position<3> &p, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<3> &p, librandom::RngPtr& rng) const
       { return parameter1_->value(p,rng) / parameter2_->value(p,rng); }
 
     Parameter * clone() const
@@ -423,6 +486,7 @@ namespace nest
      * of the supplied Parameter objects.
      */
     SumParameter(const Parameter &m1, const Parameter &m2):
+      Parameter(),
       parameter1_(m1.clone()), parameter2_(m2.clone())
       {}
 
@@ -437,14 +501,12 @@ namespace nest
     ~SumParameter()
       { delete parameter1_; delete parameter2_; }
 
-    using Parameter::value;
-
     /**
      * @returns the value of the sum.
      */
-    double_t value(const Position<2> &p, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<2> &p, librandom::RngPtr& rng) const
       { return parameter1_->value(p,rng) + parameter2_->value(p,rng); }
-    double_t value(const Position<3> &p, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<3> &p, librandom::RngPtr& rng) const
       { return parameter1_->value(p,rng) + parameter2_->value(p,rng); }
 
     Parameter * clone() const
@@ -465,6 +527,7 @@ namespace nest
      * of the supplied Parameter objects.
      */
     DifferenceParameter(const Parameter &m1, const Parameter &m2):
+      Parameter(),
       parameter1_(m1.clone()), parameter2_(m2.clone())
       {}
 
@@ -479,14 +542,12 @@ namespace nest
     ~DifferenceParameter()
       { delete parameter1_; delete parameter2_; }
 
-    using Parameter::value;
-
     /**
      * @returns the value of the difference.
      */
-    double_t value(const Position<2> &p, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<2> &p, librandom::RngPtr& rng) const
       { return parameter1_->value(p,rng) - parameter2_->value(p,rng); }
-    double_t value(const Position<3> &p, librandom::RngPtr& rng) const
+    double_t raw_value(const Position<3> &p, librandom::RngPtr& rng) const
       { return parameter1_->value(p,rng) - parameter2_->value(p,rng); }
 
     Parameter * clone() const
@@ -507,6 +568,7 @@ namespace nest
      * supplied Parameter object.
      */
     ConverseParameter(const Parameter &p):
+      Parameter(p),
       p_(p.clone())
       {}
 
@@ -520,15 +582,13 @@ namespace nest
     ~ConverseParameter()
       { delete p_; }
 
-    using Parameter::value;
-
     /**
      * @returns the value of the parameter.
      */
-    double_t value(const Position<2> &p, librandom::RngPtr& rng) const
-      { return p_->value(-p,rng); }
-    double_t value(const Position<3> &p, librandom::RngPtr& rng) const
-      { return p_->value(-p,rng); }
+    double_t raw_value(const Position<2> &p, librandom::RngPtr& rng) const
+      { return p_->raw_value(-p,rng); }
+    double_t raw_value(const Position<3> &p, librandom::RngPtr& rng) const
+      { return p_->raw_value(-p,rng); }
 
     Parameter * clone() const
       { return new ConverseParameter(*this); }

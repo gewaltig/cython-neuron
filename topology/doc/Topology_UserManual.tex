@@ -95,7 +95,10 @@
   parts of the Topology library code, improved and extended the PyNEST
   interface for the Topology library, fixed bugs and added tests.
 
-  This User Manual describes the NEST 2.0 version of the NEST Topology
+  For NEST 2.2, Håkon Enger rewrote most of the Topology library code,
+  thereby improving performance considerably.
+
+  This User Manual describes the NEST 2.2 version of the NEST Topology
   Library. Please see Chapter~{sec:changes} for a summary of changes.
 
   We plan further improvements to the Topology Module in the future, 
@@ -127,8 +130,8 @@ reference manual. Please consult the online documentation in PyNEST
 for details; where appropriate, that documentation also points to
 relevant SLI documentation.
 
-This manual describes the Topology Module included with NEST~2.0, code
-revision 8995 or later.  This version differs from older ones in some
+This manual describes the Topology Module included with NEST~2.2, code
+revision 9977 or later.  This version differs from older ones in some
 important aspects as detailed in Section~\ref{sec:changes}. In our
 experience, though, most scripts using the Topology Module can be
 ported to the new version with minimal changes.
@@ -1120,7 +1123,23 @@ mask and kernel.
 \lstinputlisting[linerange=vislayer-end]{user_manual_scripts/layers.py}
 
 
-\chapter{Changes from Topology 1.9 to 2.0}\label{sec:changes}
+\chapter{Changes from Topology 2.0 to 2.2}\label{sec:changes}
+
+This is a short summary of the most important changes in the Topology
+Module from NEST version 2.0 to 2.2.
+
+\begin{itemize}
+\item Nested layers are no longer supported.
+\item Subnets are no longer used inside composite layers. A call to
+  GetElement for a composite layer will now return a list of GIDs for the
+  nodes at the position rather than a single subnet GID.
+\item Positions in layers may now be 3-dimensional.
+\item The functions GetPosition, Displacement and Distance now only works
+  for nodes local to the current MPI process, if used in a MPI-parallel
+  simulation.
+\end{itemize}
+
+\chapter{Changes from Topology 1.9 to 2.0}\label{sec:changes2}
 
 This is a short summary of the most important changes in the NEST
 Topology Module from the 1.9-xxxx to the 2.0 version.
@@ -1162,8 +1181,8 @@ Topology Module from the 1.9-xxxx to the 2.0 version.
   connections when masks overwrap.
 \end{itemize}
 
-\bibliographystyle{neuralcomput_natbib}
-\bibliography{/Users/plesser/Literature/bib/lit,/Users/plesser/Literature/bib/hep}
+\bibliographystyle{plainnat}
+\bibliography{../../extras/bibliography/nest.bib}
 %  \addcontentsline{toc}{chapter}{Bibliography}
 
 \listoffigures % \addcontentsline{toc}{chapter}{List of Figures}
