@@ -117,9 +117,26 @@
 #! Preparations
 #! ============
 
-#! Ensure that we load NEST modules from the right place. You will not
-#! need this if you installed NEST in the standard location
-#! ``/usr/local`` or if your ``PYTHONPATH`` is set correctly.
+#! Please make sure that your ``PYTHONPATH`` is set correctly, so
+#! that Python can find the NEST Python module.
+
+#! **Note:** By default, the script does not show any graphics.
+#! Set ``SHOW_FIGURES`` to ``True`` to activate graphics.
+
+SHOW_FIGURES = False
+
+import pylab
+if not SHOW_FIGURES:
+    pylab_show = pylab.show
+    def nop(s=None): pass
+    pylab.show = nop
+else:
+    pylab.ion()
+    
+#! Introduction
+#!=============
+#! This tutorial gives a brief introduction to the ConnPlotter
+#! toolbox.  It is by no means complete.
 
 #! Load pynest
 import nest
@@ -134,11 +151,6 @@ nest.ResetKernel()
 #! Import math, we need Pi
 import math
 
-#! We want to plot below, too. We need to import pylab (not ``matplotlib.plt``),
-#! since `pyreport <http://gael-varoquaux.info/computers/pyreport/>`_ otherwise 
-#! does not capture plot output. 
-import pylab
-pylab.ion()
 
 #! Configurable Parameters
 #! =======================
@@ -819,10 +831,10 @@ for t in pylab.arange(Params['sim_interval'], Params['simtime'], Params['sim_int
         pylab.colorbar()
         pylab.title(name + ', t = %6.1f ms' % nest.GetKernelStatus()['time'])
 
-    # required by ``pyreport``
-    pylab.show()
-    pylab.draw()
+    pylab.draw()  # force drawing inside loop
+    pylab.show()  # required by ``pyreport``
 
     
 #! just for some information at the end
 print nest.GetKernelStatus()
+
