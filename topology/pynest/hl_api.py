@@ -353,18 +353,19 @@ def GetElement(layers, locations):
     This function works for fixed grid layers only.
 
     If layers contains a single GID and locations is a single 2-element
-    array giving a grid location, return single-element list with GID
-    of layer element at the given location.
-    
-    If layers is a list with a single GID and locations is a list of coordinates,
-    the function returns a list of GIDs of the nodes at all locations.
+    array giving a grid location, return a list of GIDs of layer elements
+    at the given location.
+
+    If layers is a list with a single GID and locations is a list of
+    coordinates, the function returns a list of lists with GIDs of the
+    nodes at all locations.
 
     If layers is a list of GIDs and locations single 2-element array giving
-    a grid location, the function returns a list with the GIDs of the nodes
-    in all layers at the given location.
+    a grid location, the function returns a list of lists with the GIDs of
+    the nodes in all layers at the given location.
 
-    If layers and locations are lists, it returns a list of lists of GIDs,
-    one for each layer.
+    If layers and locations are lists, it returns a nested list of GIDs,
+    one list for each layer and each location.
 
     See also
     --------
@@ -386,22 +387,31 @@ def GetElement(layers, locations):
     except: 
         raise nest.NESTError("layers must contain only grid-based topology layers")
     
-    if not nest.is_sequencetype(locations[0]):
-        # locations is coordinate array, make it into 1-element list
-        locations = [locations]
+    # SLI GetElement returns either single GID or list
+    def makelist(x):
+        if not nest.is_sequencetype(x):
+            return [x] 
+        else:
+            return x
 
-    # layers and locations are now lists
-    nodes = topology_func('/locs Set { /lyr Set locs { lyr exch GetElement } Map } Map',
-                          layers, locations)
+    if nest.is_sequencetype(locations[0]):
 
-    # nodes is nested list, need to unpack
-    node_list = []
-    for nodes_in_lyr in nodes:
-        for nodes_at_loc in nodes_in_lyr:
-            if nest.is_sequencetype(nodes_at_loc):
-                node_list.extend(nodes_at_loc)
-            else:
-                node_list.append(nodes_at_loc)
+        # layers and locations are now lists
+        nodes = topology_func('/locs Set { /lyr Set locs { lyr exch GetElement } Map } Map',
+                              layers, locations)
+
+        node_list = [[makelist(nodes_at_loc) for nodes_at_loc in nodes_in_lyr]
+                     for nodes_in_lyr in nodes]
+
+    else:
+
+        # layers is list, locations is a single location
+        nodes = topology_func('/loc Set { loc GetElement } Map', layers, locations)
+
+        node_list = [makelist(nodes_in_lyr) for nodes_in_lyr in nodes]
+
+    # If only a single layer is given, un-nest list
+    if len(layers)==1: node_list=node_list[0]
 
     return node_list
 
@@ -842,21 +852,46 @@ def PlotLayer(layer, fig=None, nodecolor='b', nodesize=20):
     if len(layer) != 1:
         raise ValueError("layer must contain exactly one GID.")
 
-    # get layer extent and center, x and y
-    xext, yext = nest.GetStatus(layer, 'topology')[0]['extent'][:2]
-    xctr, yctr = nest.GetStatus(layer, 'topology')[0]['center'][:2]
+    # get layer extent and center
+    ext = nest.GetStatus(layer, 'topology')[0]['extent']
+
+    if len(ext)==2:
+        # 2D layer
+
+        # get layer extent and center, x and y
+        xext, yext = ext
+        xctr, yctr = nest.GetStatus(layer, 'topology')[0]['center']
     
-    # extract position information, transpose to list of x and y positions
-    xpos, ypos = zip(*GetPosition(nest.GetChildren(layer)[0]))
+        # extract position information, transpose to list of x and y positions
+        xpos, ypos = zip(*GetPosition(nest.GetChildren(layer)[0]))
 
-    if not fig:
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        if not fig:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+        else:
+            ax = fig.gca()
+
+        ax.scatter(xpos, ypos, s=nodesize, facecolor=nodecolor, edgecolor='none')
+        _draw_extent(ax, xctr, yctr, xext, yext)
+
+    elif len(ext)==3:
+        # 3D layer
+        from mpl_toolkits.mplot3d import Axes3D
+
+        # extract position information, transpose to list of x,y,z positions
+        pos = zip(*GetPosition(nest.GetChildren(layer)[0]))
+
+        if not fig:
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+        else:
+            ax = fig.gca()
+
+        ax.scatter3D(*pos, s=nodesize, facecolor=nodecolor, edgecolor='none')
+        plt.draw_if_interactive()
+
     else:
-        ax = fig.gca()
-
-    ax.scatter(xpos, ypos, s=nodesize, facecolor=nodecolor, edgecolor='none')
-    _draw_extent(ax, xctr, yctr, xext, yext)
+        raise nest.NESTError("unexpected dimension of layer")
 
     return fig
 
