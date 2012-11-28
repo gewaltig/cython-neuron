@@ -342,6 +342,20 @@ Note the following points:
 \end{itemize}
 
 
+\section{3D layers}\label{sec:3dlayer}
+
+Although the term ``layer'' suggests a 2-dimensional structure, the layers
+in NEST may in fact be 3-dimensional.  The example from the previous
+section may be easily extended with another component in the coordinates
+for the positions:
+%
+\lstinputlisting[linerange=layer4_3d-end]{user_manual_scripts/layers.py}
+\scriptfig{layer4_3d}{0.5}{3D layer with freely spaced elements.}%
+{A free 3D layer with 200 elements uniformly distributed in an extent of
+size $1\times 1\times 1$.}
+%
+
+
 \section{Periodic boundary conditions}\label{sec:periodic}
 
 Simulations usually model systems much smaller than the biological
@@ -442,10 +456,11 @@ each element consists of one \lstinline!'iaf_cond_alpha'! and one
 \lstinputlisting[linerange=layer6-end]{user_manual_scripts/layers.py}
 \lstinputlisting[linerange=layer6-end]{user_manual_scripts/layers.log}
 %
-The network consist of one \lstinline!topology_layer_grid! with two
-elements, each of which is a \lstinline!subnet! containing one
-\lstinline!iaf_cond_alpha! and one \lstinline!poisson_generator!
-node. 
+The network consist of one \lstinline!topology_layer_grid! with four
+elements: two \lstinline!iaf_cond_alpha! and two
+\lstinline!poisson_generator! nodes. The identical nodes are grouped, so
+that the subnet contains first one full layer of \lstinline!iaf_cond_alpha!
+nodes followed by one full layer of \lstinline!poisson_generator! nodes.
 
 You can create network elements with several nodes of each type by
 following a model name with the number of nodes to be created:
@@ -460,9 +475,13 @@ and two \lstinline!noise_generator!s.
 Note the following points:
 \begin{itemize}
 \item Each element of a layer has identical components.
-\item Each element is implemented as a \lstinline!subnet!.
 \item All nodes within a composite element have identical positions,
   namely the position of the layer element.
+\item When inspecting a layer as a subnet, the different nodes will appear
+  in groups of identical nodes.
+\item For grid-based layers, the function \lstinline!GetElement! returns a
+  list of nodes at a given grid position. See Chapter~\ref{sec:inspection}
+  for more on inspecting layers.
 \item In a previous version of the topology module it was possible to
   create layers with nested, composite elements, but such nested networks
   gobble up a lot of memory for subnet constructs and provide no practical

@@ -187,6 +187,22 @@ plt.savefig('../user_manual_figures/layer4.png', bbox_inches='tight')
 
 nest.ResetKernel()
 
+#{ layer4_3d #}
+import numpy as np
+pos = [[np.random.uniform(-0.5,0.5),np.random.uniform(-0.5,0.5),
+        np.random.uniform(-0.5,0.5)] for j in xrange(200)]
+l = tp.CreateLayer({'positions': pos,
+                    'elements': 'iaf_neuron'})
+#{ end #}
+
+fig = tp.PlotLayer(l, nodesize=50)
+
+plt.savefig('../user_manual_figures/layer4_3d.png', bbox_inches='tight')
+
+# --------------------------------------------------
+
+nest.ResetKernel()
+
 #{ player #}
 lp = tp.CreateLayer({'rows': 1, 'columns': 5, 'extent': [5., 1.],
                      'elements': 'iaf_neuron',
