@@ -1279,8 +1279,13 @@ The process of adding a mask is similar to that of adding a kernel
 function. A subclass of \lstinline!nest::Mask<D>! must be defined, where
 \lstinline!D! is the dimension (2 or 3). In this case we will define a
 2-dimensional elliptic mask by creating a class called
-\lstinline!EllipticMask!. The \lstinline!Mask! class has a few more methods
-that must be overridden:
+\lstinline!EllipticMask!. First, we must include another header file:
+\begin{lstlisting}[language=C++]
+#include "mask.h"
+\end{lstlisting}
+Compared to the \lstinline!Parameter! class discussed in the previous
+section, the \lstinline!Mask! class has a few more methods that must be
+overridden:
 \begin{lstlisting}[language=C++]
   class EllipticMask : public nest::Mask<2>
   {
@@ -1291,9 +1296,6 @@ that must be overridden:
         updateValue<double>(d, "r_x", rx_);
         updateValue<double>(d, "r_y", ry_);
       }
-
-    ~EllipticMask()
-      {}
 
     using Mask<2>::inside;
 
