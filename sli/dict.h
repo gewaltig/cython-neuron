@@ -85,12 +85,25 @@ public:
 
   /**
    * Lookup and return Token with given name in dictionary.
+   * If the name is not found, an empty token is returned. 
+   * This version of lookup is deprecated and will disappear in future versions.
+   * Please use lookup2() instead.
    * @note The token returned should @b always  be stored as a 
    *       <tt>const \&</tt>, so that the control flag for 
    *       dictionary read-out is set on the Token in the dictionary,
    *       not its copy.  
    */
+
   const Token & lookup(const Name &n) const;
+
+  /**
+   * lookup a name in the dictionary. If the name is not found an UndefinedName exception is thrown.
+   * lookup2 is the preferred way to retrieve entries from the dictionary. 
+   * @note The token returned should @b always  be stored as a 
+   *       <tt>const \&</tt>, so that the control flag for 
+   *       dictionary read-out is set on the Token in the dictionary,
+   *       not its copy.  
+   */
   const Token & lookup2(const Name &n) const; //throws UndefinedName
   bool known(const Name &) const;
   
