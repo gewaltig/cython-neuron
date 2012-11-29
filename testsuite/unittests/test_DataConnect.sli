@@ -39,7 +39,7 @@
 /unittest using
 
 % Create Random number generator
-rngdict /gsl_mt19937_1999 get 1234 CreateRNG /rng Set
+rngdict /MT19937 get 1234 CreateRNG /rng Set
 
 rng rdevdict /uniformint get CreateRDV /unidv Set
 rng rdevdict /normal get CreateRDV /normdv_w Set
