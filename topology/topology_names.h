@@ -90,6 +90,7 @@ namespace nest
     extern const Name volume;
     extern const Name doughnut;
     extern const Name grid;
+    extern const Name cutoff;
   }
 }
 

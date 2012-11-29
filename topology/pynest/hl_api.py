@@ -204,8 +204,7 @@ def CreateParameter(parametertype,specs):
     --------
     nest.help("topology::CreateParameter")
     """
-    cmd = "/%s exch CreateParameter" % parametertype
-    return Parameter(topology_func(cmd,specs))
+    return Parameter(topology_func('CreateParameter',{parametertype:specs}))
 
 
 def CreateLayer(specs):

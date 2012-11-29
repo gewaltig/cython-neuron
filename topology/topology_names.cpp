@@ -82,6 +82,7 @@ namespace nest
     const Name volume("volume");
     const Name doughnut("doughnut");
     const Name grid("grid");
+    const Name cutoff("cutoff");
   }
 }
 

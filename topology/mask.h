@@ -115,7 +115,15 @@ namespace nest
      * @note a return value of false is not a guarantee that the whole box
      * is not outside the mask.
      */
-    virtual bool outside(const Box<D> &) const = 0;
+    virtual bool outside(const Box<D> &b) const
+      {
+        Box<D> bb = get_bbox();
+        for(int i=0;i<D;++i) {
+          if ((b.upper_right[i]<bb.lower_left[i]) || (b.lower_left[i]>bb.upper_right[i]))
+            return true;
+        }
+        return false;
+      }
 
     /**
      * The whole mask is inside (i.e., false everywhere outside) the bounding box.

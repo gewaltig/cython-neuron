@@ -62,7 +62,7 @@
    CreateLayer,ConnectLayers,GetPosition,GetLayer,
    GetElement,FindNearestElement,Displacement,Distance,
    DumpLayerNodes,DumpLayerConnections,FindCenterElement,
-   GetTargetNodes,GetTargetPositions,PlotTargets,PlotKernel,PlotLayer},
+   GetTargetNodes,GetTargetPositions,PlotTargets,PlotKernel,PlotLayer,Install},
   rangeprefix=\#\{\ ,
   rangesuffix=\ \#\},
   includerangemarker=false}
@@ -71,9 +71,10 @@
 
 \title{NEST Topology User Manual}
 \author{Hans Ekkehard Plesser\\[1ex]
+Håkon Enger\\[1ex]
 \normalsize Department of Mathematical Sciences and Technology\\\normalsize Norwegian University of Life Sciences\\
 \normalsize 1432 Ås, Norway}
-\date{NEST 2.0 RC2 (r9083 or later)\\[8cm]
+\date{NEST 2.2 (r9977 or later)\\[8cm]
 \centerline{\includegraphics{nest-initiative-logo}}}
 
 
@@ -140,7 +141,9 @@ In the next chapter of this manual, we introduce Topology layers,
 which place neurons in space. In Chapter~\ref{sec:connections} we then
 describe how to connect layers with each other, before discussing in
 Chapter~\ref{sec:inspection} how you can inspect and visualize
-Topology networks.
+Topology networks. Chapter~\ref{ch:extending} deals with the more advanced
+topic of extending the Topology module with custom kernel functions and
+masks provided by C++ classes in an extension module.
 
 You will find the Python scripts used in the examples in this manual 
  in the NEST
@@ -1140,6 +1143,217 @@ elements and the targets of the center neuron are shown, as well as
 mask and kernel.
 %
 \lstinputlisting[linerange=vislayer-end]{user_manual_scripts/layers.py}
+
+
+\chapter{Adding topology kernels and masks}\label{ch:extending}
+
+This chapter will show examples of how to extend the topology module by
+adding custom kernel functions and masks. Some knowledge of the C++
+programming language is needed for this. The functions will be added as a
+part of an extension module which is dynamically loaded into NEST. For more
+information on writing an extension module, see the section titled ``Writing
+an Extension Module'' in the NEST Developer Manual. The basic steps
+required to get started are:
+\begin{enumerate}
+\item From the NEST source directory, copy directory examples/MyModule to
+  somewhere outside the NEST source, build or install directories.
+\item Change to the new location of MyModule and prepare by issuing
+  \lstinline!./bootstrap.sh!
+\item Leave MyModule and create a build directory for it, e.g., mmb next to
+  it
+\begin{lstlisting}[language=bash]
+cd ..
+mkdir mmb
+cd mmb
+\end{lstlisting}
+\item Configure. The configure process uses the script \lstinline!nest-config!
+  to find out where NEST is installed, where the source code resides, and
+  which compiler options were used for compiling NEST. If
+  \lstinline!nest-config! is not in your path, you need to provided it
+  explicitly like this
+\begin{lstlisting}[language=bash]
+../MyModule/configure --with-nest=${NEST_INSTALL_DIR}/bin/nest-config
+\end{lstlisting}
+\item MyModule will then be installed to \lstinline!${NEST_INSTALL_DIR}!. This
+  ensures that NEST will be able to find initializing SLI files for the
+  module.  You should not use the \lstinline!--prefix! to select a different
+  installation destination. If you do, you must make sure to use addpath in
+  SLI before loading the module to ensure that NEST will find the SLI
+  initialization file for your module.
+\item Compile.
+\begin{lstlisting}[language=bash]
+make
+make install
+\end{lstlisting}
+The previous command installed MyModule to the NEST installation directory, including help files generated from the source code. 
+\end{enumerate}
+
+\section{Adding kernel functions}
+
+As an example, we will add a kernel function called \lstinline!'affine2d'!,
+which will be linear (actually affine) in the displacement of the nodes, on
+the form
+\begin{equation*}
+  p(d) = a d_x + b d_y + c.
+\end{equation*}
+The kernel functions are provided by C++ classes subclassed from
+\lstinline!nest::Parameter!. To enable subclassing, add the following lines
+at the top of the file \lstinline!mymodule.h!:
+\begin{lstlisting}[language=C++]
+#include "topologymodule.h"
+#include "parameter.h"
+\end{lstlisting}
+Then, add the class definition, e.g. near the bottom of the file before the
+brace closing the namespace \lstinline!mynest!:
+\begin{lstlisting}[language=C++]
+  class Affine2DParameter: public nest::Parameter
+  {
+  public:
+    Affine2DParameter(const DictionaryDatum& d):
+      Parameter(d),
+      a_(1.0),
+      b_(1.0),
+      c_(0.0)
+      {
+        updateValue<double>(d, "a", a_);
+        updateValue<double>(d, "b", b_);
+        updateValue<double>(d, "c", c_);
+      }
+
+    double raw_value(const nest::Position<2>& disp,
+                     librandom::RngPtr&) const
+      {
+        return a_*disp[0] + b_*disp[1] + c_;
+      }
+
+    nest::Parameter * clone() const
+      { return new Affine2DParameter(*this); }
+
+  private:
+    double a_, b_, c_;
+  };
+\end{lstlisting}
+The class contains a constructor, which reads the value of the parameters
+$a$, $b$ and $c$ from the dictionary provided by the user. The function
+\lstinline!updateValue! will do nothing if the given key is not in the
+dictionary, and the default values $a=b=1,\ c=0$ will be used.
+
+The overridden method \lstinline!raw_value()! will return the actual value
+of the kernel function for the displacement given as the first argument,
+which is of type \lstinline!nest::Position<2>!. The template argument 2
+refers to a 2-dimensional position. You can also implement a method taking
+a \lstinline!nest::Position<3>! as the first argument if you want to
+support 3-dimensional layers. The second argument, a random number
+generator, is not used in this example.
+
+The class also needs to have a \lstinline!clone()! method, which will return
+a dynamically allocated copy of the object. We use the (default) copy
+constructor to implement this.
+
+To make the custom function available to the Topology module, you need to
+register the class you have provided. To do this, add the line
+\begin{lstlisting}[language=C++]
+nest::TopologyModule::register_parameter<Affine2DParameter>("affine2d");
+\end{lstlisting}
+to the function \lstinline!MyModule::init()! in the file
+\lstinline!mymodule.cpp!. Now compile and install the module by issuing
+\begin{lstlisting}[language=bash]
+make
+make install
+\end{lstlisting}
+To use the function, the module must be loaded into NEST using
+\lstinline!nest.Install()!. Then, the function is
+available to be used in connections, e.g.
+\begin{lstlisting}
+nest.Install('mymodule')
+l = tp.CreateLayer({'rows': 11, 'columns': 11, 'extent': [1.,1.],
+                        'elements': 'iaf_neuron'})
+tp.ConnectLayers(l,l,{'connection_type': 'convergent',
+            'mask': {'circular': {'radius': 0.5}},
+            'kernel': {'affine2d': {'a': 1.0, 'b': 2.0, 'c': 0.5}}})
+\end{lstlisting}
+
+\section{Adding masks}
+
+The process of adding a mask is similar to that of adding a kernel
+function. A subclass of \lstinline!nest::Mask<D>! must be defined, where
+\lstinline!D! is the dimension (2 or 3). In this case we will define a
+2-dimensional elliptic mask by creating a class called
+\lstinline!EllipticMask!. The \lstinline!Mask! class has a few more methods
+that must be overridden:
+\begin{lstlisting}[language=C++]
+  class EllipticMask : public nest::Mask<2>
+  {
+  public:
+    EllipticMask(const DictionaryDatum& d):
+      rx_(1.0), ry_(1.0)
+      {
+        updateValue<double>(d, "r_x", rx_);
+        updateValue<double>(d, "r_y", ry_);
+      }
+
+    ~EllipticMask()
+      {}
+
+    using Mask<2>::inside;
+
+    // returns true if point is inside the ellipse
+    bool inside(const nest::Position<2> &p) const
+      { return p[0]*p[0]/rx_/rx_ + p[1]*p[1]/ry_/ry_ <= 1.0; }
+
+    // returns true if the whole box is inside the ellipse
+    bool inside(const nest::Box<2> &b) const
+      {
+        nest::Position<2> p = b.lower_left;
+
+        // Test if all corners are inside mask
+        if (not inside(p)) return false;       // (0,0)
+        p[0] = b.upper_right[0];
+        if (not inside(p)) return false;       // (0,1)
+        p[1] = b.upper_right[1];
+        if (not inside(p)) return false;       // (1,1)
+        p[0] = b.lower_left[0];
+        if (not inside(p)) return false;       // (1,0)
+
+        return true;
+      }
+
+    // returns bounding box of ellipse
+    nest::Box<2> get_bbox() const
+      {
+        nest::Position<2> ll(-rx_,-ry_);
+        nest::Position<2> ur(rx_,ry_);
+        return nest::Box<2>(ll,ur);
+      }
+
+    nest::Mask<2> * clone() const
+      { return new EllipticMask(*this); }
+
+  protected:
+    double_t rx_, ry_;
+  };
+\end{lstlisting}
+The overridden methods include a test if a point is inside the mask, and
+for efficiency reasons also a test if a box is fully inside the mask. We
+implement the latter by testing if all the corners are inside, since our
+elliptic mask is convex. We must also define a function which returns a
+bounding box for the mask, i.e. a box completely surrounding the mask.
+
+Similar to kernel functions, the mask class must be registered with the
+topology module, and this is done by adding a line to the function
+\lstinline!MyModule::init()! in the file \lstinline!mymodule.cpp!:
+\begin{lstlisting}[language=C++]
+    nest::TopologyModule::register_mask<EllipticMask>("elliptic");
+\end{lstlisting}
+After compiling and installing the module, the mask is available to be used
+in connections, e.g.
+\begin{lstlisting}
+nest.Install('mymodule')
+l = tp.CreateLayer({'rows': 11, 'columns': 11, 'extent': [1.,1.],
+                        'elements': 'iaf_neuron'})
+tp.ConnectLayers(l,l,{'connection_type': 'convergent',
+            'mask': {'elliptic': {'r_x': 0.5, 'r_y': 0.25}}})
+\end{lstlisting}
 
 
 \chapter{Changes from Topology 2.0 to 2.2}\label{sec:changes}

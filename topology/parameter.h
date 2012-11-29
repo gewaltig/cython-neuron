@@ -32,6 +32,7 @@
 #include "dictdatum.h"
 #include "dictutils.h"
 #include "topologymodule.h"
+#include "normal_randomdev.h"
 
 namespace nest
 {
@@ -46,7 +47,8 @@ namespace nest
     /**
      * Default constructor
      */
-    Parameter(): cutoff_(-std::numeric_limits<double>::infinity())
+    Parameter():
+      cutoff_(-std::numeric_limits<double>::infinity())
       {}
 
     /**
@@ -62,10 +64,10 @@ namespace nest
      *  cutoff - Values less than the cutoff are set to zero.
      * @param d dictionary with parameter values
      */
-    Parameter(const DictionaryDatum& d)
+    Parameter(const DictionaryDatum& d):
+      cutoff_(-std::numeric_limits<double>::infinity())
       {
-        cutoff_ = -std::numeric_limits<double>::infinity();
-        updateValue<double_t>(d, "cutoff", cutoff_);
+        updateValue<double_t>(d, names::cutoff, cutoff_);
       }
 
     /**
@@ -102,13 +104,19 @@ namespace nest
      * Raw value disregarding cutoff.
      * @returns the value of the parameter at the given point.
      */
-    virtual double_t raw_value(const Position<2> &p, librandom::RngPtr&rng) const = 0;
+    virtual double_t raw_value(const Position<2> &, librandom::RngPtr&) const
+      {
+        throw KernelException("Parameter not valid for 2D layer");
+      }
 
     /**
      * Raw value disregarding cutoff.
      * @returns the value of the parameter at the given point.
      */
-    virtual double_t raw_value(const Position<3> &, librandom::RngPtr&) const = 0;
+    virtual double_t raw_value(const Position<3> &, librandom::RngPtr&) const
+      {
+        throw KernelException("Parameter not valid for 3D layer");
+      }
 
     /**
      * @returns the value of the parameter at the given point.
@@ -157,6 +165,10 @@ namespace nest
     ConstantParameter(double_t value) : Parameter(), value_(value)
       {}
 
+    /**
+     * Parameters:
+     * value - constant value of this parameter
+     */
     ConstantParameter(const DictionaryDatum& d): Parameter(d)
       {
         value_ = getValue<double_t>(d, "value");
@@ -205,11 +217,16 @@ namespace nest
   };
 
   /**
-   * Linear (affine) parameter.
+   * Linear (affine) parameter p(d) = c + a*d.
    */
   class LinearParameter : public RadialParameter
   {
   public:
+    /**
+     * Parameters:
+     * a - coefficient of linear function
+     * c - constant offset
+     */
     LinearParameter(const DictionaryDatum& d):
       RadialParameter(d),
       a_(1.0),
@@ -233,11 +250,17 @@ namespace nest
 
 
   /**
-   * Exponential parameter
+   * Exponential parameter p(d) = c + a*exp(-d/tau).
    */
   class ExponentialParameter : public RadialParameter
   {
   public:
+    /**
+     * Parameters:
+     * a   - coefficient of exponential term
+     * tau - length scale factor
+     * c   - constant offset
+     */
     ExponentialParameter(const DictionaryDatum& d):
       RadialParameter(d),
       a_(1.0),
@@ -263,11 +286,18 @@ namespace nest
 
 
   /**
-   * Gaussian parameter
+   * Gaussian parameter p(d) = c + p_center*exp(-(d-mean)^2/(2*sigma^2))
    */
   class GaussianParameter : public RadialParameter
   {
   public:
+    /**
+     * Parameters:
+     * c        - constant offset
+     * p_center - value at center of gaussian
+     * mean     - distance to center
+     * sigma    - width of gaussian
+     */
     GaussianParameter(const DictionaryDatum& d):
       RadialParameter(d),
       c_(0.0),
@@ -297,10 +327,23 @@ namespace nest
 
   /**
    * Bivariate Gaussian parameter
+   *  p(x,y) = c + p_center*exp( -( (x-mean_x)^2/sigma_x^2 + (y-mean_y)^2/sigma_y^2
+   *                                + 2*rho*(x-mean_x)*(y-mean_y)/(sigma_x*sigma_y) ) /
+   *                             (2*(1-rho^2)) )
    */
   class Gaussian2DParameter : public Parameter
   {
   public:
+    /**
+     * Parameters:
+     * c        - constant offset
+     * p_center - value at center
+     * mean_x   - x-coordinate of center
+     * mean_y   - y-coordinate of center
+     * sigma_x  - width in x-direction
+     * sigma_y  - width in y-direction
+     * rho      - correlation of x and y
+     */
     Gaussian2DParameter(const DictionaryDatum& d);
 
     double_t raw_value(const Position<2>& pos, librandom::RngPtr&) const
@@ -326,11 +369,16 @@ namespace nest
 
 
   /**
-   * Random parameter with uniform distribution
+   * Random parameter with uniform distribution in [min,max)
    */
   class UniformParameter: public Parameter {
   public:
   public:
+    /**
+     * Parameters:
+     * min - minimum value
+     * max - maximum value
+     */
     UniformParameter(const DictionaryDatum& d):
       Parameter(d),
       lower_(0.0),
@@ -356,6 +404,62 @@ namespace nest
 
   private:
     double_t lower_, range_;
+  };
+
+
+  /**
+   * Random parameter with normal distribution, optionally truncated to [min,max).
+   * Truncation is implemented by rejection.
+   */
+  class NormalParameter: public Parameter {
+  public:
+  public:
+    /**
+     * Parameters:
+     * mean  - mean value
+     * sigma - standard distribution
+     * min   - minimum value
+     * max   - maximum value
+     */
+    NormalParameter(const DictionaryDatum& d):
+      Parameter(d),
+      mean_(0.0),
+      sigma_(1.0),
+      min_(-std::numeric_limits<double>::infinity()),
+      max_(std::numeric_limits<double>::infinity()),
+      rdev()
+      {
+        updateValue<double_t>(d, names::mean, mean_);
+        updateValue<double_t>(d, names::sigma, sigma_);
+        updateValue<double_t>(d, names::min, min_);
+        updateValue<double_t>(d, names::max, max_);
+      }
+
+    double_t raw_value(librandom::RngPtr& rng) const
+      {
+        double_t val;
+        do {
+          val = mean_ + rdev(rng)*sigma_;
+        } while ((val<min_) or (val>=max_));
+        return val;
+      }
+
+    double_t raw_value(const Position<2>&, librandom::RngPtr& rng) const
+      {
+        return raw_value(rng);
+      }
+
+    double_t raw_value(const Position<3>&, librandom::RngPtr& rng) const
+      {
+        return raw_value(rng);
+      }
+
+    Parameter * clone() const
+      { return new NormalParameter(*this); }
+
+  private:
+    double_t mean_, sigma_, min_, max_;
+    mutable librandom::NormalRandomDev rdev;
   };
 
 
