@@ -1022,11 +1022,13 @@ void Network::divergent_connect(index source_id, DictionaryDatum pars, index syn
     DoubleVectorDatum const* tmp = dynamic_cast<DoubleVectorDatum*>(di_s->second.datum());
     if(tmp==0)
     {
-      std::string msg=String::compose("Parameter '%1' must be a DoubleVectorArray or numpy.array. ",di_s->first.toString());
-      message(SLIInterpreter::M_WARNING, "DivergentConnect",msg);
-      message(SLIInterpreter::M_WARNING, "DivergentConnect", "Trying to convert, but this takes time.");
-      IntVectorDatum const* tmpint = dynamic_cast<IntVectorDatum*>(di_s->second.datum());
-      if(tmpint){
+        
+        std::string msg=String::compose("Parameter '%1' must be a DoubleVectorArray or numpy.array. ",di_s->first.toString());
+        message(SLIInterpreter::M_DEBUG, "DivergentConnect",msg);
+        message(SLIInterpreter::M_DEBUG, "DivergentConnect", "Trying to convert, but this takes time.");
+        
+        IntVectorDatum const* tmpint = dynamic_cast<IntVectorDatum*>(di_s->second.datum());
+        if(tmpint){
         std::vector<double> *data=new std::vector<double>((*tmpint)->begin(),(*tmpint)->end());
         DoubleVectorDatum *dvd= new DoubleVectorDatum(data);
         di_s->second= dvd;

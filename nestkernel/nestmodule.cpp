@@ -947,20 +947,43 @@ namespace nest
      Name: DataConnect - Connect many neurons from data.
 
      Synopsis: 
-     source dict model  DataConnect -> -
+     1.   source dict model  DataConnect -> -
+
      source - GID of the source neuron
      dict   - dictionary with connection parameters
-     model  - the synapse model
+     model  - the synapse model as string or literal
+
+     2. [dict1 dict2 .... dict_n] DataConnect -> -
+     
+     The argument is a list with synapse status dictionaries.
 
      Description:
+
+     Variant 1:
+     This variant is mainly used if connectivity data is explicitly given and read from files.
      Connects the source neuron to targets according to the data in dict, using the synapse 'model'.
      Dict is a parameter dictionary that must contain at least the following fields:
      /target
      /weight
      /delay
-     Other depend on the synapse model. The values in the dictionaries are arrays of equal size, specifying the parameters for the
-     respective connection. The arrays should all be of type DoubleVectorDatum (numpy.array(dtype=float)). Other array types will be
-     converted and a warning is issued.
+     Other parameters depend on the synapse model. 
+     The values in the dictionaries are arrays of equal size, specifying the parameters for the
+     respective connection. The arrays should all be of type DoubleVectorDatum (numpy.array(dtype=float)). 
+     Note that for performance reasons, target GIDs must be given as doubles rather than integers!
+
+     The second variant of DataConnect can be used to re-instantiate a given connectivity matrix. 
+     
+     Example:
+     
+     % assume a connected network
+
+     << >> GetConnections Flatten /conns Set % Get all connections
+     conns { GetStatus } Map      /syns  Set % retrieve their synapse status
+
+     ResetKernel                             % clear everything
+     % rebuild neurons
+     syns DataConnect                        % restore the connecions
+
 
      Author: Marc-Oliver Gewaltig
      FirstVersion: August 2011
