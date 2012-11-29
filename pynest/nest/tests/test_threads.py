@@ -65,7 +65,10 @@ class ThreadTestCase(unittest.TestCase):
         nest.DivergentConnect(pre, post)
 
         conn = nest.FindConnections(pre)
+        # Because of threading, targets may be in a different order than
+        # in post, so we sort the vector.
         targets = nest.GetStatus(conn, "target")
+        targets.sort()
         
         self.assertEqual(targets, post)
 

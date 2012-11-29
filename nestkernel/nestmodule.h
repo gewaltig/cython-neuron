@@ -275,11 +275,6 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } copymodel_l_l_Dfunction;
 
-     class FindConnections_DFunction: public SLIFunction
-     { 
-      public:
-       void execute(SLIInterpreter *) const;
-     } findconnections_Dfunction;
 
      class GetConnections_DFunction: public SLIFunction
      { 

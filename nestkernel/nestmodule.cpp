@@ -473,28 +473,6 @@ namespace nest
   }
 
   // params: params
-  void NestModule::FindConnections_DFunction::execute(SLIInterpreter *i) const
-  {
-    i->assert_stack_load(1);
-
-    DictionaryDatum dict = getValue<DictionaryDatum>(i->OStack.pick(0));
-    dict->clear_access_flags();
-    ArrayDatum array = get_network().find_connections(dict);
-
-    std::string missed;
-    if ( !dict->all_accessed(missed) )
-    {
-      if ( get_network().dict_miss_is_error() )
-        throw UnaccessedDictionaryEntry(missed);
-      else
-        get_network().message(SLIInterpreter::M_WARNING, "FindConnections", 
-                              ("Unread dictionary entries: " + missed).c_str());
-    }
-    
-    i->OStack.pop();
-    i->OStack.push(array);
-    i->EStack.pop();
-    }
 
   // params: params
   void NestModule::GetConnections_DFunction::execute(SLIInterpreter *i) const
@@ -1711,7 +1689,6 @@ namespace nest
     i->createcommand("GetStatus_C",  &getstatus_Cfunction);
     i->createcommand("GetStatus_a",  &getstatus_afunction);
 
-    i->createcommand("FindConnections_D", &findconnections_Dfunction);
     i->createcommand("GetConnections_D", &getconnections_Dfunction);
     i->createcommand("cva_C", &cva_cfunction);
 
