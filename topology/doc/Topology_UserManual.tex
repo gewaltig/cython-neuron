@@ -338,9 +338,9 @@ Note the following points:
 \section{3D layers}\label{sec:3dlayer}
 
 Although the term ``layer'' suggests a 2-dimensional structure, the layers
-in NEST may in fact be 3-dimensional.  The example from the previous
-section may be easily extended with another component in the coordinates
-for the positions:
+in NEST may in fact be 3-dimensional\index{3D layers}.  The example from
+the previous section may be easily extended with another component in the
+coordinates for the positions:
 %
 \lstinputlisting[linerange=layer4_3d-end]{user_manual_scripts/layers.py}
 \scriptfig{layer4_3d}{0.5}{3D layer with freely spaced elements.}%
@@ -360,7 +360,7 @@ the network. In the $5\times 5$-layer in Fig.~\ref{fig:layer1}, e.g.,
 
 One common approach to reducing the effect of boundaries on
 simulations is to introduce \emph{periodic boundary
-  conditions}\index{periodic boundary conditions}, so that the
+  conditions}\index{periodic boundary cond.}, so that the
 rightmost elements on a grid are considered nearest neighbors to the
 leftmost elements, and the topmost to the bottommost. The flat layer
 becomes the surface of a torus. Fig.~\ref{fig:player} illustrates this
@@ -614,7 +614,7 @@ Here is a simple example, cf.~\ref{fig:conn1}:
   dots. This node has fewer targets since it is at the corner and many
   potential targets are beyond the layer.
 Right: The effect of periodic boundary conditions\index{periodic
-  boundary conditions} is seen here. Source and target layer and connection dictionary
+  boundary cond.} is seen here. Source and target layer and connection dictionary
 were identical, except that periodic boundary conditions were
 used. The node at $(4,5)$ now has 15 targets, too, but they are spread
 across the corners of the layer. If we wrapped the layer to a torus,
@@ -663,11 +663,16 @@ using periodic boundary conditions, since the mask would ``wrap
 around'' in that case and pool nodes would be considered multiple
 times as targets.
 
-\subsection{Masks for all layer types}\label{sec:free_masks}
+If none of the mask types provided in the topology library meet your need,
+you may add more mask types in a NEST extension module. This is covered in
+Chapter~\ref{ch:extending}.
 
-Topology currently provides three types of masks usable for free and
-grid-based layers. They are illustrated in Fig.~\ref{fig:conn2}. The
-masks are
+
+\subsection{Masks for 2D layers}\label{sec:free_masks}
+
+Topology currently provides three types of masks usable for 2-dimensional
+free and grid-based layers. They are illustrated in Fig.~\ref{fig:conn2}.
+The masks are
 \begin{description}
 \item[Rectangular\index{rectangular}] All nodes within a rectangular
   area are connected. The area is speficied by its lower left and
@@ -694,15 +699,38 @@ Fig.~\ref{fig:conn2}, bottom row):
 \lstinputlisting[linerange=conn2co-end]{user_manual_scripts/connections.py}
 \lstinputlisting[linerange=conn2do-end]{user_manual_scripts/connections.py}
 
-\scriptfig{conn2}{0.9}{Masks for all layer types}%
-{Masks for all layer types. For all mask types, the driver node is
+\scriptfig{conn2}{0.9}{Masks for 2D layers}%
+{Masks for 2D layers. For all mask types, the driver node is
   marked by a wide light-red circle, the selected pool nodes by red
   dots and the masks by red lines. Top row from left to right:
   rectangular, circular and doughnut masks centered about the driver
   node.
 Bottom row from left to right: the same masks as in the top row, but
-centered about $(-1.5,-1.5)$,m $(-2,0)$ and $(1.5,1.5)$, respectively,
+centered about $(-1.5,-1.5)$, $(-2,0)$ and $(1.5,1.5)$, respectively,
 using the \lstinline!'anchor'! parameter.}
+
+
+\subsection{Masks for 3D layers}\label{sec:3d_masks}
+
+Similarly, there are two mask types that can be used for 3D layers\index{3D layers},
+\begin{description}
+\item[Box\index{box}] All nodes within a cuboid volume are connected. The
+  area is speficied by its lower left and upper right corners, measured in
+  the same unit as element coordinates. Example:
+  \lstinputlisting[linerange=conn_3d_a-end]{user_manual_scripts/connections.py}
+\item[Spherical\index{spherical}] All nodes within a sphere are
+  connected.  The area is specified by its radius.
+\lstinputlisting[linerange=conn_3d_b-end]{user_manual_scripts/connections.py}
+\end{description}
+As in the 2D case, you can change the location of the mask relative to the
+driver node by specifying a 3D vector in the
+\lstinline!'anchor'!\index{anchor} entry in the mask dictionary.
+
+\scriptfig{conn_3d}{0.9}{Masks for 3D layers}%
+{Masks for 3D layers. For all mask types, the driver node is
+  marked by a wide light-red circle, the selected pool nodes by red
+  dots and the masks by red lines. From left to right:
+  box and spherical masks centered about the driver node.}
 
 
 \subsection{Masks for grid-based layers}\label{sec:grid_masks}
@@ -755,7 +783,7 @@ anchor determines which mask element is aligned with the driver element.
 
 \section{Kernels}\label{sec:conn_kernels}
 
-Many neuronl network models employ probabilistic connection
+Many neuronal network models employ probabilistic connection
 rules\index{probabilistic connection rules}. Topology supports
 probabilistic connections through \emph{kernels}\index{kernel}. A
 kernel is a function mapping the distance (or displacement) between a
@@ -778,9 +806,9 @@ Topology:
   Sec.~\ref{sec:prescribed_numbers} for details.
 \end{description}
 
-Available kernel functions are shown in Table~\ref{tab:kernels}. There
-is at present unfortunately no convenient way to add further kernel
-functions to Topology.
+Available kernel functions are shown in Table~\ref{tab:kernels}. More
+kernel function may be created in a NEST extension module. This is covered
+in Chapter~\ref{ch:extending}.
 
 \begin{table}
 \begin{tabularx}{\linewidth}{l|p{0.2\linewidth}|X}
@@ -875,7 +903,7 @@ $(25,0)$ since as the mask extends only 25 units to the right of the
 driver. Delays increase in a stepwise linear fashion\index{delays, stepwise}, as NEST requires
 delays to be multiples of the simulation resolution. 
 \item[Linear example with periodic boundary conditions\index{periodic
-    boundary conditions}]\rule{0mm}{0mm}\\
+    boundary cond.}]\rule{0mm}{0mm}\\
 \lstinputlisting[linerange=conn5linpbc-end]{user_manual_scripts/connections.py}
 Results are shown in the middle panel of Fig.~\ref{fig:conn5}.
 This example is identical to the previous,
@@ -904,7 +932,7 @@ delays can currently only be randomized with uniform distribution.
 \section{Periodic boundary conditions}\label{sec:conn_pbc}
 
 Connections between layers with periodic boundary
-conditions\index{periodic boundary conditions} are based
+conditions\index{periodic boundary cond.} are based
 on the following principles:
 \begin{itemize}
 \item Periodic boundary conditions are always applied in the pool
@@ -1363,6 +1391,9 @@ Module from NEST version 2.0 to 2.2.
 \item The functions GetPosition, Displacement and Distance now only works
   for nodes local to the current MPI process, if used in a MPI-parallel
   simulation.
+\item It is now possible to add kernel functions and masks to the Topology
+  module through an extension module. Please see Chapter~\ref{ch:extending}
+  for examples.
 \end{itemize}
 
 \chapter{Changes from Topology 1.9 to 2.0}\label{sec:changes2}
