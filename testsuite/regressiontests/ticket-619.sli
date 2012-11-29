@@ -1,0 +1,38 @@
+/*
+ *  ticket-619.sli
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2012 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ *  Permission is granted to compile and modify
+ *  this file for non-commercial use.
+ *  See the file LICENSE for details.
+ *
+ */
+
+/* BeginDocumentation
+
+Name: testsuite::ticket-619 - Regression test for kernel SetStatus problem
+
+Synopsis: (ticket-619) run -> NEST exits if test fails
+
+Description: 
+Ensure that kernel set status including /time 0.0 works.
+ 
+Author: Hans Ekkehard Plesser, 2012-11-29
+ */
+
+/unittest (9726) require
+/unittest using
+M_ERROR setverbosity
+
+{ 
+  ResetKernel
+  0 << /time 0.0 /rng_seeds [ 1 ] >> SetStatus  
+} pass_or_die
+
+endusing

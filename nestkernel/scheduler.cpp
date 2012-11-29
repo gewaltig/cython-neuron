@@ -902,19 +902,20 @@ void nest::Scheduler::set_status(DictionaryDatum const &d)
     if ( time != 0.0 )
       throw BadProperty("The simulation time can only be set to 0.0.");
 
-    if ( clock_ == Time(Time::step(0)) )
-      return;  // nothing to do, avoids call to configure_spike_buffers_(), see #223.
-    else
+    if ( clock_ > Time(Time::step(0)) )
+    {
+      // reset only if time has passed
       net_.message(SLIInterpreter::M_WARNING, "Scheduler::set_status",
                    "Simulation time reset to t=0.0. Resetting the simulation time is not"
                    "fully supported in NEST at present. Some spikes may be lost, and"
                    "stimulating devices may behave unexpectedly. PLEASE REVIEW YOUR"
                    "SIMULATION OUTPUT CAREFULLY!");
 
-    clock_     = Time::step(0);
-    from_step_ = 0;
-    slice_     = 0;
-    configure_spike_buffers_();  // clear all old spikes
+      clock_     = Time::step(0);
+      from_step_ = 0;
+      slice_     = 0;
+      configure_spike_buffers_();  // clear all old spikes
+    }
   }
 
   updateValue<bool>(d, "print_time", print_time_);
