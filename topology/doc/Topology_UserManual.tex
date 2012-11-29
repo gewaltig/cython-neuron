@@ -152,20 +152,10 @@ source code directory under \lstinline!topology/doc/user_manual_scripts!.
 \section{Limitations and Disclaimer}\label{sec:limitations}
 
 \begin{description}
-\item[2D only] The Topology Module provides support for layers in two-dimensional
-space only. The ``3D layers'' described in the user manual for earlier
-versions of the Topology Module were actually layers in
-two-dimensional space, where each element consisted of several neurons
-which then were labeled, e.g., as belonging to L2/3, L4, or L6, but
-were not assigned a physical z-coordinate.
-\item[No extensibility] There is currently no user-friendly way to extend the
-  Topology Module with new kernel functions or masks. We plan to add
-  support for this in the future.
 \item[Undocumented features] The Topology Module provides a number of undocumented features, which
 you may discover by browsing the code. These features are highly
 experimental and should \emph{not be used for simulations}, as they
-have not been validated.  A prominent example is the possibility to
-create layers with neurons freely placed in three-dimensional space.
+have not been validated.
 \end{description}
 
 
@@ -607,9 +597,9 @@ Connections between Topology layers are created by calling
 \item The target layer (can be identical to source layer).
 \item A connection dictionary that contains at least the following entries:
 \begin{description}
-\item[\lstinline!'connection_type'!] Either \lstinline!'convergent'!
+\item['connection\_type'] Either \lstinline!'convergent'!
   or \lstinline!'divergent'!.
-\item[\lstinline!'mask'!] A mask specification as described in
+\item['mask'] A mask specification as described in
   Sec.~\ref{sec:conn_masks}.
 \end{description}
 \end{enumerate}
@@ -1147,6 +1137,7 @@ mask and kernel.
 
 \chapter{Adding topology kernels and masks}\label{ch:extending}
 
+\index{adding kernels and masks}
 This chapter will show examples of how to extend the topology module by
 adding custom kernel functions and masks. Some knowledge of the C++
 programming language is needed for this. The functions will be added as a
@@ -1190,7 +1181,7 @@ The previous command installed MyModule to the NEST installation directory, incl
 
 \section{Adding kernel functions}
 
-As an example, we will add a kernel function called \lstinline!'affine2d'!,
+As an example, we will add a kernel\index{kernel} function called \lstinline!'affine2d'!,
 which will be linear (actually affine) in the displacement of the nodes, on
 the form
 \begin{equation*}
@@ -1275,7 +1266,7 @@ tp.ConnectLayers(l,l,{'connection_type': 'convergent',
 
 \section{Adding masks}
 
-The process of adding a mask is similar to that of adding a kernel
+The process of adding a mask\index{mask} is similar to that of adding a kernel
 function. A subclass of \lstinline!nest::Mask<D>! must be defined, where
 \lstinline!D! is the dimension (2 or 3). In this case we will define a
 2-dimensional elliptic mask by creating a class called
