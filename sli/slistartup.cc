@@ -35,6 +35,15 @@
 #include "config.h"
 
 extern int SLIsignalflag;
+
+// Access to environement variables.
+#ifdef __APPLE__
+#  include <crt_externs.h>
+#  define environ (*_NSGetEnviron())
+#else
+  extern char **environ;
+#endif
+
 /*
 1.  Propagate commandline to the sli level.
     Commandline options will be handled by the startup file.
@@ -100,7 +109,7 @@ the SLI Session is terminated
 
 Author: docu by Marc Oliver Gewaltig and Sirko Straube
 
-SeeAlso: environment, setenvironment
+SeeAlso: environment
  */
 
 std::string SLIStartup::getenv(const std::string &v) const
@@ -139,7 +148,9 @@ void SLIStartup::GetenvFunction::execute(SLIInterpreter *i) const
  * Checks if the environment variable envvar contains a directory. If yes, the
  * path is returned, else an empty string is returned.
  */
-std::string SLIStartup::checkenvpath(std::string const &envvar, SLIInterpreter *i, std::string defaultval = "") const
+std::string SLIStartup::checkenvpath(std::string const &envvar, 
+				     SLIInterpreter *i, 
+				     std::string defaultval = "") const
 {
   const std::string envpath = getenv(envvar);
 
@@ -167,10 +178,12 @@ std::string SLIStartup::checkenvpath(std::string const &envvar, SLIInterpreter *
   	  break;
       }
 
-      i->message(SLIInterpreter::M_ERROR, "SLIStartup", String::compose("%1 is not usable:", envvar).c_str());
+      i->message(SLIInterpreter::M_ERROR, "SLIStartup", 
+		 String::compose("%1 is not usable:", envvar).c_str());
       i->message(SLIInterpreter::M_ERROR, "SLIStartup", msg.c_str());
       if (defaultval != "")
-        i->message(SLIInterpreter::M_ERROR, "SLIStartup", String::compose("I'm using the default: %1", defaultval).c_str());
+        i->message(SLIInterpreter::M_ERROR, "SLIStartup", 
+		   String::compose("I'm using the default: %1", defaultval).c_str());
     }
   }
   return std::string();
@@ -226,8 +239,8 @@ SLIStartup::SLIStartup(int argc, char** argv)
   exitcode_segfault_name("segfault"),
   exitcode_exception_name("exception"),
   exitcode_fatal_name("fatal"),
-  exitcode_unknownerror_name("unknownerror")
-
+  exitcode_unknownerror_name("unknownerror"),
+  environment_name("environment")
 {
   ArrayDatum ad;
 
@@ -463,6 +476,21 @@ void SLIStartup::init(SLIInterpreter *i)
   exitcodes->insert(exitcode_unknownerror_name,Token(new IntegerDatum(10)));
 
   statusdict->insert(exitcodes_name, exitcodes); 
+
+  // Copy environment variables
+  // The environ pointer is defined at the head of the file.
+  DictionaryDatum environment(new Dictionary());
+  for ( char * const * envptr = environ ; *envptr ; ++envptr )
+  {
+    std::string const envstr(*envptr);
+
+    // It is safe to assume that all entries contain the character '='
+    const size_t pos = envstr.find('=');
+    const Name varname = envstr.substr(0, pos);
+    const std::string varvalue = envstr.substr(pos+1);
+    environment->insert(varname, Token(new StringDatum(varvalue)));
+  }
+  statusdict->insert(environment_name, environment);
 
 #ifdef HAVE_LONG_LONG
   typedef long long longlong_t;

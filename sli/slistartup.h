@@ -100,6 +100,8 @@ class SLIStartup: public SLIModule
   Name exitcode_exception_name;
   Name exitcode_fatal_name;
   Name exitcode_unknownerror_name;
+
+  Name environment_name;
   
   class GetenvFunction: public SLIFunction
   {

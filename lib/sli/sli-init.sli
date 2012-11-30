@@ -2276,3 +2276,18 @@ end % systemdict
 (.) path setpath                % prepend current directory
 
 evalrcfile
+
+
+/* BeginDocumentation
+Name: environment - return divtionary of environment variables
+Synopsis: enviroment -> dict
+Description: 
+Returns dictionary with the environment variables of the process that
+invoked NEST. It is a shortcut for statusdict/environment ::, provided
+for backward compatibility.
+SeeAlso: statusdict
+*/
+/environment 
+{
+  statusdict/environment ::
+} def
