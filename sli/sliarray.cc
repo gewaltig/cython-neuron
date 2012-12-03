@@ -1288,7 +1288,7 @@ void SLIArrayModule::Put_a_a_tFunction::execute(SLIInterpreter *i) const
     {
       i->message(SLIInterpreter::M_ERROR, "Put","Negative index found.");
       i->message(SLIInterpreter::M_ERROR, "Put","Source array is unchanged.");
-      i->raiseerror(i->ArgumentTypeError);
+      i->raiseerror(i->RangeCheckError);
       return;
     }
 
@@ -1296,7 +1296,7 @@ void SLIArrayModule::Put_a_a_tFunction::execute(SLIInterpreter *i) const
     {
       i->message(SLIInterpreter::M_ERROR, "Put","Index out of range.");
       i->message(SLIInterpreter::M_ERROR, "Put","Source array is unchanged.");
-      i->raiseerror(i->ArgumentTypeError);
+      i->raiseerror(i->RangeCheckError);
       return;
     }
 
@@ -1307,7 +1307,7 @@ void SLIArrayModule::Put_a_a_tFunction::execute(SLIInterpreter *i) const
       {
 	i->message(SLIInterpreter::M_ERROR, "Put","Dimensions of index and array do not match.");
 	i->message(SLIInterpreter::M_ERROR, "Put","Source array is unchanged.");
-	i->raiseerror(i->ArgumentTypeError);
+	i->raiseerror(i->RangeCheckError);
 	return;
       }
     }
@@ -2336,6 +2336,592 @@ void SLIArrayModule::IntVector2ArrayFunction::execute(SLIInterpreter *i) const
   i->EStack.pop();
 }
 
+void SLIArrayModule::Add_iv_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntVectorDatum *ivd1= dynamic_cast<IntVectorDatum *>(i->OStack.top().datum());
+  if(ivd1 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntVectorDatum *ivd2= dynamic_cast<IntVectorDatum *>(i->OStack.pick(1).datum());
+  if(ivd2 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if((*ivd1)->size() != (*ivd2)->size())
+  {
+      i->message(SLIInterpreter::M_ERROR, "add_iv_iv","You can only add vectors of the same length.");
+      i->raiseerror("RangeCheck");
+  }
+
+  IntVectorDatum *result=new IntVectorDatum( new std::vector<long>(**ivd1));
+  const size_t length=(**ivd1).size();
+  for( size_t j=0; j< length; ++j)
+      (**result)[j] += (**ivd2)[j];
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Add_i_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntegerDatum *id= dynamic_cast<IntegerDatum *>(i->OStack.pick(1).datum());
+  if(id == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntVectorDatum *ivd= dynamic_cast<IntVectorDatum *>(i->OStack.pick(0).datum());
+  if(ivd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  IntVectorDatum *result=new IntVectorDatum( new std::vector<long>(**ivd));
+  const size_t length=(**ivd).size();
+  const long value=id->get();
+  for( size_t j=0; j< length; ++j)
+      (**result)[j] += value;
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Neg_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<1)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntVectorDatum *ivd= dynamic_cast<IntVectorDatum *>(i->OStack.pick(1).datum());
+  if(ivd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t length=(**ivd).size();
+  IntVectorDatum *result=new IntVectorDatum( new std::vector<long>(length));
+  for( size_t j=0; j< length; ++j)
+      (**result)[j] = - (**ivd)[j];
+
+  i->OStack.pop();
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Sub_iv_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntVectorDatum *ivd1= dynamic_cast<IntVectorDatum *>(i->OStack.top().datum());
+  if(ivd1 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntVectorDatum *ivd2= dynamic_cast<IntVectorDatum *>(i->OStack.pick(1).datum());
+  if(ivd2 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if((**ivd1).size() != (**ivd2).size())
+  {
+      i->message(SLIInterpreter::M_ERROR, "sub_iv_iv","You can only add vectors of the same length.");
+      i->raiseerror("RangeCheck");
+  }
+
+  IntVectorDatum *result=new IntVectorDatum( new std::vector<long>(**ivd1));
+  const size_t length=(**ivd1).size();
+  for( size_t j=0; j< length; ++j)
+      (**result)[j] -= (**ivd2)[j];
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Mul_iv_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntVectorDatum *ivd1= dynamic_cast<IntVectorDatum *>(i->OStack.top().datum());
+  if(ivd1 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntVectorDatum *ivd2= dynamic_cast<IntVectorDatum *>(i->OStack.pick(1).datum());
+  if(ivd2 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if((**ivd1).size() != (**ivd2).size())
+  {
+      i->message(SLIInterpreter::M_ERROR, "mul_iv_iv","You can only add vectors of the same length.");
+      i->raiseerror("RangeCheck");
+  }
+
+  IntVectorDatum *result=new IntVectorDatum( new std::vector<long>(**ivd1));
+  const size_t length=(**ivd1).size();
+  for( size_t j=0; j< length; ++j)
+      (**result)[j]*= (**ivd2)[j];
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+
+void SLIArrayModule::Mul_i_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntegerDatum *id= dynamic_cast<IntegerDatum *>(i->OStack.pick(1).datum());
+  if(id == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntVectorDatum *ivd= dynamic_cast<IntVectorDatum *>(i->OStack.pick(0).datum());
+  if(ivd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  IntVectorDatum *result=new IntVectorDatum( new std::vector<long>(**ivd));
+  const size_t length=(**ivd).size();
+  const long factor=id->get();
+  for( size_t j=0; j< length; ++j)
+      (**result)[j]*= factor;
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Mul_d_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  DoubleDatum *dd= dynamic_cast<DoubleDatum *>(i->OStack.pick(1).datum());
+  if(dd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntVectorDatum *ivd= dynamic_cast<IntVectorDatum *>(i->OStack.pick(0).datum());
+  if(ivd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t length=(**ivd).size();
+  DoubleVectorDatum *result=new DoubleVectorDatum( new std::vector<double>(length));
+  const double factor=dd->get();
+  for( size_t j=0; j< length; ++j)
+      (**result)[j] = factor*static_cast<double>((**ivd)[j]);
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Div_iv_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntVectorDatum *ivd1= dynamic_cast<IntVectorDatum *>(i->OStack.top().datum());
+  if(ivd1 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntVectorDatum *ivd2= dynamic_cast<IntVectorDatum *>(i->OStack.pick(1).datum());
+  if(ivd2 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if((**ivd1).size() != (**ivd2).size())
+  {
+      i->message(SLIInterpreter::M_ERROR, "div_iv_iv","You can only add vectors of the same length.");
+      i->raiseerror("RangeCheck");
+  }
+
+  IntVectorDatum *result=new IntVectorDatum( new std::vector<long>(**ivd1));
+  const size_t length=(**ivd1).size();
+  for( size_t j=0; j< length; ++j)
+  {
+      const long quotient=(**ivd2)[j];
+      if(quotient ==0)
+      {
+          delete result;
+          i->message(SLIInterpreter::M_ERROR, "div_iv","Vector element zero encountered.");
+          i->raiseerror("DivisionByZero");
+          return;
+      }
+      (**result)[j] /=quotient;
+  } 
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Length_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<1)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntVectorDatum *ivd= dynamic_cast<IntVectorDatum *>(i->OStack.top().datum());
+  if(ivd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t length=(**ivd).size();
+
+  i->OStack.pop();
+  i->OStack.push(new IntegerDatum(length));
+  i->EStack.pop();
+}
+
+
+void SLIArrayModule::Add_dv_dvFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  DoubleVectorDatum *dvd1= dynamic_cast<DoubleVectorDatum *>(i->OStack.top().datum());
+  if(dvd1 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  DoubleVectorDatum *dvd2= dynamic_cast<DoubleVectorDatum *>(i->OStack.pick(1).datum());
+  if(dvd2 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if((**dvd1).size() != (**dvd2).size())
+  {
+      i->message(SLIInterpreter::M_ERROR, "add_dv_dv","You can only add vectors of the same length.");
+      i->raiseerror("RangeCheck");
+  }
+
+  DoubleVectorDatum *result=new DoubleVectorDatum( new std::vector<double>(**dvd1));
+  const size_t length=(**dvd1).size();
+  for( size_t j=0; j< length; ++j)
+      (**result)[j]+= (**dvd2)[j];
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Sub_dv_dvFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  DoubleVectorDatum *dvd1= dynamic_cast<DoubleVectorDatum *>(i->OStack.top().datum());
+  if(dvd1 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  DoubleVectorDatum *dvd2= dynamic_cast<DoubleVectorDatum *>(i->OStack.pick(1).datum());
+  if(dvd2 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if((**dvd1).size() != (**dvd2).size())
+  {
+      i->message(SLIInterpreter::M_ERROR, "sub_dv_dv","You can only subtract vectors of the same length.");
+      i->raiseerror("RangeCheck");
+  }
+
+  DoubleVectorDatum *result=new DoubleVectorDatum( new std::vector<double>(**dvd1));
+  const size_t length=(**dvd1).size();
+  for( size_t j=0; j< length; ++j)
+      (**result)[j]-= (**dvd2)[j];
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Add_d_dvFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  DoubleDatum *dd= dynamic_cast<DoubleDatum *>(i->OStack.pick(1).datum());
+  if(dd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  DoubleVectorDatum *dvd= dynamic_cast<DoubleVectorDatum *>(i->OStack.pick(0).datum());
+  if(dvd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  DoubleVectorDatum *result=new DoubleVectorDatum( new std::vector<double>(**dvd));
+  const size_t length=(**dvd).size();
+  const double value=(*dd).get();
+
+  for( size_t j=0; j< length; ++j)
+      (**result)[j]+= value;
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+
+void SLIArrayModule::Mul_d_dvFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  DoubleDatum *dd= dynamic_cast<DoubleDatum *>(i->OStack.pick(1).datum());
+  if(dd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  DoubleVectorDatum *dvd= dynamic_cast<DoubleVectorDatum *>(i->OStack.pick(0).datum());
+  if(dvd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  DoubleVectorDatum *result=new DoubleVectorDatum( new std::vector<double>(**dvd));
+  const size_t length=(**dvd).size();
+  const double value=(*dd).get();
+
+  for( size_t j=0; j< length; ++j)
+      (**result)[j]*= value;
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+
+void SLIArrayModule::Neg_dvFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<1)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  DoubleVectorDatum *dvd= dynamic_cast<DoubleVectorDatum *>(i->OStack.top().datum());
+  if(dvd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t length=(**dvd).size();
+  DoubleVectorDatum *result=new DoubleVectorDatum( new std::vector<double>(length));
+  for( size_t j=0; j< length; ++j)
+      (**result)[j] = - (**dvd)[j];
+
+  i->OStack.pop();
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+
+void SLIArrayModule::Inv_dvFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<1)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  DoubleVectorDatum *dvd= dynamic_cast<DoubleVectorDatum *>(i->OStack.top().datum());
+  if(dvd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t length=(**dvd).size();
+  DoubleVectorDatum *result=new DoubleVectorDatum( new std::vector<double>(length));
+  for( size_t j=0; j< length; ++j)
+  {
+      const double &val=(**dvd)[j];
+      if(val*val < 1.0e-100)
+      {
+          delete result;
+          i->message(SLIInterpreter::M_ERROR, "inv_dv","Vector element (near) zero encountered.");
+          i->raiseerror("DivisionByZero");
+          return;
+      }
+      (**result)[j] = 1.0/val;
+  }
+  i->OStack.pop();
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+
+void SLIArrayModule::Mul_dv_dvFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  DoubleVectorDatum *dvd1= dynamic_cast<DoubleVectorDatum *>(i->OStack.top().datum());
+  if(dvd1 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  DoubleVectorDatum *dvd2= dynamic_cast<DoubleVectorDatum *>(i->OStack.pick(1).datum());
+  if(dvd2 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if((**dvd1).size() != (**dvd2).size())
+  {
+      i->message(SLIInterpreter::M_ERROR, "mul_dv_dv","You can only multiply vectors of the same length.");
+      i->raiseerror("RangeCheck");
+  }
+
+  DoubleVectorDatum *result=new DoubleVectorDatum( new std::vector<double>(**dvd1));
+  const size_t length=(**dvd1).size();
+  for( size_t j=0; j< length; ++j)
+      (**result)[j] *= (**dvd2)[j];
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Div_dv_dvFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  DoubleVectorDatum *dvd1= dynamic_cast<DoubleVectorDatum *>(i->OStack.top().datum());
+  if(dvd1 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  DoubleVectorDatum *dvd2= dynamic_cast<DoubleVectorDatum *>(i->OStack.pick(1).datum());
+  if(dvd2 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if((**dvd1).size() != (**dvd2).size())
+  {
+      i->message(SLIInterpreter::M_ERROR, "div_iv_iv","You can only divide vectors of the same length.");
+      i->raiseerror("RangeCheck");
+  }
+
+  DoubleVectorDatum *result=new DoubleVectorDatum( new std::vector<double>(**dvd1));
+  const size_t length=(**dvd1).size();
+  for( size_t j=0; j< length; ++j)
+  {
+      const double quotient=(**dvd2)[j];
+      if(quotient*quotient < 1e-100)
+      {
+          delete result;
+          i->message(SLIInterpreter::M_ERROR, "div_dv","Vector element (near) zero encountered.");
+          i->raiseerror("DivisionByZero");
+          return;
+      }
+      (**result)[j] /=quotient;
+  } 
+
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Length_dvFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<1)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  DoubleVectorDatum *dvd1= dynamic_cast<DoubleVectorDatum *>(i->OStack.top().datum());
+  if(dvd1 == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t length=(**dvd1).size();
+
+  i->OStack.pop();
+  i->OStack.push(new IntegerDatum(length));
+  i->EStack.pop();
+}
+
 void SLIArrayModule::DoubleVector2ArrayFunction::execute(SLIInterpreter *i) const
 {
   if(i->OStack.load()<1)
@@ -2404,6 +2990,28 @@ void SLIArrayModule::init(SLIInterpreter *i)
   i->createcommand("array2doublevector", &array2doublevectorfunction);
   i->createcommand("doublevector2array", &doublevector2arrayfunction);
   i->createcommand("intvector2array", &intvector2arrayfunction);
+ i->createcommand("add_iv_iv", &add_iv_ivfunction);
+ i->createcommand("add_i_iv", &add_i_ivfunction);
+ i->createcommand("sub_iv_iv", &sub_iv_ivfunction);
+ i->createcommand("neg_iv", &neg_ivfunction);
+ i->createcommand("mul_iv_iv", &mul_iv_ivfunction);
+ i->createcommand("mul_i_iv", &mul_i_ivfunction);
+ i->createcommand("mul_d_iv", &mul_d_ivfunction);
+ i->createcommand("div_iv_iv", &div_iv_ivfunction);
+ i->createcommand("length_iv", &length_ivfunction);
+
+ i->createcommand("add_dv_dv", &add_dv_dvfunction);
+ i->createcommand("add_d_dv", &add_d_dvfunction);
+
+ i->createcommand("sub_dv_dv", &sub_dv_dvfunction);
+ i->createcommand("neg_dv", &neg_dvfunction);
+
+ i->createcommand("mul_dv_dv", &mul_dv_dvfunction);
+ i->createcommand("mul_d_dv", &mul_d_dvfunction);
+
+ i->createcommand("div_dv_dv", &div_dv_dvfunction);
+ i->createcommand("inv_dv",   &inv_dvfunction);
+ i->createcommand("length_dv", &length_dvfunction);
 
   i->createcommand("finite_q_d", &finiteq_dfunction);
 }

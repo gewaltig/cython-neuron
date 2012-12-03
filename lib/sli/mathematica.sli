@@ -4716,6 +4716,69 @@ SeeAlso: MapThread, forall, Map, MapIndexed, NestList, FoldList
   end
 } def
 
+%% Functions on Integer and double vectors
+
+/cva [/intvectortype] /intvector2array load def
+/cva [/doublevectortype] /doublevector2array load def
+
+/**
+* BeginDocumentation:
+* Name: cv_iv - convert array of integers to an IntVector.
+*/
+/cv_iv[/arraytype]  { {cvi} Map array2intvector } def
+
+/**
+* BeginDocumentation:
+* Name: cv_dv - convert array of integers to a DoubleVector.
+*/
+
+/cv_dv[/arraytype] { {cvd} Map array2doublevector } def
+
+/add [/intvectortype /intvectortype] /add_iv_iv load def
+/sub [/intvectortype /intvectortype] /sub_iv_iv load def
+/mul [/intvectortype /intvectortype] /mul_iv_iv load def
+/mul [/integertype /intvectortype] /mul_i_iv load def
+/mul [/intvectortype /integertype] {exch_ mul_i_iv} def
+/mul [/doubletype /intvectortype]  /mul_d_iv load def
+/mul [/intvectortype /doubletype ]  {exch_ mul_d_iv} def
+/div [/intvectortype /intvectortype] /add_iv_iv load def
+/add [/doublevectortype /doublevectortype] /add_dv_dv load def
+/sub [/doublevectortype /doublevectortype] /sub_dv_dv load def
+/mul [/doublevectortype /doublevectortype] /mul_dv_dv load def
+/div [/doublevectortype /doublevectortype] /div_dv_dv load def
+/add [/doubletype /doublevectortype] /add_d_dv load def
+/add [/doublevectortype /doubletype] {exch_ add_d_dv} def
+/mul [/doubletype /doublevectortype] /mul_d_dv load def
+/mul [/doublevectortype /doubletype] {exch_ mul_d_dv} def
+/neg [/doublevectortype] /neg_dv load def
+/length [/doublevectortype] /length_dv load def
+/length [/intvectortype] /length_iv load def
+/size [/intvectortype] {dup length_iv} def
+/size [/doublevectortype] {dup length_dv} def
+
+/eq [/intvectortype /intvectortype]
+{
+  intvector2array exch intvector2array eq
+} def
+
+/eq [/doublevectortype /doublevectortype]
+{
+  doublevector2array exch doublevector2array eq
+} def
+
+/forall [/doublevectortype /proceduretype]
+{ exch doublevector2array exch forall } def
+
+/Map 
+ [/doublevectortype /proceduretype] { exch doublevector2array exch  Map array2doublevector } def
+
+/forall [/intvectortype /proceduretype]
+{ exch intvector2array exch forall } def
+
+/Map 
+ [/intvectortype /proceduretype ] { exch intvector2array exch Map array2intvector } def
+
+
 %----------------------------------------------------------------------------
 /* Begin(LOESCHMISCH!)Documentation
 

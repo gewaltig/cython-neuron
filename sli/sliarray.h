@@ -320,6 +320,107 @@ class SLIArrayModule: public SLIModule
     void execute(SLIInterpreter *) const;
   };
 
+  class Add_iv_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Add_i_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Neg_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Sub_iv_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Mul_iv_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Mul_i_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Mul_d_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Div_iv_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Add_dv_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Add_d_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Sub_dv_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Mul_dv_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Mul_d_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Div_dv_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Neg_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Inv_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Length_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Length_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
   /**
    * Test single double for finiteness.
    * @todo This class does not really belong into sliarray, but is placed
@@ -365,6 +466,26 @@ class SLIArrayModule: public SLIModule
   IntVector2ArrayFunction intvector2arrayfunction;
   DoubleVector2ArrayFunction doublevector2arrayfunction;
   FiniteQ_dFunction finiteq_dfunction;
+
+  Add_iv_ivFunction add_iv_ivfunction;
+  Add_i_ivFunction  add_i_ivfunction;
+  Neg_ivFunction    neg_ivfunction;
+  Sub_iv_ivFunction sub_iv_ivfunction;
+  Mul_iv_ivFunction mul_iv_ivfunction;
+  Mul_i_ivFunction mul_i_ivfunction;
+  Mul_d_ivFunction mul_d_ivfunction;
+  Div_iv_ivFunction div_iv_ivfunction;
+  Length_ivFunction length_ivfunction;
+
+  Add_dv_dvFunction add_dv_dvfunction;
+  Add_d_dvFunction  add_d_dvfunction;
+  Sub_dv_dvFunction sub_dv_dvfunction;
+  Mul_dv_dvFunction mul_dv_dvfunction;
+  Mul_d_dvFunction  mul_d_dvfunction;
+  Div_dv_dvFunction div_dv_dvfunction;
+  Neg_dvFunction    neg_dvfunction;
+  Inv_dvFunction    inv_dvfunction;
+  Length_dvFunction length_dvfunction;
 
   public:
 
