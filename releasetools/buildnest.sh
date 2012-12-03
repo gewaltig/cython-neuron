@@ -133,6 +133,8 @@ set nest_major   = `grep -m1 SLI_MAJOR configure.ac.in | cut -d\= -f2`
 set nest_version = "$nest_major.$nest_minor.$patchlevel"
 set nest_nprog   = "nest-$nest_version"
 
+sed -i -e "s/AC_INIT(\[nest\], \[$nest_major\.$nest_minor\.svn\]/AC_INIT([nest], [$nest_version]/" configure.ac.in
+
 echo " to $nest_nprog"
 
 # tag new version if real run
