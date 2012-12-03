@@ -927,85 +927,61 @@ void nest::Scheduler::set_status(DictionaryDatum const &d)
   bool n_threads_updated = updateValue<long>(d, "local_num_threads", n_threads);
   if (n_threads_updated)
   {
-    bool nodes_exist = net_.size() > 1;
-    bool user_synapse_prototypes = net_.connection_manager_.has_user_prototypes();
-    bool user_set_delay_extrema =  net_.connection_manager_.get_user_set_delay_extrema();
-    bool simulated = net_.get_simulated();
+    if ( net_.size() > 1 )
+      throw KernelException("Nodes exist: Thread/process number cannot be changed.");
+    if ( net_.connection_manager_.has_user_prototypes() )
+      throw KernelException("Custom synapse types exist: Thread/process number cannot be changed.");
+    if ( net_.connection_manager_.get_user_set_delay_extrema() )
+      throw KernelException("Delay extrema have been set: Thread/process number cannot be changed.");
+    if ( net_.get_simulated() )
+      throw KernelException("The network has been simulated: Thread/process number cannot be changed.");
+    if ( not Time::resolution_is_default() )
+      throw KernelException("The resolution has been set: Thread/process number cannot be changed.");
 
-    if (nodes_exist || user_synapse_prototypes || user_set_delay_extrema || simulated)
-    {
-      if (nodes_exist)
-        net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status", "Nodes already exist.");
-      if (user_synapse_prototypes)
-        net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status", "Custom synapse types already exist.");
-      if (user_set_delay_extrema)
-        net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status", "Custom delay extrema are set.");
-      if (simulated)
-        net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status", "The network has already been simulated.");
-
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status", "Please call ResetKernel first.");
-      throw KernelException();
-    }
-    else if ( (n_threads > 1) && (force_singlethreading_) )
+    if ( n_threads > 1 && force_singlethreading_ )
     {
       net_.message(SLIInterpreter::M_WARNING, "Scheduler::set_status",
                    "No multithreading available, using single threading");
       n_threads_ = 1;
     }
-    else
-    {
-      // it is essential to call net_.reset() here to adapt memory pools and more
-      // to the new number of threads and VPs.
-      n_threads_ = n_threads;
-      net_.reset();
-    }
+
+    // it is essential to call net_.reset() here to adapt memory pools and more
+    // to the new number of threads and VPs.
+    n_threads_ = n_threads;
+    net_.reset();
   }
 
   long n_vps;
   bool n_vps_updated = updateValue<long>(d, "total_num_virtual_procs", n_vps);
   if (n_vps_updated)
   {
-    bool nodes_exist = net_.size() > 1;
-    bool user_synapse_prototypes = net_.connection_manager_.has_user_prototypes();
-    bool user_set_delay_extrema =  net_.connection_manager_.get_user_set_delay_extrema();
-    bool simulated = net_.get_simulated();
+    if ( net_.size() > 1 )
+      throw KernelException("Nodes exist: Thread/process number cannot be changed.");
+    if ( net_.connection_manager_.has_user_prototypes() )
+      throw KernelException("Custom synapse types exist: Thread/process number cannot be changed.");
+    if ( net_.connection_manager_.get_user_set_delay_extrema() )
+      throw KernelException("Delay extrema have been set: Thread/process number cannot be changed.");
+    if ( net_.get_simulated() )
+      throw KernelException("The network has been simulated: Thread/process number cannot be changed.");
+    if ( not Time::resolution_is_default() )
+      throw KernelException("The resolution has been set: Thread/process number cannot be changed.");
 
-    if (nodes_exist || user_synapse_prototypes || user_set_delay_extrema || simulated)
-    {
-      if (nodes_exist)
-        net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status", "Nodes already exist.");
-      if (user_synapse_prototypes)
-        net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status", "Custom synapse types already exist.");
-      if (user_set_delay_extrema)
-        net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status", "Custom delay extrema are set.");
-      if (simulated)
-        net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status", "The network has already been simulated.");
-
-      net_.message(SLIInterpreter::M_ERROR, "Scheduler::set_status", "Please call ResetKernel first.");
-      throw KernelException();
-    }
-    else if (n_vps % Communicator::get_num_processes() != 0)
-    {
+    if (n_vps % Communicator::get_num_processes() != 0)
       throw BadProperty("Number of virtual processes (threads*processes) must be an integer "
                         "multiple of the number of processes. Value unchanged.");
-    }
-    else
+    
+    n_threads_ = n_vps / Communicator::get_num_processes();
+    if ((n_threads > 1) && (force_singlethreading_))
     {
-      n_threads_ = n_vps / Communicator::get_num_processes();
-      if ((n_threads > 1) && (force_singlethreading_))
-      {
-        net_.message(SLIInterpreter::M_WARNING, "Scheduler::set_status",
+      net_.message(SLIInterpreter::M_WARNING, "Scheduler::set_status",
                    "No multithreading available, using single threading");
-        n_threads_ = 1;
-      }
-      else
-      {
-        // it is essential to call net_.reset() here to adapt memory pools and more
-        // to the new number of threads and VPs
-        set_num_threads(n_threads_);
-        net_.reset();
-      }
+      n_threads_ = 1;
     }
+
+    // it is essential to call net_.reset() here to adapt memory pools and more
+    // to the new number of threads and VPs
+    set_num_threads(n_threads_);
+    net_.reset();
   }
 
   // tics_per_ms and resolution must come after local_num_thread / total_num_threads

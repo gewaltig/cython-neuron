@@ -1,0 +1,98 @@
+/*
+ *  ticket-396.sli
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2012 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ *  Permission is granted to compile and modify
+ *  this file for non-commercial use.
+ *  See the file LICENSE for details.
+ *
+ */
+
+/* BeginDocumentation
+
+Name: testsuite::ticket-396 - Ensure that the number of threads cannot be changed after resolution.
+
+Synopsis: (ticket-396) run -> NEST exits if test fails
+
+Description: 
+This ticket ensures that the number of threads cannot be changed if the resolution
+differs from the default resolution.
+ 
+Author: Hans Ekkehard Plesser, 2012-12-03
+ */
+
+/unittest (9726) require
+/unittest using
+M_ERROR setverbosity
+
+% test against changing local_num_threads
+{ 
+  ResetKernel
+  /new_res 0 /resolution get 2 mul def
+  /new_threads 0 /local_num_threads get 2 mul def
+  0 << /resolution new_res >> SetStatus
+  0 << /local_num_threads new_threads >> SetStatus
+} fail_or_die
+
+% test against changing total_num_virtual_procs
+{ 
+  ResetKernel
+  /new_res 0 /resolution get 2 mul def
+  /new_procs 0 /total_num_virtual_procs get 2 mul def
+  0 << /resolution new_res >> SetStatus
+  0 << /total_num_virtual_procs new_procs >> SetStatus
+} fail_or_die
+
+% check that we can change either way before setting resolution
+{ 
+  ResetKernel
+  /new_res 0 /resolution get 2 mul def
+  /new_threads 0 /local_num_threads get 2 mul def
+  0 << /local_num_threads new_threads >> SetStatus
+  0 << /resolution new_res >> SetStatus
+  0 /resolution get new_res eq
+  0 /local_num_threads get new_threads eq
+  and
+} assert_or_die
+
+{ 
+  ResetKernel
+  /new_res 0 /resolution get 2 mul def
+  /new_procs 0 /total_num_virtual_procs get 2 mul def
+  0 << /total_num_virtual_procs new_procs >> SetStatus
+  0 << /resolution new_res >> SetStatus
+  0 /resolution get new_res eq
+  0 /total_num_virtual_procs get new_procs eq
+  and
+} assert_or_die
+
+% test that we can set in single call
+{ 
+  ResetKernel
+  /new_res 0 /resolution get 2 mul def
+  /new_threads 0 /local_num_threads get 2 mul def
+  0 << /local_num_threads new_threads
+       /resolution new_res >> SetStatus
+  0 /resolution get new_res eq
+  0 /local_num_threads get new_threads eq
+  and
+} assert_or_die
+
+{ 
+  ResetKernel
+  /new_res 0 /resolution get 2 mul def
+  /new_procs 0 /total_num_virtual_procs get 2 mul def
+  0 << /total_num_virtual_procs new_procs 
+       /resolution new_res >> SetStatus
+  0 /resolution get new_res eq
+  0 /total_num_virtual_procs get new_procs eq
+  and
+} assert_or_die
+
+endusing

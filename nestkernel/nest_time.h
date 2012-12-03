@@ -256,6 +256,11 @@ namespace nest
     static 
     Time get_resolution(); 
 
+    /**
+     * Returns true if resolution is default resolution.
+     */
+    static
+    bool resolution_is_default();
 
     static nest::double_t get_ms_per_tic();
 
@@ -648,6 +653,12 @@ private:
   Time Time::get_resolution()
   {
     return Time(TICS_PER_STEP_);
+  }
+
+  inline
+  bool Time::resolution_is_default()
+  {
+    return TICS_PER_STEP_ == TICS_PER_STEP_DEFAULT_;
   }
 
   inline
