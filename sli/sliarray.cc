@@ -2447,7 +2447,7 @@ void SLIArrayModule::Sub_iv_ivFunction::execute(SLIInterpreter *i) const
   }
   if((**ivd1).size() != (**ivd2).size())
   {
-      i->message(SLIInterpreter::M_ERROR, "sub_iv_iv","You can only add vectors of the same length.");
+      i->message(SLIInterpreter::M_ERROR, "sub_iv_iv","You can only subtract vectors of the same length.");
       i->raiseerror("RangeCheck");
   }
 
@@ -2482,7 +2482,7 @@ void SLIArrayModule::Mul_iv_ivFunction::execute(SLIInterpreter *i) const
   }
   if((**ivd1).size() != (**ivd2).size())
   {
-      i->message(SLIInterpreter::M_ERROR, "mul_iv_iv","You can only add vectors of the same length.");
+      i->message(SLIInterpreter::M_ERROR, "mul_iv_iv","You can only multiply vectors of the same length.");
       i->raiseerror("RangeCheck");
   }
 
@@ -2580,7 +2580,7 @@ void SLIArrayModule::Div_iv_ivFunction::execute(SLIInterpreter *i) const
   }
   if((**ivd1).size() != (**ivd2).size())
   {
-      i->message(SLIInterpreter::M_ERROR, "div_iv_iv","You can only add vectors of the same length.");
+      i->message(SLIInterpreter::M_ERROR, "div_iv_iv","You can only divide vectors of the same length.");
       i->raiseerror("RangeCheck");
   }
 
