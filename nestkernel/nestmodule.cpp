@@ -1388,7 +1388,12 @@ namespace nest
   /* BeginDocumentation
      Name: Rank - Return the MPI rank of the process.
      Synopsis: Rank -> int
-     Description: Returns the rank of the MPI process (MPI_Comm_rank) executing the command.
+     Description:
+     Returns the rank of the MPI process (MPI_Comm_rank) executing the
+     command. This function is mainly meant for logging and debugging
+     purposes. It is highly discouraged to use this function to write
+     rank-dependent code in a simulation script as this can break NEST
+     in funny ways, of which dead-locks are the nicest.
      Availability: NEST 2.0
      Author: Jochen Martin Eppler
      FirstVersion: January 2006
@@ -1403,7 +1408,9 @@ namespace nest
   /* BeginDocumentation
      Name: NumProcesses - Return the number of MPI processes.
      Synopsis: NumProcesses -> int
-     Description: Returns the numnber of MPI processes (MPI_Comm_size).
+     Description:
+     Returns the number of MPI processes (MPI_Comm_size). This
+     function is mainly meant for logging and debugging purposes.
      Availability: NEST 2.0
      Author: Jochen Martin Eppler
      FirstVersion: January 2006
