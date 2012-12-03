@@ -254,38 +254,37 @@ namespace nest
     ArrayDatum conn_a = getValue<ArrayDatum>(i->OStack.pick(1));
 
     if((dict_a.size() != 1) and (dict_a.size() != conn_a.size()))
-      { 
-	throw RangeCheck();
-      }
+    { 
+      throw RangeCheck();
+    }
     if (dict_a.size() ==1) // Broadcast
+    {	
+      DictionaryDatum dict = getValue<DictionaryDatum>(dict_a[0]);
+      const size_t n_conns=conn_a.size();
+      for(size_t con=0;con < n_conns; ++con)
       {
-	
-	DictionaryDatum dict = getValue<DictionaryDatum>(dict_a[0]);
-	const size_t n_conns=conn_a.size();
-	for(size_t con=0;con < n_conns; ++con)
-	  {
-	      ConnectionDatum con_id = getValue<ConnectionDatum>(conn_a[con]);
-	      get_network().set_synapse_status(con_id.get_source_gid(), // source_gid
-					       con_id.get_synapse_type_id(), // synapse_id
-					       con_id.get_port(), // port
-					       con_id.get_target_thread(), // target thread
-					       dict);
-	  }
+        ConnectionDatum con_id = getValue<ConnectionDatum>(conn_a[con]);
+        get_network().set_synapse_status(con_id.get_source_gid(), // source_gid
+                                         con_id.get_synapse_type_id(), // synapse_id
+                                         con_id.get_port(), // port
+                                         con_id.get_target_thread(), // target thread
+                                         dict);
       }
+    }
     else
+    {
+      const size_t n_conns=conn_a.size();
+      for(size_t con=0;con < n_conns; ++con)
       {
-	const size_t n_conns=conn_a.size();
-	for(size_t con=0;con < n_conns; ++con)
-	  {
-	    DictionaryDatum dict = getValue<DictionaryDatum>(dict_a[con]);
-	    ConnectionDatum con_id = getValue<ConnectionDatum>(conn_a[con]);
-	    get_network().set_synapse_status(con_id.get_source_gid(), // source_gid
-					     con_id.get_synapse_type_id(), // synapse_id
-					     con_id.get_port(), // port
-					     con_id.get_target_thread(), // target thread
-					     dict);
-	  }
+        DictionaryDatum dict = getValue<DictionaryDatum>(dict_a[con]);
+        ConnectionDatum con_id = getValue<ConnectionDatum>(conn_a[con]);
+        get_network().set_synapse_status(con_id.get_source_gid(), // source_gid
+                                         con_id.get_synapse_type_id(), // synapse_id
+                                         con_id.get_port(), // port
+                                         con_id.get_target_thread(), // target thread
+                                         dict);
       }
+    }
     
     i->OStack.pop(2);
     i->EStack.pop();
@@ -357,10 +356,11 @@ namespace nest
     get_network().get_node(gid); // Just to check if the node exists
      
     DictionaryDatum result_dict = get_network().get_synapse_status(
-						     gid,
-						     conn.get_synapse_type_id(), 
-						     conn.get_port(),
-						     conn.get_target_thread());    
+        gid,
+        conn.get_synapse_type_id(), 
+        conn.get_port(),
+        conn.get_target_thread());
+
     i->OStack.pop();
     i->OStack.push(result_dict);
     i->EStack.pop();
@@ -376,13 +376,13 @@ namespace nest
     result.reserve(n_results);
     for(size_t nt=0; nt< n_results; ++nt)
     {
-	ConnectionDatum con_id= getValue<ConnectionDatum>(conns.get(nt));
-	DictionaryDatum result_dict = get_network().get_synapse_status(
-	    con_id.get_source_gid(),
-	    con_id.get_synapse_type_id(),
-	    con_id.get_port(),
-	    con_id.get_target_thread());
-	result.push_back(result_dict);
+      ConnectionDatum con_id= getValue<ConnectionDatum>(conns.get(nt));
+      DictionaryDatum result_dict = get_network().get_synapse_status(
+          con_id.get_source_gid(),
+          con_id.get_synapse_type_id(),
+          con_id.get_port(),
+          con_id.get_target_thread());
+      result.push_back(result_dict);
     }
 
     i->OStack.pop();
@@ -658,7 +658,6 @@ namespace nest
     const DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(2));
     const index node_id        = getValue<long>(i->OStack.pick(3));
 
-    
     Subnet *subnet = dynamic_cast<Subnet *>(get_network().get_node(node_id));     
     if (subnet==NULL)
       throw SubnetExpected();
@@ -672,8 +671,8 @@ namespace nest
 
     ArrayDatum result;
     result.reserve(globalnodes.size());
-    for( vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin();
-         n != globalnodes.end(); ++n )
+    for( vector<Communicator::NodeAddressingData>::iterator n = globalnodes.begin(); n != globalnodes.end(); ++n )
+    {
       if ( return_gids_only )
         result.push_back(new IntegerDatum(n->get_gid()));
       else
@@ -684,6 +683,7 @@ namespace nest
         (**node_info)[names::parent] = n->get_parent_gid();
         result.push_back(node_info);
       }
+    }
 
     i->OStack.pop(4);
     i->OStack.push(result);
