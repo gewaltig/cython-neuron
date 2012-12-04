@@ -1423,6 +1423,23 @@ namespace nest
   }
 
   /* BeginDocumentation
+     Name: n_procs SetFakeNumProcesses - Set a fake number of MPI processes.
+     Synopsis: SetFakeNumProcesses
+     Description:
+     Sets the number of MPI processes to n_procs. Used for benchmarking puposes only. 
+     Availability: NEST 2.2
+     Author: Susanne Kunkel
+     FirstVersion: July 2011
+     SeeAlso: NumProcesses
+  */
+  void NestModule::SetFakeNumProcessesFunction_i::execute(SLIInterpreter *i) const
+  {
+    long n_procs = getValue<long>(i->OStack.pick(0));
+    Communicator::set_num_processes(n_procs);
+    i->EStack.pop();
+  }
+
+  /* BeginDocumentation
      Name: SyncProcesses - Synchronize all MPI processes.
      Synopsis: SyncProcesses -> -
      Availability: NEST 2.0
@@ -1736,6 +1753,7 @@ namespace nest
     
     i->createcommand("Rank", &rankfunction);
     i->createcommand("NumProcesses", &numprocessesfunction);
+    i->createcommand("SetFakeNumProcesses", &setfakenumprocesses_ifunction);
     i->createcommand("SyncProcesses", &syncprocessesfunction);
     i->createcommand("TimeCommunication_i_i_b", &timecommunication_i_i_bfunction); 
     i->createcommand("ProcessorName", &processornamefunction);

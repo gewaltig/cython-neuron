@@ -348,8 +348,6 @@ namespace nest
     bool simulating_;  //!< true if simulation in progress
     bool force_singlethreading_;
 
-    index n_procs_;
-
     index n_threads_; //!< Number of threads per process.
     index n_nodes_;   //!< Effective number of simulated nodes.
 

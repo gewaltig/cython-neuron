@@ -417,6 +417,11 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } numprocessesfunction;
 
+     class SetFakeNumProcessesFunction_i : public SLIFunction
+     {
+       void execute(SLIInterpreter *) const;
+     } setfakenumprocesses_ifunction;
+
      class SyncProcessesFunction : public SLIFunction
      {
        void execute(SLIInterpreter *) const;
