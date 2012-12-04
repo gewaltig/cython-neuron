@@ -4770,13 +4770,19 @@ SeeAlso: MapThread, forall, Map, MapIndexed, NestList, FoldList
 { exch doublevector2array exch forall } def
 
 /Map 
- [/doublevectortype /proceduretype] { exch doublevector2array exch  Map array2doublevector } def
+ [/doublevectortype /proceduretype] { exch doublevector2array exch  Map cv_dv } def
 
 /forall [/intvectortype /proceduretype]
 { exch intvector2array exch forall } def
 
 /Map 
- [/intvectortype /proceduretype ] { exch intvector2array exch Map array2intvector } def
+ [/intvectortype /proceduretype ] { exch intvector2array exch Map cv_iv } def
+
+/arrayload_ /arrayload load def
+
+/arrayload [/arraytype] /arrayload_ load def
+/arrayload [/intvectortype] {intvector2array arrayload_} def
+/arrayload [/doublevectortype] {doublevector2array arrayload_} def
 
 /get [/doublevectortype /integertype] /get_dv_i load def
 /get [/doublevectortype /intvectortype] /get_dv_iv load def

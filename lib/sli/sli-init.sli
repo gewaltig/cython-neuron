@@ -210,17 +210,24 @@ def
 
 
 /put trie
-  [/arraytype      /arraytype    /anytype ]     /put_a_a_t load addtotrie
-  [/arraytype      /integertype  /anytype ]     /put_a load addtotrie
-  [/stringtype     /integertype  /integertype]  /put_s load addtotrie
-  [/arraytype      /integertype  /integertype]  /put_a load addtotrie
-  [/arraytype      /arraytype    /integertype ] /put_a_a_t load addtotrie
-  [/proceduretype  /integertype  /integertype ] /put_p load addtotrie
-  [/proceduretype  /integertype  /anytype ]     /put_p load addtotrie
-  [/literalproceduretype /integertype /integertype] /put_lp load addtotrie
-  [/literalproceduretype /integertype /anytype] /put_lp load addtotrie
-  [/dictionarytype /literaltype /anytype]       /put_d load addtotrie
-  [/dictionarytype /literaltype /integertype]   /put_d load addtotrie
+  [/arraytype            /integertype  /integertype]  /put_a     load addtotrie
+  [/arraytype            /arraytype    /anytype ]     /put_a_a_t load addtotrie
+  [/arraytype            /integertype  /anytype ]     /put_a     load addtotrie
+  [/literalproceduretype /integertype  /anytype]      /put_lp    load addtotrie
+  [/dictionarytype       /literaltype  /anytype]      /put_d     load addtotrie
+  [/proceduretype        /integertype  /anytype ]     /put_p     load addtotrie
+  [/stringtype           /integertype  /integertype]  /put_s     load addtotrie
+
+% The following seemingly redundant definitions fix a deficiency of /anytype
+% We must manually add the functions to the branches which have specific types 
+  [/arraytype            /arraytype    /integertype ] /put_a_a_t load addtotrie
+  [/arraytype            /arraytype    /doubletype ]  /put_a_a_t load addtotrie
+  [/proceduretype        /integertype  /integertype ] /put_p     load addtotrie
+  [/proceduretype        /integertype  /doubletype ]  /put_p     load addtotrie
+  [/literalproceduretype /integertype  /integertype]  /put_lp    load addtotrie
+  [/literalproceduretype /integertype  /doubletype]   /put_lp    load addtotrie
+  [/dictionarytype       /literaltype  /integertype]  /put_d     load addtotrie
+  [/dictionarytype       /literaltype  /doubletype]   /put_d     load addtotrie 
 def
 
 

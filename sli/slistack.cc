@@ -156,7 +156,7 @@ void IndexFunction::execute(SLIInterpreter *i) const
   assert( id != NULL);
   size_t pos=id->get();
     
-  if(pos <= i->OStack.load())
+  if(pos+1 < i->OStack.load())
   {
     i->EStack.pop();
     i->OStack.pop();
