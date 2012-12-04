@@ -44,6 +44,9 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 # Obtain host system type; HEP 2004-12-20
 AC_CANONICAL_HOST
 
+# Default to installing in the home directory, unless instructed otherwise
+AC_PREFIX_DEFAULT([$HOME/opt/nest])
+
 # ------------------------------------------------------------------------
 # Handle options
 #
