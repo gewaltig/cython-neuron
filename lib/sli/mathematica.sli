@@ -4788,8 +4788,38 @@ SeeAlso: MapThread, forall, Map, MapIndexed, NestList, FoldList
 /put  [/doublevectortype /integertype /doubletype] /put_dv_i_d load def
 /put  [/intvectortype /integertype /integertype] /put_iv_i_i load def
 
+/* BeginDocumentation
+Name: zeros - Return a DoubleVector filled with zeros.
+Synapsis: n zeros -> [. 0. 0. ... .]
+Author: Marc-Oliver Gewaltig
+FirstVersion: Dec. 4 2012
+SeeAlso: ones, arange
+*/
 /zeros [/integertype] /zeros_dv load def
+
+/* BeginDocumentation
+Name: oness - Return a DoubleVector filled with ones.
+Synapsis: n ones -> [. 1. 1. ... .]
+Author: Marc-Oliver Gewaltig
+FirstVersion: Dec. 4 2012
+SeeAlso: zeros, arange
+*/
+
 /ones [/integertype] /ones_dv load def
+
+/* BeginDocumentation
+Name: arange - Return a Int/DoubleVector filled with a range of numbers.
+Synapsis: [n] arange -> [ 1  ... 10 ]
+          [a b] arange -> [a ... b]
+          [a b s] arange -> [a a+s ...]
+Description:
+arange is identical to Range, except that the returned object is a DoubleVector or IntVector, depending on the type of the
+range specification.
+
+Author: Marc-Oliver Gewaltig
+FirstVersion: Dec. 4 2012
+SeeAlso: zeros, one, Range
+*/
 
 %----------------------------------------------------------------------------
 /* Begin(LOESCHMISCH!)Documentation
