@@ -29,6 +29,10 @@ namespace sli
   extern Name any;
   extern Name object;
   extern Name imap;
+  extern Name imap_iv;
+  extern Name imap_dv;
+  extern Name iforall_iv;
+  extern Name iforall_dv;
   extern Name imapindexed;
 }
 #endif

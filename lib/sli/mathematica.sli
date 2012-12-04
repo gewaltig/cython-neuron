@@ -4766,18 +4766,12 @@ SeeAlso: MapThread, forall, Map, MapIndexed, NestList, FoldList
   doublevector2array exch doublevector2array eq
 } def
 
-/forall [/doublevectortype /proceduretype]
-{ exch doublevector2array exch forall } def
+/forall [/doublevectortype /proceduretype] /forall_dv load def
+/forall [/intvectortype /proceduretype] /forall_iv load def
 
-/Map 
- [/doublevectortype /proceduretype] { exch doublevector2array exch  Map cv_dv } def
-
-/forall [/intvectortype /proceduretype]
-{ exch intvector2array exch forall } def
-
-/Map 
- [/intvectortype /proceduretype ] { exch intvector2array exch Map cv_iv } def
-
+/Map [/doublevectortype /proceduretype] /Map_ load def
+/Map [/intvectortype /proceduretype] /Map_ load def
+ 
 /arrayload_ /arrayload load def
 
 /arrayload [/arraytype] /arrayload_ load def
@@ -4790,6 +4784,7 @@ SeeAlso: MapThread, forall, Map, MapIndexed, NestList, FoldList
 /get [/intvectortype /intvectortype] /get_iv_iv load def
 /get [/intvectortype /arraytype] {cv_iv get_iv_iv} def
 /get [/doublevectortype /arraytype] {cv_iv get_dv_iv} def
+
 
 /put  [/doublevectortype /integertype /doubletype] /put_dv_i_d load def
 /put  [/intvectortype /integertype /integertype] /put_iv_i_i load def
@@ -4826,6 +4821,24 @@ Author: Marc-Oliver Gewaltig
 FirstVersion: Dec. 4 2012
 SeeAlso: zeros, ones, Range
 */
+
+/getinterval [/intvectortype /integertype /integertype]
+{
+   2 arraystore arange 
+   get_iv_iv 
+} def 
+
+/getinterval [/doublevectortype /integertype /integertype]
+{
+   2 arraystore arange 
+   get_dv_iv 
+} def 
+
+/<. mark def
+/<# mark def
+
+/.> { counttomark arraystore array2doublevector exch pop } bind def
+/#> { counttomark arraystore array2intvector exch pop} bind def
 
 %----------------------------------------------------------------------------
 /* Begin(LOESCHMISCH!)Documentation

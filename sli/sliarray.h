@@ -51,6 +51,18 @@ class SLIArrayModule: public SLIModule
     void execute(SLIInterpreter *) const;
     void backtrace(SLIInterpreter *, int) const ;
   };
+  class IMap_ivFunction: public SLIFunction
+  {
+    public:
+    void execute(SLIInterpreter *) const;
+    void backtrace(SLIInterpreter *, int) const ;
+  };
+  class IMap_dvFunction: public SLIFunction
+  {
+    public:
+    void execute(SLIInterpreter *) const;
+    void backtrace(SLIInterpreter *, int) const ;
+  };
   class MapThreadFunction: public SLIFunction
   {
     public:
@@ -492,6 +504,33 @@ class SLIArrayModule: public SLIModule
     void execute(SLIInterpreter *) const;
   };
 
+  class Forall_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Forall_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Iforall_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+    void backtrace(SLIInterpreter *, int) const ;
+  };
+
+  class Iforall_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+    void backtrace(SLIInterpreter *, int) const ;
+ };
+
+
   /** @} */
   
   RangeFunction rangefunction;
@@ -505,6 +544,8 @@ class SLIArrayModule: public SLIModule
   TransposeFunction transposefunction;
   MapFunction mapfunction;
   IMapFunction imapfunction;
+  IMap_ivFunction imap_ivfunction;
+  IMap_dvFunction imap_dvfunction;
   MapIndexedFunction mapindexedfunction;
   IMapIndexedFunction imapindexedfunction;
   MapThreadFunction mapthreadfunction;
@@ -525,6 +566,11 @@ class SLIArrayModule: public SLIModule
   IntVector2ArrayFunction intvector2arrayfunction;
   DoubleVector2ArrayFunction doublevector2arrayfunction;
   FiniteQ_dFunction finiteq_dfunction;
+  Forall_ivFunction forall_ivfunction;
+  Iforall_ivFunction iforall_ivfunction;
+  Forall_dvFunction forall_dvfunction;
+  Iforall_dvFunction iforall_dvfunction;
+
 
   Add_iv_ivFunction add_iv_ivfunction;
   Add_i_ivFunction  add_i_ivfunction;

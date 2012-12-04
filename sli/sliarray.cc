@@ -953,6 +953,276 @@ void SLIArrayModule::IMapFunction::execute(SLIInterpreter *i) const
 
 
 }
+void SLIArrayModule::IMap_ivFunction::backtrace(SLIInterpreter *i, int p) const
+{
+  IntegerDatum   *id= static_cast<IntegerDatum *>(i->EStack.pick(p+3).datum());
+  assert(id!=NULL);
+
+  IntegerDatum   *count= static_cast<IntegerDatum *>(i->EStack.pick(p+2).datum());
+  assert(count==NULL);
+
+  ProcedureDatum const *pd= static_cast<ProcedureDatum *>(i->EStack.pick(p+1).datum());
+  assert(pd !=NULL);
+
+  std::cerr << "During Map at iteration " << count->get() << "." << std::endl;
+
+
+  pd->list(std::cerr,"   ",id->get()-1);
+  std::cerr <<std::endl;
+
+}
+
+/**********************************************/
+/* % IMap_iv                                     */
+/*  call: intvec mark procc count proc %map   */
+/*  pick   5     4    3     2    1      0     */
+/**********************************************/
+void SLIArrayModule::IMap_ivFunction::execute(SLIInterpreter *i) const
+{
+    ProcedureDatum *proc=static_cast<ProcedureDatum *>(i->EStack.pick(1).datum());
+    size_t proclimit=proc->size();
+    IntegerDatum *count= static_cast<IntegerDatum *>(i->EStack.pick(2).datum());
+    size_t iterator= count->get();
+    IntegerDatum *procc= static_cast<IntegerDatum *>(i->EStack.pick(3).datum());
+    size_t pos= procc->get();
+    IntVectorDatum *array=static_cast<IntVectorDatum *>(i->EStack.pick(5).datum());
+    size_t limit=(*array)->size();
+
+    // Do we  start a new iteration ?
+    if(pos==0)
+    {
+      if(iterator < limit) // Is Iteration is still running
+      {
+	if(iterator>0)
+	{
+	  // In this case we have to put the result of
+	  // the last procedure call into the array
+	  if(i->OStack.load()==0)
+	  {
+	    i->dec_call_depth();
+	    i->raiseerror(i->StackUnderflowError);
+	    return;
+	  }
+          IntegerDatum *result=dynamic_cast<IntegerDatum *>(i->OStack.top().datum());
+          if(not result)
+          {
+	    i->dec_call_depth();
+            i->message(SLIInterpreter::M_ERROR, "Map_iv", "Function must return an integer.");
+
+	    i->raiseerror(i->ArgumentTypeError);
+            return;
+          }
+
+	  (**array)[iterator-1]=result->get();
+	  i->OStack.pop();
+	}
+
+	i->OStack.push(new IntegerDatum((**array)[iterator]));  // push element to user
+	if(i->step_mode())
+	{
+	  std::cerr << "Map:"
+		    << " Limit: " << limit
+		    << " Pos: " << iterator
+		    << " Iterator: ";
+	  i->OStack.pick(0).pprint(std::cerr);
+	  std::cerr << std::endl;
+	}
+
+	++(count->get());
+	// We continue after this if-branch and do the commands
+      }
+      else
+      {
+	if(iterator>0)
+	{
+	  // In this case we have to put the result of
+	  // the last procedure call into the array
+	  if(i->OStack.load()==0)
+	  {
+	    i->raiseerror(i->StackUnderflowError);
+	    return;
+	  }
+          IntegerDatum *result=dynamic_cast<IntegerDatum *>(i->OStack.top().datum());
+          if(not result)
+          {
+              i->dec_call_depth();
+              i->message(SLIInterpreter::M_ERROR, "Map_iv", "Function must return an integer.");
+              i->raiseerror(i->ArgumentTypeError);
+              return;
+          }
+	  (**array)[iterator-1]= result->get();
+	  i->OStack.pop();
+	}
+	i->OStack.push_move(i->EStack.pick(5)); // push array
+	i->EStack.pop(6);
+	i->dec_call_depth();
+	return;
+      }
+    }
+
+    if((size_t)procc->get() < proclimit)
+    {
+      /* we are still evaluating the procedure. */
+      i->EStack.push(proc->get(pos));  // get next command from the procedure
+      ++(procc->get());                 // increment the counter and
+
+      if(i->step_mode())
+      {
+	std::cerr << std::endl;
+	do{
+	  char cmd=i->debug_commandline(i->EStack.top());
+	  if(cmd=='l') // List the procedure
+	  {
+	    if(proc !=NULL)
+	    {
+	      proc->list(std::cerr,"   ",pos);
+	      std::cerr <<std::endl;
+	    }
+	  }
+	  else
+	    break;
+	} while (true);
+      }
+
+    }
+    if((size_t)procc->get() >= proclimit)
+      (*procc)=0;
+
+
+}
+
+void SLIArrayModule::IMap_dvFunction::backtrace(SLIInterpreter *i, int p) const
+{
+  IntegerDatum   *id= static_cast<IntegerDatum *>(i->EStack.pick(p+3).datum());
+  assert(id!=NULL);
+
+  IntegerDatum   *count= static_cast<IntegerDatum *>(i->EStack.pick(p+2).datum());
+  assert(count==NULL);
+
+  ProcedureDatum const *pd= static_cast<ProcedureDatum *>(i->EStack.pick(p+1).datum());
+  assert(pd !=NULL);
+
+  std::cerr << "During Map at iteration " << count->get() << "." << std::endl;
+
+
+  pd->list(std::cerr,"   ",id->get()-1);
+  std::cerr <<std::endl;
+
+}
+
+void SLIArrayModule::IMap_dvFunction::execute(SLIInterpreter *i) const
+{
+    ProcedureDatum *proc=static_cast<ProcedureDatum *>(i->EStack.pick(1).datum());
+    size_t proclimit=proc->size();
+    IntegerDatum *count= static_cast<IntegerDatum *>(i->EStack.pick(2).datum());
+    size_t iterator= count->get();
+    IntegerDatum *procc= static_cast<IntegerDatum *>(i->EStack.pick(3).datum());
+    size_t pos= procc->get();
+    DoubleVectorDatum *array=static_cast<DoubleVectorDatum *>(i->EStack.pick(5).datum());
+    size_t limit=(*array)->size();
+
+    // Do we  start a new iteration ?
+    if(pos==0)
+    {
+      if(iterator < limit) // Is Iteration is still running
+      {
+	if(iterator>0)
+	{
+	  // In this case we have to put the result of
+	  // the last procedure call into the array
+	  if(i->OStack.load()==0)
+	  {
+	    i->dec_call_depth();
+	    i->raiseerror(i->StackUnderflowError);
+	    return;
+	  }
+          DoubleDatum *result=dynamic_cast<DoubleDatum *>(i->OStack.top().datum());
+          if(not result)
+          {
+	    i->dec_call_depth();
+            i->message(SLIInterpreter::M_ERROR, "Map_dv", "Function must return a double.");
+
+	    i->raiseerror(i->ArgumentTypeError);
+            return;
+          }
+
+	  (**array)[iterator-1]=result->get();
+	  i->OStack.pop();
+	}
+
+	i->OStack.push(new DoubleDatum((**array)[iterator]));  // push element to user
+	if(i->step_mode())
+	{
+	  std::cerr << "Map:"
+		    << " Limit: " << limit
+		    << " Pos: " << iterator
+		    << " Iterator: ";
+	  i->OStack.pick(0).pprint(std::cerr);
+	  std::cerr << std::endl;
+	}
+
+	++(count->get());
+	// We continue after this if-branch and do the commands
+      }
+      else
+      {
+	if(iterator>0)
+	{
+	  // In this case we have to put the result of
+	  // the last procedure call into the array
+	  if(i->OStack.load()==0)
+	  {
+	    i->raiseerror(i->StackUnderflowError);
+	    return;
+	  }
+          DoubleDatum *result=dynamic_cast<DoubleDatum *>(i->OStack.top().datum());
+          if(not result)
+          {
+              i->dec_call_depth();
+              i->message(SLIInterpreter::M_ERROR, "Map_dv", "Function must return a double.");
+              i->raiseerror(i->ArgumentTypeError);
+              return;
+          }
+	  (**array)[iterator-1]= result->get();
+	  i->OStack.pop();
+	}
+	i->OStack.push_move(i->EStack.pick(5)); // push array
+	i->EStack.pop(6);
+	i->dec_call_depth();
+	return;
+      }
+    }
+
+    if((size_t)procc->get() < proclimit)
+    {
+      /* we are still evaluating the procedure. */
+      i->EStack.push(proc->get(pos));  // get next command from the procedure
+      ++(procc->get());                 // increment the counter and
+
+      if(i->step_mode())
+      {
+	std::cerr << std::endl;
+	do{
+	  char cmd=i->debug_commandline(i->EStack.top());
+	  if(cmd=='l') // List the procedure
+	  {
+	    if(proc !=NULL)
+	    {
+	      proc->list(std::cerr,"   ",pos);
+	      std::cerr <<std::endl;
+	    }
+	  }
+	  else
+	    break;
+	} while (true);
+      }
+
+    }
+    if((size_t)procc->get() >= proclimit)
+      (*procc)=0;
+
+
+}
 
 /********************************/
 /* Map                          */
@@ -1017,13 +1287,19 @@ void SLIArrayModule::MapFunction::execute(SLIInterpreter *i) const
     }
 
     i->EStack.push_move(i->OStack.pick(1));        // push array
+    
     i->EStack.push(i->baselookup(i->mark_name));
 
     i->EStack.push_by_pointer(new IntegerDatum(0));          // push procedure counter
     i->EStack.push_by_pointer(new IntegerDatum(0));          // push initial counter
     i->EStack.push_move(i->OStack.pick(0));       // push procedure
 
-    i->EStack.push(i->baselookup(sli::imap));
+    if(dynamic_cast<IntVectorDatum *>(i->EStack.pick(4).datum()))
+        i->EStack.push(i->baselookup(sli::imap_iv));
+    else if(dynamic_cast<DoubleVectorDatum *>(i->EStack.pick(4).datum()))
+        i->EStack.push(i->baselookup(sli::imap_dv));
+    else
+        i->EStack.push(i->baselookup(sli::imap));
     i->inc_call_depth();
     i->OStack.pop(2);
 }
@@ -3438,6 +3714,163 @@ void SLIArrayModule::FiniteQ_dFunction::execute(SLIInterpreter *i) const
   i->EStack.pop();
 }
 
+
+
+void SLIArrayModule::Forall_ivFunction::execute(SLIInterpreter *i) const
+{
+    static Token mark(i->baselookup(i->mark_name));
+    static Token forall(i->baselookup(sli::iforall_iv));
+
+    ProcedureDatum *proc=
+        static_cast<ProcedureDatum *>(i->OStack.top().datum());
+    
+    i->EStack.pop();
+    i->EStack.push_by_ref(mark);
+    i->EStack.push_move(i->OStack.pick(1));        // push object
+    i->EStack.push_by_pointer(new IntegerDatum(0));          // push array counter
+    i->EStack.push_by_ref(i->OStack.pick(0));       // push procedure
+    i->EStack.push_by_pointer(new IntegerDatum(proc->size()));          // push procedure counter
+    i->EStack.push_by_ref(forall);
+    i->OStack.pop(2);
+    i->inc_call_depth();
+}
+/*********************************************************/
+/* %forall_iv                                          */
+/*  call: mark object count proc n %forall_iv      */
+/*  pick    5     4    3     2    1    0               */        
+/*********************************************************/
+void SLIArrayModule::Iforall_ivFunction::execute(SLIInterpreter *i) const
+{
+    
+    IntegerDatum *proccount=
+        static_cast<IntegerDatum *>(i->EStack.pick(1).datum());
+    
+    ProcedureDatum
+        const *proc= static_cast<ProcedureDatum *>(i->EStack.pick(2).datum());
+    
+    long &pos=proccount->get();
+
+    while( proc->index_is_valid(pos))
+    {
+	const Token &t= proc->get(pos);
+	++pos;
+	if( t->is_executable())
+	{
+	    i->EStack.push(t);
+	    return;
+	}
+	i->OStack.push(t);
+    }
+ 
+    IntegerDatum *count=
+	static_cast<IntegerDatum *>(i->EStack.pick(3).datum());
+    IntVectorDatum *ad  =
+	static_cast<IntVectorDatum *>(i->EStack.pick(4).datum());
+        
+    size_t idx=count->get();
+    
+    if(idx < (**ad).size())
+    {
+	pos=0; // reset procedure interator
+        
+	i->OStack.push(new IntegerDatum((**ad)[idx])); // push counter to user
+	++(count->get());
+    }
+    else
+    {
+	i->EStack.pop(6);
+	i->dec_call_depth();
+    }
+}
+
+
+void SLIArrayModule::Iforall_ivFunction::backtrace(SLIInterpreter *i, int p) const
+{
+  IntegerDatum   *count= static_cast<IntegerDatum *>(i->EStack.pick(p+3).datum());
+  assert(count!=NULL);
+
+  std::cerr << "During forall (IntVector) at iteration " << count->get() << "." << std::endl;
+
+}
+
+void SLIArrayModule::Forall_dvFunction::execute(SLIInterpreter *i) const
+{
+    static Token mark(i->baselookup(i->mark_name));
+    static Token forall(i->baselookup(sli::iforall_dv));
+
+    ProcedureDatum *proc=
+        static_cast<ProcedureDatum *>(i->OStack.top().datum());
+    
+    i->EStack.pop();
+    i->EStack.push_by_ref(mark);
+    i->EStack.push_move(i->OStack.pick(1));        // push object
+    i->EStack.push_by_pointer(new IntegerDatum(0));          // push array counter
+    i->EStack.push_by_ref(i->OStack.pick(0));       // push procedure
+    i->EStack.push_by_pointer(new IntegerDatum(proc->size()));          // push procedure counter
+    i->EStack.push_by_ref(forall);
+    i->OStack.pop(2);
+    i->inc_call_depth();
+}
+
+/*********************************************************/
+/* %forall_iv                                          */
+/*  call: mark object count proc n %forall_iv      */
+/*  pick    5     4    3     2    1    0               */        
+/*********************************************************/
+void SLIArrayModule::Iforall_dvFunction::execute(SLIInterpreter *i) const
+{
+    
+    IntegerDatum *proccount=
+        static_cast<IntegerDatum *>(i->EStack.pick(1).datum());
+    
+    ProcedureDatum
+        const *proc= static_cast<ProcedureDatum *>(i->EStack.pick(2).datum());
+    
+    long &pos=proccount->get();
+
+    while( proc->index_is_valid(pos))
+    {
+	const Token &t= proc->get(pos);
+	++pos;
+	if( t->is_executable())
+	{
+	    i->EStack.push(t);
+	    return;
+	}
+	i->OStack.push(t);
+    }
+ 
+    IntegerDatum *count=
+	static_cast<IntegerDatum *>(i->EStack.pick(3).datum());
+    DoubleVectorDatum *ad  =
+	static_cast<DoubleVectorDatum *>(i->EStack.pick(4).datum());
+        
+    size_t idx=count->get();
+    
+    if(idx < (**ad).size())
+    {
+	pos=0; // reset procedure interator
+        
+	i->OStack.push(new DoubleDatum((**ad)[idx])); // push counter to user
+	++(*count);
+    }
+    else
+    {
+	i->EStack.pop(6);
+	i->dec_call_depth();
+    }
+}
+
+
+void SLIArrayModule::Iforall_dvFunction::backtrace(SLIInterpreter *i, int p) const
+{
+  IntegerDatum   *count= static_cast<IntegerDatum *>(i->EStack.pick(p+3).datum());
+  assert(count!=NULL);
+
+  std::cerr << "During forall (DoubleVector) at iteration " << count->get() << "." << std::endl;
+
+}
+
 void SLIArrayModule::init(SLIInterpreter *i)
 {
   i->createcommand("MapIndexed_a", &mapindexedfunction);
@@ -3450,7 +3883,13 @@ void SLIArrayModule::init(SLIInterpreter *i)
   i->createcommand("Transpose", &transposefunction);
   i->createcommand("Partition_a_i_i", &partitionfunction);
   i->createcommand(sli::imap, &imapfunction);
+  i->createcommand(sli::imap_dv, &imap_dvfunction);
+  i->createcommand(sli::imap_iv, &imap_ivfunction);
   i->createcommand(sli::imapindexed, &imapindexedfunction);
+  i->createcommand("forall_iv", &forall_ivfunction);
+  i->createcommand("forall_dv", &forall_dvfunction);
+  i->createcommand(sli::iforall_iv, &iforall_ivfunction);
+  i->createcommand(sli::iforall_dv, &iforall_dvfunction);
   i->createcommand("::MapThread", &imapthreadfunction);
   i->createcommand("Range", &rangefunction);
   i->createcommand("arrayload", &arrayloadfunction);

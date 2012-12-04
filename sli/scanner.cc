@@ -290,6 +290,8 @@ Scanner::Scanner(std::istream* is)
 
 
     trans[decpfirstst][digit]=decpdgtst;
+    trans[decpfirstst][alpha]=dotalphast;
+    trans[decpfirstst][asterisk]=dotalphast;
     trans[decpfirstst][null]=decpdgtst;
  
     trans[decpointst][digit]=fracdgtst;
@@ -669,6 +671,11 @@ bool Scanner::operator()(Token& t)
 	  state=end;
 	}
 	break;
+      case dotalphast:
+          s.append(1,'.');
+          s.append(1,c);
+          state=alphast;
+          break;
       case sgalphast  :
 	assert(sgc=='+' || sgc=='-');
 	s.append(1,sgc);
