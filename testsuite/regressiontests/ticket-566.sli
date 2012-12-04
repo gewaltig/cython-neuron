@@ -1,0 +1,45 @@
+/*
+ *  ticket-619.sli
+ *
+ *  This file is part of NEST
+ *
+ *  Copyright (C) 2012 by
+ *  The NEST Initiative
+ *
+ *  See the file AUTHORS for details.
+ *
+ *  Permission is granted to compile and modify
+ *  this file for non-commercial use.
+ *  See the file LICENSE for details.
+ *
+ */
+
+/* BeginDocumentation
+
+Name: testsuite::ticket-566 - Regression test for setting a fake number of processes.
+
+Synopsis: (ticket-566) run -> NEST exits if test fails
+
+Description: 
+Ensure that kernel set status of num_procs does no longer work and
+check that SetFakeNumProcesses sets num_processes in the kernel.
+
+Author: Susanne Kunkel, 2012-12-04
+ */
+
+/unittest (9990) require
+/unittest using
+M_ERROR setverbosity
+
+{ 
+  0 << /num_procs 777 >> SetStatus
+}
+fail_or_die
+
+{
+  777 SetFakeNumProcesses
+  0 GetStatus /num_processes get 777 eq
+}
+assert_or_die
+
+endusing
