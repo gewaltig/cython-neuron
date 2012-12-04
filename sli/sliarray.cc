@@ -198,6 +198,179 @@ void SLIArrayModule::RangeFunction::execute(SLIInterpreter *i) const
 }
 
 
+void SLIArrayModule::ArangeFunction::execute(SLIInterpreter *i) const
+{
+//  call:  array arange -> vector
+
+  assert(i->OStack.load()>0);
+
+  ArrayDatum   *ad = dynamic_cast<ArrayDatum *>(i->OStack.pick(0).datum());
+
+  assert(ad !=0);
+  if(ad->size() == 1) // Construct an array of elements 1 ... N
+  {
+    IntegerDatum *nd= dynamic_cast<IntegerDatum *>(ad->get(0).datum());
+    if(nd!=0)
+    {
+      long n= nd->get();
+      if(n<0)
+      {
+          i->raiseerror("RangeCheck");
+          return;
+      }
+      IntVectorDatum *result=new IntVectorDatum(new std::vector<long>(n));
+      for(long j=0; j< n; ++j)
+      {
+          (**result)[j]=j+1;
+      }
+      i->EStack.pop();
+      i->OStack.pop();
+      i->OStack.push(result);
+      return;
+    }
+    else
+    {
+        double d=ad->get(0);
+        long n= (long) std::floor(d);
+        if(n<0)
+        {
+            i->raiseerror("RangeCheck");
+            return;
+        }
+        DoubleVectorDatum *result=new DoubleVectorDatum(new std::vector<double>(n));
+	for(long j=0; j< n; ++j)
+	{
+            (**result)[j]= 1.0+j;
+	}
+        i->EStack.pop();
+        i->OStack.pop();
+        i->OStack.push(result);
+        return;
+    }
+  }
+  else if(ad->size() == 2) // [n1 n2]
+  {
+      IntegerDatum *n1d= dynamic_cast<IntegerDatum *>(ad->get(0).datum());
+      IntegerDatum *n2d= dynamic_cast<IntegerDatum *>(ad->get(1).datum());
+      if( (n1d !=0) && (n2d != 0))
+      {
+          long n = 1 + n2d->get() - n1d->get();
+          if(n<0)
+          {
+              i->raiseerror("RangeCheck");
+              return;
+          }
+          
+          long start = n1d->get();
+          long stop  = n2d->get();
+          
+          IntVectorDatum *result=new IntVectorDatum(new std::vector<long>(n));
+
+          for(long j=start; j<=stop; ++j)
+          {
+              (**result)[j]= j;
+          }
+          i->EStack.pop();
+          i->OStack.pop();
+          i->OStack.push(result);
+          return;
+      }
+      else
+      {
+          DoubleDatum *n1d= dynamic_cast<DoubleDatum *>(ad->get(0).datum());
+          DoubleDatum *n2d= dynamic_cast<DoubleDatum *>(ad->get(1).datum());
+          if( (n1d !=0) && (n2d != 0))
+          {
+              double start = n1d->get();
+              double stop  = n2d->get();
+              long n= 1 + static_cast<long>(stop-start);
+              if(n<0)
+              {
+                  i->raiseerror("RangeCheck");
+                  return;
+              }
+      
+              DoubleVectorDatum *result=new DoubleVectorDatum(new std::vector<double>(n));
+
+              for(long j=0; j<n; ++j)
+              {
+                  (**result)[j]= start+j;
+              }
+              i->EStack.pop();
+              i->OStack.pop();
+              i->OStack.push(result);
+              return;
+          }
+      } 
+  }
+  else if(ad->size() == 3) // [n1 n2 dn]
+  {
+    IntegerDatum *n1d= dynamic_cast<IntegerDatum *>(ad->get(0).datum());
+    IntegerDatum *n2d= dynamic_cast<IntegerDatum *>(ad->get(1).datum());
+    IntegerDatum *n3d= dynamic_cast<IntegerDatum *>(ad->get(2).datum());
+    if( (n1d !=0) && (n2d != 0) && (n3d != 0))
+    {
+      long di = n3d->get();
+      long start=n1d->get();
+      long stop=n2d->get();
+      if(di != 0)
+      {
+	long n= 1 + (stop-start)/di;
+        if(n<0)
+        {
+            i->raiseerror("RangeCheck");
+            return;
+        }
+        IntVectorDatum *result=new IntVectorDatum(new std::vector<long>(n));
+        long s=start;
+        for(long j=0; j<n; ++j, s+=di)
+        {
+            (**result)[j]= s;
+        }
+        i->EStack.pop();
+        i->OStack.pop();
+        i->OStack.push(result);
+        return;
+      }
+      else i->raiseerror(i->DivisionByZeroError);
+    }
+    else
+    {
+      DoubleDatum *n1d= dynamic_cast<DoubleDatum *>(ad->get(0).datum());
+      DoubleDatum *n2d= dynamic_cast<DoubleDatum *>(ad->get(1).datum());
+      DoubleDatum *n3d= dynamic_cast<DoubleDatum *>(ad->get(2).datum());
+      if( (n1d !=0) && (n2d != 0) && (n3d != 0))
+      {
+	double di = n3d->get();
+	double start=n1d->get();
+	double stop=n2d->get();
+
+	if(di != 0)
+	{
+	  long n= 1 + static_cast<long>((stop-start)/di);
+          if(n<0)
+          {
+              i->raiseerror("RangeCheck");
+              return;
+          }
+          DoubleVectorDatum *result=new DoubleVectorDatum(new std::vector<double>(n));
+          for(long j=0; j<n; ++j)
+          {
+	      (**result)[j] = (start+j*di);
+	  }
+          i->EStack.pop();
+          i->OStack.pop();
+          i->OStack.push(result);
+          return;
+	}
+	else i->raiseerror(i->DivisionByZeroError);
+      }
+      else i->raiseerror(i->ArgumentTypeError);
+    }
+  } else i->raiseerror(i->ArgumentTypeError);
+}
+
+
 
 
 
@@ -2922,6 +3095,222 @@ void SLIArrayModule::Length_dvFunction::execute(SLIInterpreter *i) const
   i->EStack.pop();
 }
 
+void SLIArrayModule::Get_dv_iFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntegerDatum *id= dynamic_cast<IntegerDatum *>(i->OStack.pick(0).datum());
+  if(id == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  DoubleVectorDatum *dvd= dynamic_cast<DoubleVectorDatum *>(i->OStack.pick(1).datum());
+  if(dvd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t idx=id->get();
+  if(idx >= (**dvd).size())
+  {
+      i->raiseerror("RangeCheck");
+      return;
+  }
+  DoubleDatum *result=new DoubleDatum((**dvd)[idx]);
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Get_iv_iFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntegerDatum *id= dynamic_cast<IntegerDatum *>(i->OStack.pick(0).datum());
+  if(id == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntVectorDatum *vd= dynamic_cast<IntVectorDatum *>(i->OStack.pick(1).datum());
+  if(vd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t idx=id->get();
+  if(idx >= (**vd).size())
+  {
+      i->raiseerror("RangeCheck");
+      return;
+  }
+  IntegerDatum *result=new IntegerDatum((**vd)[idx]);
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Get_iv_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntVectorDatum *id= dynamic_cast<IntVectorDatum *>(i->OStack.pick(0).datum());
+  if(id == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntVectorDatum *vd= dynamic_cast<IntVectorDatum *>(i->OStack.pick(1).datum());
+  if(vd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t length= (**id).size();
+  const size_t max_idx= (**vd).size();
+  IntVectorDatum *result= new IntVectorDatum(new std::vector<long>(length));
+  for(size_t j=0; j< length; ++j)
+  {
+      const size_t idx=(**id)[j];
+      if(idx >= max_idx)
+      {
+          delete result;
+          i->raiseerror("RangeCheck");
+          return;
+      }
+      (**result)[j]=(**vd)[idx];
+  }
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Get_dv_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<2)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntVectorDatum *id= dynamic_cast<IntVectorDatum *>(i->OStack.pick(0).datum());
+  if(id == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  DoubleVectorDatum *vd= dynamic_cast<DoubleVectorDatum *>(i->OStack.pick(1).datum());
+  if(vd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t length= (**id).size();
+  const size_t max_idx= (**vd).size();
+  DoubleVectorDatum *result= new DoubleVectorDatum(new std::vector<double>(length));
+  for(size_t j=0; j< length; ++j)
+  {
+      const size_t idx=(**id)[j];
+      if(idx >= max_idx)
+      {
+          delete result;
+          i->raiseerror("RangeCheck");
+          return;
+      }
+      (**result)[j]=(**vd)[idx];
+  }
+  i->OStack.pop(2);
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+// vector idx val put -> vector
+void SLIArrayModule::Put_dv_i_dFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<3)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  DoubleDatum *val= dynamic_cast<DoubleDatum *>(i->OStack.pick(0).datum());
+  if(val == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntegerDatum *idxd= dynamic_cast<IntegerDatum *>(i->OStack.pick(1).datum());
+  if(idxd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  DoubleVectorDatum *vecd= dynamic_cast<DoubleVectorDatum *>(i->OStack.pick(2).datum());
+  if(vecd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t idx= idxd->get();
+  if(idx >= (**vecd).size())
+  {
+      i->raiseerror("RangeCheck");
+      return;
+  }
+  (**vecd)[idx]= val->get();
+
+  i->OStack.pop(2);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Put_iv_i_iFunction::execute(SLIInterpreter *i) const
+{
+
+  IntegerDatum *val= dynamic_cast<IntegerDatum *>(i->OStack.pick(0).datum());
+  if(val == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntegerDatum *idxd= dynamic_cast<IntegerDatum *>(i->OStack.pick(1).datum());
+  if(idxd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  IntVectorDatum *vecd= dynamic_cast<IntVectorDatum *>(i->OStack.pick(2).datum());
+  if(vecd == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+
+  const size_t idx= idxd->get();
+  if(idx >= (**vecd).size())
+  {
+      i->raiseerror("RangeCheck");
+      return;
+  }
+  (**vecd)[idx]= val->get();
+
+  i->OStack.pop(2);
+  i->EStack.pop();
+
+}
+
 void SLIArrayModule::DoubleVector2ArrayFunction::execute(SLIInterpreter *i) const
 {
   if(i->OStack.load()<1)
@@ -2940,6 +3329,102 @@ void SLIArrayModule::DoubleVector2ArrayFunction::execute(SLIInterpreter *i) cons
   i->OStack.push(ad);
   i->EStack.pop();
 
+}
+
+void SLIArrayModule::Zeros_dvFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<1)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntegerDatum *num= dynamic_cast<IntegerDatum *>(i->OStack.top().datum());
+  if(num == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if(num->get() <0)
+  {
+      i->raiseerror("RangeCheck");
+      return;
+  }
+  DoubleVectorDatum *result=new DoubleVectorDatum( new std::vector<double>(num->get(), 0.0));
+  i->OStack.pop();
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Ones_dvFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<1)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntegerDatum *num= dynamic_cast<IntegerDatum *>(i->OStack.top().datum());
+  if(num == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if(num->get() <0)
+  {
+      i->raiseerror("RangeCheck");
+      return;
+  }
+  DoubleVectorDatum *result=new DoubleVectorDatum( new std::vector<double>(num->get(), 1.0));
+  i->OStack.pop();
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Zeros_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<1)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntegerDatum *num= dynamic_cast<IntegerDatum *>(i->OStack.top().datum());
+  if(num == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if(num->get() <0)
+  {
+      i->raiseerror("RangeCheck");
+      return;
+  }
+  IntVectorDatum *result=new IntVectorDatum( new std::vector<long>(num->get(), 0L));
+  i->OStack.pop();
+  i->OStack.push(result);
+  i->EStack.pop();
+}
+
+void SLIArrayModule::Ones_ivFunction::execute(SLIInterpreter *i) const
+{
+  if(i->OStack.load()<1)
+  {
+    i->raiseerror(i->StackUnderflowError);
+    return;
+  }
+  IntegerDatum *num= dynamic_cast<IntegerDatum *>(i->OStack.top().datum());
+  if(num == 0)
+  {
+    i->raiseerror(i->ArgumentTypeError);
+    return;
+  }
+  if(num->get() <0)
+  {
+      i->raiseerror("RangeCheck");
+      return;
+  }
+  IntVectorDatum *result=new IntVectorDatum( new std::vector<long>(num->get(), 1L));
+   i->OStack.pop();
+   i->OStack.push(result);
+   i->EStack.pop();
 }
 
 void SLIArrayModule::FiniteQ_dFunction::execute(SLIInterpreter *i) const
@@ -3012,6 +3497,18 @@ void SLIArrayModule::init(SLIInterpreter *i)
  i->createcommand("div_dv_dv", &div_dv_dvfunction);
  i->createcommand("inv_dv",   &inv_dvfunction);
  i->createcommand("length_dv", &length_dvfunction);
+
+ i->createcommand("get_iv_i", &get_iv_ifunction);
+ i->createcommand("get_iv_iv", &get_iv_ivfunction);
+ i->createcommand("get_dv_i", &get_dv_ifunction);
+ i->createcommand("get_dv_iv", &get_dv_ivfunction);
+ i->createcommand("put_dv_i_d", &put_dv_i_dfunction);
+ i->createcommand("put_iv_i_i", &put_iv_i_ifunction);
+ i->createcommand("zeros_dv", &zeros_dvfunction);
+ i->createcommand("ones_dv", &ones_dvfunction);
+ i->createcommand("zeros_iv", &zeros_ivfunction);
+ i->createcommand("ones_iv", &ones_ivfunction);
+ i->createcommand("arange", &arangefunction);
 
   i->createcommand("finite_q_d", &finiteq_dfunction);
 }

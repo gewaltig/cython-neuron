@@ -421,6 +421,65 @@ class SLIArrayModule: public SLIModule
     void execute(SLIInterpreter *) const;
   };
 
+  class Get_iv_iFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Get_iv_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Get_dv_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Get_dv_iFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Put_dv_i_dFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Put_iv_i_iFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class Zeros_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Zeros_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Ones_dvFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+  class Ones_ivFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
+  class ArangeFunction: public SLIFunction
+  {
+  public:
+    void execute(SLIInterpreter *) const;
+  };
+
   /**
    * Test single double for finiteness.
    * @todo This class does not really belong into sliarray, but is placed
@@ -486,7 +545,17 @@ class SLIArrayModule: public SLIModule
   Neg_dvFunction    neg_dvfunction;
   Inv_dvFunction    inv_dvfunction;
   Length_dvFunction length_dvfunction;
-
+  Get_dv_iFunction  get_dv_ifunction;
+  Get_dv_ivFunction get_dv_ivfunction;
+  Get_iv_iFunction  get_iv_ifunction;
+  Get_iv_ivFunction  get_iv_ivfunction;
+  Put_iv_i_iFunction put_iv_i_ifunction;
+  Put_dv_i_dFunction put_dv_i_dfunction;
+  Zeros_dvFunction zeros_dvfunction;
+  Ones_dvFunction ones_dvfunction;
+  Zeros_ivFunction zeros_ivfunction;
+  Ones_ivFunction ones_ivfunction;
+  ArangeFunction  arangefunction;
   public:
 
   SLIArrayModule(){}
