@@ -4804,7 +4804,7 @@ SeeAlso: ones, arange
 /zeros [/integertype] /zeros_dv load def
 
 /* BeginDocumentation
-Name: oness - Return a DoubleVector filled with ones.
+Name: ones - Return a DoubleVector filled with ones.
 Synapsis: n ones -> [. 1. 1. ... .]
 Author: Marc-Oliver Gewaltig
 FirstVersion: Dec. 4 2012
@@ -4824,7 +4824,7 @@ range specification.
 
 Author: Marc-Oliver Gewaltig
 FirstVersion: Dec. 4 2012
-SeeAlso: zeros, one, Range
+SeeAlso: zeros, ones, Range
 */
 
 %----------------------------------------------------------------------------
