@@ -93,10 +93,7 @@ nest::mip_generator::mip_generator(const mip_generator& n)
   : Node(n), 
     device_(n.device_),
     P_(n.P_) // also causes deep copy of random nnumber generator
-{
-  // create new, private generator, not clean, as it ignores model status
-  //P_.rng_ = librandom::RandomGen::create_knuthlfg_rng(P_.mother_seed_);
-}
+{}
 
 
 /* ---------------------------------------------------------------- 
