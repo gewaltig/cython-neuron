@@ -25,7 +25,7 @@ Create layer of 4x3 elements compose of one
 pyramidal cell and one interneuron, visualize
 
 BCCN Tutorial @ CNS*09
-Hans Ekkehard Plesser, UMB/Simula
+Hans Ekkehard Plesser, UMB
 '''
 
 import nest

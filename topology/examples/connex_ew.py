@@ -26,7 +26,7 @@ connect with circular mask, flat probability,
 visualize.
 
 BCCN Tutorial @ CNS*09
-Hans Ekkehard Plesser, UMB/Simula
+Hans Ekkehard Plesser, UMB
 '''
 
 import nest, pylab

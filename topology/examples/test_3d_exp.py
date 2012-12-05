@@ -72,6 +72,7 @@ ax.scatter(xtgt,ytgt,ztgt,s=40, facecolor='g', edgecolor='g')
 
 tgts=topo.GetTargetNodes(ctr,l1)[0]
 d=topo.Distance(ctr,tgts)
+
 plt.figure()
 plt.hist(d,100)
-plt.show()
+#plt.show()

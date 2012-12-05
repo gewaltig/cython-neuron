@@ -8,7 +8,8 @@ defs= @SLI_THREAD_DEFS@ $defs
 MAKEFLAGS= @MAKE_FLAGS@
 # END  : do not change these lines ---------------------------------------
 
-#SUBDIRS= doc examples
+SUBDIRS= examples
+EXTRA_DIST= testsuite sli doc pynest
 
 noinst_LTLIBRARIES= libtopologymodule.la
 
@@ -69,5 +70,3 @@ install-data-hook:
 
 install-pynest-component:
 	@PYTHON_EXEC@ setup.py install --prefix=$(DESTDIR)@PYNEST_PREFIX@
-
-EXTRA_DIST= testsuite sli doc pynest examples

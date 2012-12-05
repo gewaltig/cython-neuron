@@ -26,7 +26,7 @@ connect with convergent projection and rectangular mask,
 visualize connections from source perspective. 
 
 BCCN Tutorial @ CNS*09
-Hans Ekkehard Plesser, UMB/Simula
+Hans Ekkehard Plesser, UMB
 '''
 
 import nest, pylab

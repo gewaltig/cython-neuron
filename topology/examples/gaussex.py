@@ -25,7 +25,7 @@ Create two layers of 30x30 elements and connect
 them using a Gaussian probabilistic kernel, visualize.
 
 BCCN Tutorial @ CNS*09
-Hans Ekkehard Plesser, UMB/Simula
+Hans Ekkehard Plesser, UMB
 '''
 
 import nest, pylab
