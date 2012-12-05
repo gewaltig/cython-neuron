@@ -56,18 +56,25 @@ namespace librandom {
     
   public:
     explicit GslRandomGen(const gsl_rng_type *,  //!< given RNG, given seed
-		                      unsigned long);
+		          unsigned long);
   
     ~GslRandomGen();
 
     //! Add all GSL RNGs to rngdict
     static void add_gsl_rngs(DictionaryDatum&);
 
+    RngPtr clone(unsigned long s)
+    {
+      return RngPtr(new GslRandomGen(rng_type_, s));
+    }
+
+
   private:
     void           seed_(unsigned long);
     double         drand_(void);
 
   private:
+    gsl_rng_type const *rng_type_;
     gsl_rng *rng_;
 
   };
@@ -112,6 +119,7 @@ namespace librandom {
   private:
     GslRandomGen() {assert(false);}   
     ~GslRandomGen() {assert(false);}
+    RngPtr clone(unsigned long s) {assert(false);}
 
   private:
     void           seed_(unsigned long s);
