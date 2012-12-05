@@ -587,7 +587,9 @@ def GetConnections(source=None, target=None, synapse_type=None) :
         be a nested list, where each sublist contains the connection ids of the respective synapse model.
         
         
-        Each connection id is a 5 tuple or, if available, a numpy array with 5 entries.
+        Each connection id is a 5-tuple or, if available, a numpy array with 5 entries.
+        Elements of the tuple/array are: source-gid, target-gid, target-thread, synapse-id, port
+
 	
         Use GetSynapseStatus()/SetSynapseStatus() to inspect/modify the found
 	connections.
