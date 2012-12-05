@@ -26,12 +26,16 @@ and one interneuron. Connect with two projections, one pyr->pyr, one
 pyr->in, and visualize.
 
 BCCN Tutorial @ CNS*09
-Hans Ekkehard Plesser, UMB/Simula
+Hans Ekkehard Plesser, UMB
 '''
 
-import nest, pylab
+import pylab
+pylab.ion()
+
+import nest
 import nest.topology as topo
 nest.ResetKernel()
+nest.set_verbosity('M_WARNING')
 
 # create two test layers
 nest.CopyModel('iaf_neuron', 'pyr')
@@ -105,5 +109,3 @@ pylab.axes().set_yticks(pylab.arange(-1.5, 1.55, 0.5))
 pylab.grid(True)
 pylab.axis([-1.6, 1.6, -1.6, 1.6])
 pylab.axes().set_aspect('equal', 'box')
-
-# pylab.savefig('conncomp.pdf')

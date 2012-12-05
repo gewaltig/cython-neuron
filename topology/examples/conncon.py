@@ -26,12 +26,16 @@ connect with convergent projection and rectangular mask,
 visualize connection from target perspective. 
 
 BCCN Tutorial @ CNS*09
-Hans Ekkehard Plesser, UMB/Simula
+Hans Ekkehard Plesser, UMB
 '''
 
-import nest, pylab
+import pylab
+pylab.ion()
+
+import nest
 import nest.topology as topo
 nest.ResetKernel()
+nest.set_verbosity('M_WARNING')
 
 # create two test layers
 a = topo.CreateLayer({'columns': 30, 'rows': 30, 'extent': [3.0, 3.0],
@@ -82,4 +86,3 @@ pylab.axis([-2.0, 2.0, -2.0, 2.0])
 pylab.axes().set_aspect('equal', 'box')
 pylab.title('Connection sources')
 
-# pylab.savefig('conncon.pdf')
