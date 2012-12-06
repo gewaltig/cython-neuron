@@ -624,7 +624,7 @@ def GetConnections(source=None, target=None, synapse_model=None) :
 	sps(params)
 	if synapse_model:
             # add model to params dict as literal
-            sr('dup /synapse_model /{} put_d'.format(synapse_model))
+            sr('dup /synapse_model /{0} put_d'.format(synapse_model))
 
 	sr("GetConnections_D")
     
