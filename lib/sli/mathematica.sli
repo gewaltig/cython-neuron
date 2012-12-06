@@ -4734,23 +4734,37 @@ SeeAlso: MapThread, forall, Map, MapIndexed, NestList, FoldList
 
 /cv_dv[/arraytype] { {cvd} Map array2doublevector } def
 
+/neg [/intvectortype] /neg_iv load def
+/neg [/doublevectortype] /neg_dv load def
+/inv_ /inv load def
+
+/inv [/doublevectortype] /inv_dv load def
+/inv [/doubletype] /inv_ load def
+
 /add [/intvectortype /intvectortype] /add_iv_iv load def
+/add [/integertype /intvectortype] /add_i_iv load def
+/add [/intvectortype /integertype] {exch_ add_i_iv} def
+/add [/doublevectortype /doublevectortype] /add_dv_dv load def
+/add [/doubletype /doublevectortype] /add_d_dv load def
+/add [/doublevectortype /doubletype] {exch_ add_d_dv} def
 /sub [/intvectortype /intvectortype] /sub_iv_iv load def
+/sub [/integertype /intvectortype] { neg_iv add_i_iv} def
+/sub [/intvectortype /integertype] { neg_i exch_ add_i_iv} def
+/sub [/doublevectortype /doublevectortype] /sub_dv_dv load def
 /mul [/intvectortype /intvectortype] /mul_iv_iv load def
 /mul [/integertype /intvectortype] /mul_i_iv load def
 /mul [/intvectortype /integertype] {exch_ mul_i_iv} def
 /mul [/doubletype /intvectortype]  /mul_d_iv load def
 /mul [/intvectortype /doubletype ]  {exch_ mul_d_iv} def
-/div [/intvectortype /intvectortype] /add_iv_iv load def
-/add [/doublevectortype /doublevectortype] /add_dv_dv load def
-/sub [/doublevectortype /doublevectortype] /sub_dv_dv load def
-/mul [/doublevectortype /doublevectortype] /mul_dv_dv load def
-/div [/doublevectortype /doublevectortype] /div_dv_dv load def
-/add [/doubletype /doublevectortype] /add_d_dv load def
-/add [/doublevectortype /doubletype] {exch_ add_d_dv} def
 /mul [/doubletype /doublevectortype] /mul_d_dv load def
 /mul [/doublevectortype /doubletype] {exch_ mul_d_dv} def
-/neg [/doublevectortype] /neg_dv load def
+/mul [/doublevectortype /doublevectortype] /mul_dv_dv load def
+/div [/intvectortype /integertype] { exch_ { 1 index div_ii } Map exch_ ; } def
+/div [/intvectortype /intvectortype] /div_iv_iv load def
+/div [/doublevectortype /doublevectortype] /div_dv_dv load def
+/div [/doubletype /doublevectortype] { inv_dv mul_d_dv } def
+/div [/doublevectortype /doubletype] { inv_d exch_ mul_d_dv}  def
+
 /length [/doublevectortype] /length_dv load def
 /length [/intvectortype] /length_iv load def
 /size [/intvectortype] {dup length_iv} def
@@ -4784,7 +4798,6 @@ SeeAlso: MapThread, forall, Map, MapIndexed, NestList, FoldList
 /get [/intvectortype /intvectortype] /get_iv_iv load def
 /get [/intvectortype /arraytype] {cv_iv get_iv_iv} def
 /get [/doublevectortype /arraytype] {cv_iv get_dv_iv} def
-
 
 /put  [/doublevectortype /integertype /doubletype] /put_dv_i_d load def
 /put  [/intvectortype /integertype /integertype] /put_iv_i_i load def
@@ -4821,6 +4834,8 @@ Author: Marc-Oliver Gewaltig
 FirstVersion: Dec. 4 2012
 SeeAlso: zeros, ones, Range
 */
+/arange_ /arange load def
+/arange [/arraytype] /arange_ load def
 
 /getinterval [/intvectortype /integertype /integertype]
 {
@@ -4837,8 +4852,8 @@ SeeAlso: zeros, ones, Range
 /<. mark def
 /<# mark def
 
-/.> { counttomark arraystore array2doublevector exch pop } bind def
-/#> { counttomark arraystore array2intvector exch pop} bind def
+/.> { ] cv_dv } bind def
+/#> { ] cv_iv } bind def
 
 %----------------------------------------------------------------------------
 /* Begin(LOESCHMISCH!)Documentation

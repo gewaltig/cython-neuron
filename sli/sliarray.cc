@@ -254,21 +254,16 @@ void SLIArrayModule::ArangeFunction::execute(SLIInterpreter *i) const
       IntegerDatum *n2d= dynamic_cast<IntegerDatum *>(ad->get(1).datum());
       if( (n1d !=0) && (n2d != 0))
       {
-          long n = 1 + n2d->get() - n1d->get();
-          if(n<0)
-          {
-              i->raiseerror("RangeCheck");
-              return;
-          }
-          
-          long start = n1d->get();
-          long stop  = n2d->get();
-          
+          const long start = n1d->get();
+          const long stop  = n2d->get();
+          long n = 1 + stop-start;
+          if ( n < 0)
+              n=0;
           IntVectorDatum *result=new IntVectorDatum(new std::vector<long>(n));
 
-          for(long j=start; j<=stop; ++j)
+          for(long j=0, val=start; j< n; ++j, ++val)
           {
-              (**result)[j]= j;
+              (**result)[j]= val;
           }
           i->EStack.pop();
           i->OStack.pop();
@@ -285,16 +280,13 @@ void SLIArrayModule::ArangeFunction::execute(SLIInterpreter *i) const
               double stop  = n2d->get();
               long n= 1 + static_cast<long>(stop-start);
               if(n<0)
-              {
-                  i->raiseerror("RangeCheck");
-                  return;
-              }
+                  n=0;
       
               DoubleVectorDatum *result=new DoubleVectorDatum(new std::vector<double>(n));
-
-              for(long j=0; j<n; ++j)
+              double val=start;
+              for(long j=0; j<n; ++j, ++val)
               {
-                  (**result)[j]= start+j;
+                  (**result)[j]= val;
               }
               i->EStack.pop();
               i->OStack.pop();
@@ -1153,7 +1145,7 @@ void SLIArrayModule::IMap_dvFunction::execute(SLIInterpreter *i) const
 	i->OStack.push(new DoubleDatum((**array)[iterator]));  // push element to user
 	if(i->step_mode())
 	{
-	  std::cerr << "Map:"
+	  std::cerr << "Map_dv:"
 		    << " Limit: " << limit
 		    << " Pos: " << iterator
 		    << " Iterator: ";
