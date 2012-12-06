@@ -33,8 +33,10 @@ namespace nest
   {
     public:
       ConnectionID() {}  
-      ConnectionID(long source_gid, long target_gid, long target_thread, long synapse_typeid, long port);
-      ConnectionID(long source_gid, long target_thread, long synapse_typeid, long port);
+      ConnectionID(long source_gid, long target_gid, long target_thread, 
+		   long synapse_modelid, long port);
+      ConnectionID(long source_gid, long target_thread, long synapse_modelid, 
+		   long port);
       ConnectionID(const ConnectionID &);
       
       DictionaryDatum get_dict() const;
@@ -50,7 +52,7 @@ namespace nest
       long source_gid_;
       long target_gid_;
       long target_thread_;
-      long synapse_typeid_;
+      long synapse_modelid_;
       long port_;
   };
 
@@ -59,7 +61,7 @@ namespace nest
       : source_gid_(cid.source_gid_),
 	target_gid_(cid.target_gid_),
 	target_thread_(cid.target_thread_),
-	synapse_typeid_(cid.synapse_typeid_),
+	synapse_modelid_(cid.synapse_modelid_),
 	port_(cid.port_)
     {}
     
@@ -84,7 +86,7 @@ namespace nest
   inline
     long ConnectionID::get_synapse_type_id() const
     {
-      return synapse_typeid_;
+      return synapse_modelid_;
     }
 
   inline

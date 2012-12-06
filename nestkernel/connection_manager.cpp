@@ -255,7 +255,7 @@ DictionaryDatum ConnectionManager::get_synapse_status(index gid, index syn_id, p
   DictionaryDatum dict(new Dictionary);
   connections_[tid].get(gid)[syn_vec_index].connector->get_synapse_status(dict, p);
   (*dict)[names::source] = gid;
-  (*dict)[names::synapse_type] = LiteralDatum(get_synapse_prototype(syn_id).get_name());
+  (*dict)[names::synapse_model] = LiteralDatum(get_synapse_prototype(syn_id).get_name());
 
   return dict;
 }
@@ -321,7 +321,7 @@ ArrayDatum ConnectionManager::find_connections(DictionaryDatum params)
 
   size_t syn_id = 0;
   Name synmodel_name;
-  bool have_synmodel = updateValue<std::string>(params, names::synapse_type, synmodel_name);
+  bool have_synmodel = updateValue<std::string>(params, names::synapse_model, synmodel_name);
 
   if (have_synmodel)
   {
@@ -369,7 +369,7 @@ ArrayDatum ConnectionManager::get_connections(DictionaryDatum params) const
 
   const Token source_t=   params->lookup(names::source);
   const Token target_t=   params->lookup(names::target);
-  const Token syn_model_t=params->lookup(names::synapse_type);
+  const Token syn_model_t=params->lookup(names::synapse_model);
   const TokenArray *source_a=0;
   const TokenArray *target_a=0;
 
@@ -623,7 +623,7 @@ bool ConnectionManager::connect(ArrayDatum& conns)
  		size_t syn_id=0;
  		index source_gid=(*cd)[names::source];
 
- 		Token synmodel = cd->lookup(names::synapse_type);
+ 		Token synmodel = cd->lookup(names::synapse_model);
  		if(! synmodel.empty())
  		{
  		    std::string synmodel_name=getValue<std::string>(synmodel);

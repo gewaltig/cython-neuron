@@ -293,8 +293,8 @@ namespace nest
     extern const Name rports;
     extern const Name port;
     extern const Name target_thread;
-    extern const Name synapse_type;
-    extern const Name synapse_typeid;
+    extern const Name synapse_model;
+    extern const Name synapse_modelid;
 
     // Specific to ppd_sup_generator and gamma_sup_generator
     extern const Name amplitude;

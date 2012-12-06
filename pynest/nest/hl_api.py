@@ -539,37 +539,51 @@ def GetLID(gid) :
 # -------------------- Functions for connection handling
 
 	
-def FindConnections(source, target=None, synapse_type=None) :
+def FindConnections(source, target=None, synapse_model=None, synapse_type=None):
     """
     Return an array of identifiers for connections that match the
     given parameters. Only source is mandatory and must be a list of
-    one or more nodes. If target and/or synapse_type is/are given,
+    one or more nodes. If target and/or synapse_model is/are given,
     they must be single values, lists of length one or the same length
     as source. Use GetStatus()/SetStatus() to inspect/modify the found
     connections.
+
+    Note: FindConnections() is deprecated and will be removed in the future.
+          Use GetConnections() instead.
+
+    Note: synapse_type is alias for synapse_model for backward compatibility
     """
 
-    if not target and not synapse_type:
+    if synapse_model and synapse_type:
+        raise NESTError("synapse_type is alias for synapse_model, cannot be used together.")
+    if synapse_type:
+        synapse_model = synapse_type
+
+    if not target and not synapse_model:
         params = [{"source": s} for s in source]
 
-    if not target and synapse_type:
-        synapse_type = broadcast(synapse_type, len(source), (str,), "synapse_type")
-        params = [{"source": s, "synapse_type": syn} for s, syn in zip(source, synapse_type)]
+    if not target and synapse_model:
+        synapse_model = broadcast(synapse_model, len(source), (str,), "synapse_model")
+        params = [{"source": s, "synapse_model": syn}
+                  for s, syn in zip(source, synapse_model)]
 
-    if target and not synapse_type:
+    if target and not synapse_model:
         target = broadcast(target, len(source), (int,), "target")
         params = [{"source": s, "target": t} for s, t in zip(source, target)]
 
-    if target and synapse_type:
+    if target and synapse_model:
         target = broadcast(target, len(source), (int,), "target")
-        synapse_type = broadcast(synapse_type, len(source), (str,), "synapse_type")
-        params = [{"source": s, "target": t, "synapse_type": syn} for s, t, syn in zip(source, target, synapse_type)]
+        synapse_model = broadcast(synapse_model, len(source), (str,), "synapse_model")
+        params = [{"source": s, "target": t, "synapse_model": syn}
+                  for s, t, syn in zip(source, target, synapse_model)]
 
     sps(params)
     sr("{FindConnections} Map Flatten")
     
     result=spp()
-    return [ { 'source':int(r[0]), 'target_thread': int(r[2]), 'synapse_typeid': int(r[3]), 'port': int(r[4])} for r in result ]
+    return [ { 'source':int(r[0]), 'target_thread': int(r[2]),
+               'synapse_modelid': int(r[3]), 'port': int(r[4])} for r in result ]
+
 
 def GetConnections(source=None, target=None, synapse_model=None) :
 	"""

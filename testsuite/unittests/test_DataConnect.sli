@@ -89,7 +89,7 @@ normdv_d
 
 % Check for one source neuron
 /nrn 5 def
- << /source [nrn] /synapse_type /static_synapse >> GetConnections /conn Set
+ << /source [nrn] /synapse_model /static_synapse >> GetConnections /conn Set
  conn {GetStatus} Map /syn5 Set
 
  syn5 { /weight get } Map /weights Set
@@ -103,7 +103,7 @@ normdv_d
 
 % Step 1: read out all connections and retrieve the synapse status
 
-<< /synapse_type /static_synapse >> GetConnections {GetStatus} Map
+<< /synapse_model /static_synapse >> GetConnections {GetStatus} Map
 /connectome Set
 
 % Step 2: reset the kernel 
@@ -118,7 +118,7 @@ connectome DataConnect
 
 % Step 5: Check for one source neuron
 /nrn 5 def
- << /source [nrn] /synapse_type /static_synapse >> GetConnections /conn Set
+ << /source [nrn] /synapse_model /static_synapse >> GetConnections /conn Set
  conn {GetStatus} Map /syn5 Set
 
  syn5 { /weight get } Map /weights Set

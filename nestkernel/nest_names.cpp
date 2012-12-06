@@ -273,8 +273,8 @@ namespace nest
     const Name rports("receptors");
     const Name port("port");
     const Name target_thread("target_thread");
-    const Name synapse_type("synapse_type");
-    const Name synapse_typeid("synapse_typeid");
+    const Name synapse_model("synapse_model");
+    const Name synapse_modelid("synapse_modelid");
 
     // Specific to ppd_sup_generator and gamma_sup_generator
     const Name amplitude("amplitude");

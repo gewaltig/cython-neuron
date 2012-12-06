@@ -208,7 +208,7 @@ namespace nest
     ConnectionDatum conn = getValue<ConnectionDatum>(i->OStack.pick(1));
     DictionaryDatum conn_dict = conn.get_dict();
 
-    long synapse_id = getValue<long>(conn_dict, nest::names::synapse_typeid);
+    long synapse_id = getValue<long>(conn_dict, nest::names::synapse_modelid);
     long port = getValue<long>(conn_dict, nest::names::port);
     long gid = getValue<long>(conn_dict, nest::names::source);
     thread tid = getValue<long>(conn_dict, nest::names::target_thread);

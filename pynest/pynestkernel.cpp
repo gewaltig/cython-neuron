@@ -448,7 +448,7 @@ static PyObject *push_connection_datums(PyObject *, PyObject *args)
 	    PyObject* subsubPyObj;
 	    long source;
 	    long target_thread;
-	    long synapse_typeid;
+	    long synapse_modelid;
 	    long port;
 	    
 	    subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::source.toString().c_str());
@@ -456,25 +456,30 @@ static PyObject *push_connection_datums(PyObject *, PyObject *args)
 		source = PyInt_AsLong(subsubPyObj);
 	    else
 	    {
-		PyErr_SetString(NESTError, "push_connection_datums(): No source entry in dictionary.");
+		PyErr_SetString(NESTError, 
+				"push_connection_datums(): No source entry in dictionary.");
 		return NULL;
 	    }
 	    
-	    subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::target_thread.toString().c_str());
+	    subsubPyObj = PyDict_GetItemString(subPyObj, 
+					       nest::names::target_thread.toString().c_str());
 	    if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
 		target_thread = PyInt_AsLong(subsubPyObj);
 	    else
 	    {
-		PyErr_SetString(NESTError, "push_connection_datums(): No target_thread entry in dictionary.");
+		PyErr_SetString(NESTError, 
+				"push_connection_datums(): No target_thread entry in dictionary.");
 		return NULL;
 	    }
 	    
-	    subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::synapse_typeid.toString().c_str());
+	    subsubPyObj = PyDict_GetItemString(subPyObj, 
+					       nest::names::synapse_modelid.toString().c_str());
 	    if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
-		synapse_typeid = PyInt_AsLong(subsubPyObj);
+		synapse_modelid = PyInt_AsLong(subsubPyObj);
 	    else
 	    {
-		PyErr_SetString(NESTError, "push_connection_datums(): No synapse_typeid entry in dictionary.");
+		PyErr_SetString(NESTError, 
+				"push_connection_datums(): No synapse_modelid entry in dictionary.");
 		return NULL;
 	    }
 	    
@@ -483,11 +488,13 @@ static PyObject *push_connection_datums(PyObject *, PyObject *args)
 		port = PyInt_AsLong(subsubPyObj);
 	    else
 	    {
-		PyErr_SetString(NESTError, "push_connection_datums(): No port entry in dictionary.");
+		PyErr_SetString(NESTError, 
+				"push_connection_datums(): No port entry in dictionary.");
 		return NULL;
 	    }
 	    
-	    ConnectionDatum cd = ConnectionDatum(nest::ConnectionID(source, target_thread, synapse_typeid, port));
+	    ConnectionDatum cd = ConnectionDatum(nest::ConnectionID(source, target_thread, 
+								    synapse_modelid, port));
 	    connectome.push_back(cd);
 	    continue;
 	} 
@@ -518,7 +525,8 @@ static PyObject *push_connection_datums(PyObject *, PyObject *args)
 		    PyArray_ITER_NEXT(iter);
 		}
 		delete iter ;
-		connectome.push_back(new ConnectionDatum(nest::ConnectionID(con[0],con[1],con[2], con[3], con[4])));
+		connectome.push_back(new ConnectionDatum(nest::ConnectionID(con[0],con[1],con[2], 
+									    con[3], con[4])));
 		continue;
 	    }
 	    case NPY_LONG:
@@ -533,7 +541,8 @@ static PyObject *push_connection_datums(PyObject *, PyObject *args)
 		    PyArray_ITER_NEXT(iter);
 		}
 		delete iter ;
-		connectome.push_back(new ConnectionDatum(nest::ConnectionID(con[0],con[1],con[2], con[3], con[4])));
+		connectome.push_back(new ConnectionDatum(nest::ConnectionID(con[0],con[1],con[2], 
+									    con[3], con[4])));
 		continue;
 	    }
 	    default:

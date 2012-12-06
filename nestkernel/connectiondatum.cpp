@@ -42,6 +42,7 @@ void AggregateDatum<nest::ConnectionID, &nest::NestModule::ConnectionType>::prin
 template<>
 void AggregateDatum<nest::ConnectionID, &nest::NestModule::ConnectionType>::pprint(std::ostream &out) const
 {
-    out << "<" << source_gid_ << ',' << target_gid_ << ',' << target_thread_ << ',' << synapse_typeid_ << ',' << port_ << ">";
+    out << "<" << source_gid_ << ',' << target_gid_ << ',' 
+	<< target_thread_ << ',' << synapse_modelid_ << ',' << port_ << ">";
 }
 

@@ -54,7 +54,6 @@ namespace nest
     const Name number_of_connections("number_of_connections");
     const Name convergent("convergent");
     const Name divergent("divergent");
-    const Name synapse_model("synapse_model");
     const Name kernel("kernel");
     const Name lower_left("lower_left");
     const Name upper_right("upper_right");

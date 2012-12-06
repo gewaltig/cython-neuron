@@ -716,6 +716,71 @@ def FindCenterElement(layers):
             for lyr in layers]
 
 
+def NewGetTargetNodes(sources, tgt_layer, tgt_model=None, syn_model=None):
+    """
+    Obtain targets of a list of sources in a given target layer.
+    
+    Parameters
+    ----------
+    sources     List of GID(s) of source neurons
+    tgt_layer   Single-element list with GID of tgt_layer
+    tgt_model   Return only target positions for a given neuron model [optional].
+    syn_model   Return only target positions for a given synapse model [optional].
+
+    Returns
+    -------
+    List of GIDs of target neurons fulfilling the given criteria. It is a list of lists,
+    one list per source.
+
+    For each neuron in sources, this function finds all target elements in tgt_layer.
+    If tgt_model is not given (default), all targets are returned, otherwise only
+    targets of specific type, and similarly for syn_model.
+    
+    Note: For distributed simulations, this function only returns targets on the local MPI process.
+    
+    See also
+    --------
+    GetTargetPositions, nest.GetConnections
+    """
+    
+    nest.raise_if_not_list_of_gids(sources, 'sources')
+    nest.raise_if_not_list_of_gids(tgt_layer, 'tgt_layer')
+    if len(tgt_layer) != 1:
+        raise nest.NESTError("tgt_layer must be a one-element list")
+    
+    # obtain local nodes in target layer, to pass to GetConnections
+    tgt_nodes = nest.GetNodes(tgt_layer,
+                              properties = {'model': tgt_model}
+                                           if tgt_model else None,
+                              local_only = True)[0]
+                              
+    conns = nest.GetConnections(sources, tgt_nodes, synapse_model=synapse_model)
+
+    # conns now contains one list per synapse type
+    
+    # obtain all target neuron IDs, if necessary for given synapse type
+    if syn_model:
+        syn_model = nest.broadcast(syn_model, len(sources), (str,), 'syn_model')
+        conntgts = [nest.GetStatus(nest.FindConnections([sn], synapse_type=st), 'target')
+                    for sn,st in zip(sources,syn_model)]
+    else:
+        conntgts = [nest.GetStatus(nest.FindConnections([sn]), 'target')
+                    for sn in sources]
+        
+    # obtain all node GIDs in target layer, filter by model if requested
+    if tgt_model:
+        tgt_model = nest.broadcast(tgt_model, len(sources), (str,), "tgt_model")
+        tgtnrns = [[n for n in leaves
+                    if nest.GetStatus([n], 'model')[0] == m]
+                   for leaves,m in zip(nest.GetLeaves(tgt_layer),tgt_model)]
+    else:
+        tgtnrns = nest.GetLeaves(tgt_layer)
+
+    # for each source neuron, get set of unique target gids, then intersect with
+    # list of gids with proper model type     
+    return [list(set(ct).intersection(tn)) for ct,tn in zip(conntgts,tgtnrns)]
+
+
 def GetTargetNodes(sources, tgt_layer, tgt_model=None, syn_model=None):
     """
     Obtain targets of a list of sources in a given target layer.
@@ -740,7 +805,7 @@ def GetTargetNodes(sources, tgt_layer, tgt_model=None, syn_model=None):
     
     See also
     --------
-    GetTargetPositions, nest.FindConnections
+    GetTargetPositions, nest.GetConnections
     """
     
     nest.raise_if_not_list_of_gids(sources, 'sources')

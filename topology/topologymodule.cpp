@@ -1069,12 +1069,12 @@ namespace nest
     
     Name: topology::DumpLayerConnections - prints a list of the connections of the nodes in the layer to file
     
-    Synopsis: ostream source_layer_gid synapse_type DumpLayerConnections -> ostream
+    Synopsis: ostream source_layer_gid synapse_model DumpLayerConnections -> ostream
 
     Parameters:
     ostream          - open outputstream
     source_layer_gid - topology layer
-    synapse_type     - synapse model (literal)
+    synapse_model    - synapse model (literal)
 		 
     Description: 
     Dumps information about all connections of the given type having their source in
