@@ -571,18 +571,18 @@ def FindConnections(source, target=None, synapse_type=None) :
     result=spp()
     return [ { 'source':int(r[0]), 'target_thread': int(r[2]), 'synapse_typeid': int(r[3]), 'port': int(r[4])} for r in result ]
 
-def GetConnections(source=None, target=None, synapse_type=None) :
+def GetConnections(source=None, target=None, synapse_model=None) :
 	"""
 	Return an array of connection identifiers.
 	
 	Parameters:
         source - list of source GIDs
         target - list of target GIDs
-        synapse_type - string with the synapse model type
+        synapse_model - string with the synapse model
         
         If GetConnections is called without parameters, all GIDs and all synapse types are iterated.
 
-        If a synapse type is given, the return value is the list of connection ids for this type.
+        If a synapse model is given, the return value is the list of connection ids for this model.
 	If no synapse model is given, GetConnections will iterate all used synapse types and the return value will
         be a nested list, where each sublist contains the connection ids of the respective synapse model.
         
@@ -599,14 +599,13 @@ def GetConnections(source=None, target=None, synapse_type=None) :
 	if source:
 		if not is_sequencetype(source):
 			raise NESTError("source must be a list of gids.")
-		params['source']=source
+		params['source'] = source
 	if target:
 		if not is_sequencetype(target):
 			raise NESTError("target must be a list of gids.")
-		params['target']=target
-
-	if synapse_type:
-		params['synapse_type']=synapse_type
+		params['target'] = target
+	if synapse_model:
+		params['synapse_model'] = synapse_model
 
 	sps(params)
 	sr("GetConnections_D")

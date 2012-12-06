@@ -384,7 +384,7 @@ ArrayDatum ConnectionManager::get_connections(DictionaryDatum params) const
 #ifdef _OPENMP
   std::string msg;
   msg = String::compose( "Setting OpenMP num_threads to %1.",net_.get_num_threads());
-  net_.message(SLIInterpreter::M_INFO, "ConnectionManager::get_connections", msg);
+  net_.message(SLIInterpreter::M_DEBUG, "ConnectionManager::get_connections", msg);
   omp_set_num_threads(net_.get_num_threads());
 #endif
 
