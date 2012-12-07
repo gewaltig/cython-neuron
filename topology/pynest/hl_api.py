@@ -749,37 +749,23 @@ def NewGetTargetNodes(sources, tgt_layer, tgt_model=None, syn_model=None):
         raise nest.NESTError("tgt_layer must be a one-element list")
     
     # obtain local nodes in target layer, to pass to GetConnections
-    tgt_nodes = nest.GetNodes(tgt_layer,
-                              properties = {'model': tgt_model}
-                                           if tgt_model else None,
-                              local_only = True)[0]
+    tgt_nodes = nest.GetLeaves(tgt_layer,
+                               properties = {'model': tgt_model} if tgt_model else None,
+                               local_only = True)[0]
                               
-    conns = nest.GetConnections(sources, tgt_nodes, synapse_model=synapse_model)
+    conns = nest.GetConnections(sources, tgt_nodes, synapse_model=syn_model)
+       
+    # conns now contains one list per synapse type; each list contains connections
+    # from all sources. We need to re-organize into one list per source containing
+    # targets only
+    src_tgt_map = dict((sgid, []) for sgid in sources)
+    for per_syn_model_list in conns:
+       for conn in per_syn_model_list:
+          src_tgt_map[conn[0]].append(conn[1])
 
-    # conns now contains one list per synapse type
-    
-    # obtain all target neuron IDs, if necessary for given synapse type
-    if syn_model:
-        syn_model = nest.broadcast(syn_model, len(sources), (str,), 'syn_model')
-        conntgts = [nest.GetStatus(nest.FindConnections([sn], synapse_type=st), 'target')
-                    for sn,st in zip(sources,syn_model)]
-    else:
-        conntgts = [nest.GetStatus(nest.FindConnections([sn]), 'target')
-                    for sn in sources]
-        
-    # obtain all node GIDs in target layer, filter by model if requested
-    if tgt_model:
-        tgt_model = nest.broadcast(tgt_model, len(sources), (str,), "tgt_model")
-        tgtnrns = [[n for n in leaves
-                    if nest.GetStatus([n], 'model')[0] == m]
-                   for leaves,m in zip(nest.GetLeaves(tgt_layer),tgt_model)]
-    else:
-        tgtnrns = nest.GetLeaves(tgt_layer)
-
-    # for each source neuron, get set of unique target gids, then intersect with
-    # list of gids with proper model type     
-    return [list(set(ct).intersection(tn)) for ct,tn in zip(conntgts,tgtnrns)]
-
+    # convert dict to nested list in same order as sources
+    return [src_tgt_map[sgid] for sgid in sources]
+ 
 
 def GetTargetNodes(sources, tgt_layer, tgt_model=None, syn_model=None):
     """
