@@ -902,7 +902,7 @@ def PlotLayer(layer, fig=None, nodecolor='b', nodesize=20):
     if len(layer) != 1:
         raise ValueError("layer must contain exactly one GID.")
 
-    # get layer extent and center
+    # get layer extent
     ext = nest.GetStatus(layer, 'topology')[0]['extent']
 
     if len(ext)==2:
@@ -989,30 +989,55 @@ def PlotTargets(src_nrn, tgt_layer, tgt_model=None, syn_type=None, fig=None,
     srcpos = GetPosition(src_nrn)[0]
 
     # get layer extent and center, x and y
-    xext, yext = nest.GetStatus(tgt_layer, 'topology')[0]['extent'][:2]
-    xctr, yctr = nest.GetStatus(tgt_layer, 'topology')[0]['center'][:2]
+    ext = nest.GetStatus(tgt_layer, 'topology')[0]['extent']
+
+    if len(ext)==2:
+        # 2D layer
+
+        # get layer extent and center, x and y
+        xext, yext = ext
+        xctr, yctr = nest.GetStatus(tgt_layer, 'topology')[0]['center']
     
-    if not fig:
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        if not fig:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+        else:
+            ax = fig.gca()
+
+        # get positions, reorganize to x and y vectors
+        tgtpos = GetTargetPositions(src_nrn, tgt_layer, tgt_model, syn_type)
+        if tgtpos:
+            xpos, ypos = zip(*tgtpos[0])
+            ax.scatter(xpos, ypos, s=tgt_size, facecolor=tgt_color, edgecolor='none')
+
+        ax.scatter(srcpos[:1], srcpos[1:], s=src_size, facecolor=src_color, edgecolor='none',
+                   alpha = 0.4, zorder = -10)
+    
+        _draw_extent(ax, xctr, yctr, xext, yext)
+
+        if mask or kernel:
+            PlotKernel(ax, src_nrn, mask, kernel, mask_color, kernel_color)
+
     else:
-        ax = fig.gca()
+        # 3D layer
+        from mpl_toolkits.mplot3d import Axes3D
 
-    # get positions, reorganize to x and y vectors
-    tgtpos = GetTargetPositions(src_nrn, tgt_layer, tgt_model, syn_type)
-    if tgtpos:
-        xpos, ypos = zip(*tgtpos[0])
-        ax.scatter(xpos, ypos, s=tgt_size, facecolor=tgt_color, edgecolor='none')
+        if not fig:
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+        else:
+            ax = fig.gca()
 
-    ax.scatter(srcpos[:1], srcpos[1:], s=src_size, facecolor=src_color, edgecolor='none',
-               alpha = 0.4, zorder = -10)
-    
-    _draw_extent(ax, xctr, yctr, xext, yext)
+        # get positions, reorganize to x,y,z vectors
+        tgtpos = GetTargetPositions(src_nrn, tgt_layer, tgt_model, syn_type)
+        if tgtpos:
+            xpos, ypos, zpos = zip(*tgtpos[0])
+            ax.scatter3D(xpos, ypos, zpos, s=tgt_size, facecolor=tgt_color, edgecolor='none')
 
-    if mask or kernel:
-        PlotKernel(ax, src_nrn, mask, kernel, mask_color, kernel_color)
+        ax.scatter3D(srcpos[:1], srcpos[1:2], srcpos[2:], s=src_size, facecolor=src_color, edgecolor='none',
+                   alpha = 0.4, zorder = -10)
 
-    plt.draw() 
+    plt.draw_if_interactive() 
 
     return fig
 
