@@ -804,7 +804,7 @@ def GetTargetNodes(sources, tgt_layer, tgt_model=None, syn_model=None):
     # obtain all target neuron IDs, if necessary for given synapse type
     if syn_model:
         syn_model = nest.broadcast(syn_model, len(sources), (str,), 'syn_model')
-        conntgts = [nest.GetStatus(nest.FindConnections([sn], synapse_type=st), 'target')
+        conntgts = [nest.GetStatus(nest.FindConnections([sn], synapse_model=st), 'target')
                     for sn,st in zip(sources,syn_model)]
     else:
         conntgts = [nest.GetStatus(nest.FindConnections([sn]), 'target')

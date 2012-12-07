@@ -20,6 +20,10 @@
 # along with NEST.  If not, see <http://www.gnu.org/licenses/>.
 """
 Tests for topology hl_api dumping functions.
+
+
+NOTE: These tests only test whether the code runs, it does not check
+      whether the results produced are correct.
 """
 
 import unittest

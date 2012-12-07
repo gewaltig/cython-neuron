@@ -20,6 +20,9 @@
 # along with NEST.  If not, see <http://www.gnu.org/licenses/>.
 """
 Tests for basic topology hl_api functions.
+
+NOTE: These tests only test whether the code runs, it does not check
+      whether the results produced are correct.
 """
 
 import unittest
@@ -66,8 +69,8 @@ class PlottingTestCase(unittest.TestCase):
         topo.ConnectLayers(l, l, cdict)
         for k in ['sources', 'targets', 'synapse_model']: cdict.pop(k)
  
-        ctr_ian, ctr_iap = nest.GetLeaves(topo.FindCenterElement(l))[0]
-        fig = topo.PlotTargets([ctr_ian], l)
+        ctr = topo.FindCenterElement(l)
+        fig = topo.PlotTargets(ctr, l)
         fig.gca().set_title('Plain call')
         
         self.assertTrue(True)
