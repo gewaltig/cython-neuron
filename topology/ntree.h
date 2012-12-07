@@ -222,7 +222,7 @@ namespace nest
      * @param extent      Size (width,height) of ntree.
      */
     Ntree(const Position<D>& lower_left, const Position<D>& extent,
-          std::bitset<D> periodic, Ntree *parent, int subquad);
+          std::bitset<D> periodic=0, Ntree *parent=0, int subquad=0);
 
     /**
      * Traverse quadtree structure from current ntree.
@@ -322,9 +322,9 @@ namespace nest
   template<int D, class T, int max_capacity>
   Ntree<D,T,max_capacity>::Ntree(const Position<D>& lower_left,
                                  const Position<D>& extent,
-                                 std::bitset<D> periodic = 0,
-                                 Ntree<D,T,max_capacity>* parent=0,
-                                 int subquad=0) :
+                                 std::bitset<D> periodic,
+                                 Ntree<D,T,max_capacity>* parent,
+                                 int subquad) :
     lower_left_(lower_left),
     extent_(extent),
     leaf_(true),
