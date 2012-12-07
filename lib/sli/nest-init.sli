@@ -930,7 +930,7 @@ def
    <<
      /source [ args /source get ]
      args /target known {  /target [ args /target get ] } if 
-     args /synapse_type known { /synapse_type args /synapse_type get cvlit} if 
+     args /synapse_model known { /synapse_model args /synapse_model get cvlit} if 
   >> 
   end
   GetConnections Flatten
