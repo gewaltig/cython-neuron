@@ -1423,8 +1423,8 @@ namespace nest
   }
 
   /* BeginDocumentation
-     Name: n_procs SetFakeNumProcesses - Set a fake number of MPI processes.
-     Synopsis: SetFakeNumProcesses
+     Name: SetFakeNumProcesses - Set a fake number of MPI processes.
+     Synopsis: n_procs SetFakeNumProcesses -> -
      Description:
      Sets the number of MPI processes to n_procs. Used for benchmarking puposes only. 
      Availability: NEST 2.2
