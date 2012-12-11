@@ -2,7 +2,6 @@ nobase_pkgdata_DATA=\
   sli/FormattedIO.sli\
   sli/arr.sli\
   sli/debug.sli\
-  sli/gdftools.sli\
   sli/helpinit.sli\
   sli/install-help.sli\
   sli/librandom.sli\
