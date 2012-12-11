@@ -12,7 +12,7 @@ install-data-hook:
 install-slidoc:
 	mkdir -p $(DESTDIR)@PKGDOCDIR@/help
 	for dir in $(TESTSUBDIRS) ; do \
-	  $(DESTDIR)$(exec_prefix)/bin/sli --userargs="@PKGSRCDIR@/$(subdir)/$$dir" $(top_srcdir)/lib/sli/install-help.sli 2>&1 > @INSTALL_HELP_LOG@; \
+	  $(DESTDIR)$(exec_prefix)/bin/sli --userargs="@PKGSRCDIR@/$(subdir)/$$dir" $(top_srcdir)/lib/sli/install-help.sli 2>&1 >> @INSTALL_HELP_LOG@; \
 	done
 
 EXTRA_DIST= $(TESTSUBDIRS) README

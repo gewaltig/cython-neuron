@@ -98,11 +98,16 @@ AM_CPPFLAGS= -I$(top_srcdir)/libnestutil\
 
 nobase_pkgdata_DATA= sli/developer-init.sli
 
+# Documentation extraction on the developer module was never properly
+# called. Since the developer module is going away at some point, it
+# doesn't make sense to fix it. Leaving this in place in case if this
+# decision is revisited (see #394).
+
 HELPDIRS="@PKGSRCDIR@/$(subdir):@PKGSRCDIR@/$(subdir)/sli:@PKGSRCDIR@/$(subdir)/unittests"
 
 install-slidoc:
 	mkdir -p $(DESTDIR)@PKGDOCDIR@/help
-	$(DESTDIR)$(exec_prefix)/bin/sli --userargs=$(HELPDIRS) $(top_srcdir)/lib/sli/install-help.sli 2>&1 > @INSTALL_HELP_LOG@
+	$(DESTDIR)$(exec_prefix)/bin/sli --userargs=$(HELPDIRS) $(top_srcdir)/lib/sli/install-help.sli 2>&1 >> @INSTALL_HELP_LOG@
 
 install-data-hook:
 	mkdir -p $(DESTDIR)@PKGDOCDIR@/unittests

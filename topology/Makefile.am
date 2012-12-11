@@ -56,12 +56,6 @@ AM_CPPFLAGS= -I$(top_srcdir)/libnestutil\
 nobase_pkgdata_DATA=\
   sli/topology-interface.sli
 
-HELPDIRS="@PKGSRCDIR@/$(subdir):@PKGSRCDIR@/$(subdir)/sli:@PKGSRCDIR@/$(subdir)/testsuite/manualtests"
-
-install-slidoc:
-	mkdir -p $(DESTDIR)@PKGDOCDIR@/help
-	$(DESTDIR)$(exec_prefix)/bin/sli --userargs=$(HELPDIRS) $(top_srcdir)/lib/sli/install-help.sli 2>&1 > @INSTALL_HELP_LOG@
-
 install-data-hook:
 	mkdir -p $(DESTDIR)@PKGDOCDIR@/topology
 	rm -rf $(DESTDIR)@PKGDOCDIR@/topology/testsuite

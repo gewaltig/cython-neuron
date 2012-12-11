@@ -858,9 +858,17 @@ SLI_DIST_SUBDIRS="$SLI_CORE_LIBS nest $PYNEST_SUBDIR"
 SLI_SUBDIRS="$SLI_CORE_LIBS $SLI_EXTRA_MODULES nest"
 
 # generate a list of absolute paths where to search for help files
-for dir in $SLI_SUBDIRS; do
+for dir in $SLI_SUBDIRS ; do
+
   HELPDIRS="$HELPDIRS $PKGSRCDIR/$dir"
+
+  # Automatically include sli directory if it exists
+  if test -d "$PKGSRCDIR/$dir/sli" ; then
+    HELPDIRS="$HELPDIRS $PKGSRCDIR/$dir/sli"
+  fi
+
 done
+
 HELPDIRS=`echo $HELPDIRS | tr " " ":"`
 INSTALL_HELP_LOG="$PKGBUILDDIR/install-help.log"
 

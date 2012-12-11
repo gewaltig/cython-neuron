@@ -8,9 +8,6 @@ Execute
 Should report that all results agree with results in reference directory
 Testing free_mask_rect_12 will evoke an error message. This is intentional.
 
-manualtests:
-Exploratory tests. Currently empty.
-
 unittests:
 Follow usual NEST unit testing setup, but need to be run manually at present as
 <nest executable> <script name>

@@ -19,9 +19,3 @@ nobase_pkgdata_DATA=\
   sli/nest-init.sli\
   sli/unittest.sli\
   sli/filesystem.sli
-
-HELPDIRS="@PKGSRCDIR@/$(subdir)/sli"
-
-install-slidoc:
-	mkdir -p $(DESTDIR)@PKGDOCDIR@/help
-	$(DESTDIR)$(exec_prefix)/bin/sli --userargs=$(HELPDIRS) $(top_srcdir)/lib/sli/install-help.sli 2>&1 > @INSTALL_HELP_LOG@
