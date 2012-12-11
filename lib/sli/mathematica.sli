@@ -3055,7 +3055,6 @@ The conversion of doubles does not yet guarantee the existence
 of the decimal point and an appropriate number of digits.
 References:
    [1] The Mathematica Book
-SeeAlso: ToMathematica
 */
 /ToMathematicaExpression
 {
@@ -3122,37 +3121,6 @@ SeeAlso: ToMathematica
   raiseerror
  } if
  exch dup rollu type get exec   % apply conversion rule
-} def
-
-
-/*BeginDocumentation
-Name: ToMathematica - send SLI objects to Mathematica
-Synopsis:
-any ToMathematica ->
-
-Description:
-The function converts a SLI Object to the corresponding
-Mathematica input expression and sends the result as a
-string to the Mathematica kernel.
-
-Author: Diesmann
-
-SeeAlso: ToMathematicaExpression
-*/
-
-/ToMathematica
-{
- ToMathematicaExpression
- MLPutString
-} def
-
-/MathematicaSet
-{
- cvs exch
- ToMathematicaExpression exch
- (Set[) exch join (,) join
- exch join (];) join
- MLPutString
 } def
 
 %----------------------------------------------------------------------------
