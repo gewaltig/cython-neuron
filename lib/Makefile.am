@@ -16,7 +16,6 @@ nobase_pkgdata_DATA=\
   sli/sli-init.sli\
   sli/typeinit.sli\
   sli/version.sli\
-  sli/XDR.sli\
   sli/nest-init.sli\
   sli/unittest.sli\
   sli/filesystem.sli
