@@ -139,13 +139,10 @@ namespace nest
       *
       * @section conventions Conventions
       * -# All interface functions expect and return nodes as vectors
-      *    of GIDs (Vi), with exception of only those functions that
-      *    absolutey need to take or provide addresses.
+      *    of GIDs (Vi).
       * -# Functions must document how they loop over GID vectors and
       *    how the function is applied to subnets provided as
       *    arguments.
-      * -# Functions expecting or returning addresses have the name
-      *    suffix @c ByAddr .
       * -# Functions that do not require overloading on the SLI level,
       *    need not carry their argument list in the SLI function
       *    name and need not be wrapped by SLI tries.
@@ -159,24 +156,12 @@ namespace nest
       * -# The network is accessed using the get_network() accessor
       *    function. 
       * -# Each interface function shall verify that there are enough
-      *    elements on the stack and check their data type as early 
-      *    as possible. Proper SLI error messages shall be issued in
-      *    case of error using
-           @verbatim
-           i->error(function, message);  // may be repeated for multi-line msg
-           i->raiseerror(i->{Kernel,InternalKernel,***}Error);    // set error flag in interpreter
-           return;                       // important to return to interpreter
-           @endverbatim
-      * -# No C++ exceptions should escape the interface function. Unspecified
-      *    exceptions should be caught and passed to the fallbackHandler, before
-      *    returning control to the interpreter.
-           @verbatim
-           catch ( std::exception& e )
-           {
-             KernelException::fallbackHandler(i, __PRETTY_FUNCTION__, e);
-             return;
-           }
-           @endverbatim
+      *    elements on the stack using (replace n by correct integer)
+      *    @verbatim
+      *    i->assert_stack_load(n);
+      *    @endverbatim
+      * -# Errors should trigger C++ exceptions. They will be caught
+      *    in the main interpreter loop.
       *
       * @section slidoc SLI Documentation
       * SLI documentation should be provided in nestmodule.cpp, ahead of each
