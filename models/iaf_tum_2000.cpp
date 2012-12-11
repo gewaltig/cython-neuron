@@ -133,6 +133,10 @@ namespace nest
     if ( Tau_ <= 0 || tau_ex_ <= 0 || tau_in_ <= 0 || 
 	 tau_ref_tot_ <= 0 || tau_ref_abs_ <=0)
       throw BadProperty("All time constants must be strictly positive.");
+    
+    if ( Tau_ == tau_ex_ || Tau_ == tau_in_ )
+      throw BadProperty("Membrane and synapse time constant(s) must differ."
+			"See note in documentation.");
 
     return delta_EL;
   }
@@ -221,10 +225,12 @@ namespace nest
     // these depend on the above. Please do not change the order.
     // TODO: use expm1 here to improve accuracy for small timesteps
 
-    V_.P21ex_ = P_.Tau_/(P_.C_*(1.0-P_.Tau_/P_.tau_ex_)) * V_.P11ex_ * (1.0 - std::exp(h*(1.0/P_.tau_ex_-1.0/P_.Tau_)));
+    V_.P21ex_ = P_.Tau_/(P_.C_*(1.0-P_.Tau_/P_.tau_ex_)) * V_.P11ex_ 
+      * (1.0 - std::exp(h*(1.0/P_.tau_ex_-1.0/P_.Tau_)));
     //P21ex_ = h/C_;
 
-    V_.P21in_ = P_.Tau_/(P_.C_*(1.0-P_.Tau_/P_.tau_in_)) * V_.P11in_ * (1.0 - std::exp(h*(1.0/P_.tau_in_-1.0/P_.Tau_)));
+    V_.P21in_ = P_.Tau_/(P_.C_*(1.0-P_.Tau_/P_.tau_in_)) * V_.P11in_ 
+      * (1.0 - std::exp(h*(1.0/P_.tau_in_-1.0/P_.Tau_)));
     //P21in_ = h/C_;
 
     V_.P20_ = P_.Tau_/P_.C_*(1.0 - V_.P22_);

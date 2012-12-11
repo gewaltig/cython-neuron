@@ -151,6 +151,10 @@ double nest::iaf_psc_alpha_presc::Parameters_::set(const DictionaryDatum& d)
   if ( tau_m_ <= 0 || tau_syn_ <= 0 )
     throw BadProperty("All time constants must be strictly positive.");
 
+  if ( tau_m_ == tau_syn_ )
+    throw BadProperty("Membrane and synapse time constant(s) must differ."
+		      "See note in documentation.");
+
   return delta_EL;
 }
 

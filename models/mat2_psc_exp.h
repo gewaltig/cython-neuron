@@ -97,6 +97,11 @@ namespace nest
      V_m          Non-resetting membrane potential
      V_th         Two-timescale adaptive threshold
 
+     Note:
+     tau_m != tau_syn_{ex,in} is required by the current implementation to avoid a
+     degenerate case of the ODE describing the model [1]. For very similar values,
+     numerics will be unstable.
+
      References:
      [1] Rotter S & Diesmann M (1999) Exact simulation of
          time-invariant linear systems with applications to neuronal

@@ -125,6 +125,10 @@ double nest::iaf_psc_exp::Parameters_::set(const DictionaryDatum &d)
        t_ref_ <= 0 )
     throw BadProperty("All time constants must be strictly positive.");
 
+  if ( Tau_ == tau_ex_ || Tau_ == tau_in_ )
+    throw BadProperty("Membrane and synapse time constant(s) must differ."
+		      "See note in documentation.");
+
   return delta_EL;
 }
 
@@ -133,7 +137,8 @@ void nest::iaf_psc_exp::State_::get(DictionaryDatum &d, const Parameters_ &p) co
   def<double>(d, names::V_m, V_m_ + p.U0_); // Membrane potential
 }
 
-void nest::iaf_psc_exp::State_::set(const DictionaryDatum &d, const Parameters_ &p, double delta_EL)
+void nest::iaf_psc_exp::State_::set(const DictionaryDatum &d, 
+				    const Parameters_ &p, double delta_EL)
 {
   if ( updateValue<double>(d, names::V_m, V_m_) )
     V_m_ -= p.U0_;

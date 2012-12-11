@@ -83,6 +83,11 @@ Remarks:
   spike_detector has to be set to true in order to record the offsets
   in addition to the on-grid spike times.
   
+Note:
+  tau_m != tau_syn_{ex,in} is required by the current implementation to avoid a
+  degenerate case of the ODE describing the model [1]. For very similar values,
+  numerics will be unstable.
+
 References:
   [1] Morrison A, Straube S, Plesser HE & Diesmann M (2007) Exact subthreshold
       integration with continuous spike times in discrete time neural network

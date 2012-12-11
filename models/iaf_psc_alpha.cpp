@@ -136,6 +136,10 @@ double nest::iaf_psc_alpha::Parameters_::set(const DictionaryDatum& d)
   updateValue<double>(d, names::tau_syn_ex, tau_ex_);
   updateValue<double>(d, names::tau_syn_in, tau_in_);
 
+  if ( Tau_ == tau_ex_ || Tau_ == tau_in_ )
+    throw BadProperty("Membrane and synapse time constant(s) must differ."
+		      "See note in documentation.");
+
   if ( TauR_ < 0. )
   	throw BadProperty("The refractory time t_ref can't be negative.");
 

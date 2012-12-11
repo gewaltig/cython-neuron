@@ -93,6 +93,11 @@ The following parameters can be set in the status dictionary.
   Interpol_Order  int - Interpolation order for spike time: 
                         0-none, 1-linear, 2-quadratic, 3-cubic
 
+Note:
+  tau_m != tau_syn is required by the current implementation to avoid a
+  degenerate case of the ODE describing the model [1]. For very similar values,
+  numerics will be unstable.
+
 References:
 [1] Morrison A, Straube S, Plesser H E, & Diesmann M (2006) Exact Subthreshold 
     Integration with Continuous Spike Times in Discrete Time Neural Network 

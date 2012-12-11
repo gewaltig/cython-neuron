@@ -136,6 +136,10 @@ namespace nest   // template specialization must be placed in namespace
      tau_ref_ <= 0 || tau_1_ <= 0 || tau_2_ <= 0)
       throw BadProperty("All time constants must be strictly positive.");
 
+    if ( Tau_ == tau_ex_ || Tau_ == tau_in_ )
+      throw BadProperty("Membrane and synapse time constant(s) must differ."
+			"See note in documentation.");
+
     return delta_EL;
   }
 

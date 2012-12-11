@@ -121,6 +121,10 @@ double nest::iaf_neuron::Parameters_::set(const DictionaryDatum& d)
   if ( Tau_ <= 0 || tau_syn_ <= 0 || TauR_ <= 0 )
     throw BadProperty("All time constants must be strictly positive.");
 
+  if ( Tau_ == tau_syn_ )
+    throw BadProperty("Membrane and synapse time constant(s) must differ."
+		      "See note in documentation.");
+
   return delta_EL;
 }
 
