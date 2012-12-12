@@ -815,8 +815,9 @@ void Network::connect(index source_id, index target_id, index syn)
   }
   else //globally receiving devices iterate over all target threads
   {
-    if (!source_ptr->has_proxies()) //we do not allow to connect a device to a global receiver at the moment
-      throw IllegalConnection();
+    //we do not allow to connect a device to a global receiver at the moment
+    if (!source_ptr->has_proxies()) 
+      throw IllegalConnection("Devices cannot be connected to global receivers.");
 
     const thread n_threads = get_num_threads();
     for (thread t = 0; t < n_threads; t++)
@@ -920,17 +921,24 @@ bool Network::connect(index source_id, index target_id, DictionaryDatum& params,
 
 // -----------------------------------------------------------------------------
 
-void Network::divergent_connect(index source_id, const TokenArray target_ids, const TokenArray weights, const TokenArray delays, index syn)
+void Network::divergent_connect(index source_id, const TokenArray target_ids, 
+				const TokenArray weights, const TokenArray delays, index syn)
 {
-  bool complete_wd_lists = (target_ids.size() == weights.size() && weights.size() != 0 && weights.size() == delays.size());
-  bool short_wd_lists = (target_ids.size() != weights.size() && weights.size() == 1 && delays.size() == 1);
-  bool no_wd_lists = (weights.size() == 0 && delays.size() == 0);
+  bool complete_wd_lists = (target_ids.size() == weights.size() 
+			    && weights.size() != 0 
+			    && weights.size() == delays.size());
+  bool short_wd_lists = (target_ids.size() != weights.size() 
+			 && weights.size() == 1 
+			 && delays.size() == 1);
+  bool no_wd_lists = (weights.size() == 0 
+		      && delays.size() == 0);
 
   // check if we have consistent lists for weights and delays
   if (! (complete_wd_lists || short_wd_lists || no_wd_lists))
   {
-    message(SLIInterpreter::M_ERROR, "DivergentConnect", "If explicitly specified, weights and delays must be either doubles or lists of equal size. "
-        "If given as lists, their size must be 1 or the same size as targets.");
+    message(SLIInterpreter::M_ERROR, "DivergentConnect", 
+	    "If explicitly specified, weights and delays must be either doubles or lists of "
+	    "equal size. If given as lists, their size must be 1 or the same size as targets.");
     throw DimensionMismatch();
   }
 
@@ -985,18 +993,24 @@ void Network::divergent_connect(index source_id, const TokenArray target_ids, co
     }
     catch (IllegalConnection& e)
     {
-      std::string msg; // = String::compose("Global target ID %1: Target does not support event.", target_ids[i]);
+      std::string msg 
+	= String::compose("Target with ID %1 does not support the connection. "
+			  "The connection will be ignored.", targets[i]->get_gid());
+      if ( ! e.message().empty() )
+	msg += "\nDetails: " + e.message();
       message(SLIInterpreter::M_WARNING, "DivergentConnect", msg.c_str());
-      message(SLIInterpreter::M_WARNING, "DivergentConnect", "Connection will be ignored.");
       continue;
     }
     catch (UnknownReceptorType& e)
     {
-      std::string msg; // = String::compose("In Connection from global source ID %1 to target ID %2:", source_id, target_ids[i]);
-      message(SLIInterpreter::M_WARNING, "Connect", msg.c_str());
-      message(SLIInterpreter::M_WARNING, "Connect", "Target does not support requested receptor type.");
-      message(SLIInterpreter::M_WARNING, "Connect", "Connection will be ignored.");
-      interpreter_.raiseerror(e.what());
+      std::string msg
+	= String::compose("In Connection from global source ID %1 to target ID %2: "
+			  "Target does not support requested receptor type. "
+			  "The connection will be ignored", 
+			  source->get_gid(), targets[i]->get_gid());
+      if ( ! e.message().empty() )
+	msg += "\nDetails: " + e.message();
+      message(SLIInterpreter::M_WARNING, "DivergentConnect", msg.c_str());
       continue;
     }
   }
@@ -1124,17 +1138,24 @@ void Network::divergent_connect(index source_id, DictionaryDatum pars, index syn
     }
     catch (IllegalConnection& e)
     {
-      std::string msg = String::compose("Global target ID %1: Target does not support event.", target_ids[i]);
+      std::string msg 
+	= String::compose("Target with ID %1 does not support the connection. "
+			  "The connection will be ignored.", targets[i]->get_gid());
+      if ( ! e.message().empty() )
+	msg += "\nDetails: " + e.message();
       message(SLIInterpreter::M_WARNING, "DivergentConnect", msg.c_str());
-      message(SLIInterpreter::M_WARNING, "DivergentConnect", "Connection will be ignored.");
       continue;
     }
     catch (UnknownReceptorType& e)
     {
-      std::string msg = String::compose("In Connection from global source ID %1 to target ID %2:", source_id, target_ids[i]);
-      message(SLIInterpreter::M_WARNING, "Connect", msg.c_str());
-      message(SLIInterpreter::M_WARNING, "Connect", "Target does not support requested receptor type.");
-      message(SLIInterpreter::M_WARNING, "Connect", "Connection will be ignored.");
+      std::string msg
+	= String::compose("In Connection from global source ID %1 to target ID %2: "
+			  "Target does not support requested receptor type. "
+			  "The connection will be ignored", 
+			  source->get_gid(), targets[i]->get_gid());
+      if ( ! e.message().empty() )
+	msg += "\nDetails: " + e.message();
+      message(SLIInterpreter::M_WARNING, "DivergentConnect", msg.c_str());
       continue;
     }
   }
@@ -1266,18 +1287,24 @@ void Network::convergent_connect(const TokenArray source_ids, index target_id, c
     }
     catch (IllegalConnection& e)
     {
-      std::string msg = String::compose("Global target ID %1: Target does not support event.", target_id);
+      std::string msg 
+	= String::compose("Target with ID %1 does not support the connection. "
+			  "The connection will be ignored.", target->get_gid());
+      if ( ! e.message().empty() )
+	msg += "\nDetails: " + e.message();
       message(SLIInterpreter::M_WARNING, "ConvergentConnect", msg.c_str());
-      message(SLIInterpreter::M_WARNING, "ConvergentConnect", "Connection will be ignored.");
       continue;
     }
     catch (UnknownReceptorType& e)
     {
-      std::string msg = String::compose("In Connection from global source ID %1 to target ID %2:", source_id, target_id);
+      std::string msg
+	= String::compose("In Connection from global source ID %1 to target ID %2: "
+			  "Target does not support requested receptor type. "
+			  "The connection will be ignored", 
+			  source->get_gid(), target->get_gid());
+      if ( ! e.message().empty() )
+	msg += "\nDetails: " + e.message();
       message(SLIInterpreter::M_WARNING, "ConvergentConnect", msg.c_str());
-      message(SLIInterpreter::M_WARNING, "ConvergentConnect", "Target does not support requested receptor type.");
-      message(SLIInterpreter::M_WARNING, "ConvergentConnect", "Connection will be ignored.");
-      interpreter_.raiseerror(e.what());
       continue;
     }
   }
@@ -1337,18 +1364,24 @@ void Network::convergent_connect(const std::vector<index> & source_ids, const st
     }
     catch (IllegalConnection& e)
     {
-      std::string msg = String::compose("Global target ID %1: Target does not support event.", target_id);
+      std::string msg 
+	= String::compose("Target with ID %1 does not support the connection. "
+			  "The connection will be ignored.", target->get_gid());
+      if ( ! e.message().empty() )
+	msg += "\nDetails: " + e.message();
       message(SLIInterpreter::M_WARNING, "ConvergentConnect", msg.c_str());
-      message(SLIInterpreter::M_WARNING, "ConvergentConnect", "Connection will be ignored.");
       continue;
     }
     catch (UnknownReceptorType& e)
     {
-      std::string msg = String::compose("In Connection from global source ID %1 to target ID %2:", source_ids[i], target_id);
+      std::string msg
+	= String::compose("In Connection from global source ID %1 to target ID %2: "
+			  "Target does not support requested receptor type. "
+			  "The connection will be ignored", 
+			  source->get_gid(), target->get_gid());
+      if ( ! e.message().empty() )
+	msg += "\nDetails: " + e.message();
       message(SLIInterpreter::M_WARNING, "ConvergentConnect", msg.c_str());
-      message(SLIInterpreter::M_WARNING, "ConvergentConnect", "Target does not support requested receptor type.");
-      message(SLIInterpreter::M_WARNING, "ConvergentConnect", "Connection will be ignored.");
-      interpreter_.raiseerror(e.what());
       continue;
     }
   }
