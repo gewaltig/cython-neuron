@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# conncon.py
+# conncon_sources.py
 #
 # This file is part of NEST.
 #

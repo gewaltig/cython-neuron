@@ -34,6 +34,7 @@ import random
 import nest.topology as topo
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+pylab.ion()
 
 nest.ResetKernel()
 

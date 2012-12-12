@@ -3,7 +3,7 @@ datadir=@PKGDOCDIR@/examples/topology
 nobase_data_DATA=\
 	README \
 	conncomp.py \
-	conncon.py \
+	conncon_sources.py \
 	conncon_targets.py \
 	connex.py \
 	connex_ew.py \

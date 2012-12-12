@@ -31,6 +31,7 @@ import pylab
 import time
 import nest
 import nest.topology as topo
+pylab.ion()
 
 for ctr in [(0.0,0.0),(-2.0,2.0),(0.5,1.0)]:
     nest.ResetKernel()

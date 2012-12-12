@@ -30,6 +30,7 @@ Hans Ekkehard Plesser, UMB
 import nest
 import pylab
 import nest.topology as topo
+pylab.ion()
 
 nest.ResetKernel()
 

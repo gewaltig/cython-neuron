@@ -32,6 +32,7 @@ import nest
 import nest.topology as topo
 import pylab
 import random
+pylab.ion()
 
 nest.ResetKernel()
 
