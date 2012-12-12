@@ -52,21 +52,21 @@ topo.ConnectLayers(a, b, {'connection_type': 'convergent',
 pylab.clf()
 
 # plot sources of neurons in different grid locations
-for ctr in [[15,15],[0,0]]:
+for tgt_pos in [[15,15],[0,0]]:
     
     # obtain node id for center
-    ctr_id = topo.GetElement(b, ctr)
+    tgt = topo.GetElement(b, tgt_pos)
 
-    # obtain list of outgoing connections for ctr,
-    # assume static_synapse
-    spos = zip(*[topo.GetPosition([n])[0] for n in nest.GetLeaves(a)[0]
-                 if nest.GetStatus(nest.FindConnections([n]), 'target').count(ctr_id[0]) > 0])
+    # obtain list of outgoing connections for ctr
+    # int() required to cast numpy.int64
+    spos = zip(*[topo.GetPosition([int(conn[0])])[0] for conn in
+                 nest.GetConnections(target=tgt)])
 
     # scatter-plot
     pylab.scatter(spos[0], spos[1], 20, zorder = 10)
 
     # mark sender position with transparent red circle
-    ctrpos = pylab.array(topo.GetPosition(ctr_id)[0])
+    ctrpos = pylab.array(topo.GetPosition(tgt)[0])
     pylab.gca().add_patch(pylab.Circle(ctrpos, radius=0.1, zorder = 99,
                                        fc = 'r', alpha = 0.4, ec = 'none'))
  
