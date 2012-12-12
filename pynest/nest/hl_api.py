@@ -594,21 +594,30 @@ def GetConnections(source=None, target=None, synapse_model=None) :
         target - list of target GIDs
         synapse_model - string with the synapse model
         
-        If GetConnections is called without parameters, all GIDs and
-        all synapse types are iterated.
+        If GetConnections is called without parameters, all connections
+        in the network are returned.
 
-        If a synapse model is given, the return value is the list of
-	connection ids for this model.  If no synapse model is given,
-	GetConnections will iterate all used synapse types and the
-	return value will be a nested list, where each sublist
-	contains the connection ids of the respective synapse model.
-        
-        Each connection id is a 5-tuple or, if available, a numpy
-        array with 5 entries.  Elements of the tuple/array are:
+        If a list of source neurons is given, only connections from these
+        pre-synaptic neurons are returned.
+
+        If a list of target neurons is given, only connections to these
+        post-synaptic neurons are returned.
+
+        If a synapse model is given, only connections with this synapse
+        type are returned.
+
+        Any combination of source, target and synapse_model parameters
+        is permitted.
+
+        Each connection id is a 5-tuple or, if available, a NumPy
+        array with the following fived entries:
         source-gid, target-gid, target-thread, synapse-id, port
 	
         Use GetSynapseStatus()/SetSynapseStatus() to inspect/modify
 	the found connections.
+
+        Note: Only connections with targets on the MPI process executing
+              the command are returned.
 	"""
 	
 	params={}
@@ -626,13 +635,18 @@ def GetConnections(source=None, target=None, synapse_model=None) :
             # add model to params dict as literal
             sr('dup /synapse_model /{0} put_d'.format(synapse_model))
 
-	sr("GetConnections_D")
+	sr("GetConnections")
     
 	return spp()
 
 
 def SetSynapseStatus(conn_ids, params, val=None):
 	"""
+        Modify synapse properties.
+
+        Parameters:
+        conn_ids - a list of connection objects returned by GetConnections
+        params - 
 	Modify the connections given in conn_ids.
 	conn_ids must be an array with connection ids where
 	each connection id is a 5-tuple with the following anatomy

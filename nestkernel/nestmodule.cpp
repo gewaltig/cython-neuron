@@ -164,9 +164,7 @@ namespace nest
      Name: SetStatus - sets the value of a property of a node or object
 
      Synopsis: 
-     [adr] dict SetStatus -> -
      gid   dict SetStatus -> -
-     rdev  dict SetStatus -> -
      conn  dict SetStatus -> -
 
      Description:
@@ -264,11 +262,21 @@ namespace nest
       for(size_t con=0;con < n_conns; ++con)
       {
         ConnectionDatum con_id = getValue<ConnectionDatum>(conn_a[con]);
-        get_network().set_synapse_status(con_id.get_source_gid(), // source_gid
+	dict->clear_access_flags();
+	get_network().set_synapse_status(con_id.get_source_gid(), // source_gid
                                          con_id.get_synapse_type_id(), // synapse_id
                                          con_id.get_port(), // port
                                          con_id.get_target_thread(), // target thread
                                          dict);
+	std::string missed;
+	if ( !dict->all_accessed(missed) )
+	  {
+	    if ( get_network().dict_miss_is_error() )
+	      throw UnaccessedDictionaryEntry(missed);
+	    else
+	      get_network().message(SLIInterpreter::M_WARNING, "SetStatus", 
+				    ("Unread dictionary entries: " + missed).c_str());
+	  }
       }
     }
     else
@@ -278,11 +286,21 @@ namespace nest
       {
         DictionaryDatum dict = getValue<DictionaryDatum>(dict_a[con]);
         ConnectionDatum con_id = getValue<ConnectionDatum>(conn_a[con]);
+	dict->clear_access_flags();
         get_network().set_synapse_status(con_id.get_source_gid(), // source_gid
                                          con_id.get_synapse_type_id(), // synapse_id
                                          con_id.get_port(), // port
                                          con_id.get_target_thread(), // target thread
                                          dict);
+	std::string missed;
+	if ( !dict->all_accessed(missed) )
+	  {
+	    if ( get_network().dict_miss_is_error() )
+	      throw UnaccessedDictionaryEntry(missed);
+	    else
+	      get_network().message(SLIInterpreter::M_WARNING, "SetStatus", 
+				    ("Unread dictionary entries: " + missed).c_str());
+	  }
       }
     }
     
@@ -293,7 +311,6 @@ namespace nest
   /* BeginDocumentation
      Name: GetStatus - return the property dictionary of a node or object
      Synopsis: 
-     [adr] GetStatus -> dict
      gid   GetStatus -> dict
      rdev  GetStatus -> dict
      conn  GetStatus -> dict
