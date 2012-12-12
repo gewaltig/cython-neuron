@@ -237,7 +237,7 @@ namespace nest
     ad.push_back(conn.get_source_gid());
     ad.push_back(conn.get_target_gid());
     ad.push_back(conn.get_target_thread());
-    ad.push_back(conn.get_synapse_type_id());
+    ad.push_back(conn.get_synapse_model_id());
     ad.push_back(conn.get_port());
     Token result(ad);
     i->OStack.top().swap(result);
@@ -264,7 +264,7 @@ namespace nest
         ConnectionDatum con_id = getValue<ConnectionDatum>(conn_a[con]);
 	dict->clear_access_flags();
 	get_network().set_synapse_status(con_id.get_source_gid(), // source_gid
-                                         con_id.get_synapse_type_id(), // synapse_id
+                                         con_id.get_synapse_model_id(), // synapse_id
                                          con_id.get_port(), // port
                                          con_id.get_target_thread(), // target thread
                                          dict);
@@ -288,7 +288,7 @@ namespace nest
         ConnectionDatum con_id = getValue<ConnectionDatum>(conn_a[con]);
 	dict->clear_access_flags();
         get_network().set_synapse_status(con_id.get_source_gid(), // source_gid
-                                         con_id.get_synapse_type_id(), // synapse_id
+                                         con_id.get_synapse_model_id(), // synapse_id
                                          con_id.get_port(), // port
                                          con_id.get_target_thread(), // target thread
                                          dict);
@@ -374,7 +374,7 @@ namespace nest
      
     DictionaryDatum result_dict = get_network().get_synapse_status(
         gid,
-        conn.get_synapse_type_id(), 
+        conn.get_synapse_model_id(), 
         conn.get_port(),
         conn.get_target_thread());
 
@@ -396,7 +396,7 @@ namespace nest
       ConnectionDatum con_id= getValue<ConnectionDatum>(conns.get(nt));
       DictionaryDatum result_dict = get_network().get_synapse_status(
           con_id.get_source_gid(),
-          con_id.get_synapse_type_id(),
+          con_id.get_synapse_model_id(),
           con_id.get_port(),
           con_id.get_target_thread());
       result.push_back(result_dict);

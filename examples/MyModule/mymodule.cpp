@@ -122,7 +122,7 @@ mynest::MyModule::~MyModule()
       command will print the connections (you must paste the SLI
       command as one long line):
 
-      src { /s Set << /source s /synapse_type /static_synapse >> FindConnections { GetStatus /target get } Map dup length 0 gt { cout s <- ( -> ) <- exch <-- endl } if ; } forall
+      src { /s Set << /source s >> GetConnections { cva 1 get } Map dup length 0 gt { cout s <- ( -> ) <- exch <-- endl } if ; } forall
       1 -> [21 25 29]
       7 -> [21 25 29]
       13 -> [21 25 29]

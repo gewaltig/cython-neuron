@@ -303,7 +303,7 @@ BeginDocumentation
    parameters.
 
    Synopsis:
-   source_array target_array N param_dict synapse_type RandomPopulationConnectD
+   source_array target_array N param_dict synapse_model RandomPopulationConnectD
 
    Parameters:
    source_array       - array containing the gids of the presynaptic populations
@@ -312,7 +312,7 @@ BeginDocumentation
    param_dict         - dictionary for discribing the parameter
                         distributions and the property switches of
 			the connection routine
-   synapse_type       - synapse_type of the connection
+   synapse_model      - synapse model of the connection
 
    Options:
 

@@ -65,7 +65,7 @@ ResetKernel
 src 0 get sd ConvergentConnect
 src 0 get {
   /source Set
-  << /source source /synapse_type /static_synapse >> FindConnections
+  << /source source /synapse_model /static_synapse >> FindConnections
   { GetStatus } Map { /target get } Map
   [ sd ] eq assert_or_die
 } forall
@@ -74,7 +74,7 @@ src 0 get {
 src 1 get sd /static_synapse ConvergentConnect
 src 1 get {
   /source Set
-  << /source source /synapse_type /static_synapse >> FindConnections
+  << /source source /synapse_model /static_synapse >> FindConnections
   { GetStatus } Map { /target get } Map
   [ sd ] eq assert_or_die
 } forall
@@ -87,13 +87,13 @@ n_per_trial array 1 add {cvd} Map /d Set
 src 2 get sd w d ConvergentConnect
 src 2 get {
   /source Set
-  << /source source /synapse_type /static_synapse >> FindConnections
+  << /source source /synapse_model /static_synapse >> FindConnections
   { GetStatus } Map { /target get } Map
   [ sd ] eq assert_or_die
 } forall
 [ src 2 get {
   /source Set
-  << /source source /synapse_type /static_synapse >> FindConnections
+  << /source source /synapse_model /static_synapse >> FindConnections
   { GetStatus } Map { /weight get } Map
 } forall ] Flatten Sort
 w eq assert_or_die
@@ -102,13 +102,13 @@ w eq assert_or_die
 src 3 get sd w d /static_synapse ConvergentConnect
 src 3 get {
   /source Set
-  << /source source /synapse_type /static_synapse >> FindConnections
+  << /source source /synapse_model /static_synapse >> FindConnections
   { GetStatus } Map { /target get } Map
   [ sd ] eq assert_or_die
 } forall
 [ src 3 get {
   /source Set
-  << /source source /synapse_type /static_synapse >> FindConnections
+  << /source source /synapse_model /static_synapse >> FindConnections
   { GetStatus } Map { /weight get } Map
 } forall ] Flatten Sort
 w eq assert_or_die

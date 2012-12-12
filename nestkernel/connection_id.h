@@ -46,7 +46,7 @@ namespace nest
       long get_source_gid() const;
       long get_target_gid() const;
       long get_target_thread() const;
-      long get_synapse_type_id() const;
+      long get_synapse_model_id() const;
       long get_port() const;
   protected:
       long source_gid_;
@@ -84,7 +84,7 @@ namespace nest
     }
 
   inline
-    long ConnectionID::get_synapse_type_id() const
+    long ConnectionID::get_synapse_model_id() const
     {
       return synapse_modelid_;
     }
