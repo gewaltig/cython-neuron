@@ -938,53 +938,35 @@ namespace nest
     i->EStack.pop();
   }
 
-  /* BeginDocumentation
-     Name: DataConnect - Connect many neurons from data.
+
+   /* BeginDocumentation
+     Name: DataConnect_i_dict_s - Connect many neurons from data.
 
      Synopsis: 
-     1.   source dict model  DataConnect -> -
+     gid dict model  DataConnect -> -
 
-     source - GID of the source neuron
+     gid    - GID of the source neuron
      dict   - dictionary with connection parameters
      model  - the synapse model as string or literal
 
-     2. [dict1 dict2 .... dict_n] DataConnect -> -
-     
-     The argument is a list with synapse status dictionaries.
-
      Description:
-
-     Variant 1:
-     This variant is mainly used if connectivity data is explicitly given and read from files.
      Connects the source neuron to targets according to the data in dict, using the synapse 'model'.
-     Dict is a parameter dictionary that must contain at least the following fields:
-     /target
-     /weight
-     /delay
-     Other parameters depend on the synapse model. 
-     The values in the dictionaries are arrays of equal size, specifying the parameters for the
-     respective connection. The arrays should all be of type DoubleVectorDatum (numpy.array(dtype=float)). 
-     Note that for performance reasons, target GIDs must be given as doubles rather than integers!
 
-     The second variant of DataConnect can be used to re-instantiate a given connectivity matrix. 
-     
-     Example:
-     
-     % assume a connected network
+     Dict is a parameter dictionary that must contain the connection parameters as DoubleVectors. 
+     The parameter dictionary must contain at least the fields:
+     /target <. gid_1 ... gid_n .>
+     /weight <. w1_1 ... w_n .>
+     /delay  <. d_1 ... d_n .>
+     All of these must be DoubleVectors of the same length.
 
-     << >> GetConnections Flatten /conns Set % Get all connections
-     conns { GetStatus } Map      /syns  Set % retrieve their synapse status
+     Depending on the synapse model, the dictionary may contain other keys, again as
+     DoubleVectors of the same length as /target. 
 
-     ResetKernel                             % clear everything
-     % rebuild neurons
-     syns DataConnect                        % restore the connecions
-
-
+     DataConnect will iterate all vectors and create the connections according to the parameters given.
+     SeeAlso: DataConnect_a, DataConnect
      Author: Marc-Oliver Gewaltig
-     FirstVersion: August 2011
-     SeeAlso: Connect, DivergentConnect
-  */
-  void NestModule::DataConnect_i_dict_iFunction::execute(SLIInterpreter *i) const
+   */
+  void NestModule::DataConnect_i_dict_sFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(3);
      
@@ -1018,9 +1000,29 @@ namespace nest
      Synopsis: 
      [dict1, dict2, ..., dict_n ]  DataConnect_a -> -
 
+     This variant of DataConnect can be used to re-instantiate a given connectivity matrix.
+     The argument is a list of dictionaries, each containing at least the keys
+     /source
+     /target
+     /weight
+     /delay
+     /model
+     
+     Example:
+     
+     % assume a connected network
+
+     << >> GetConnections Flatten /conns Set % Get all connections
+     conns { GetStatus } Map      /syns  Set % retrieve their synapse status
+
+     ResetKernel                             % clear everything
+     % rebuild neurons
+     syns DataConnect                        % restore the connecions
+
+
      Author: Marc-Oliver Gewaltig
      FirstVersion: May 2012
-     SeeAlso: DataConnect, Connect
+     SeeAlso: DataConnect_i_dict_s, Connect
   */
   void NestModule::DataConnect_aFunction::execute(SLIInterpreter *i) const
   {
@@ -1747,7 +1749,7 @@ namespace nest
     i->createcommand("Connect_i_i_d_d_l", &connect_i_i_d_d_lfunction);
     i->createcommand("Connect_i_i_d_d_i", &connect_i_i_d_d_ifunction);
     i->createcommand("Connect_i_i_D_l", &connect_i_i_D_lfunction);
-    i->createcommand("DataConnect_", &dataconnect_i_dict_ifunction);
+    i->createcommand("DataConnect_i_dict_s", &dataconnect_i_dict_sfunction);
     i->createcommand("DataConnect_a", &dataconnect_afunction);
 
     i->createcommand("DivergentConnect_i_ia_a_a_l", &divergentconnect_i_ia_a_a_lfunction);

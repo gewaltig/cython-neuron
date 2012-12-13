@@ -291,11 +291,11 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } restorenodes_afunction;
 
-     class DataConnect_i_dict_iFunction: public SLIFunction
+     class DataConnect_i_dict_sFunction: public SLIFunction
      {
       public:
        void execute(SLIInterpreter *) const;
-     } dataconnect_i_dict_ifunction;
+     } dataconnect_i_dict_sfunction;
 
      class DataConnect_aFunction: public SLIFunction
      {

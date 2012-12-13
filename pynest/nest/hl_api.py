@@ -61,12 +61,20 @@ class NESTError(Exception):
 
 # -------------------- Helper functions
 
+def is_ndarray(seq):
+        try:
+                import numpy
+                return type(seq) == numpy.ndarray
+        except:
+                return false
+        
 def is_sequencetype(seq) :
     """
     Return True if the given object is a sequence type, False else
     """
+    import sys
     
-    return type(seq) in (types.TupleType, types.ListType)
+    return (type(seq) in (types.TupleType, types.ListType)) or is_ndarray(seq)
 
 
 def is_iterabletype(seq) :
@@ -480,7 +488,7 @@ def SetStatus(nodes, params, val=None) :
     if len(nodes) != len(params) :
         raise NESTError("Status dict must be a dict, or list of dicts of length 1 or len(nodes).")
         
-    if type(nodes[0]) == types.DictType:
+    if  (type(nodes[0]) == types.DictType) or is_sequencetype(nodes[0]):
         nest.push_connection_datums(nodes)
     else:
         sps(nodes)
@@ -513,7 +521,7 @@ def GetStatus(nodes, keys=None) :
         else:
             cmd='{ GetStatus /%s get} Map' % keys
 
-    if type(nodes[0]) == types.DictType:
+    if (type(nodes[0]) == types.DictType) or is_sequencetype(nodes[0]):
         nest.push_connection_datums(nodes)
     else:
         sps(nodes)
@@ -613,9 +621,6 @@ def GetConnections(source=None, target=None, synapse_model=None) :
         array with the following fived entries:
         source-gid, target-gid, target-thread, synapse-id, port
 	
-        Use GetSynapseStatus()/SetSynapseStatus() to inspect/modify
-	the found connections.
-
         Note: Only connections with targets on the MPI process executing
               the command are returned.
 	"""
@@ -638,76 +643,6 @@ def GetConnections(source=None, target=None, synapse_model=None) :
 	sr("GetConnections")
     
 	return spp()
-
-
-def SetSynapseStatus(conn_ids, params, val=None):
-	"""
-        Modify synapse properties.
-
-        Parameters:
-        conn_ids - a list of connection objects returned by GetConnections
-        params - 
-	Modify the connections given in conn_ids.
-	conn_ids must be an array with connection ids where
-	each connection id is a 5-tuple with the following anatomy
-	(source_gid, target_gid, target_thread, synapse_id, port).
-	params must be an array of dictionaries, one for each connection.
-	connection ids are returned by GetConnections().
-
-	This function is still experimental.
-	Author: Marc-Oliver Gewaltig 
-	"""
-
-	if not is_sequencetype(conn_ids):
-		raise NESTError("conn_ids must be a list of connection ids.")
-
-	if len(conn_ids) == 0:
-		return
-
-	if type(params) == types.StringType :
-		if is_iterabletype(val) and not type(val) in (types.StringType, types.DictType):
-			params = [{params : x} for x in val]
-		else :
-			params = {params : val}
-
-	params = broadcast(params, len(conn_ids), (dict,), "params")
-	if len(conn_ids) != len(params) :
-		raise NESTError("Status dict must be a dict, or list of dicts of length 1 or len(conn_ids).")
-
-        nest.push_connection_datums(conn_ids)
-	sps(params)
-	sr('SetStatus_aa')
-
-
-def GetSynapseStatus(conn_ids, keys=None) :
-    """
-    Return the parameter dictionaries of the given list of connections
-    (identified by handles as returned by GetConnections()). If keys is given, a
-    list of values is returned instead. keys may also be a list, in
-    which case the returned list contains lists of values.
-    
-    This function is still experimental.
-    Author: Marc-Oliver Gewaltig 
-    """
-
-    if not is_sequencetype(conn_ids):
-        raise NESTError("conn_ids must be a list of connections.")
-
-    if len(conn_ids) == 0:
-        return []
-
-    cmd='GetStatus_a'
-
-    if keys:
-        if is_sequencetype(keys):
-            keyss = string.join(["/%s" % x for x in keys])
-            cmd='GetStatus_a  { [ [ %s ] ] get } Map' % keyss
-        else:
-            cmd='GetStatus_a { /%s get} Map' % keys
-
-    nest.push_connection_datums(conn_ids)
-    sr(cmd)
-    return spp()
 
 def Connect(pre, post, params=None, delay=None, model="static_synapse"):
     """
@@ -876,13 +811,30 @@ def DivergentConnect(pre, post, weight=None, delay=None, model="static_synapse")
 
 def DataConnect(pre, params=None, model=None):
     """
-    Connect each neuron in pre according to the data in {params}.
-    params is a list of dictionaries, each containing at least the keys:
-    'target': [t1,...,tn]
-    'weight': [w1,...,wn]
-    'delay':[d1,...,dn]
-    The parameter lists should be numpy float arrays.
-    Otherwise, they will be converted, which takes time.
+    Connect neurons from lists of connection data.
+
+    Variant 1.
+    pre: [gid_1, ... gid_n]
+    params: [ {param1}, ..., {param_n} ]
+    model= 'synapse_model'
+
+    Variant 2:
+    pre = [ {synapse_state1}, ..., {synapse_state_n}]
+    params=None
+    model=None
+
+    Variant 1 of DataConnect connects each neuron in pre to the targets given in params, using synapse type model.
+    The dictionary parames must contain at least the following keys:
+    'target'
+    'weight'
+    'delay'
+    each resolving to a list or numpy.ndarray of values. Depending on the synapse model, other parameters can be given
+    in the same format. All arrays in params must have the same length as 'target'.
+
+    Variant 2 of DataConnect will connect neurons according to a list of synapse status dictionaries,
+    as obtained from GetStatus.
+    Note: During connection, status dictionary misses will not raise errors, even if
+    the kernel property 'dict_miss_is_error' is True.
     """
     if not is_sequencetype(pre):
         raise NESTError("'pre' must be a list of nodes or connection dictionaries.")
@@ -901,8 +853,12 @@ def DataConnect(pre, params=None, model=None):
     else:
 	    # Call the variant where all connections are
 	    # given explicitly
+            dictmiss=GetKernelStatus('dict_miss_is_error')
+            SetKernelStatus('dict_miss_is_error', False)
 	    sps(pre)
 	    sr('DataConnect_a')
+            SetKernelStatus('dict_miss_is_error', dictmiss)
+            
     
 def RandomDivergentConnect(pre, post, n, weight=None, delay=None,
                            model="static_synapse", options=None):
