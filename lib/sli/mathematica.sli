@@ -2116,11 +2116,10 @@ functional operator and for compatibility with Mathematica.
 SeeAlso: forall, repeat, FoldList, Nest
 */
 %% x a p
-/Fold trie
-[/anytype /arraytype /proceduretype]
-{
- forall
-} bind addtotrie def
+/Fold [/anytype /arraytype /proceduretype] /forall load def
+/Fold [/anytype /intvectortype /proceduretype] /forall load def
+/Fold [/anytype /doublevectortype /proceduretype] /forall load def
+
 
 
 
@@ -3269,31 +3268,38 @@ Synopsis:
 Parameters:
  array
 Description:
- The function is implemented in SLI. It depends on the
- comparison operator leq if heterogeneous arrays can
- meaningfully be processed
+  This function finds the largest element in a list, DoubleVector or IntVector. To process
+  heterogeneous arrays, the operator gt must be supported between any pair of objects in
+  the list.
+
 Examples:
  [8 4 3 6 9 5] Max --> 9
 Remarks:
  Replacess arr::Max in future versions.
-Author: Diesmann
-FirstVersion: 2008.2.12
+Author: Gewaltig
+FirstVersion: 2008.2.12 (Diesmann)
 References:
    [1] The Mathematica Book "Max"
 SeeAlso: Min, Sort
 */
 /Max
 {
- dup First exch Rest
- {
-  2 copy
-  leq
-  {exch} if
-  pop
- }
- Fold
-}
-def
+   size 0 eq
+   {  
+     /Max /RangeCheck raiseerror
+   } if
+   dup 0 get  % start value as sentinel
+   exch 
+   { 
+      dup 2 index gt % compare current element with sentinel
+     { 
+       exch pop % if element is greater than sentinel, make it new sentinel
+     } 
+     {
+        pop  %else discard
+     } ifelse 
+   } forall 
+} def
 
 /*BeginDocumentation
 Name: Min - returns the smallest element of an array
@@ -3302,29 +3308,38 @@ Synopsis:
 Parameters:
  array
 Description:
- The function is implemented in SLI. It depends on the
- comparison operator gt if heterogeneous arrays can
- meaningfully be processed
+ This function finds the smallest element in a list, DoubleVector or intVector.
+ To process heterogeneous arrays, the operator lt must be supported between
+ any pair of objects in the list.
+
 Examples:
  [8 4 3 6 9 5] Min --> 3
 Remarks:
  Replacess arr::Min in future versions.
-Author: Diesmann
-FirstVersion: 2008.2.12
+
+Author: Gewaltig
+FirstVersion: 2008.2.12 (Diesmann)
 References:
    [1] The Mathematica Book "Min"
 SeeAlso: Max, Sort, Mean, Variance
 */
 /Min
 {
- dup First exch Rest
- {
-  2 copy
-  gt
-  {exch} if
-  pop
- }
- Fold
+   size 0 eq
+   {  
+     /Max /RangeCheck raiseerror
+   } if
+   dup 0 get  % start value as sentinel
+   exch 
+   { 
+      dup 2 index lt % compare current element with sentinel
+     { 
+       exch pop % if element is less than sentinel, make it new sentinel
+     } 
+     {
+        pop  %else discard
+     } ifelse 
+   } forall 
 }
 def
 
