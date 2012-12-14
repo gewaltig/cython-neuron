@@ -392,23 +392,42 @@ def Models(mtype = "all", sel=None):
     return models
 
 
-def SetDefaults(model, params) :
+def SetDefaults(model, params, val=None) :
     """
     Set the default parameters of the given model to the values
     specified in the params dictionary.
+    If val is given, params has to be the name of a model property.
+    New default values are used for all subsequently created instances
+    of the model.
     """
 
+    if type(params) == types.StringType :
+            params = {params : val}
+
+    sr('/'+model)
     sps(params)
-    sr('/%s exch SetDefaults' % model)
+    sr('SetDefaults')
 
 
-def GetDefaults(model) :
+def GetDefaults(model, keys=None) :
     """
     Return a dictionary with the default parameters of the given
     model, specified by a string.
+    If keys is given, it must be a string or a list of strings naming model properties.
+    GetDefaults then returns a single value or a list of values belonging to the keys given.
+    Examples:
+    GetDefaults('iaf_neuron','V_m') -> -70.0
+    GetDefaults('iaf_neuron',['V_m', 'model') -> [-70.0, 'iaf_neuron']
     """
-    
-    sr("/%s GetDefaults" % model)
+    cmd = "/%s GetDefaults" % model
+    if keys:
+        if is_sequencetype(keys):
+            keyss = string.join(["/%s" % x for x in keys])
+            cmd='/'+model+' GetDefaults  [ %s ] { 1 index exch get} Map' % keyss
+        else:
+            cmd= '/'+model+' GetDefaults '+'/'+keys+' get'
+        
+    sr(cmd)
     return spp()
 
 
@@ -466,7 +485,7 @@ def Create(model, n=1, params=None):
 def SetStatus(nodes, params, val=None) :
     """ Set the parameters of nodes (identified by global ids)
     or connections (identified by handles as returned by
-    FindConnections()) to params, which may be a single dictionary or
+    GetConnections()) to params, which may be a single dictionary or
     a list of dictionaries. If val is given, params has to be the name
     of an attribute, which is set to val on the nodes/connections. val
     can be a single value or a list of the same size as nodes.
@@ -501,7 +520,7 @@ def GetStatus(nodes, keys=None) :
     """
     Return the parameter dictionaries of the given list of nodes
     (identified by global ids) or connections (identified
-    by handles as returned by FindConnections()). If keys is given, a
+    by handles as returned by GetConnections()). If keys is given, a
     list of values is returned instead. keys may also be a list, in
     which case the returned list contains lists of values.
     """
