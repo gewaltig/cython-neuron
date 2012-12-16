@@ -149,14 +149,16 @@ public:
    * \param syn The synapse model to use.
    * \returns The receiver port number for the new connection
    */ 
-  void connect(Node& s, Node& r, index s_gid, thread tid, index syn);
-  void connect(Node& s, Node& r, index s_gid, thread tid, double_t w, double_t d, index syn);
-  void connect(Node& s, Node& r, index s_gid, thread tid, DictionaryDatum& p, index syn);
+  void connect(Node& s, Node& r, index s_gid, thread tid, index syn, bool count_connections = true);
+  void connect(Node& s, Node& r, index s_gid, thread tid, double_t w, double_t d, index syn, bool count_connections = true);
+  void connect(Node& s, Node& r, index s_gid, thread tid, DictionaryDatum& p, index syn, bool count_connections = true);
 
   /** 
-   * Experimental bulk connector. see documentation in network.h
+   * Experimental bulk connector. See documentation in network.h
    */
   bool connect(ArrayDatum &d);
+
+  void increment_num_connections(index syn, size_t num);
 
   void send(thread t, index sgid, Event& e);
 

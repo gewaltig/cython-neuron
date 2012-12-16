@@ -326,7 +326,7 @@ SeeAlso: Simulate, Node
     void convergent_connect(const TokenArray s, index r, const TokenArray weights, const TokenArray delays, index syn);
 
     
-    void convergent_connect(const std::vector<index> &s_id, const std::vector<Node*> &s, index r, const TokenArray &weight, const TokenArray &delays, index syn);
+    size_t convergent_connect(const std::vector<index> &s_id, const std::vector<Node*> &s, index r, const TokenArray &weight, const TokenArray &delays, index syn);
 
     void random_convergent_connect(const TokenArray s, index t, index n, const TokenArray w, const TokenArray d, bool, bool, index syn);
 
@@ -714,9 +714,9 @@ SeeAlso: Simulate, Node
 #endif
     
   private:
-    void connect(Node& s, Node& r, index sgid, thread t, index syn);
-    void connect(Node& s, Node& r, index sgid, thread t, double_t w, double_t d, index syn);
-    void connect(Node& s, Node& r, index sgid, thread t, DictionaryDatum& d, index syn);
+    void connect(Node& s, Node& r, index sgid, thread t, index syn, bool count_connections = true);
+    void connect(Node& s, Node& r, index sgid, thread t, double_t w, double_t d, index syn, bool count_connections = true);
+    void connect(Node& s, Node& r, index sgid, thread t, DictionaryDatum& d, index syn, bool count_connections = true);
 
     /**
      * Initialize the network data structures.
@@ -821,21 +821,21 @@ SeeAlso: Simulate, Node
   }
 
   inline
-  void Network::connect(Node& s, Node& r, index sgid, thread t, index syn)
+  void Network::connect(Node& s, Node& r, index sgid, thread t, index syn, bool count_connections)
   {
-    connection_manager_.connect(s, r, sgid, t, syn);
+    connection_manager_.connect(s, r, sgid, t, syn, count_connections);
   }
 
   inline
-  void Network::connect(Node& s, Node& r, index sgid, thread t, double_t w, double_t d, index syn)
+  void Network::connect(Node& s, Node& r, index sgid, thread t, double_t w, double_t d, index syn, bool count_connections)
   {
-    connection_manager_.connect(s, r, sgid, t, w, d, syn);
+    connection_manager_.connect(s, r, sgid, t, w, d, syn, count_connections);
   }
 
   inline
-  void Network::connect(Node& s, Node& r, index sgid, thread t, DictionaryDatum& p, index syn)
+  void Network::connect(Node& s, Node& r, index sgid, thread t, DictionaryDatum& p, index syn, bool count_connections)
   {
-    connection_manager_.connect(s, r, sgid, t, p, syn);
+    connection_manager_.connect(s, r, sgid, t, p, syn, count_connections);
   }
 
   inline 

@@ -1312,33 +1312,35 @@ void Network::convergent_connect(const TokenArray source_ids, index target_id, c
 
 
 /**
- * new version of convergent connect specifically for threaded random convergent connect
- * takes vector<Node*> sources
- * uses information that target neuron is on our thread
+ * New and specialized variant of the convergent_connect()
+ * function, which takes a vector<Node*> for sources and relies
+ * on the fact that target is guaranteed to be on this thread.
  */
-void Network::convergent_connect(const std::vector<index> & source_ids, const std::vector<Node*> & sources, index target_id, const TokenArray & weights, const TokenArray & delays, index syn)
+size_t Network::convergent_connect(const std::vector<index> & source_ids, const std::vector<Node*> & sources, index target_id, const TokenArray & weights, const TokenArray & delays, index syn)
 {
   bool complete_wd_lists = (sources.size() == weights.size() && weights.size() != 0 && weights.size() == delays.size());
   bool short_wd_lists = (sources.size() != weights.size() && weights.size() == 1 && delays.size() == 1);
   bool no_wd_lists = (weights.size() == 0 && delays.size() == 0);
 
-  // check if we have consistent lists for weights and delays
+  // Check if we have consistent lists for weights and delays
+
+  // TODO: This check should already be performed outside the parallel
+  // section of the threadedrandom_convergent_connect(). Throwing an
+  // exception inside a parallel section is not allowed.
   if (! (complete_wd_lists || short_wd_lists || no_wd_lists))
   {
-    message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights and delays must be either doubles or lists of equal size. "
-        "If given as lists, their size must be 1 or the same size as sources.");
+    message(SLIInterpreter::M_ERROR, "ConvergentConnect",
+            "weights and delays must be either doubles or lists of equal size. "
+            "If given as lists, their size must be 1 or the same size as sources.");
     throw DimensionMismatch();
   }
 
+  size_t num_connections = 0;
 
   Node* target = get_node(target_id);
-
-
   for(index i = 0; i < sources.size(); ++i)
   {
-
     Node* source = sources[i];
-
     thread target_thread = target->get_thread();
 
     if (!target->has_proxies())
@@ -1356,11 +1358,13 @@ void Network::convergent_connect(const std::vector<index> & source_ids, const st
     try
     {
       if (complete_wd_lists)
-        connect(*source, *target, source_ids[i], target_thread, weights.get(i), delays.get(i), syn);
+          connect(*source, *target, source_ids[i], target_thread, weights.get(i), delays.get(i), syn, false);
       else if (short_wd_lists)
-        connect(*source, *target, source_ids[i], target_thread, weights.get(0), delays.get(0), syn);
+          connect(*source, *target, source_ids[i], target_thread, weights.get(0), delays.get(0), syn, false);
       else 
-        connect(*source, *target, source_ids[i], target_thread, syn);
+          connect(*source, *target, source_ids[i], target_thread, syn, false);
+
+      num_connections++;      
     }
     catch (IllegalConnection& e)
     {
@@ -1374,17 +1378,18 @@ void Network::convergent_connect(const std::vector<index> & source_ids, const st
     }
     catch (UnknownReceptorType& e)
     {
-      std::string msg
-	= String::compose("In Connection from global source ID %1 to target ID %2: "
-			  "Target does not support requested receptor type. "
-			  "The connection will be ignored", 
-			  source->get_gid(), target->get_gid());
-      if ( ! e.message().empty() )
+      std::string msg = String::compose("In Connection from global source ID %1 to target ID %2: "
+                                        "Target does not support requested receptor type. "
+                                        "The connection will be ignored", 
+                                        source->get_gid(), target->get_gid());
+      if (!e.message().empty())
 	msg += "\nDetails: " + e.message();
       message(SLIInterpreter::M_WARNING, "ConvergentConnect", msg.c_str());
       continue;
     }
   }
+
+  return num_connections;
 }
 
 
@@ -1447,24 +1452,22 @@ void Network::random_convergent_connect(const TokenArray source_ids, index targe
 
 void Network::random_convergent_connect(TokenArray source_ids, TokenArray target_ids, TokenArray ns, TokenArray weights, TokenArray delays, bool allow_multapses, bool allow_autapses, index syn)
 {
+  // This function loops over all targets, with every thread taking
+  // care only of his own target nodes
 
-  // loop over all targets
-  // every thread takes care of his own target nodes
-
-  // it only makes sense to call this function if we have openmp
 #ifndef _OPENMP
+  // It only makes sense to call this function if we have openmp
   assert(false);
-#else
-  // TODO: better do this in scheduler::set_status 
-  omp_set_num_threads(get_num_threads());
 #endif
 
-  // collect all nodes on this process and convert source TokenArray to vector<Node*>
-  // this is needed, because
-  // 1.) otherwise we call get_node within the loop for many neurons several times
-  // 2.) token_array::operator[] is not thread save, so the threads will
-  // possibly access the same element at the same time causing
-  // segfaults
+  // Collect all nodes on this process and convert the TokenArray with
+  // the sources to a std::vector<Node*>. This is needed, because
+  // 1. We don't want to call get_node() within the loop for many
+  //    neurons several times
+  // 2. The function token_array::operator[]() is not thread-safe, so
+  //    the threads will possibly access the same element at the same
+  //    time, causing segfaults
+
   std::vector<Node*> sources(source_ids.size());
   std::vector<index> vsource_ids(source_ids.size());
   for (index i = 0; i < source_ids.size(); ++i)
@@ -1474,7 +1477,7 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
     vsource_ids[i] = sid;
   }
 
-  // check if we have consistent lists for weights and delays
+  // Check if we have consistent lists for weights and delays
   if (! (weights.size() == ns.size() || weights.size() == 0) && (weights.size() == delays.size()))
   {
     message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights, delays and ns must be same size.");
@@ -1483,11 +1486,16 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
 
   bool abort = false;
 
+  // We set up vector of connection counters with one entry per
+  // thread. The entries are only written at the end of the
+  // loops. Intermediate values are maintained in threadlocal counters
+  // by each thread during the loops. This should minimize cache
+  // thrashing and at the same time guarantee thread-safe counting.
+  std::vector<size_t> conn_count(get_num_threads(), 0);
+
 #pragma omp parallel
   {
     int nrn_counter = 0;
-    int syn_counter = 0;
-
     int tid = 0;
 
 #ifdef _OPENMP
@@ -1500,22 +1508,23 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
     {      
       index target_id = target_ids.get(i);
 
-      // this is true for neurons on remote processes
+      // This is true for neurons on remote processes
       if ( !is_local_gid(target_id) )
         continue;
 
       Node* target = get_node(target_id, tid);
 
-      // check, if targets is on our thread
+      // Check, if target is on our thread
       if (target->get_thread() != tid)
         continue;
 
       nrn_counter++;
 
-      // TODO: This throws std::bad_cast if the dynamic_cast goes wrong
+      // TODO: This throws std::bad_cast if the dynamic_cast goes
+      // wrong. Throwing in a parallel section is not allowed. This
+      // could be solved by only accepting IntVectorDatums for the ns.
       const IntegerDatum& nid = dynamic_cast<const IntegerDatum&>(*ns.get(i));
       const size_t n = nid.get();
-      //const size_t n = getValue<long>(ns[i]);
 
       TokenArray ws;
       TokenArray ds;      
@@ -1525,17 +1534,15 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
         ds = getValue<TokenArray>(delays.get(i));
       }
 
-      // check if we have consistent lists for weights and delays
-      // use flush to ensure consistent view of variable abort across threads
-      // see http://www.thinkingparallel.com/2007/06/29/breaking-out-of-loops-in-openmp/
-      // and http://publib.boulder.ibm.com/infocenter/comphelp/v8v101/index.jsp?topic=%2Fcom.ibm.xlcpp8a.doc%2Fcompiler%2Fref%2Fruompflu.htm
-#pragma omp flush (abort) 
+      // Check if we have consistent lists for weights and delays
+      // We don't use omp flush here, as that would be a performance
+      // problem. As we just toggle a boolean variable, it does not
+      // matter in which order this happens and if multiple threads
+      // are doing this concurrently.
+      // TODO: Check the dimensions of all parameters already before
+      // the beginning of the parallel section
       if (! (ws.size() == n || ws.size() == 0) && (ws.size() == ds.size()) && !abort)
-      {
         abort = true;
-#pragma omp flush (abort)
-      }
-
 
       vector<Node*> chosen_sources(n);
       vector<index> chosen_source_ids(n);
@@ -1561,28 +1568,27 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
         chosen_source_ids[j] = vsource_ids[s_id];
       }
 
-      // we use a specialized function which uses the information that target *is* already on this thread
-      // and that takes a vector<Node*> for sources
-      syn_counter += chosen_sources.size();
-      convergent_connect(chosen_source_ids, chosen_sources, target_id, ws, ds, syn);
+      conn_count[tid] += convergent_connect(chosen_source_ids, chosen_sources, target_id, ws, ds, syn);
 
     } // of for all targets
-
-    //    std::cerr << "A thread's diary " << std::endl;
-    //    std::cerr << "I am thread " << tid << " and was working on " << nrn_counter << " neurons." << std::endl;
-    //    std::cerr << "I am thread " << tid << " and created " << syn_counter << " synapses." << std::endl;
-
-
   } // of omp parallel
 
+  // TODO: Move this exception throwing block and the check for
+  // consistent weight and delay lists above from inside the parallel
+  // section to outside.
   if (abort)
   {
     message(SLIInterpreter::M_ERROR, "ConvergentConnect", "weights and delays must be lists of size n.");
-    // on JUGENE: "throw" is not allowed in a structured block.
     throw DimensionMismatch();
   }
 
-
+  // We calculate the total number of connections established and
+  // increase the connection count of the corresponding prototype in
+  // the ConnectionManager.
+  size_t total_num_conn = 0;
+  for (size_t t = 0; t < get_num_threads(); ++t)
+    total_num_conn += conn_count[t];
+  connection_manager_.increment_num_connections(syn, total_num_conn);  
 }
 
 

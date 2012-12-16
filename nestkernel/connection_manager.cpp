@@ -573,22 +573,22 @@ void ConnectionManager::get_connections(ArrayDatum& connectome, index source, th
   connections_[t].get(source)[syn_vec_index].connector->get_connections(source,t,syn_id,connectome);
 }
 
-void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, index syn)
+void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, index syn, bool count_connections)
 {
   index syn_vec_index = validate_connector(tid, s_gid, syn);
-  connections_[tid].get(s_gid)[syn_vec_index].connector->register_connection(s, r);
+  connections_[tid].get(s_gid)[syn_vec_index].connector->register_connection(s, r, count_connections);
 }
 
-void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, double_t w, double_t d, index syn)
+void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, double_t w, double_t d, index syn, bool count_connections)
 {
   index syn_vec_index = validate_connector(tid, s_gid, syn);
-  connections_[tid].get(s_gid)[syn_vec_index].connector->register_connection(s, r, w, d);
+  connections_[tid].get(s_gid)[syn_vec_index].connector->register_connection(s, r, w, d, count_connections);
 }
 
-void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, DictionaryDatum& p, index syn)
+void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, DictionaryDatum& p, index syn, bool count_connections)
 {
   index syn_vec_index = validate_connector(tid, s_gid, syn);
-  connections_[tid].get(s_gid)[syn_vec_index].connector->register_connection(s, r, p);
+  connections_[tid].get(s_gid)[syn_vec_index].connector->register_connection(s, r, p, count_connections);
 }
 
 
@@ -658,5 +658,11 @@ size_t ConnectionManager::get_num_connections() const
 
   return num_connections;
 } 
+
+void ConnectionManager::increment_num_connections(index syn_id, size_t num)
+{
+  assert_valid_syn_id(syn_id);
+  prototypes_[syn_id]->increment_num_connections(num);
+}
 
 } // namespace

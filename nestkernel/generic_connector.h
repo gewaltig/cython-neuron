@@ -79,24 +79,24 @@ class GenericConnectorBase : public Connector
   /**
    * Register a new connection at the sender side.
    */ 
-  void register_connection(Node&, Node&);
+  void register_connection(Node&, Node&, bool);
 
   /**
    * Register a new connection at the sender side.
    * Use given weight and delay.
    */ 
-  void register_connection(Node&, Node&, double_t, double_t);
+  void register_connection(Node&, Node&, double_t, double_t, bool);
 
   /**
    * Register a new connection at the sender side. 
    * Use given dictionary for parameters.
    */ 
-  void register_connection(Node&, Node&, DictionaryDatum&);
+  void register_connection(Node&, Node&, DictionaryDatum&, bool);
   
   /**
    * Register a new connection at the sender side.
    */ 
-  void register_connection(Node&, Node&, ConnectionT&, port);
+  void register_connection(Node&, Node&, ConnectionT&, port, bool);
  
  /**
    * Register many connections in bulk. 
@@ -194,7 +194,7 @@ GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::Generic
 }
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
-void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r)
+void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r, bool count_connections)
 {
   // create a new instance of the default connection
   ConnectionT cn = ConnectionT( connector_model_.get_default_connection() );
@@ -202,11 +202,11 @@ void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::re
   // tell the connector model, that we used the default delay
   connector_model_.used_default_delay();
 
-  register_connection(s, r, cn, connector_model_.get_receptor_type());
+  register_connection(s, r, cn, connector_model_.get_receptor_type(), count_connections);
 }
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
-void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r, double_t w, double_t d)
+void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r, double_t w, double_t d, bool count_connections)
 {
 
   // We have to convert the delay in ms to a Time object then to steps and back the ms again
@@ -221,11 +221,11 @@ void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::re
   cn.set_weight(w);
   cn.set_delay(d);
 
-  register_connection(s, r, cn, connector_model_.get_receptor_type());
+  register_connection(s, r, cn, connector_model_.get_receptor_type(), count_connections);
 }
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
-void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r, DictionaryDatum& d)
+void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r, DictionaryDatum& d, bool count_connections)
 {
   // check delay
   double_t delay = 0.0;
@@ -249,23 +249,24 @@ void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::re
 #endif
   updateValue<long_t>(d, names::receptor_type, receptor_type);
 
-  register_connection(s, r, cn, receptor_type);
+  register_connection(s, r, cn, receptor_type, count_connections);
 }
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 
 inline
-void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r, ConnectionT &cn, port receptor_type)
+void GenericConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::register_connection(Node& s, Node& r, ConnectionT &cn, port receptor_type, bool count_connections)
 {
   cn.check_connection(s, r, receptor_type, t_lastspike_);
   Node* n = connector_model_.get_registering_node(); //if the connection is a heterosynatpic one, it gets the node which contributes to heterosynaptic plasticity 
 
   connections_.push_back(cn);
   if(n!=0 && connections_.size()==1) //register for first connection connector in registered node  
-    {
-      
-      n->register_connector(*this); //register node in heterosynapse
-    }
-  connector_model_.increment_num_connections();
+  {
+    n->register_connector(*this); //register node in heterosynapse
+  }
+
+  if (count_connections)
+    connector_model_.increment_num_connections();
 }
 
 template< typename ConnectionT, typename CommonPropertiesT, typename ConnectorModelT > 

@@ -43,9 +43,9 @@ class Connector
 {
  public:
   virtual ~Connector() {}
-  virtual void register_connection(Node&, Node&) = 0;
-  virtual void register_connection(Node&, Node&, double_t, double_t) = 0;
-  virtual void register_connection(Node&, Node&, DictionaryDatum&) = 0;
+  virtual void register_connection(Node&, Node&, bool) = 0;
+  virtual void register_connection(Node&, Node&, double_t, double_t, bool) = 0;
+  virtual void register_connection(Node&, Node&, DictionaryDatum&, bool) = 0;
   virtual std::vector<long>* find_connections(DictionaryDatum) const = 0;
   /**
    * Return a list of all connections. 

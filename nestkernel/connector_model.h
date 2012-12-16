@@ -81,7 +81,7 @@ class ConnectorModel
   /**
    * Increment the number of connections created by this ConnectorModel.
    */
-  void increment_num_connections();
+  void increment_num_connections(size_t num = 1);
 
   size_t get_num_connections() const;
 
@@ -136,9 +136,9 @@ void ConnectorModel::set_max_delay(const Time &max_delay)
 }
 
 inline
-void ConnectorModel::increment_num_connections()
+void ConnectorModel::increment_num_connections(size_t num)
 {
-  ++num_connections_;
+  num_connections_ += num;
 }
 
 inline
