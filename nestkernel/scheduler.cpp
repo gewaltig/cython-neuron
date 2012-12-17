@@ -303,7 +303,8 @@ void nest::Scheduler::configure_spike_buffers_()
   global_offgrid_spikes_.clear();
   global_offgrid_spikes_.resize(recv_buffer_size, OffGridSpike(0,0.0));
 
-  displacements_.resize(Communicator::get_num_processes(), 0);
+  displacements_.clear();
+  displacements_.resize(Communicator::get_num_processes(), comm_marker_);
 }
 
 void nest::Scheduler::clear_nodes_vec_()
