@@ -114,6 +114,9 @@ namespace nest{
      spike_detector has to be set to true in order to record the offsets
      in addition to the on-grid spike times.
 
+     A further improvement of precise simulation is implemented in iaf_psc_exp_ps
+     based on [4].
+
 
      Parameters: 
      The following parameters can be set in the status dictionary.
@@ -141,13 +144,16 @@ namespace nest{
      [3] Morrison A, Straube S, Plesser H E, & Diesmann M (2006) Exact Subthreshold 
      Integration with Continuous Spike Times in Discrete Time Neural Network 
      Simulations. To appear in Neural Computation.
+     [4] Hanuschkin A, Kunkel S, Helias M, Morrison A & Diesmann M (2010) 
+     A general and efficient method for incorporating exact spike times in 
+     globally time-driven simulations Front Neuroinformatics, 4:113
 
      Sends: SpikeEvent
 
      Receives: SpikeEvent, CurrentEvent, DataLoggingRequest
      
      Author:  May 2006, Plesser; based on work by Diesmann, Gewaltig, Morrison, Straube, Eppler
-     SeeAlso: iaf_psc_delta
+     SeeAlso: iaf_psc_delta, iaf_psc_exp_ps
   */
 
   class iaf_psc_delta_canon:

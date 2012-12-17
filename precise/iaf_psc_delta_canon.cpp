@@ -131,8 +131,8 @@ double nest::iaf_psc_delta_canon::Parameters_::set(const DictionaryDatum& d)
   if ( c_m_ <= 0 )
     throw BadProperty("Capacitance must be strictly positive.");
     
-  if ( t_ref_ < 0 )
-    throw BadProperty("Refractory time must not be negative.");
+  if ( Time(Time::ms(t_ref_)).get_steps() < 1 )
+    throw BadProperty("Refractory time must be at least one time step.");
     
   if ( tau_m_ <= 0 )
     throw BadProperty("All time constants must be strictly positive.");

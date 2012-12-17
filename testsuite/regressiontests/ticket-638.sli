@@ -56,10 +56,18 @@ def
   true exch { and } Fold
 } assert_or_die
 
+% TEMPORARY MODIFICATION for NEST 2.2: ensure models throw exception
+% For 2.4, when fixing #638 for real, the test labeled "second" below 
+% must be re-activated
+{ /iaf_psc_alpha_canon << /t_ref 0.0 >> Create } fail_or_die
+{ /iaf_psc_delta_canon << /t_ref 0.0 >> Create } fail_or_die
+{ /iaf_psc_exp_os << /t_ref 0.0 >> Create } fail_or_die
+
 % second: with t_ref == 0, must also produce > 1 spike
-{ 
-  models { 0.0 run_sim 1 gt } Map 
-  true exch { and } Fold
-} assert_or_die
+%
+%{ 
+%  models { 0.0 run_sim 1 gt } Map 
+%  true exch { and } Fold
+%} assert_or_die
 
 endusing

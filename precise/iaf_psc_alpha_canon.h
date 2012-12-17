@@ -77,6 +77,9 @@ connected to a spike_detector, the property "precise_times" of the
 spike_detector has to be set to true in order to record the offsets
 in addition to the on-grid spike times.
 
+A further improvement of precise simulation is implemented in iaf_psc_exp_ps
+based on [3].
+
 Parameters:
 The following parameters can be set in the status dictionary.
 
@@ -105,6 +108,9 @@ References:
 [2] Rotter S & Diesmann M (1999) Exact simulation of time-invariant linear
     systems with applications to neuronal modeling. Biologial Cybernetics
     81:381-402.
+[3] Hanuschkin A, Kunkel S, Helias M, Morrison A & Diesmann M (2010) 
+    A general and efficient method for incorporating exact spike times in 
+    globally time-driven simulations Front Neuroinformatics, 4:113
         
 Author: Diesmann, Eppler, Morrison, Plesser, Straube
 
@@ -112,7 +118,7 @@ Sends: SpikeEvent
 
 Receives: SpikeEvent, CurrentEvent, DataLoggingRequest
 
-SeeAlso: iaf_psc_alpha, iaf_psc_alpha_presc
+SeeAlso: iaf_psc_alpha, iaf_psc_alpha_presc, iaf_psc_exp_ps
 
 */ 
 
