@@ -68,9 +68,9 @@ namespace nest{
      since incoming spikes are modeled as instantaneous potential
      jumps. Times of spikes caused by current input are determined
      exactly by solving the membrane potential equation. Note that, in
-     contrast to the neuron models discussed in [3], this model has so
-     simple dynamics that no interpolation of spike times is required at
-     all.
+     contrast to the neuron models discussed in [3,4], this model has so
+     simple dynamics that no interpolation or iterative spike location
+     technique is required at all.
 
      The general framework for the consistent formulation of systems with
      neuron like dynamics interacting by point events is described in
@@ -106,17 +106,12 @@ namespace nest{
      optimization levels. A future version of iaf_psc_delta_canon will probably
      address the problem of efficient usage of appropriate vector and
      matrix objects.
-
      
      Please note that this node is capable of sending precise spike times
      to target nodes (on-grid spike time plus offset). If this node is
      connected to a spike_detector, the property "precise_times" of the
      spike_detector has to be set to true in order to record the offsets
      in addition to the on-grid spike times.
-
-     A further improvement of precise simulation is implemented in iaf_psc_exp_ps
-     based on [4].
-
 
      Parameters: 
      The following parameters can be set in the status dictionary.

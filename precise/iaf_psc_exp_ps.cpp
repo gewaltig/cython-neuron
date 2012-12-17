@@ -141,10 +141,10 @@ double nest::iaf_psc_exp_ps::Parameters_::set(const DictionaryDatum & d)
   
   if ( c_m_ <= 0 )
     throw BadProperty("Capacitance must be strictly positive.");
-  
+
   if ( Time(Time::ms(t_ref_)).get_steps() < 1 )
     throw BadProperty("Refractory time must be at least one time step.");
-  
+
   if ( tau_m_ <= 0 || tau_ex_ <= 0 || tau_in_ <= 0 )
     throw BadProperty("All time constants must be strictly positive.");
 
@@ -225,7 +225,7 @@ void nest::iaf_psc_exp_ps::calibrate()
   V_.P21_in_       = -P_.tau_m_*P_.tau_in_ / (P_.tau_m_-P_.tau_in_) / P_.c_m_ * (V_.expm1_tau_in_-V_.expm1_tau_m_);
   
   V_.refractory_steps_ = Time(Time::ms(P_.t_ref_)).get_steps();
-  assert( V_.refractory_steps_ >= 0 );  // since t_ref_ >= 0, this can only fail in error
+  assert(V_.refractory_steps_ > 1);  // since t_ref_ >= sim step size, this can only fail in error
 }
 
 /* ---------------------------------------------------------------- 
@@ -435,7 +435,7 @@ void nest::iaf_psc_exp_ps::emit_spike_(const Time & origin, const long_t lag,
   // reset neuron and make it refractory
   S_.y2_ = P_.U_reset_;
   S_.is_refractory_ = true;
-  
+
   // send spike
   SpikeEvent se;
   
@@ -455,7 +455,7 @@ void nest::iaf_psc_exp_ps::emit_instant_spike_(const Time & origin, const long_t
   // reset neuron and make it refractory
   S_.y2_ = P_.U_reset_;
   S_.is_refractory_ = true;
-  
+
   // send spike
   SpikeEvent se;
   
