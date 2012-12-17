@@ -178,7 +178,7 @@ namespace nest {
   inline
   void StimulatingDevice<EmittedEvent>::get_status(DictionaryDatum &d) const
   {
-    def<std::string>(d, "type", "stimulator");
+    (*d)[names::type] = LiteralDatum(names::stimulator);
     Device::get_status(d);
   }
 

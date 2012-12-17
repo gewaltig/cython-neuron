@@ -40,7 +40,7 @@ Author: Wiebke Potjans
 //#include "exeptions.h"
 //#include "stimulating_device.h"
 #include "archiving_node.h"
-
+#include "namedatum.h"
 
 
 namespace nest
@@ -263,7 +263,7 @@ inline
 void environment_cliff::get_status(DictionaryDatum &d) const
 {
   P_.get(d);
-  (*d)["type"] = "other";
+  (*d)[names::type] = LiteralDatum(names::other);
 }
 
 /*

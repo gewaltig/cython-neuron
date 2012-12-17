@@ -45,7 +45,8 @@ void Connection::get_status(DictionaryDatum & d) const
     def<long>(d, names::rport, rport_);
     def<long>(d, names::target, target_->get_gid());
   }
-  def<std::string>(d, "type", "synapse");
+
+  (*d)[names::type] = LiteralDatum(names::synapse);
 }
 
 

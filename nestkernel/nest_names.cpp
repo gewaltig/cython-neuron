@@ -315,5 +315,13 @@ namespace nest
 
     const Name theta("theta");
 
+    // Node types
+    const Name type("type");
+    const Name structure("structure");
+    const Name neuron("neuron");
+    const Name stimulator("stimulator");
+    const Name recorder("recorder");
+    const Name synapse("synapse");
+    const Name other("other");
   }
 }

@@ -142,10 +142,10 @@ namespace nest {
       }
     }
 
-    // This is overwritten in the base classes for stimulating and
-    // recording devices, and other special nodes with corresponding
-    // values
-    (*dict)["type"] = "neuron";
+    // This is overwritten with a corresponding value in the
+    // base classes for stimulating and recording devices, and
+    // in other special node classes
+    (*dict)[names::type] = LiteralDatum(names::neuron);
 
     // now call the child class' hook
     get_status(dict);

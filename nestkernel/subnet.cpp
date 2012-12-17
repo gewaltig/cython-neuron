@@ -82,6 +82,8 @@ void nest::Subnet::get_status(DictionaryDatum& dict) const
   (*dict)["label"]=label_;
   (*dict)["customdict"]=customdict_;
   (*dict)["children_on_same_vp"]=children_on_same_vp_; 
+
+  (*dict)[names::type] = LiteralDatum(names::structure);
 }
 
 void nest::Subnet::get_dimensions_(std::vector<int> & dim) const

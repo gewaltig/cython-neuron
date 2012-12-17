@@ -335,6 +335,15 @@ namespace nest
     extern const Name published;
 
     extern const Name theta; // Did not compile without (theta neuron problem)
+
+    // Node types
+    extern const Name type;
+    extern const Name structure;
+    extern const Name neuron;
+    extern const Name stimulator;
+    extern const Name recorder;
+    extern const Name synapse;
+    extern const Name other;
   }
 }
 

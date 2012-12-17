@@ -28,7 +28,7 @@
 #include "archiving_node.h"
 #include "ring_buffer.h"
 #include "spikecounter.h"
-
+#include "namedatum.h"
 
 
 /*BeginDocumentation
@@ -229,7 +229,8 @@ namespace nest
   {
     P_.get(d);
     Archiving_Node::get_status(d);
-    (*d)["type"] = "other";
+
+    (*d)[names::type] = LiteralDatum(names::other);
   }
 
   inline

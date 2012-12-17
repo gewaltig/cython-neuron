@@ -460,7 +460,7 @@ void RecordingDevice::get_status(DictionaryDatum &d) const
   S_.get(d, P_);
   Device::get_status(d);
     
-  def<std::string>(d, "type", "recorder");
+  (*d)[names::type] = LiteralDatum(names::recorder);
 }
 
 inline
