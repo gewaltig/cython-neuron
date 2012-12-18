@@ -1586,7 +1586,7 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
   // increase the connection count of the corresponding prototype in
   // the ConnectionManager.
   size_t total_num_conn = 0;
-  for (size_t t = 0; t < get_num_threads(); ++t)
+  for (thread t = 0; t < get_num_threads(); ++t)
     total_num_conn += conn_count[t];
   connection_manager_.increment_num_connections(syn, total_num_conn);  
 }
