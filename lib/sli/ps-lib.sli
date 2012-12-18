@@ -174,9 +174,4 @@ SeeAlso: ceil
  [/integertype] {} addtotrie
 def 
 
-/< mark def
-/> 
-{
-  counttomark arraystore exch ;
-} bind def
 

@@ -2572,7 +2572,7 @@ SeeAlso: ArrayShape, Range, Table, Dimensions
  /dim  Set
   n_dim 1 eq
   {
-    < dim 0 get {val} repeat >
+    [ dim 0 get {val} repeat ]
   }
   {
     dim 0 get array
@@ -4882,6 +4882,31 @@ SeeAlso: zeros, ones, Range
 
 /.> { ] cv_dv } bind def
 /#> { ] cv_iv } bind def
+
+/< mark def
+/* BeginDocumentation
+Name: <> - Construct an array or vector, depending on the element type.
+Synopsis: < obj1 ... obj n > -> [obj1, ... , objn]
+          < int1 ... intn >  -> <# int1 ... intn #>
+          < double1 ... doublen > -> <. d1 ... dn .>
+Description:
+Create an array, intvector, or doublevector, depending on the type of the entered elements.
+This constructor uses the type of the first element in the sequence to determine the target type. All other
+elements will be converted.
+FirstVersion: Dec 18 2012
+Author: Marc-Oliver Gewaltig
+*/ 
+/> 
+{
+  counttomark arraystore exch ;
+  dup 0 get type 
+  switchbegin
+  1 index /doubletype eq { pop cv_dv exit} case
+  1 index /integertype eq { pop cv_iv exit} case
+  { pop } switchdefault
+
+} bind def
+
 
 %----------------------------------------------------------------------------
 /* Begin(LOESCHMISCH!)Documentation
