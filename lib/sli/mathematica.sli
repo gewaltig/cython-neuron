@@ -1362,6 +1362,9 @@ SeeAlso: Dimensions
  [/arraytype] /TensorRank_ load addtotrie
 def
 
+/TensorRank [/intvectortype] {; 1} def
+/TensorRank [/doublevectortype] {; 1} def
+
 /*BeginDocumentation
 Name: Dimensions - determine dimenstions of a (hyper-rectangular) SLI array
 Synopsis: [array] Dimensions -> [d1 d2 ... dn]
@@ -1418,6 +1421,9 @@ trie [/arraytype]
     } ifelse
   } loop
 } bind addtotrie def
+
+/Dimensions [/intvectortype] {[ exch length ] } def
+/Dimensions [/doublevectortype] {[ exch length ] } def
 
 /*BeginDocumentation
 Name: MatrixQ - Test whether a nested array i a matrix
@@ -2457,17 +2463,15 @@ def
 */
 /Dot  % A B Dot
 {
- dup_ Dimensions First  2 index Dimensions  Last neq
+ dup Dimensions First  2 index Dimensions  Last neq
  {/Dot /TensorsHaveIncompatibleShapes raiseerror } if
-
- exch_
- dup_ TensorRank_ 1 eq  % of A
+ exch
+ dup TensorRank 1 eq  % of A
  {
-  exch_ dup_ TensorRank_ 1 eq  % of B
+  exch_ dup_ TensorRank 1 eq  % of B
   {
-   [ ] exch_ prepend_a exch_ prepend_a
-   Transpose_ { Times } Map_ Plus
-   }
+    Dot1D
+  }
   {
    Transpose_   % of B
    {1 index exch_ Dot } Map_ exch_ pop_
@@ -2479,6 +2483,27 @@ def
  }
  ifelse_
 } bind def
+
+/* BeginDocumentation
+   Name: Dot1D - Compute the inner product of two vectors.
+   Synopsis: array array Dot1D -> num
+   Description: 
+   Dot1D expects two one dimensional arrays or vectors and computes the
+   inner product of the two arguments.
+   Dot1D works equally well for arrays, doublevectors and intvectors.
+
+   Example:
+    <. 1 2 3 .> <. 1 2 3 .> Dot1D -> 14
+   SeeAlso: Dot, OuterProduct
+   Author: Marc-Oliver Gewaltig
+   FirstVersion: Dec 18 2012
+*/
+/Dot1D
+{
+  mul
+  0 exch
+  { add } forall
+} def
 
 
 /* BeginDocumentation
@@ -2504,8 +2529,9 @@ def
 
   Bugs:
    not yet protected by trie
-  Author: Diesmann
-  FirstVersion: 31.5.2000
+  Author: Marc-Oliver Gewaltig, Diesmann
+  FirstVersion: 31.5.2000, rewritten Dec 18 2012
+  
   Remarks:
   SeeAlso: Times, Dot
   References:
@@ -2514,11 +2540,8 @@ def
 /OuterProduct
 {
  exch
- { 1 index
-  { 1 index mul } Map exch pop
- } Map exch pop
-
-
+ { 1 index mul } Map 
+ exch pop
 } bind def
 
 
@@ -4747,6 +4770,26 @@ SeeAlso: MapThread, forall, Map, MapIndexed, NestList, FoldList
 /div [/doublevectortype /doublevectortype] /div_dv_dv load def
 /div [/doubletype /doublevectortype] { inv_dv mul_d_dv } def
 /div [/doublevectortype /doubletype] { inv_d exch_ mul_d_dv}  def
+
+/add [/intvectortype /arraytype] {cv_iv add_iv_iv} def
+/mul [/intvectortype /arraytype] {cv_iv mul_iv_iv} def
+/sub [/intvectortype /arraytype] {cv_iv sub_iv_iv} def
+/div [/intvectortype /arraytype] {cv_iv div_iv_iv} def
+
+/add [/arraytype /intvectortype] {exch cv_iv add_iv_iv} def
+/mul [/arraytype /intvectortype] {exch cv_iv mul_iv_iv} def
+/dub [/arraytype /intvectortype] {exch cv_iv exch sub_iv_iv} def
+/div [/arraytype /intvectortype] {exch cv_iv exch div_iv_iv} def
+
+/add [/doublevectortype /arraytype] {cv_dv add_dv_dv} def
+/mul [/doublevectortype /arraytype] {cv_dv mul_dv_dv} def
+/sub [/doublevectortype /arraytype] {cv_dv sub_dv_dv} def
+/div [/doublevectortype /arraytype] {cv_dv div_dv_dv} def
+
+/add [/arraytype /doublevectortype] {exch cv_dv add_dv_dv} def
+/mul [/arraytype /doublevectortype] {exch cv_dv mul_dv_dv} def
+/dub [/arraytype /doublevectortype] {exch cv_dv exch sub_dv_dv} def
+/div [/arraytype /doublevectortype] {exch cv_dv exch div_dv_dv} def
 
 /length [/doublevectortype] /length_dv load def
 /length [/intvectortype] /length_iv load def
