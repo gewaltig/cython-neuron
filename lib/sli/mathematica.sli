@@ -1422,8 +1422,8 @@ trie [/arraytype]
   } loop
 } bind addtotrie def
 
-/Dimensions [/intvectortype] {[ exch length ] } def
-/Dimensions [/doublevectortype] {[ exch length ] } def
+/Dimensions [/intvectortype] { length 1 arraystore } def
+/Dimensions [/doublevectortype] { length 1 arraystore } def
 
 /*BeginDocumentation
 Name: MatrixQ - Test whether a nested array i a matrix
@@ -1466,6 +1466,8 @@ trie [/arraytype]
 [/anytype] {pop false} addtotrie
  def
 
+/MatrixQ [/intvectortype] false def
+/MatrixQ [/doublevectortype] false def
 
 /* BeginDocumentation
   Name: FindRoot - numerically find a root in an interval
@@ -1858,9 +1860,9 @@ Synopsis:
                                 specified by seqi are taken at level i in list.
 Examples:
  [4 9 -7 3 2 11] 2 Take
-  ->
+  -> [4 9]
  [4 9 -7 3 2 11] -2 Take
-  ->
+  -> [2 11]
  [1 2 3 4 5] [-2] Take
   -> 4
  [1 2 3 4 5] [1 -2] Take
@@ -2432,7 +2434,7 @@ def
 
  (3)
    [ [ 4 ] [ 3 ] [ 7 ] ] [  2  5   8  ] Dot ==  [8 6 14]
-      Error: /TensorsHaveIncompatibleShapes in Dup
+      Error: /DimensionMismatch in Dup
  (4)
    [ [ 5 3 2 ] [ 5 4 1 ] ] [ [ 2 ] [ 3 ] [ 9 ] ] Dot == [[37] [31]]
 
@@ -2464,7 +2466,7 @@ def
 /Dot  % A B Dot
 {
  dup Dimensions First  2 index Dimensions  Last neq
- {/Dot /TensorsHaveIncompatibleShapes raiseerror } if
+ {/Dot /DimensionMismatch raiseerror } if
  exch
  dup TensorRank 1 eq  % of A
  {
