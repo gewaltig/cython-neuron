@@ -32,15 +32,12 @@ A network node of type subnet serves as a root node for subnetworks
 Parameters:
 Parameters that can be accessed via the GetStatus and SetStatus functions:
 
-children_on_same_vp (booltype) -
-   Whether all children are allocated on the same virtual process
 customdict (dictionarytype) -
    A user-defined dictionary, which may be used to store additional
    data.
 label (stringtype) -
   A user-defined string, which may be used to give a symbolic name to
-  the node. From the SLI level, the FindNodes command may be used to
-  find a subnet's address from it's label.
+  the node.
 number_of_children (integertype) -
   The number of direct children of the subnet
 

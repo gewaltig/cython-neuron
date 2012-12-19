@@ -109,10 +109,9 @@ namespace nest
   /* BeginDocumentation
      Name: ChangeSubnet - change the current working subnet.
      Synopsis:
-     [adr] ChangeSubnet -> -
      gid   ChangeSubnet -> -
      Parameters:
-     [adr]/gid - The address of GID of the new current subnet.
+     gid - The GID of the new current subnet.
      Description:
      Change the current subnet to the one given as argument. Create
      will place newly created nodes in the current working subnet.
