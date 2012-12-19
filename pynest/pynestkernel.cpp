@@ -65,6 +65,13 @@ typedef int Py_ssize_t;
 #include "compose.hpp"
 #include "filesystem.h"
 
+#include "pynestpycsa.h"
+#include "../conngen/conngenmodule.h"
+
+#ifdef HAVE_CSA
+#include "csa_glue.h"
+#endif
+
 #include "doubledatum.h"
 #include "integerdatum.h"
 #include "dictdatum.h"
@@ -292,6 +299,20 @@ Datum* PyObj_ToDatum(PyObject *pObj)
     return d;
   }
 
+  if (PyPyCSA_Check(pObj)) { // object is a PyCSA object
+    ConnectionGenerator *cg = new PyCSAGenerator(pObj);
+    nest::ConnectionGeneratorDatum *d = new nest::ConnectionGeneratorDatum(cg);
+    return d;
+  }
+
+#ifdef HAVE_CSA
+  if (PyCSA_Check(pObj)) { // object is a CSA object
+    ConnectionGenerator *cg = PyCSA_GetObject(pObj);
+    nest::ConnectionGeneratorDatum *d = new nest::ConnectionGeneratorDatum(cg);
+    return d;
+  }
+#endif
+
   std::string error = String::compose("Python object of type '%1' cannot be converted to SLI.\n"
                                       "If you think this is an error, tell us at nest_user@nest-initiative.org",
                                       pObj->ob_type->tp_name);
@@ -323,9 +344,12 @@ static PyObject *runsli(PyObject *, PyObject *args)
   sliCommand.assign(pSliCommand);
 
   // send string to sli interpreter
-  Py_BEGIN_ALLOW_THREADS
+  Py_BEGIN_ALLOW_THREADS;
   pEngine->execute(sliCommand);
-  Py_END_ALLOW_THREADS
+  Py_END_ALLOW_THREADS;
+
+  if (PyErr_Occurred ())
+    return NULL;
 
   return Py_BuildValue("");
 }
@@ -617,7 +641,6 @@ static PyObject *push_connection_datums(PyObject *, PyObject *args)
 }
 
 
-
 /**
  * Converts a python list of strings into the plain old C style array
  * of null terminated strings. The string pointers MUST NOT be freed
@@ -792,6 +815,8 @@ static PyMethodDef MethodTable[] = {
   {NULL, NULL, 0, NULL}
 };
 
+extern void PyCSA_init ();
+
 PyMODINIT_FUNC initpynestkernel(void)
 {
   NESTError = Py_BuildValue("s", "NESTError");
@@ -815,4 +840,6 @@ PyMODINIT_FUNC initpynestkernel(void)
 
   Py_INCREF(&PyDatumType);
   PyModule_AddObject(m, "Datum", (PyObject *)&PyDatumType);
+
+  PyCSA_init ();
 }

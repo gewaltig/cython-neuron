@@ -24,6 +24,7 @@
 #include <assert.h>
 #include <iostream>
 #include "modelrangemanager.h"
+#include "exceptions.h"
 
 namespace nest {
   // member functions of modelrangemanager
@@ -92,10 +93,21 @@ bool Modelrangemanager::model_in_use(index i) const
   return found;
 }
 
-
 void Modelrangemanager::clear()
 {
   modelranges_.clear();
 }
 
+const modelrange& Modelrangemanager::get_range(index gid) const
+{
+  if (!is_in_range(gid))
+      throw UnknownNode(gid);
+  
+  for (std::vector<modelrange>::const_iterator it = modelranges_.begin(); it != modelranges_.end(); it++)
+    if ( it->is_in_range(gid) )
+      return (*it);
+
+  throw UnknownNode(gid);
 }
+
+} // namespace nest

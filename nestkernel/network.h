@@ -236,6 +236,12 @@ SeeAlso: Simulate, Node
     index get_model_id_of_gid(index);
 
     /**
+     * Return the contiguous range of ids of nodes with the same model
+     * than the node with the given GID.
+     */
+    const modelrange& get_contiguous_gid_range(index gid) const;
+
+    /**
      * Add a number of nodes to the network.
      * This function creates n Node objects of Model m and adds them
      * to the Network at the current position.
@@ -1150,6 +1156,12 @@ SeeAlso: Simulate, Node
       return node_model_ids_.get_model_id(gid);
     else
       throw UnknownNode(gid);
+  }
+
+  inline 
+  const modelrange& Network::get_contiguous_gid_range(index gid) const
+  {
+    return node_model_ids_.get_range(gid);
   }
 
   inline

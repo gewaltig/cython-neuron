@@ -483,10 +483,11 @@ def Create(model, n=1, params=None):
 
         
 def SetStatus(nodes, params, val=None) :
-    """ Set the parameters of nodes (identified by global ids)
-    or connections (identified by handles as returned by
-    GetConnections()) to params, which may be a single dictionary or
-    a list of dictionaries. If val is given, params has to be the name
+    """
+    Set the parameters of nodes (identified by global ids) or
+    connections (identified by handles as returned by
+    GetConnections()) to params, which may be a single dictionary or a
+    list of dictionaries. If val is given, params has to be the name
     of an attribute, which is set to val on the nodes/connections. val
     can be a single value or a list of the same size as nodes.
     """
@@ -515,6 +516,7 @@ def SetStatus(nodes, params, val=None) :
     sps(params)
     sr('2 arraystore')
     sr('Transpose { arrayload ; SetStatus } forall')
+
 
 def GetStatus(nodes, keys=None) :
     """
@@ -555,8 +557,10 @@ def GetLID(gid) :
     Return the local id of a node with gid.
     GetLID(gid) -> lid
     """
+
     if len(gid) > 1:
-        raise NESTError("Can only return the local ID of one node.")
+        raise NESTError("GetLID() expects exactly one GID.")
+
     sps(gid[0])
     sr("GetLID")
 
@@ -613,55 +617,56 @@ def FindConnections(source, target=None, synapse_model=None, synapse_type=None):
 
 
 def GetConnections(source=None, target=None, synapse_model=None) :
-	"""
-	Return an array of connection identifiers.
-	
-	Parameters:
-        source - list of source GIDs
-        target - list of target GIDs
-        synapse_model - string with the synapse model
-        
-        If GetConnections is called without parameters, all connections
-        in the network are returned.
-
-        If a list of source neurons is given, only connections from these
-        pre-synaptic neurons are returned.
-
-        If a list of target neurons is given, only connections to these
-        post-synaptic neurons are returned.
-
-        If a synapse model is given, only connections with this synapse
-        type are returned.
-
-        Any combination of source, target and synapse_model parameters
-        is permitted.
-
-        Each connection id is a 5-tuple or, if available, a NumPy
-        array with the following fived entries:
-        source-gid, target-gid, target-thread, synapse-id, port
-	
-        Note: Only connections with targets on the MPI process executing
-              the command are returned.
-	"""
-	
-	params={}
-	if source:
-	    if not is_sequencetype(source):
-	        raise NESTError("source must be a list of gids.")
-	    params['source'] = source
-	if target:
-	    if not is_sequencetype(target):
-		raise NESTError("target must be a list of gids.")
-	    params['target'] = target
-
-	sps(params)
-	if synapse_model:
-            # add model to params dict as literal
-            sr('dup /synapse_model /{0} put_d'.format(synapse_model))
-
-	sr("GetConnections")
+    """
+    Return an array of connection identifiers.
     
-	return spp()
+    Parameters:
+    source - list of source GIDs
+    target - list of target GIDs
+    synapse_model - string with the synapse model
+    
+    If GetConnections is called without parameters, all connections
+    in the network are returned.
+
+    If a list of source neurons is given, only connections from these
+    pre-synaptic neurons are returned.
+
+    If a list of target neurons is given, only connections to these
+    post-synaptic neurons are returned.
+
+    If a synapse model is given, only connections with this synapse
+    type are returned.
+
+    Any combination of source, target and synapse_model parameters
+    is permitted.
+
+    Each connection id is a 5-tuple or, if available, a NumPy
+    array with the following fived entries:
+    source-gid, target-gid, target-thread, synapse-id, port
+    
+    Note: Only connections with targets on the MPI process executing
+          the command are returned.
+    """
+    
+    params={}
+    if source:
+        if not is_sequencetype(source):
+            raise NESTError("source must be a list of gids.")
+        params['source'] = source
+    if target:
+        if not is_sequencetype(target):
+            raise NESTError("target must be a list of gids.")
+        params['target'] = target
+
+    sps(params)
+    if synapse_model:
+        # add model to params dict as literal
+        sr('dup /synapse_model /{0} put_d'.format(synapse_model))
+
+    sr("GetConnections")
+    
+    return spp()
+
 
 def Connect(pre, post, params=None, delay=None, model="static_synapse"):
     """
@@ -799,10 +804,12 @@ def RandomConvergentConnect(pre, post, n, weight=None, delay=None, model="static
 
 
 def DivergentConnect(pre, post, weight=None, delay=None, model="static_synapse"):
-    """Connect each neuron in pre to all neurons in post. pre and post
+    """
+    Connect each neuron in pre to all neurons in post. pre and post
     have to be lists. If weight is given (as a single float or as list
     of floats), delay also has to be given as float or as list of
-    floats."""
+    floats.
+    """
 
     if weight == None and delay == None:
         for s in pre :
@@ -827,6 +834,7 @@ def DivergentConnect(pre, post, weight=None, delay=None, model="static_synapse")
     
     else:
         raise NESTError("Both 'weight' and 'delay' have to be given.")
+
 
 def DataConnect(pre, params=None, model=None):
     """
@@ -855,6 +863,7 @@ def DataConnect(pre, params=None, model=None):
     Note: During connection, status dictionary misses will not raise errors, even if
     the kernel property 'dict_miss_is_error' is True.
     """
+
     if not is_sequencetype(pre):
         raise NESTError("'pre' must be a list of nodes or connection dictionaries.")
     if params and not is_sequencetype(params):
@@ -879,9 +888,9 @@ def DataConnect(pre, params=None, model=None):
             SetKernelStatus('dict_miss_is_error', dictmiss)
             
     
-def RandomDivergentConnect(pre, post, n, weight=None, delay=None,
-                           model="static_synapse", options=None):
-    """Connect each neuron in pre to n randomly selected neurons from
+def RandomDivergentConnect(pre, post, n, weight=None, delay=None, model="static_synapse", options=None):
+    """
+    Connect each neuron in pre to n randomly selected neurons from
     post. pre and post have to be lists. If weight is given (as a
     single float or as list of floats), delay also has to be given as
     float or as list of floats. options is a dictionary specifying
@@ -928,28 +937,59 @@ def RandomDivergentConnect(pre, post, n, weight=None, delay=None,
         raise NESTError("Both 'weight' and 'delay' have to be given.")
 
 
+def CGConnect(pre, post, cg, parameter_map={}, model="static_synapse"):
+    """
+    Connect neurons from pre to neurons from post using connectivity
+    specified by the connection generator cg. pre and post are either
+    both lists containing 1 subnet, or lists of gids. parameter_map is
+    a dictionary mapping names of values such as weight and delay to
+    value set positions.
+    """
+
+    if GetStatus(pre[:1], "model")[0] == "subnet":
+        if GetStatus(post[:1], "model")[0] != "subnet":
+            raise NESTError("if pre is a subnet, post also has to be a subnet")
+        if len(pre) > 1 or len(post) > 1:
+            raise NESTError("the length of pre and post has to be 1 if subnets are given")
+        sli_func('CGConnect', cg, pre[0], post[0], parameter_map, '/'+model, litconv=True)
+        
+    else:
+        sli_func('CGConnect', cg, pre, post, parameter_map, '/'+model, litconv=True)
+
+
 # -------------------- Functions for hierarchical networks
 
 def PrintNetwork(depth=1, subnet=None) :
-    """Print the network tree up to depth, starting at subnet. if
-    subnet is omitted, the current subnet is used instead."""
+    """
+    Print the network tree up to depth, starting at subnet. if
+    subnet is omitted, the current subnet is used instead.
+    """
     
     if subnet == None:
         subnet = CurrentSubnet()
+    elif len(subnet) > 1:
+        raise NESTError("PrintNetwork() expects exactly one GID.")
 
     sps(subnet[0])
     sr("%i PrintNetwork" % depth)
 
 
 def CurrentSubnet() :
-    """Returns the global id of the current subnet."""
+    """
+    Returns the global id of the current subnet.
+    """
 
     sr("CurrentSubnet")
     return [spp()]
 
 
 def ChangeSubnet(subnet) :
-    """Make subnet the current subnet."""
+    """
+    Make subnet the current subnet.
+    """
+
+    if len(subnet) > 1:
+        raise NESTError("ChangeSubnet() expects exactly one GID.")
 
     sps(subnet[0])
     sr("ChangeSubnet")
@@ -1030,7 +1070,8 @@ def GetChildren(subnets, properties=None, local_only=False):
 
         
 def GetNetwork(gid, depth):
-    """Return a nested list with the children of subnet id at level
+    """
+    Return a nested list with the children of subnet id at level
     depth. If depth==0, the immediate children of the subnet are
     returned. The returned list is depth+1 dimensional.
     """
@@ -1045,9 +1086,11 @@ def GetNetwork(gid, depth):
 
 
 def BeginSubnet(label=None, params=None):
-    """Create a new subnet and change into it.
-    A string argument can be used to name the new subnet
-    A dictionary argument can be used to set the subnet's custom dict."""
+    """
+    Create a new subnet and change into it. A string argument can be
+    used to name the new subnet A dictionary argument can be used to
+    set the subnet's custom dict.
+    """
 
     sn=Create("subnet")
     if label:
@@ -1058,7 +1101,9 @@ def BeginSubnet(label=None, params=None):
 
 
 def EndSubnet():
-    """Change to the parent subnet and return the gid of the current."""
+    """
+    Change to the parent subnet and return the gid of the current.
+    """
 
     csn=CurrentSubnet()
     parent=GetStatus(csn, "parent")
@@ -1071,8 +1116,10 @@ def EndSubnet():
 
 
 def LayoutNetwork(model, dim, label=None, params=None) :
-    """Create a subnetwork of dimension dim with nodes of type model
-       and return a list of ids."""
+    """
+    Create a subnetwork of dimension dim with nodes of type model and
+    return a list of ids.
+    """
 
     if type(model) == types.StringType:
         sps(dim)

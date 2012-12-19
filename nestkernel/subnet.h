@@ -113,8 +113,8 @@ namespace nest{
     vector<Node*>::const_iterator local_end() const;
 
     /**
-     * Return pointer to Node at give LID if it is local.
-     * @node Defined for dense subnets only (all children local)
+     * Return pointer to Node at given LID if it is local.
+     * @note Defined for dense subnets only (all children local)
      */
     Node* at_lid(index) const;
 
@@ -163,6 +163,8 @@ namespace nest{
     void set_children_vp(thread);
     
     bool allow_entry() const;
+
+    bool is_homogeneous() const; 
 
   protected:
     void init_node_(const Node&) {}
@@ -352,6 +354,12 @@ namespace nest{
   void Subnet::set_children_vp(thread children_vp)
   {
     children_vp_ = children_vp;
+  }
+
+  inline
+  bool Subnet::is_homogeneous() const
+  {
+    return homogeneous_;
   }
   
 } // namespace

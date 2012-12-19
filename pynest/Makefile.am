@@ -22,8 +22,9 @@ EXTRA_DIST= setup.py.in do_tests.py.in \
 	pydatum.h \
 	pydatum.cpp \
 	datumtopythonconverter.h \
-	datumtopythonconverter.cpp
-
+	datumtopythonconverter.cpp \
+	pynestpycsa.h \
+	pynestpycsa.cpp
 
 # 'all' does sometimes miss changes, therefore we 'clean' first
 all:	clean
@@ -60,6 +61,7 @@ data_DATA=\
 	examples/brette-gerstner-fig-2c.py \
 	examples/brette-gerstner-fig-3d.py \
 	examples/CampbellSiegert.py \
+	examples/csa_example.py \
 	examples/mc_neuron.py \
 	examples/multimeter.py \
 	examples/one-neuron.py \

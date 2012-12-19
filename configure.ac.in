@@ -1,3 +1,10 @@
+#
+# CAUTION!
+#
+# The file configure.ac is auto-generated from configure.ac.in
+# Changes to configure.ac will be overwritten by bootstrap.sh
+#
+
 AC_PREREQ(2.52)
 AC_INIT([nest], [2.1.svn], [nest_user@nest-initiative.org])
 
@@ -778,7 +785,7 @@ fi
 # - SLI_NONPUBLIC_DYNMODULES
 #      dynamically linked, automatically loaded, not included in release
 
-SLI_PUBLIC_MODULES="models precise topology"
+SLI_PUBLIC_MODULES="models precise topology conngen"
 SLI_NONPUBLIC_MODULES=""
 
 SLI_PUBLIC_DYNMODULES=""
@@ -830,14 +837,14 @@ done
 INCLUDE_STATIC_MODULES=''
 ADD_STATIC_MODULES=''
 for mod in $SLI_PUBLIC_MODULES $SLI_NONPUBLIC_MODULES; do
-    # get module name with first char capitalized; double ["[ needed to get inner [] through
-    Mod=`printf "${mod:0:1}" | tr ["[:lower:]"] ["[:upper:]"]`
-    Mod="$Mod${mod:1}"
+    modheader="$mod/${mod}module.h"
+    # get module name from the module's main header
+    Mod=`grep SLIModule ${srcdir}/${modheader} | sed -n 's/class *\(.*\) *:.*/\1/p' | tr -d ' '`
     # the line breaks must remain in the strings below
     SLI_CHECK_SOURCE_FILE([$srcdir/$mod/Makefile.am],
-                  [INCLUDE_STATIC_MODULES="${INCLUDE_STATIC_MODULES}#include \"../$mod/${mod}module.h\"
+                  [INCLUDE_STATIC_MODULES="${INCLUDE_STATIC_MODULES}#include \"../${modheader}\"
 "
-                   ADD_STATIC_MODULES="${ADD_STATIC_MODULES}  engine.addmodule(new nest::${Mod}Module(net));
+                   ADD_STATIC_MODULES="${ADD_STATIC_MODULES}  engine.addmodule(new nest::${Mod}(net));
 "],
 		  [printf ""])
 done
@@ -858,15 +865,12 @@ SLI_DIST_SUBDIRS="$SLI_CORE_LIBS nest $PYNEST_SUBDIR"
 SLI_SUBDIRS="$SLI_CORE_LIBS $SLI_EXTRA_MODULES nest"
 
 # generate a list of absolute paths where to search for help files
-for dir in $SLI_SUBDIRS ; do
-
+for dir in $SLI_SUBDIRS; do
   HELPDIRS="$HELPDIRS $PKGSRCDIR/$dir"
-
   # Automatically include sli directory if it exists
   if test -d "$PKGSRCDIR/$dir/sli" ; then
     HELPDIRS="$HELPDIRS $PKGSRCDIR/$dir/sli"
   fi
-
 done
 
 HELPDIRS=`echo $HELPDIRS | tr " " ":"`
@@ -987,6 +991,9 @@ for dir in $NEED_MAKEFILE_DIRS; do
       ;;
     precise)
       AC_CONFIG_FILES(precise/Makefile)
+      ;;
+    conngen)
+      AC_CONFIG_FILES(conngen/Makefile)
       ;;
     topology)
       AC_CONFIG_FILES(topology/Makefile)

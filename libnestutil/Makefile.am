@@ -24,6 +24,7 @@ libnestutil_la_SOURCES= \
 		libc_allocator_with_realloc.h \
 		hashtable-common.h \
 		sparsetable.h \
+		connection_generator.h connection_generator.cpp \
 		compose.hpp
 
 

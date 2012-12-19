@@ -40,6 +40,7 @@ namespace nest {
     bool model_in_use(index i) const;
     void clear();
     void print() const;
+    const modelrange& get_range(index gid) const;
 
   private:
     std::vector<modelrange> modelranges_;
