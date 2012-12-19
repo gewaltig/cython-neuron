@@ -161,18 +161,22 @@ namespace nest
   }
 
   /* BeginDocumentation
-     Name: SetStatus - sets the value of a property of a node or object
+     Name: SetStatus - sets the value of properties of a node, connection, random deviate generator or object
 
      Synopsis: 
      gid   dict SetStatus -> -
      conn  dict SetStatus -> -
+     rdev  dict SetStatus -> -
+     obj   dict SetStatus -> -
 
      Description:
-     SetStatus is the tool to alter properties of nodes. These can be viewed
-     with GetStatus info.
-     SetStatus fulfills the same function for random number distributions
-     and dictionaries used in SLI to represent the objects of oo-programming.
-  
+     SetStatus changes properties of a node (specified by its gid), a connection 
+     (specified by a connection object), a random deviate generator (see GetStatus_v 
+     for more) or an object as used in object-oriented programming in SLI 
+     (see cvo for more). Properties can be inspected with GetStatus. 
+
+     Note that many properties are read-only and cannot be changed.
+
      Examples:
      /dc_generator Create /dc_gen Set  %Creates a dc_generator, which is a node
      dc_gen GetStatus info %view properties (amplitude is 0)
@@ -309,17 +313,18 @@ namespace nest
   }
 
   /* BeginDocumentation
-     Name: GetStatus - return the property dictionary of a node or object
+     Name: GetStatus - return the property dictionary of a node, connection, random deviate generator or object
      Synopsis: 
      gid   GetStatus -> dict
-     rdev  GetStatus -> dict
      conn  GetStatus -> dict
+     rdev  GetStatus -> dict
+     obj   GetStatus -> dict
 
      Description:
      GetStatus returns a dictionary with the status information 
-     of the node, specified by its global id or address.
-     GetStatus fulfills the same function for random number distributions
-     and dictionaries used in SLI to represent the objects of oo-programming.
+     for a node (specified by its gid), a connection (specified by a connection
+     object), a random deviate generator (see GetStatus_v for more) or an
+     object as used in object-oriented programming in SLI (see cvo for more).
 
      The interpreter exchanges data with the network element using
      its status dictionary. To abbreviate the access pattern
@@ -337,7 +342,7 @@ namespace nest
      
      Please refer to the model documentation for details.
   
-     Standard entries:
+     Standard entries for nodes:
 
      global_id   - local ID of the node
      status      - integer, representing the status flags of the node
