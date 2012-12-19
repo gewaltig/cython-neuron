@@ -29,7 +29,7 @@ namespace nest {
   // member functions of modelrangemanager
 
 Modelrangemanager::Modelrangemanager() :
-  range_idx_(0), first_gid_(0), last_gid_(0)
+  first_gid_(0), last_gid_(0)
   { } 
 
 void Modelrangemanager::add_range(index model, index first_gid, index last_gid)
@@ -57,21 +57,25 @@ void Modelrangemanager::add_range(index model, index first_gid, index last_gid)
   int right = modelranges_.size();
   assert(right >= 1);
   assert(is_in_range(gid));
-  while (!modelranges_[range_idx_].is_in_range(gid))
+
+  // to ensure thread-safety, use local range_idx
+  size_t range_idx = right / 2;  // start in center
+  while (!modelranges_[range_idx].is_in_range(gid))
   {
-    if (gid > modelranges_[range_idx_].get_last_gid())
+    if (gid > modelranges_[range_idx].get_last_gid())
     {
-      left = range_idx_;
-      range_idx_ += (right - range_idx_)/2;
+      left = range_idx;
+      range_idx += (right - range_idx)/2;
     }
     else
     {
-      right = range_idx_;
-      range_idx_ -= (range_idx_ - left)/2;
+      right = range_idx;
+      range_idx -= (range_idx - left)/2;
     }
     assert(left+1 < right);
+    assert(range_idx < modelranges_.size());
   }
-  return modelranges_[range_idx_].get_model_id();
+  return modelranges_[range_idx].get_model_id();
 }
 
 bool Modelrangemanager::model_in_use(index i) const
@@ -92,7 +96,6 @@ bool Modelrangemanager::model_in_use(index i) const
 void Modelrangemanager::clear()
 {
   modelranges_.clear();
-  range_idx_ = 0;
 }
 
 }

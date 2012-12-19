@@ -43,7 +43,6 @@ namespace nest {
 
   private:
     std::vector<modelrange> modelranges_;
-    uint_t range_idx_;
     index first_gid_;
     index last_gid_;
   };
