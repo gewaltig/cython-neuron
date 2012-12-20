@@ -5,13 +5,18 @@ CSA tests
 import unittest
 import nest
 import nest.pynestkernel as kernel
-import numpy
 
 try:
     import csa
     haveCSA = True
 except ImportError:
     haveCSA = False
+
+try:
+    import numpy
+    haveNumpy = True
+except ImportError:
+    haveNumpy = False
 
 @unittest.skipIf(not haveCSA, 'Python CSA library not installed')
 class CSATestCase(unittest.TestCase):
@@ -28,7 +33,8 @@ class CSATestCase(unittest.TestCase):
         pop1 = nest.LayoutNetwork("iaf_neuron", [n])
 
         cs = csa.cset(csa.oneToOne)
-        
+
+        print pop0
         nest.CGConnect (pop0, pop1, cs)
 
         sources = nest.GetLeaves(pop0)[0]
@@ -66,6 +72,7 @@ class CSATestCase(unittest.TestCase):
             conns = nest.GetStatus(nest.FindConnections([targets[i]]), 'target')
             self.assertEqual(len(conns), 0)
 
+    @unittest.skipIf(not haveNumpy, 'Python numpy library not installed')
     def test_CSA_cgnext(self):
         """cgnext"""
 
