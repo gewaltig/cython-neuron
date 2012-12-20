@@ -229,7 +229,7 @@ PyCSAGenerator::next (int& source, int& target, double* value)
   if (pIterator == NULL)
     {
       error ("Must call start() before next()");
-      return;
+      return false;
     }
 
   PyGILState_STATE gstate = PyGILState_Ensure();
