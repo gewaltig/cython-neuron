@@ -25,6 +25,7 @@
 
 #include <map>
 #include "nest.h"
+#include "dictdatum.h"
 
 namespace nest
 {

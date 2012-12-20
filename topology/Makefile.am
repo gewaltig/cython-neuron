@@ -31,7 +31,7 @@ libtopologymodule_la_SOURCES= \
 			free_layer.h \
 			grid_layer.h \
 			mask.h \
-			mask.cpp \
+			mask_impl.h \
 			grid_mask.h \
 			ntree.h \
 			ntree_impl.h \

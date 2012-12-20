@@ -37,6 +37,7 @@
 #include "free_layer.h"
 #include "grid_layer.h"
 #include "mask.h"
+#include "mask_impl.h"
 #include "grid_mask.h"
 #include "connection_creator_impl.h"
 #include "parameter.h"

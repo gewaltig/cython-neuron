@@ -28,6 +28,7 @@
 #include "position.h"
 #include "dictdatum.h"
 #include "dictutils.h"
+#include "exceptions.h"
 #include "topologymodule.h"
 
 namespace nest
@@ -100,8 +101,7 @@ namespace nest
     /**
      * @returns true if point is inside mask.
      */
-    bool inside(const std::vector<double_t> &pt) const
-      { return inside(Position<D>(pt)); }
+    bool inside(const std::vector<double_t> &pt) const;
 
     /**
      * @returns true if the whole box is inside the mask.
@@ -115,15 +115,7 @@ namespace nest
      * @note a return value of false is not a guarantee that the whole box
      * is not outside the mask.
      */
-    virtual bool outside(const Box<D> &b) const
-      {
-        Box<D> bb = get_bbox();
-        for(int i=0;i<D;++i) {
-          if ((b.upper_right[i]<bb.lower_left[i]) || (b.lower_left[i]>bb.upper_right[i]))
-            return true;
-        }
-        return false;
-      }
+    virtual bool outside(const Box<D> &b) const;
 
     /**
      * The whole mask is inside (i.e., false everywhere outside) the bounding box.
@@ -167,34 +159,23 @@ namespace nest
     /**
      * @returns true if point is inside the box
      */
-    bool inside(const Position<D> &p) const
-      { return (p>=lower_left_) && (p<=upper_right_); }
+    bool inside(const Position<D> &p) const;
 
     /**
      * @returns true if the whole given box is inside this box
      */
-    bool inside(const Box<D> &b) const
-      { return (b.lower_left>=lower_left_) && (b.upper_right<=upper_right_); }
+    bool inside(const Box<D> &b) const;
 
     /**
      * @returns true if the whole given box is outside this box
      */
-    bool outside(const Box<D> &b) const
-      {
-          for(int i=0;i<D;++i) {
-              if ((b.upper_right[i]<lower_left_[i]) || (b.lower_left[i]>upper_right_[i]))
-                  return true;
-          }
-          return false;
-      }
+    bool outside(const Box<D> &b) const;
 
-    Box<D> get_bbox() const
-      { return Box<D>(lower_left_, upper_right_); }
+    Box<D> get_bbox() const;
 
     DictionaryDatum get_dict() const;
 
-    Mask<D> * clone() const
-      { return new BoxMask(*this); }
+    Mask<D> * clone() const;
 
     /**
      * @returns the name of this mask type.
@@ -236,8 +217,7 @@ namespace nest
     /**
      * @returns true if point is inside the circle
      */
-    bool inside(const Position<D> &p) const
-      { return (p-center_).length() <= radius_; }
+    bool inside(const Position<D> &p) const;
 
     /**
      * @returns true if the whole box is inside the circle
@@ -247,32 +227,13 @@ namespace nest
     /**
      * @returns true if the whole box is outside the circle
      */
-    bool outside(const Box<D> &b) const
-      {
-        // Currently only checks if the box is outside the bounding box of
-        // the ball. This could be made more refined.
-        for (int i=0; i<D; ++i) {
-          if ((b.upper_right[i] < center_[i]-radius_) ||
-              (b.lower_left[i] > center_[i]+radius_))
-            return true;
-        }
-        return false;
-      }
+    bool outside(const Box<D> &b) const;
 
-    Box<D> get_bbox() const
-      {
-        Box<D> bb(center_, center_);
-        for (int i=0; i<D; ++i) {
-          bb.lower_left[i] -= radius_;
-          bb.upper_right[i] += radius_;
-        }
-        return bb;
-      }
+    Box<D> get_bbox() const;
 
     DictionaryDatum get_dict() const;
 
-    Mask<D> * clone() const
-      { return new BallMask(*this); }
+    Mask<D> * clone() const;
 
     /**
      * @returns the name of this mask type.
@@ -309,30 +270,15 @@ namespace nest
     ~IntersectionMask()
       { delete mask1_; delete mask2_; }
 
-    bool inside(const Position<D> &p) const
-      { return mask1_->inside(p) && mask2_->inside(p); }
+    bool inside(const Position<D> &p) const;
 
-    bool inside(const Box<D> &b) const
-      { return mask1_->inside(b) && mask2_->inside(b); }
+    bool inside(const Box<D> &b) const;
 
-    bool outside(const Box<D> &b) const
-      { return mask1_->outside(b) || mask2_->outside(b); }
+    bool outside(const Box<D> &b) const;
 
-    Box<D> get_bbox() const
-      {
-        Box<D> bb = mask1_->get_bbox();
-        Box<D> bb2 = mask2_->get_bbox();
-        for (int i=0; i<D; ++i) {
-          if (bb2.lower_left[i] > bb.lower_left[i])
-            bb.lower_left[i] = bb2.lower_left[i];
-          if (bb2.upper_right[i] < bb.upper_right[i])
-            bb.upper_right[i] = bb2.upper_right[i];
-        }
-        return bb;
-      }
+    Box<D> get_bbox() const;
 
-    Mask<D> * clone() const
-      { return new IntersectionMask(*this); }
+    Mask<D> * clone() const;
 
   protected:
     Mask<D> *mask1_, *mask2_;
@@ -363,30 +309,15 @@ namespace nest
     ~UnionMask()
       { delete mask1_; delete mask2_; }
 
-    bool inside(const Position<D> &p) const
-      { return mask1_->inside(p) || mask2_->inside(p); }
+    bool inside(const Position<D> &p) const;
 
-    bool inside(const Box<D> &b) const
-      { return mask1_->inside(b) || mask2_->inside(b); }
+    bool inside(const Box<D> &b) const;
 
-    bool outside(const Box<D> &b) const
-    { return mask1_->outside(b) && mask2_->outside(b); }
+    bool outside(const Box<D> &b) const;
 
-    Box<D> get_bbox() const
-      {
-        Box<D> bb = mask1_->get_bbox();
-        Box<D> bb2 = mask2_->get_bbox();
-        for (int i=0; i<D; ++i) {
-          if (bb2.lower_left[i] < bb.lower_left[i])
-            bb.lower_left[i] = bb2.lower_left[i];
-          if (bb2.upper_right[i] > bb.upper_right[i])
-            bb.upper_right[i] = bb2.upper_right[i];
-        }
-        return bb;
-      }
+    Box<D> get_bbox() const;
 
-    Mask<D> * clone() const
-      { return new UnionMask(*this); }
+    Mask<D> * clone() const;
 
   protected:
     Mask<D> *mask1_, *mask2_;
@@ -417,20 +348,15 @@ namespace nest
     ~DifferenceMask()
       { delete mask1_; delete mask2_; }
 
-    bool inside(const Position<D> &p) const
-      { return mask1_->inside(p) && !mask2_->inside(p); }
+    bool inside(const Position<D> &p) const;
 
-    bool inside(const Box<D> &b) const
-      { return mask1_->inside(b) && mask2_->outside(b); }
+    bool inside(const Box<D> &b) const;
 
-    bool outside(const Box<D> &b) const
-      { return mask1_->outside(b) || mask2_->inside(b); }
+    bool outside(const Box<D> &b) const;
 
-    Box<D> get_bbox() const
-      { return mask1_->get_bbox(); }
+    Box<D> get_bbox() const;
 
-    Mask<D> * clone() const
-      { return new DifferenceMask(*this); }
+    Mask<D> * clone() const;
 
   protected:
     Mask<D> *mask1_, *mask2_;
@@ -457,23 +383,15 @@ namespace nest
     ~ConverseMask()
       { delete m_; }
 
-    bool inside(const Position<D> &p) const
-      { return m_->inside(-p); }
+    bool inside(const Position<D> &p) const;
 
-    bool inside(const Box<D> &b) const
-      { return m_->inside(Box<D>(-b.upper_right,-b.lower_left)); }
+    bool inside(const Box<D> &b) const;
 
-    bool outside(const Box<D> &b) const
-      { return m_->outside(Box<D>(-b.upper_right,-b.lower_left)); }
+    bool outside(const Box<D> &b) const;
 
-    Box<D> get_bbox() const
-      {
-        Box<D> bb = m_->get_bbox();
-        return Box<D>(-bb.upper_right, -bb.lower_left);
-      }
+    Box<D> get_bbox() const;
 
-    Mask<D> * clone() const
-      { return new ConverseMask(*this); }
+    Mask<D> * clone() const;
 
   protected:
     Mask<D> *m_;
@@ -500,55 +418,22 @@ namespace nest
     ~AnchoredMask()
       { delete m_; }
 
-    bool inside(const Position<D> &p) const
-      { return m_->inside(p-anchor_); }
+    bool inside(const Position<D> &p) const;
 
-    bool inside(const Box<D> &b) const
-      { return m_->inside(Box<D>(b.lower_left-anchor_,b.upper_right-anchor_)); }
+    bool inside(const Box<D> &b) const;
 
-    bool outside(const Box<D> &b) const
-      { return m_->outside(Box<D>(b.lower_left-anchor_,b.upper_right-anchor_)); }
+    bool outside(const Box<D> &b) const;
 
-    Box<D> get_bbox() const
-      {
-        Box<D> bb = m_->get_bbox();
-        return Box<D>(bb.lower_left+anchor_, bb.upper_right+anchor_);
-      }
+    Box<D> get_bbox() const;
 
     DictionaryDatum get_dict() const;
 
-    Mask<D> * clone() const
-      { return new AnchoredMask(*this); }
+    Mask<D> * clone() const;
 
   protected:
     Mask<D> *m_;
     Position<D> anchor_;
   };
-
-
-  template<int D>
-  AbstractMask * Mask<D>::intersect_mask(const AbstractMask & other) const
-  {
-    const Mask * other_d = dynamic_cast<const Mask*>(&other);
-    assert(other_d); // FIXME: Fail gracefully
-    return new IntersectionMask<D>(*this,*other_d);
-  }
-
-  template<int D>
-  AbstractMask * Mask<D>::union_mask(const AbstractMask & other) const
-  {
-    const Mask * other_d = dynamic_cast<const Mask*>(&other);
-    assert(other_d); // FIXME: Fail gracefully
-    return new UnionMask<D>(*this,*other_d);
-  }
-
-  template<int D>
-  AbstractMask * Mask<D>::minus_mask(const AbstractMask & other) const
-  {
-    const Mask * other_d = dynamic_cast<const Mask*>(&other);
-    assert(other_d); // FIXME: Fail gracefully
-    return new DifferenceMask<D>(*this,*other_d);
-  }
 
   template<>
   inline
@@ -577,17 +462,6 @@ namespace nest
     lower_left_(lower_left), upper_right_(upper_right)
   {}
   
-  template<int D>
-  DictionaryDatum BoxMask<D>::get_dict() const
-  {
-    DictionaryDatum d(new Dictionary);
-    DictionaryDatum maskd(new Dictionary);
-    def<DictionaryDatum>(d, get_name(), maskd);
-    def<std::vector<double_t> >(maskd, names::lower_left, lower_left_);
-    def<std::vector<double_t> >(maskd, names::upper_right, upper_right_);
-    return d;
-  }
-
   template<>
   inline
   Name BallMask<2>::get_name()
@@ -609,25 +483,6 @@ namespace nest
     if (d->known(names::anchor)) {
       center_ = getValue<std::vector<double_t> >(d, names::anchor);
     }
-  }
-
-  template<int D>
-  DictionaryDatum BallMask<D>::get_dict() const
-  {
-    DictionaryDatum d(new Dictionary);
-    DictionaryDatum maskd(new Dictionary);
-    def<DictionaryDatum>(d, get_name(), maskd);
-    def<double_t>(maskd, names::radius, radius_);
-    def<std::vector<double_t> >(maskd, names::anchor, center_);
-    return d;
-  }
-
-  template<int D>
-  DictionaryDatum AnchoredMask<D>::get_dict() const
-  {
-    DictionaryDatum d = m_->get_dict();
-    def<std::vector<double_t> >(d, names::anchor, anchor_);
-    return d;
   }
 
 } // namespace nest
