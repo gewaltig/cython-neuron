@@ -19,40 +19,59 @@
 # You should have received a copy of the GNU General Public License
 # along with NEST.  If not, see <http://www.gnu.org/licenses/>.
 
-import csa
 import nest
-from PIL import Image
 
-cs = csa.cset(csa.random(0.1), 10000.0, 1.0)
+try:
+    import csa
+    haveCSA = True
+except ImportError:
+    haveCSA = False
 
-# This does not work yet, as the implementation does not support
-# nested subnets yet.
-#
-#pop1 = nest.LayoutNetwork("iaf_neuron", [4,4])
-#pop2 = nest.LayoutNetwork("iaf_neuron", [4,4])
+try:
+    from PIL import Image
+    havePIL = True
+except ImportError:
+    havePIL = False
 
-pop1 = nest.LayoutNetwork("iaf_neuron", [16])
-pop2 = nest.LayoutNetwork("iaf_neuron", [16])
+def csa_example():
 
-nest.PrintNetwork(10)
+    cs = csa.cset(csa.random(0.1), 10000.0, 1.0)
 
-nest.CGConnect(pop1, pop2, cs, {"weight": 0, "delay": 1})
+    # This does not work yet, as the implementation does not yet
+    # support nested subnets.
+    #
+    #pop1 = nest.LayoutNetwork("iaf_neuron", [4,4])
+    #pop2 = nest.LayoutNetwork("iaf_neuron", [4,4])
 
-pg = nest.Create("poisson_generator", params={"rate": 80000.0})
-nest.DivergentConnect(pg, nest.GetLeaves(pop1)[0], 1.2, 1.0)
+    pop1 = nest.LayoutNetwork("iaf_neuron", [16])
+    pop2 = nest.LayoutNetwork("iaf_neuron", [16])
 
-vm = nest.Create("voltmeter", params={"record_to": ["memory"], "withgid": True, "withtime": True, "interval": 0.1})
-nest.DivergentConnect(vm, nest.GetLeaves(pop2)[0])
+    nest.PrintNetwork(10)
 
-nest.Simulate(50.0)
+    nest.CGConnect(pop1, pop2, cs, {"weight": 0, "delay": 1})
 
-from nest import visualization
-allnodes = [pg, nest.GetLeaves(pop1)[0], nest.GetLeaves(pop2)[0], vm]
-visualization.plot_network(allnodes, "test_csa.png", "png", plot_modelnames=True)
+    pg = nest.Create("poisson_generator", params={"rate": 80000.0})
+    nest.DivergentConnect(pg, nest.GetLeaves(pop1)[0], 1.2, 1.0)
 
-from nest import voltage_trace
-voltage_trace.from_device(vm)
-voltage_trace.show()
+    vm = nest.Create("voltmeter", params={"record_to": ["memory"], "withgid": True, "withtime": True, "interval": 0.1})
+    nest.DivergentConnect(vm, nest.GetLeaves(pop2)[0])
 
-im = Image.open("test_csa.png")
-im.show()
+    nest.Simulate(50.0)
+
+    # Not yet supported in NEST
+    #from nest import visualization
+    #allnodes = [pg, nest.GetLeaves(pop1)[0], nest.GetLeaves(pop2)[0], vm]
+    #visualization.plot_network(allnodes, "test_csa.png", "png", plot_modelnames=True
+
+    from nest import voltage_trace
+    voltage_trace.from_device(vm)
+    voltage_trace.show()
+
+    #if havePIL:
+    #    im = Image.open("test_csa.png")
+    #    im.show()
+
+
+if __name__ == "__main__" and haveCSA:
+    nest.ResetKernel()
+    csa_example ()
