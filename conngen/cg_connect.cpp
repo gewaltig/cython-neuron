@@ -103,7 +103,7 @@ namespace nest
     size_t length = 0;
     for (RangeSet::iterator source = sources.begin(); source != sources.end(); ++source)
     {
-      for (int proc = 0; proc < Communicator::get_num_processes(); ++proc)
+      for (size_t proc = 0; proc < static_cast<size_t>(Communicator::get_num_processes()); ++proc)
       {
         size_t last = source->last - source->first;
         if (proc <= last)
@@ -119,7 +119,7 @@ namespace nest
     length = 0;
     for (RangeSet::iterator target = targets.begin(); target != targets.end(); ++target)
     {
-      for (int proc = 0; proc < Communicator::get_num_processes(); ++proc)
+      for (size_t proc = 0; proc < static_cast<size_t>(Communicator::get_num_processes()); ++proc)
       {
         size_t last = target->last - target->first;
         if (proc <= last)
@@ -144,11 +144,11 @@ namespace nest
     long right = -1;
     while(true)
     {
-      if ((i == gids.size() - 1 && gids[i] - gids[left] == i - left) || i == leftmost_r) 
+      if ((i == static_cast<long>(gids.size()) - 1 && gids[i] - gids[left] == i - static_cast<long>(left)) || i == leftmost_r) 
         return last_i;
 
       last_i = i;
-      if (gids[i] - gids[left] == i - left)
+      if (gids[i] - gids[left] == i - static_cast<long>(left))
         i += step;
       else
       {

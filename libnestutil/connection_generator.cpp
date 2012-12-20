@@ -23,8 +23,7 @@
 #include "connection_generator.h"
 
 ConnectionGenerator::~ConnectionGenerator ()
-{
-}
+{}
 
 
 void
@@ -37,9 +36,8 @@ ConnectionGenerator::setMask (Mask& mask)
 
 
 void
-ConnectionGenerator::setMask (std::vector<Mask>& masks, int local)
-{
-}
+ConnectionGenerator::setMask (std::vector<Mask>&, int)
+{}
 
 /**
  * Default implementation of size ()
@@ -62,9 +60,9 @@ int ConnectionGenerator::size ()
 class DummyGenerator : public ConnectionGenerator {
 public:
   int arity () { return 2; }
-  void setMask (std::vector<Mask>& masks, int local) { }
+  void setMask (std::vector<Mask>&, int) { }
   void start () { }
-  bool next (int& source, int& target, double* value) { }
+  bool next (int&, int&, double*) { return false; }
 };
 
 ConnectionGenerator* makeDummyConnectionGenerator ()
