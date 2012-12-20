@@ -203,7 +203,7 @@ if nest.NumProcesses() == 1:
   pylab.figure()
   pylab.hist(w, bins=100)
   pylab.xlabel('Synaptic weight [pA]')
-  pylab.savefig('../figures/rand_plas_w.eps')
+  #pylab.savefig('../figures/rand_plas_w.eps')
   #pylab.show()
 
 else:

@@ -112,7 +112,7 @@ if nest.NumProcesses() == 1:
   V_E = nest.GetStatus(nodes_E[:N_rec], 'V_m')
   pylab.hist(V_E, bins=10)
   pylab.xlabel('Membrane potential V_m [mV]')
-  pylab.savefig('../figures/rand_Vm.eps')
+  #pylab.savefig('../figures/rand_Vm.eps')
 
   pylab.figure()
   w = nest.GetStatus(nest.GetConnections(nodes_E[:N_rec],
@@ -120,8 +120,8 @@ if nest.NumProcesses() == 1:
                      'weight')
   pylab.hist(w, bins=100)
   pylab.xlabel('Synaptic weight [pA]')
- # pylab.title('Distribution of synaptic weights (%d synapses)' % len(w))
-  pylab.savefig('../figures/rand_w.eps')
+  #pylab.title('Distribution of synaptic weights (%d synapses)' % len(w))
+  #pylab.savefig('../figures/rand_w.eps')
 else:
   print "Multiple MPI processes, skipping graphical output"
 
@@ -142,7 +142,7 @@ print "Inhibitory rate   : %.2f Hz" % rate_in
 
 if nest.NumProcesses() == 1:
   nest.raster_plot.from_device(spikes_E, hist=True, title='')
-  pylab.savefig('../figures/rand_raster.eps')
+  #pylab.savefig('../figures/rand_raster.eps')
 else:
   print "Multiple MPI processes, skipping graphical output"
 
