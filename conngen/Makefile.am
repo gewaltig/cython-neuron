@@ -32,14 +32,4 @@ AM_CPPFLAGS= -I$(top_srcdir)/libnestutil\
 nobase_pkgdata_DATA=\
   sli/conngen-interface.sli
 
-HELPDIRS="@PKGSRCDIR@/$(subdir):@PKGSRCDIR@/$(subdir)/sli"
-
-install-slidoc:
-	mkdir -p $(DESTDIR)@PKGDOCDIR@/help
-	$(DESTDIR)$(exec_prefix)/bin/sli --userargs=$(HELPDIRS) $(top_srcdir)/lib/sli/install-help.sli 2>&1 > @INSTALL_HELP_LOG@
-
-install-data-hook:
-	mkdir -p $(DESTDIR)@PKGDOCDIR@/conngen
-	rm -rf `find $(DESTDIR)@PKGDOCDIR@/conngen -name .svn`
-
 EXTRA_DIST= sli
