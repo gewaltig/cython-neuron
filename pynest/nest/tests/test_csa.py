@@ -34,7 +34,6 @@ class CSATestCase(unittest.TestCase):
 
         cs = csa.cset(csa.oneToOne)
 
-        print pop0
         nest.CGConnect (pop0, pop1, cs)
 
         sources = nest.GetLeaves(pop0)[0]
