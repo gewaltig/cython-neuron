@@ -66,9 +66,19 @@ data_DATA=\
 	examples/multimeter.py \
 	examples/one-neuron.py \
 	examples/one-neuron-with-noise.py \
-	examples/one-neuron-with-sine-wave.py \
 	examples/pulsepacket.py \
 	examples/testiaf.py \
 	examples/tsodyks_facilitating.py \
 	examples/tsodyks_depressing.py \
 	examples/vinit_example.py
+
+lenoveredir=@PKGDOCDIR@/examples/pynest/LeNovere_2012
+
+lenovere_DATA=\
+	examples/LeNovere_2012/brunel2000_classes.py \
+	examples/LeNovere_2012/brunel2000_interactive.py \
+	examples/LeNovere_2012/brunel2000_rand_plastic.py \
+	examples/LeNovere_2012/brunel2000_rand.py \
+	examples/LeNovere_2012/one_neuron_with_sine_wave.py
+
+

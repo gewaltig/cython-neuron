@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# one-neuron-with-sine-wave.py
+# one_neuron_with_sine_wave.py
 #
 # This file is part of NEST.
 #
@@ -24,20 +24,22 @@ import nest.voltage_trace
 
 nest.ResetKernel()
 
-neuron = nest.Create("iaf_neuron")
+neuron = nest.Create('iaf_neuron')
 
-noise = nest.Create("poisson_generator", 2)
-nest.SetStatus(noise, [{"rate": 80000.0}, {"rate": 20000.0}])
+sine = nest.Create('ac_generator', 1, 
+                   {'amplitude': 100.0,
+                    'frequency': 2.0})
 
-sine = nest.Create("ac_generator")
-nest.SetStatus(sine, [{"amplitude": 100.0, "frequency": 2.0}])
+noise = nest.Create('poisson_generator', 2,
+                    [{'rate': 70000.0}, 
+                     {'rate': 20000.0}])
 
-voltmeter = nest.Create("voltmeter")
-nest.SetStatus(voltmeter, {"withgid": True, "withtime": True})
+voltmeter = nest.Create('voltmeter',1,
+                        {'withgid': True})
 
-nest.ConvergentConnect(noise, neuron, [1.0, -1.0], 1.0)
-nest.Connect(voltmeter, neuron)
 nest.Connect(sine, neuron)
+nest.Connect(voltmeter, neuron)
+nest.ConvergentConnect(noise, neuron, [1.0, -1.0], 1.0)
 
 nest.Simulate(1000.0)
 
