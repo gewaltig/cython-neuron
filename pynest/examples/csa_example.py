@@ -63,15 +63,20 @@ def csa_example():
     #allnodes = [pg, nest.GetLeaves(pop1)[0], nest.GetLeaves(pop2)[0], vm]
     #visualization.plot_network(allnodes, "test_csa.png", "png", plot_modelnames=True
 
-    from nest import voltage_trace
-    voltage_trace.from_device(vm)
-    voltage_trace.show()
-
     #if havePIL:
     #    im = Image.open("test_csa.png")
     #    im.show()
 
+    from nest import voltage_trace
+    voltage_trace.from_device(vm)
 
-if __name__ == "__main__" and haveCSA:
-    nest.ResetKernel()
-    csa_example ()
+    #import pylab
+    #pylab.show()
+
+if __name__ == "__main__":
+
+    if haveCSA:
+        nest.ResetKernel()
+        csa_example()
+    else:
+        print("This example requires CSA to be installed in order to run!")
