@@ -8,7 +8,6 @@ defs= @SLI_THREAD_DEFS@ $defs
 MAKEFLAGS= @MAKE_FLAGS@
 # END  : do not change these lines ---------------------------------------
 
-SUBDIRS= examples
 EXTRA_DIST= testsuite sli doc pynest
 
 noinst_LTLIBRARIES= libtopologymodule.la
@@ -16,33 +15,53 @@ noinst_LTLIBRARIES= libtopologymodule.la
 # Add one line for each h-cpp-file pair containing code for your
 # module. Remember the \ at the end of each but the last line!
 libtopologymodule_la_SOURCES= \
-			topologymodule.h \
-			topologymodule.cpp \
-			topology_names.h \
-			topology_names.cpp \
-			connection_creator.h \
-			connection_creator_impl.h \
-			connection_creator.cpp \
-			generic_factory.h \
-			position.h \
-			layer.h \
-			layer_impl.h \
-			layer.cpp \
-			free_layer.h \
-			grid_layer.h \
-			mask.h \
-			mask_impl.h \
-			grid_mask.h \
-			ntree.h \
-			ntree_impl.h \
-			vose.h \
-			vose.cpp \
-			parameter.h \
-			parameter.cpp \
-			selector.h \
-			selector.cpp
+	topologymodule.h \
+	topologymodule.cpp \
+	topology_names.h \
+	topology_names.cpp \
+	connection_creator.h \
+	connection_creator_impl.h \
+	connection_creator.cpp \
+	generic_factory.h \
+	position.h \
+	layer.h \
+	layer_impl.h \
+	layer.cpp \
+	free_layer.h \
+	grid_layer.h \
+	mask.h \
+	mask_impl.h \
+	grid_mask.h \
+	ntree.h \
+	ntree_impl.h \
+	vose.h \
+	vose.cpp \
+	parameter.h \
+	parameter.cpp \
+	selector.h \
+	selector.cpp
 
-# do not change anything below this line ------------------------------
+nobase_pkgdata_DATA=\
+	sli/topology-interface.sli
+
+examplesdir=@PKGDOCDIR@/examples/topology
+
+dist_examples_DATA=\
+	examples/README \
+	examples/conncomp.py \
+	examples/conncon_sources.py \
+	examples/conncon_targets.py \
+	examples/connex.py \
+	examples/connex_ew.py \
+	examples/ctx_2n.py \
+	examples/gaussex.py \
+	examples/grid_iaf.py \
+	examples/grid_iaf_irr.py \
+	examples/grid_iaf_oc.py \
+	examples/hill_tononi_Vp.py \
+	examples/test_3d.py \
+	examples/test_3d_exp.py \
+	examples/test_3d_gauss.py
 
 libtopologymodule_la_CXXFLAGS= @AM_CXXFLAGS@
 
@@ -52,9 +71,6 @@ AM_CPPFLAGS= -I$(top_srcdir)/libnestutil\
 	  -I$(top_srcdir)/nestkernel\
 	  @INCLTDL@ \
 	  @GSL_CFLAGS@ @MUSIC_INCLUDE@ @MPI_INCLUDE@
-
-nobase_pkgdata_DATA=\
-  sli/topology-interface.sli
 
 install-data-hook:
 	mkdir -p $(DESTDIR)@PKGDOCDIR@/topology

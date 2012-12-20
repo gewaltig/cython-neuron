@@ -1004,9 +1004,6 @@ for dir in $NEED_MAKEFILE_DIRS; do
     topology/doc)
       AC_CONFIG_FILES(topology/doc/Makefile)
       ;;
-    topology/examples)
-      AC_CONFIG_FILES(topology/examples/Makefile)
-      ;;
 ## BEGIN CUT FROM RELEASE -------------- DO NOT EDIT THIS LINE
 ## INSERT CODE FOR CANDIDATES HERE ----- DO NOT EDIT THIS LINE
     developer)
