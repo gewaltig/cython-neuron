@@ -31,6 +31,7 @@ data_DATA= ../LICENSE
 datadir=@PKGDOCDIR@
 
 nobase_data_DATA=\
+	conngen/conngen.txt \
 	index.html\
 	quickref.html\
 	doc_header.txt
