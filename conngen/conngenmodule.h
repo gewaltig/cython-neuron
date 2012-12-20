@@ -109,7 +109,7 @@ namespace nest
     return *net_;
   }
 
-  typedef lockPTRDatum<ConnectionGenerator, &ConnectionGeneratorModule::ConnectionGeneratorType> ConnectionGeneratorDatum;
+  typedef lockPTRDatum<ConnectionGenerator, &nest::ConnectionGeneratorModule::ConnectionGeneratorType> ConnectionGeneratorDatum;
 
 } // namespace nest
 
