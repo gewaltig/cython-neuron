@@ -49,6 +49,9 @@ M_ERROR setverbosity
   0 << /total_num_virtual_procs new_procs >> SetStatus
 } fail_or_die
 
+% don't run the remaining tests if we didn't compile with threads
+statusdict/threading :: (no) eq {statusdict/exitcodes/success :: quit_i} if
+
 % check that we can change either way before setting resolution
 { 
   ResetKernel
