@@ -97,5 +97,8 @@ if __name__ == "__main__":
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite())
     
-    import matplotlib.pyplot as plt
-    plt.show()
+    try:
+        import matplotlib.pyplot as plt
+        plt.show()
+    except ImportError:
+        pass

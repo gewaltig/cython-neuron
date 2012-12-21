@@ -29,8 +29,13 @@ import unittest
 import nest
 import nest.topology as topo
 import sys
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+    have_mpl = True
+except ImportError:
+    have_mpl = False
 
+@unittest.skipIf(not have_mpl, 'Python matplotlib package not installed')
 class PlottingTestCase(unittest.TestCase):
 
     def test_PlotLayer(self):
