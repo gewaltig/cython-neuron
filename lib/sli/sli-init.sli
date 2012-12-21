@@ -1704,12 +1704,12 @@ SeeAlso: nestrc
        (               -- S L I --) <- endl
    } 
    {
-       (           -- N E S T 2 beta --) <- endl
+       (              -- N E S T --) <- endl
    } ifelse
-   () =
-   (  Copyright 1995-2011 The NEST Initiative) <- endl 
-   (   Version ) <- 
-   prgmajor <- (.) <- prgminor <- (-) <- prgpatch <-
+   endl
+   (  Copyright (C) 2004 The NEST Initiative) <- endl
+   (  Version ) <- 
+   prgmajor <- (.) <- prgminor <- (.) <- prgpatch <-
    ( ) <- built <- endl endl ;
    end
    warranty
@@ -1737,7 +1737,7 @@ SeeAlso: nestrc
    {
        (NEST v) <-
    } ifelse
-   version <- ( (C) 1995-2011 The NEST Initiative) <- endl ;
+   version <- ( (C) 2004 The NEST Initiative) <- endl ;
    end     
 } def
 
@@ -2068,7 +2068,7 @@ moduleinitializers
     {
       statusdict begin
 	cout (NEST version ) <- version <- (, built on ) <- built <- ( for ) <- host <- endl
-	(Copyright (C) 1995-2008 The NEST Initiative) <- endl endl
+	(Copyright (C) 2004 The NEST Initiative) <- endl endl
       end
       quit
     } if
