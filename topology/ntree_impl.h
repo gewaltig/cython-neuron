@@ -109,7 +109,7 @@ namespace nest {
       // Move lower left corner of mask into main image of layer
       for(int i=0;i<D;++i) {
         if (ntree_->periodic_[i]) {
-          anchor_[i] = mod(anchor_[i] + mask_bb.lower_left[i] - ntree_->lower_left_[i], ntree_->extent_[i]) - mask_bb.lower_left[i] + ntree_->lower_left_[i];
+          anchor_[i] = nest::mod(anchor_[i] + mask_bb.lower_left[i] - ntree_->lower_left_[i], ntree_->extent_[i]) - mask_bb.lower_left[i] + ntree_->lower_left_[i];
         }
       }
       anchors_.push_back(anchor_);
