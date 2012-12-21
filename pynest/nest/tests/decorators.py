@@ -36,8 +36,18 @@ class _skipIf(object):
     def __call__(self, obj):
 
         if sys.version_info >= (2, 7, 0):
-            return unittest.skipIf(self.condition, self.reason)
+
+            if self.obj_type == 'testcase':
+                @unittest.skipIf(self.condition, self.reason)
+                class dummy(unittest.TestCase): pass
+            else:
+                @unittest.skipIf(self.condition, self.reason)
+                def dummy(_): pass
+
+            return dummy
+
         else:
+
             if not self.condition:
                 return obj
             else:
