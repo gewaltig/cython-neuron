@@ -1,24 +1,23 @@
 /*
  *  modelrangemanager.cpp
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2007 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- */
-
-/**
- * \file modelrangemanager.cpp
- * to manage consecutive ranges of gids of the same model in compact form
- * \Abigail Morrison
- * \date february 2010
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #include <assert.h>
@@ -27,7 +26,6 @@
 #include "exceptions.h"
 
 namespace nest {
-  // member functions of modelrangemanager
 
 Modelrangemanager::Modelrangemanager() :
   first_gid_(0), last_gid_(0)
