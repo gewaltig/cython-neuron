@@ -1457,7 +1457,8 @@ void Network::random_convergent_connect(TokenArray source_ids, TokenArray target
 
 #ifndef _OPENMP
   // It only makes sense to call this function if we have openmp
-  assert(false);
+  message(SLIInterpreter::M_ERROR, "ConvergentConnect", "This function can only be called using OpenMP threading.");
+  throw KernelException();
 #endif
 
   // Collect all nodes on this process and convert the TokenArray with

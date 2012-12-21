@@ -26,7 +26,10 @@ to itself, with 100 connections per neuron, a total of 10000 connections.
 This is repeated 10 times, and the resulting number of connections checked. 
  
 Author: Hans Ekkehard Plesser, 2012-05-27
- */
+*/
+
+% don't run this test if we didn't compile with OpenMP 
+statusdict/threading :: (openmp) not eq {statusdict/exitcodes/success :: quit_i} if
 
 /unittest (9726) require
 /unittest using
