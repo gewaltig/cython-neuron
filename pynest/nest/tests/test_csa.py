@@ -6,6 +6,8 @@ import unittest
 import nest
 import nest.pynestkernel as kernel
 
+from decorators import _skipIf
+
 try:
     import csa
     haveCSA = True
@@ -18,7 +20,7 @@ try:
 except ImportError:
     haveNumpy = False
 
-@unittest.skipIf(not haveCSA, 'Python CSA library not installed')
+@_skipIf(not haveCSA, 'Python CSA library not installed', 'testcase')
 class CSATestCase(unittest.TestCase):
     """CSA tests"""
 
@@ -71,7 +73,7 @@ class CSATestCase(unittest.TestCase):
             conns = nest.GetStatus(nest.FindConnections([targets[i]]), 'target')
             self.assertEqual(len(conns), 0)
 
-    @unittest.skipIf(not haveNumpy, 'Python numpy library not installed')
+    @_skipIf(not haveNumpy, 'Python numpy library not installed')
     def test_CSA_cgnext(self):
         """cgnext"""
 
