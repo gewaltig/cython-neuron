@@ -106,11 +106,11 @@ void nest::Communicator::init (int* argc, char** argv[])
   if (init == 0)
   {
 #ifdef HAVE_MUSIC
-    music_setup = new MUSIC::Setup(*argc, *argv, MPI_THREAD_FUNNELED, &provided_thread_level);
+    music_setup = new MUSIC::Setup(*argc, *argv, MPI_THREAD_SERIALIZED, &provided_thread_level);
     // get a communicator from MUSIC
     comm = music_setup->communicator();
 #else /* #ifdef HAVE_MUSIC */
-    MPI_Init_thread(argc, argv, MPI_THREAD_FUNNELED, &provided_thread_level);
+    MPI_Init_thread(argc, argv, MPI_THREAD_SERIALIZED, &provided_thread_level);
     comm = MPI_COMM_WORLD;
 #endif /* #ifdef HAVE_MUSIC */
   }
