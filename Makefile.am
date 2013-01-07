@@ -56,7 +56,7 @@ if HAVE_PYTHON
 
 installcheck-local:
 	PATH=$(exec_prefix)/bin:$(PATH) \
-	/bin/sh $(DESTDIR)@PKGDATADIR@/extras/do_tests.sh --test-pynest
+	/bin/sh $(DESTDIR)@PKGDATADIR@/extras/do_tests.sh --test-@PYNEST_SUBDIR@
 
 else
 

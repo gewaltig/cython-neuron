@@ -41,6 +41,7 @@ EOF
 }
 
 TEST_PYNEST=false
+TEST_CYNEST=false
 
 while test $# -gt 0 ; do
     case "$1" in
@@ -49,6 +50,9 @@ while test $# -gt 0 ; do
             ;;
         --test-pynest)
             TEST_PYNEST=true
+            ;;
+        --test-cynest)
+            TEST_CYNEST=true
             ;;
         --output-dir=*)
             TEST_OUTDIR="$( echo "$1" | sed 's/^[^=]\+=//' )"
@@ -517,6 +521,33 @@ else
     echo "  for Python. See the file README for details."
 fi
 
+if test "x${TEST_CYNEST}" = xtrue ; then
+    "${PYTHON}" "${PYTHON_HARNESS}" >> "${TEST_LOGFILE}"
+
+    CYNEST_TEST_TOTAL="$(  cat pynest_test_numbers.log | cut -d' ' -f1 )"
+    CYNEST_TEST_PASSED="$( cat pynest_test_numbers.log | cut -d' ' -f3 )"
+    CYNEST_TEST_FAILED="$( cat pynest_test_numbers.log | cut -d' ' -f2 )"
+
+    echo
+    echo "  CyNEST tests: ${CYNEST_TEST_TOTAL}"
+    echo "     Passed: ${CYNEST_TEST_PASSED}"
+    echo "     Failed: ${CYNEST_TEST_FAILED}"
+
+    CYNEST_TEST_FAILED_TEXT="(${CYNEST_TEST_FAILED} CyNEST)"
+
+    rm -f "pynest_test_numbers.log"
+
+    TEST_TOTAL=$(( $TEST_TOTAL + $CYNEST_TEST_TOTAL ))
+    TEST_PASSED=$(( $TEST_PASSED + $CYNEST_TEST_PASSED ))
+    TEST_FAILED=$(( $TEST_FAILED + $CYNEST_TEST_FAILED ))
+else
+    echo
+    echo "Phase 6: Running CyNEST tests"
+    echo "-----------------------------"
+    echo "  Not running PyNEST tests because NEST was compiled without support"
+    echo "  for Python. See the file README for details."
+fi
+
 echo
 echo "NEST Testsuite Summary"
 echo "----------------------"
@@ -524,7 +555,7 @@ echo "  NEST Executable: $(which nest)"
 echo "  SLI Executable : $(which sli)"
 echo "  Total number of tests: ${TEST_TOTAL}"
 echo "     Passed: ${TEST_PASSED}"
-echo "     Failed: ${TEST_FAILED} ${PYNEST_TEST_FAILED_TEXT:-}"
+echo "     Failed: ${TEST_FAILED} ${PYNEST_TEST_FAILED_TEXT:-} ${CYNEST_TEST_FAILED_TEXT:-}"
 echo
 
 if test ${TEST_FAILED} -gt 0 ; then
