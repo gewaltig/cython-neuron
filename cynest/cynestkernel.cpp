@@ -427,9 +427,12 @@ bool NESTEngine::run(std::string cmd)
 
     // send string to sli interpreter
     Py_BEGIN_ALLOW_THREADS
+    // Safe the Python Signal handler
     Sigfunc *py_signal_handler= posix_signal(SIGINT, (Sigfunc *)SIG_IGN);
+    // Set the SLISignal handler
     posix_signal(SIGINT,(Sigfunc *)SLISignalHandler);
     pEngine_->execute(cmd);
+    // and now we re-set the Python signal handler
     posix_signal(SIGINT,(Sigfunc *)py_signal_handler);
     Py_END_ALLOW_THREADS
     
