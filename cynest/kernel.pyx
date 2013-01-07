@@ -5,6 +5,7 @@ cimport cpython # we need this for the unicode UTF-8 conversion
 
 import signal
 
+
 # This imports the C++ class wrappers
 cimport classes
 

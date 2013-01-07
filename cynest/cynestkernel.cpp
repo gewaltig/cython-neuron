@@ -1,5 +1,5 @@
 /*
- *  pynestkernel.cpp
+ *  cynestkernel.cpp
  *
  *  Interface between Python and the NEST simulation tool. 
  *  www.nest-initiative.org
@@ -38,7 +38,10 @@ typedef int Py_ssize_t;
 #define PY_ARRAY_UNIQUE_SYMBOL _pynest_arrayu
 
 #ifdef HAVE_NUMPY
+extern "C"
+{
 #include <numpy/arrayobject.h>
+}
 #endif
 
 #include "interpret.h"
@@ -94,6 +97,16 @@ in future versions. mog
 //nest::spikecounter pseudo_spikecounter_instance(0.0,0.0);
 #endif
 
+extern "C"
+{
+void init_numpy_()
+#ifdef HAVE_NUMPY
+//  we need to set up the numeric array type
+  import_array()
+#else
+{}
+#endif
+}
 
 NESTEngine::NESTEngine()
     : initialized_(false),
@@ -119,12 +132,10 @@ NESTEngine::~NESTEngine()
  * statement. 
  */
 void NESTEngine::init_numpy()
-{
-#ifdef HAVE_NUMPY
- // we need to set up the numeric array type
-  import_array();
-#endif
+{ // we need to set up the numeric array type
+    init_numpy_();
 }
+
 
 bool NESTEngine::check_engine()
 {
@@ -263,7 +274,7 @@ bool NESTEngine::push_connections(PyObject *arg)
 	    PyObject* subsubPyObj=PyDict_GetItemString(subPyObj, nest::names::source.toString().c_str());
 	    long source;
 	    long target_thread;
-	    long synapse_typeid;
+	    long synapse_modelid;
 	    long port;
 	    
 	    if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
@@ -283,12 +294,12 @@ bool NESTEngine::push_connections(PyObject *arg)
 		return false;
 	    }
 	    
-	    subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::synapse_typeid.toString().c_str());
+	    subsubPyObj = PyDict_GetItemString(subPyObj, nest::names::synapse_modelid.toString().c_str());
 	    if (subsubPyObj != NULL && PyInt_Check(subsubPyObj))
-		synapse_typeid = PyInt_AsLong(subsubPyObj);
+		synapse_modelid = PyInt_AsLong(subsubPyObj);
 	    else
 	    {
-		PyErr_SetString(NESTError_, "NESTEngine::push_connections(): No synapse_typeid entry in dictionary.");
+		PyErr_SetString(NESTError_, "NESTEngine::push_connections(): No synapse_modelid entry in dictionary.");
 		return false;
 	    }
 	    
@@ -301,7 +312,7 @@ bool NESTEngine::push_connections(PyObject *arg)
 		return false;
 	    }
 	    
-	    ConnectionDatum cd = ConnectionDatum(nest::ConnectionID(source, target_thread, synapse_typeid, port));
+	    ConnectionDatum cd = ConnectionDatum(nest::ConnectionID(source, target_thread, synapse_modelid, port));
 	    connectome.push_back(cd);
 	}
 #ifdef HAVE_NUMPY

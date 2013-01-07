@@ -183,7 +183,7 @@ npy_intp npydims = dims;
   *val++= cd.get_source_gid();
   *val++= cd.get_target_gid();
   *val++= cd.get_target_thread();
-  *val++= cd.get_synapse_type_id();
+  *val++= cd.get_synapse_model_id();
   *val++= cd.get_port();
 
   py_object_ = (PyObject*) array;
@@ -193,7 +193,7 @@ npy_intp npydims = dims;
   PyList_SetItem(py_object_, i++, PyInt_FromLong(cd.get_source_gid()));
   PyList_SetItem(py_object_, i++, PyInt_FromLong(cd.get_target_gid()));
   PyList_SetItem(py_object_, i++, PyInt_FromLong(cd.get_target_thread()));
-  PyList_SetItem(py_object_, i++, PyInt_FromLong(cd.get_synapse_type_id()));
+  PyList_SetItem(py_object_, i++, PyInt_FromLong(cd.get_synapse_model_id()));
   PyList_SetItem(py_object_, i++, PyInt_FromLong(cd.get_port()));
 #endif //HAVE_NUMPY
 }
