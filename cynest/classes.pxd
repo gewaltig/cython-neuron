@@ -3,6 +3,10 @@
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 
+cdef extern from "psignal.h":
+  cdef int SLIsignalflag
+  cdef void SLISignalHandler(int)
+  
 cdef extern from "datum.h":
   cdef cppclass Datum:
         pass
@@ -23,6 +27,7 @@ cdef extern from "cynestkernel.h":
         NESTEngine()
         bint init(vector[string] argv, string)
         bint push(object)
+        bint push_token(Token)
         bint push_connections(object)
         bint run(string)
         bint run_token(Token)

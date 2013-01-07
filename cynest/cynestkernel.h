@@ -39,6 +39,11 @@ class NESTEngine
   Token* pop_token();
 
   /**
+   * Push a token to SLI's operand stack.
+   */
+  bool push_token(Token);
+
+  /**
    * Execute a Token.
    */
   bool run_token(Token);

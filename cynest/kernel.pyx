@@ -3,13 +3,19 @@ from libcpp.string cimport string
 from libcpp.vector cimport vector
 cimport cpython # we need this for the unicode UTF-8 conversion
 
+import signal
+
 # This imports the C++ class wrappers
 cimport classes
+
+def cynest_signal_handler(signal,frame):
+    raise KeyboardInterrupt()
 
 cdef class NESTEngine:
     cdef classes.NESTEngine *thisptr
     def __cinit__(self):
         self.thisptr= new classes.NESTEngine()
+        
     def __dealloc__(self):
         print ("CyNEST says good bye.")
         del self.thisptr
@@ -27,7 +33,10 @@ cdef class NESTEngine:
             argv[0]='cynest'
         argv_bytes= [ str.encode('UTF-8') for str in argv]
         cdef bytes modulepath_bytes=modulepath.encode('UTF-8')
-        return self.thisptr.init(argv_bytes, modulepath_bytes)
+        result= self.thisptr.init(argv_bytes, modulepath_bytes)
+        if result:
+           signal.signal(signal.SIGINT, cynest_signal_handler)
+        return result
 
     def push(self, value):
         """
@@ -56,7 +65,10 @@ cdef class NESTEngine:
         This function is part of the low-level API.
         """
         cdef bytes command_bytes=command.encode('UTF-8')
-        return self.thisptr.run(command_bytes)
+        result= self.thisptr.run(command_bytes)
+        signal.signal(signal.SIGINT, cynest_signal_handler)
+        
+        return result
 
     cpdef run_pytoken(self, PyToken command):
         """
@@ -69,6 +81,14 @@ cdef class NESTEngine:
          t= PyToken()
          t.thisptr= self.thisptr.pop_token()
          return t
+
+    cpdef push_pytoken(self, PyToken obj):
+          """
+          Push a token to NEST's operand stack.
+          This function is part of the low-level API.
+          """
+          return self.thisptr.push_token(obj.thisptr[0])
+
 
     def push_connections(self, connectome):
         """
@@ -115,9 +135,17 @@ cdef class NameDatum:
          t.thisptr= new classes.Token(<classes.Datum *>name_ptr)
          return t
 
+     def str(self):
+         """
+         Return a string representation of the NameDatum.
+         """
+         return self.thisptr.toString()
+
 cdef public object Token_to_PyObject(classes.Token *arg):
      """
      Convert a Datum pointer to a Python object.
+     This function is exposed to C/C++ and used by the DatumToPythonConverter to
+     encapsulate arbitrary Tokens in PyToken objects.
      """
      dat=PyToken()
      dat.thisptr=arg

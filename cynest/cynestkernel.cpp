@@ -67,7 +67,7 @@ typedef int Py_ssize_t;
 #include "stringdatum.h"
 #include "connectiondatum.h"
 #include "datumtopythonconverter.h"
-//#include "pydatum.h"
+#include "psignal.h"
 
 #include <algorithm>
 
@@ -100,7 +100,9 @@ NESTEngine::NESTEngine()
       NESTError_(0), //!< Python error object. We are responsible.
       pEngine_(0),   //!< NEST instance. We are responsible for this pointer
       pNet_(0)       //!< Pointer given to NEST. NEST will delete this object
-{}
+{
+
+}
 
 NESTEngine::~NESTEngine()
 {
@@ -207,7 +209,8 @@ bool NESTEngine::init(std::vector<string> argv, std::string modulepath)
   delete [] c_argv;
   pEngine_->startup();
   initialized_=true;
-  
+
+ 
   return initialized_;
 }
 
@@ -223,6 +226,15 @@ bool NESTEngine::push(PyObject *args)
     }
     else
 	return false;
+}
+
+bool NESTEngine::push_token(Token obj)
+{
+    if( not check_engine() or  obj.empty())
+	return false;
+
+    pEngine_->OStack.push_move(obj);
+    return true;
 }
 
 bool NESTEngine::push_connections(PyObject *arg)
@@ -415,7 +427,10 @@ bool NESTEngine::run(std::string cmd)
 
     // send string to sli interpreter
     Py_BEGIN_ALLOW_THREADS
+    Sigfunc *py_signal_handler= posix_signal(SIGINT, (Sigfunc *)SIG_IGN);
+    posix_signal(SIGINT,(Sigfunc *)SLISignalHandler);
     pEngine_->execute(cmd);
+    posix_signal(SIGINT,(Sigfunc *)py_signal_handler);
     Py_END_ALLOW_THREADS
     
     return true;
@@ -428,7 +443,10 @@ bool NESTEngine::run_token(Token cmd)
 
     // send string to sli interpreter
     Py_BEGIN_ALLOW_THREADS
-        pEngine_->execute(cmd);
+    Sigfunc *py_signal_handler= posix_signal(SIGINT, (Sigfunc *)SIG_IGN);
+    posix_signal(SIGINT,(Sigfunc *)SLISignalHandler);
+    pEngine_->execute(cmd);
+    posix_signal(SIGINT,(Sigfunc *)py_signal_handler);
     Py_END_ALLOW_THREADS
     
     return true;

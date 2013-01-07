@@ -3,7 +3,7 @@
 
 struct PyToken;
 
-/* "cynest/kernel.pyx":87
+/* "cynest/kernel.pyx":107
  *         return self.thisptr.check_engine()
  * 
  * cdef public class PyToken[object PyToken, type PyTokenType]:             # <<<<<<<<<<<<<<
