@@ -83,11 +83,6 @@ std::string nest::UnknownNode::message()
   return out.str();
 }
 
-std::string nest::MalformedAddress::message()
-{
-  return msg_;
-}
-
 std::string nest::NoThreadSiblingsAvailable::message()
 {
   std::ostringstream out;
