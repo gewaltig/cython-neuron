@@ -1,17 +1,18 @@
 #ifndef __PYX_HAVE__cynest__kernel
 #define __PYX_HAVE__cynest__kernel
 
-struct PyDatum;
+struct PyToken;
 
-/* "cynest/kernel.pyx":75
+/* "cynest/kernel.pyx":87
  *         return self.thisptr.check_engine()
  * 
- * cdef public struct PyDatum:             # <<<<<<<<<<<<<<
- *     classes.Datum *thisptr
- * 
+ * cdef public class PyToken[object PyToken, type PyTokenType]:             # <<<<<<<<<<<<<<
+ *      """
+ *      Python wrapper of SLI's Token class.
  */
-struct PyDatum {
-  Datum *thisptr;
+struct PyToken {
+  PyObject_HEAD
+  Token *thisptr;
 };
 
 #ifndef __PYX_HAVE_API__cynest__kernel
@@ -23,6 +24,10 @@ struct PyDatum {
     #define __PYX_EXTERN_C extern
   #endif
 #endif
+
+__PYX_EXTERN_C DL_IMPORT(PyTypeObject) PyTokenType;
+
+__PYX_EXTERN_C DL_IMPORT(PyObject) *Token_to_PyObject(Token *);
 
 #endif /* !__PYX_HAVE_API__cynest__kernel */
 

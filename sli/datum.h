@@ -37,6 +37,10 @@ class Datum
   
   friend class Token;
   
+  /**
+   * Virtual copy constructor.
+   * Use this function to lazily copy a datum.
+   */ 
   virtual Datum * clone(void) const = 0;
 
 
@@ -62,6 +66,7 @@ class Datum
     unsigned int reference_count_;
   bool   executable_;
 
+
  Datum() :
   type(NULL), 
     action(NULL),
@@ -83,6 +88,7 @@ class Datum
  public:
 
   virtual ~Datum() {};
+  
 
   void addReference() const
   {

@@ -1,12 +1,12 @@
 #ifndef PYNESTKERNEL2
 #define PYNESTKERNEL2
-#include <Python.h>
-
 /**
  * C++ API to NEST. 
  * The NEST interpreter and the network are encapsulated in a class which we expose to Cynest.
  *
  */
+
+#include <Python.h>
 
 class SLIInterpreter;
 class Datum;
@@ -27,9 +27,23 @@ class NESTEngine
   bool push_connections(PyObject *args);
   bool run( std::string cmd);
 
+  /**
+   * Pop the top lement of SLI's operand stack and return it as Python Object.
+   * This function returns a new reference.
+   */
   PyObject *pop();
 
-  Datum* get_Datum(PyObject *pObj);
+  /**
+   * Pop the top element of SLI's operand stack and return the Token.
+   */
+  Token* pop_token();
+
+  /**
+   * Execute a Token.
+   */
+  bool run_token(Token);
+
+  Datum* PyObject_as_Datum(PyObject *pObj);
 
   bool check_engine();
 

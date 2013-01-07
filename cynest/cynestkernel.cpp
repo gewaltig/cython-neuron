@@ -76,6 +76,7 @@ typedef int Py_ssize_t;
 #include "static_modules.h"
 
 #include "cynestkernel.h"
+#include "kernel.h"
 
 /*
 The following instance of nest::spikecounter needs to be defined
@@ -215,7 +216,7 @@ bool NESTEngine::push(PyObject *args)
     if( not check_engine())
 	return false;
 
-    Datum *pdat = get_Datum(args);
+    Datum *pdat = PyObject_as_Datum(args);
     if (pdat != 0) {
 	pEngine_->OStack.push(pdat);
 	return true;
@@ -420,6 +421,19 @@ bool NESTEngine::run(std::string cmd)
     return true;
 }
 
+bool NESTEngine::run_token(Token cmd)
+{
+    if(not check_engine() or not cmd)
+	return false;
+
+    // send string to sli interpreter
+    Py_BEGIN_ALLOW_THREADS
+        pEngine_->execute(cmd);
+    Py_END_ALLOW_THREADS
+    
+    return true;
+}
+
 PyObject *NESTEngine::pop()
 {
     if(not check_engine())
@@ -447,8 +461,26 @@ PyObject *NESTEngine::pop()
     return pObj;
 }
 
+Token* NESTEngine::pop_token()
+{
+    if(not check_engine())
+	return false;
 
-Datum* NESTEngine::get_Datum(PyObject *pObj)
+    if (pEngine_->OStack.empty()) 
+    {
+	PyErr_SetString(NESTError_, "NESTEngine::pop(): SLI stack is empty.");
+	return NULL;
+    }
+
+    Token *t= new Token();
+    t->move(pEngine_->OStack.top());
+    pEngine_->OStack.pop();
+    
+    return t;
+}
+
+
+Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
 {
   if (PyInt_Check(pObj)) { // object is integer or bool
     if (pObj==Py_True)
@@ -464,6 +496,34 @@ Datum* NESTEngine::get_Datum(PyObject *pObj)
 
   if (PyString_Check(pObj)) // object is string
     return new StringDatum(PyString_AsString(pObj));
+
+  /*
+   * Here we check for PyDatum, a wrapper class around Datum, defined in the cython module kernel.pyx.
+   * and made available in "kernel.h"
+   */ 
+  if (PyObject_TypeCheck(pObj, &PyTokenType)) 
+  { // Object is encapsulated Datum
+      Token* t = reinterpret_cast<PyToken*>(pObj)->thisptr;
+      if( not t)
+      {
+          const char error[]="PyToken must contain a valid Token.\n";
+          PyErr_SetString(NESTError_, error);
+          return 0;
+      }
+
+      Datum *d=t->datum();
+      if(d ) // In case pObj was uninitialized
+      {
+          d->addReference();
+          return d;
+      }
+      else
+      {
+          const char error[]="PyToken must contain a valid Datum reference.\n";
+          PyErr_SetString(NESTError_, error);
+          return 0;
+      }
+  }
 
 #if PY_MAJOR_VERSION >= 3
   if (PyUnicode_Check(pObj)) // object is string
@@ -511,7 +571,7 @@ Datum* NESTEngine::get_Datum(PyObject *pObj)
         PyArrayObject *array = 0;
         array = (PyArrayObject*) pObj;
         assert(array != 0);
-        return get_Datum(PyArray_ToScalar(array->data, pObj));
+        return PyObject_as_Datum(PyArray_ToScalar(array->data, pObj));
       }
       default:
       {
@@ -609,7 +669,7 @@ Datum* NESTEngine::get_Datum(PyObject *pObj)
  
     for (size_t i = 0; i < size; ++i) {
       subPyObj = (PyList_Check(pObj)) ? PyList_GetItem(pObj, i) : PyTuple_GetItem(pObj, i);
-      Datum *tmp_d=get_Datum(subPyObj);
+      Datum *tmp_d=PyObject_as_Datum(subPyObj);
       assert(tmp_d !=0);
       d->push_back(tmp_d);
       if (PyErr_Occurred()) {
@@ -628,7 +688,7 @@ Datum* NESTEngine::get_Datum(PyObject *pObj)
 
     while (PyDict_Next(pObj, &pos, &key, &subPyObj)) 
     {
-	Token t(get_Datum(subPyObj));
+	Token t(PyObject_as_Datum(subPyObj));
 	if (PyErr_Occurred()) {
 	    delete d;
 	    return NULL;
@@ -665,12 +725,6 @@ Datum* NESTEngine::get_Datum(PyObject *pObj)
     }
     return d;
   }
-
-  // if (PyDatum_Check(pObj)) { // Object is encapsulated Datum
-  //   Datum* d = PyDatum_GetDatum(reinterpret_cast<PyDatum*>(pObj));
-  //   d->addReference();
-  //   return d;
-  // }
 
   std::string error = String::compose("Python object of type '%1' cannot be converted to SLI.\n"
                                       "If you think this is an error, tell us at nest_user@nest-initiative.org",

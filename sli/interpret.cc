@@ -1234,6 +1234,16 @@ int SLIInterpreter::execute(const std::string &cmdline)
   return execute_(); // run the interpreter
 }
 
+int SLIInterpreter::execute(const Token &cmd)
+{
+  int exitcode=startup();
+  if(exitcode !=EXIT_SUCCESS)
+      return -1;
+
+  EStack.push(cmd);
+  return execute_(); // run the interpreter
+}
+
 
 int SLIInterpreter::execute(int v)
 {

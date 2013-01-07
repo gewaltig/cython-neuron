@@ -58,6 +58,18 @@ cdef class NESTEngine:
         cdef bytes command_bytes=command.encode('UTF-8')
         return self.thisptr.run(command_bytes)
 
+    cpdef run_pytoken(self, PyToken command):
+        """
+        Execute a PyDatum object.
+        This function is part of the low-level API.
+        """
+        return self.thisptr.run_token(command.thisptr[0])
+
+    def pop_pytoken(self):
+         t= PyToken()
+         t.thisptr= self.thisptr.pop_token()
+         return t
+
     def push_connections(self, connectome):
         """
         Push a list of dictionaries with connection information to NEST. Each dictionary is converted to a NEST ConnectionDatum
@@ -72,6 +84,42 @@ cdef class NESTEngine:
         """
         return self.thisptr.check_engine()
 
+cdef public class PyToken[object PyToken, type PyTokenType]:
+     """
+     Python wrapper of SLI's Token class.
+     """
+     cdef classes.Token *thisptr
+     def __dealloc__(self):
+         if self.thisptr:
+            del self.thisptr
 
+cdef class NameDatum:
+     """
+     Python wrapper of SLI's NameDatum class. 
+     This class is used to store SLI commands and variables.
+     """
+     cdef classes.NameDatum *thisptr
+     def __cinit__(self, name):
+         cdef string name_b=name.encode('UTF-8')
+         self.thisptr = new classes.NameDatum(name_b)
 
-        
+     def __dealloc__(self):
+         del self.thisptr
+
+     def as_PyToken(self):
+         """
+         Create a new Token with the NameDatum.
+         """
+         t=PyToken()
+         cdef classes.NameDatum *name_ptr=new classes.NameDatum(self.thisptr[0])
+         t.thisptr= new classes.Token(<classes.Datum *>name_ptr)
+         return t
+
+cdef public object Token_to_PyObject(classes.Token *arg):
+     """
+     Convert a Datum pointer to a Python object.
+     """
+     dat=PyToken()
+     dat.thisptr=arg
+     return dat
+
