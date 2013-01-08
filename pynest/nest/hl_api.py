@@ -66,7 +66,7 @@ def is_ndarray(seq):
                 import numpy
                 return type(seq) == numpy.ndarray
         except:
-                return false
+                return False
         
 def is_sequencetype(seq) :
     """
