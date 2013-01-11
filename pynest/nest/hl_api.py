@@ -872,7 +872,7 @@ def DataConnect(pre, params=None, model=None):
     if params:
 	if not model:
 		model="static_synapse"
-	cmd='/%s DataConnect_' % model
+	cmd='(%s) DataConnect_i_dict_s ' % model
     
 	for s,p in zip(pre,params):
 		sps(s)
