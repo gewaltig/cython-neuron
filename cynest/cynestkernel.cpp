@@ -713,22 +713,23 @@ Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
   }
 
   if (PyDict_Check(pObj)) { // object is a dictionary
-    DictionaryDatum *d = new DictionaryDatum(new Dictionary);
-    PyObject* subPyObj;
-    PyObject *key;
+    DictionaryDatum *d = new DictionaryDatum(new Dictionary());
+
+    PyObject* subPyObj=0;
+    PyObject *key=0;
     Py_ssize_t pos = 0;
 
     while (PyDict_Next(pObj, &pos, &key, &subPyObj)) 
     {
-	Token t(PyObject_as_Datum(subPyObj));
-	if (PyErr_Occurred()) {
-	    delete d;
-	    return NULL;
-	}
+      Token t(PyObject_as_Datum(subPyObj));
+      if (PyErr_Occurred()) {
+	delete d;
+	return NULL;
+      }
 	
-	if (PyString_Check(key)) 
+      if (PyString_Check(key)) 
 	{
-	    (*d)->insert(PyString_AsString(pObj), t);
+	  (*d)->insert(PyString_AsString(key), t);
 	}
 #if PY_MAJOR_VERSION >= 3
 	else if (PyUnicode_Check(key)) 
