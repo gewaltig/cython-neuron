@@ -5,6 +5,9 @@ cimport cpython # we need this for the unicode UTF-8 conversion
 
 import signal
 
+class NESTError(Exception):
+    def __init__(self, msg) :
+        Exception.__init__(self, msg)
 
 # This imports the C++ class wrappers
 cimport classes
@@ -88,8 +91,10 @@ cdef class NESTEngine:
           Push a token to NEST's operand stack.
           This function is part of the low-level API.
           """
-          return self.thisptr.push_token(obj.thisptr[0])
-
+          if obj.thisptr:
+            return self.thisptr.push_token(obj.thisptr[0])
+          else:
+            raise NESTError("Cannot push empty PyToken.") 
 
     def push_connections(self, connectome):
         """
