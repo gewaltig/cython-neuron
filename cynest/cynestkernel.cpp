@@ -726,13 +726,14 @@ Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
 	delete d;
 	return NULL;
       }
-	
-      if (PyString_Check(key)) 
+	 
+#if PY_MAJOR_VERSION < 3
+     if (PyString_Check(key)) 
 	{
 	  (*d)->insert(PyString_AsString(key), t);
 	}
-#if PY_MAJOR_VERSION >= 3
-	else if (PyUnicode_Check(key)) 
+#else
+	if (PyUnicode_Check(key)) 
 	{
 	    PyObject *byte_repr=PyUnicode_AsUTF8String(key); // We re-code the unicode string into a bytes object
 	    if(byte_repr ==0)
