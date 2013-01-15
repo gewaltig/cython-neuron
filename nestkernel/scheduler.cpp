@@ -1048,11 +1048,7 @@ void nest::Scheduler::set_status(DictionaryDatum const &d)
     }
   }
 
-
-  bool off_grid_spiking;
-  bool grid_spiking_updated = updateValue<bool>(d, "off_grid_spiking", off_grid_spiking);
-  if (grid_spiking_updated)
-      off_grid_spiking_ = off_grid_spiking;
+  updateValue<bool>(d, "off_grid_spiking", off_grid_spiking_);
 
   bool comm_allgather;
   bool commstyle_updated = updateValue<bool>(d, "communicate_allgather", comm_allgather);
