@@ -70,8 +70,6 @@ nest::ulong_t nest::ppd_sup_generator::Age_distribution_::update(double_t hazard
             {
             n_spikes = occ_active_;
             }
-        else
-            {;}
         }
       else
         {
@@ -90,8 +88,6 @@ nest::ulong_t nest::ppd_sup_generator::Age_distribution_::update(double_t hazard
       occ_refractory_[activate_] = n_spikes;
       activate_ = (activate_ + 1) % occ_refractory_.size();
       }
-    else
-      {;}
     return n_spikes;
 }
 

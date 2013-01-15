@@ -72,8 +72,6 @@ nest::ulong_t nest::gamma_sup_generator::Internal_states_::update(double_t trans
                     {
                     n_trans[i] = occ_[i];
                     }
-                else
-                    {;}
                 }
             else
                 {
