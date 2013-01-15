@@ -41,7 +41,7 @@ namespace nest
   class FreeLayer: public Layer<D>
   {
   public:
-    Position<D> get_position(index lid) const;
+    Position<D> get_position(index sind) const;
     void set_status(const DictionaryDatum&);
     void get_status(DictionaryDatum&) const;
 
@@ -117,9 +117,9 @@ namespace nest
   }
 
   template <int D>
-  Position<D> FreeLayer<D>::get_position(index lid) const
+  Position<D> FreeLayer<D>::get_position(index sind) const
   {
-    return positions_[lid % positions_.size()];
+    return positions_[sind % positions_.size()];
   }
 
   template <int D>

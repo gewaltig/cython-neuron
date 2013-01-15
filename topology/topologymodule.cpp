@@ -155,15 +155,19 @@ namespace nest
             }
             switch(dim) {
             case 2:
-              {
+              try {
                 GridMask<2>& grid_mask_2d = dynamic_cast<GridMask<2>&>(*mask);
                 grid_mask_2d.set_anchor(Position<2,int_t>(column,row));
+              } catch (std::bad_cast e) {
+                throw BadProperty("Mask must be 2-dimensional grid mask.");
               }
               break;
             case 3:
-              {
+              try {
                 GridMask<3>& grid_mask_3d = dynamic_cast<GridMask<3>&>(*mask);
                 grid_mask_3d.set_anchor(Position<3,int_t>(column,row,layer));
+              } catch (std::bad_cast e) {
+                throw BadProperty("Mask must be 3-dimensional grid mask.");
               }
               break;
             }

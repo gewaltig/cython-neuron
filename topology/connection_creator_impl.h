@@ -285,6 +285,17 @@ namespace nest
 
   }
 
+  // Throw a BadProperty rather than bad_cast if mask dimension is wrong
+  template<int D>
+  static inline
+  const Mask<D>& get_mask_ref(const MaskDatum &m) {
+    try {
+      return dynamic_cast<const Mask<D>&>(*m);
+    } catch (std::bad_cast e) {
+      throw BadProperty("Mask is incompatible with layer.");
+    }
+  }
+
   template<int D>
   void ConnectionCreator::convergent_connect_(Layer<D>& source, Layer<D>& target)
   {
@@ -309,7 +320,7 @@ namespace nest
 
     if (mask_.valid()) {
 
-      const Mask<D>& mask_ref = dynamic_cast<const Mask<D>&>(*mask_);
+      const Mask<D>& mask_ref = get_mask_ref<D>(mask_);
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
 

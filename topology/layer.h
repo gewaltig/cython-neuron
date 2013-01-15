@@ -249,15 +249,16 @@ namespace nest
 
     /**
      * Get position of node. Only possible for local nodes.
-     * @param sind subnet index of node
+     * @param sind local subnet index of node
      * @returns position of node identified by Subnet local index value.
      */
     virtual Position<D> get_position(index sind) const = 0;
 
     /**
+     * @param sind local subnet index of node
      * @returns position of node as std::vector
      */
-    std::vector<double_t> get_position_vector(const index lid) const;
+    std::vector<double_t> get_position_vector(const index sind) const;
 
     /**
      * Returns displacement of a position from another position. When using periodic
@@ -463,7 +464,11 @@ namespace nest
   inline
   typename Ntree<D,index>::masked_iterator MaskedLayer<D>::begin(const Position<D>& anchor)
   {
-    return ntree_->masked_begin(dynamic_cast<const Mask<D>&>(*mask_),anchor);
+    try {
+      return ntree_->masked_begin(dynamic_cast<const Mask<D>&>(*mask_),anchor);
+    } catch (std::bad_cast e) {
+      throw BadProperty("Mask is incompatible with layer.");
+    }
   }
 
   template<int D>
@@ -541,9 +546,9 @@ namespace nest
 
   template<int D>
   inline
-  std::vector<double_t> Layer<D>::get_position_vector(const index lid) const
+  std::vector<double_t> Layer<D>::get_position_vector(const index sind) const
   {
-    return std::vector<double_t>(get_position(lid));
+    return std::vector<double_t>(get_position(sind));
   }
 
   template <int D>
