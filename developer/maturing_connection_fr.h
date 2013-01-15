@@ -280,7 +280,7 @@ bool MaturingConnectionFr::send(Event& e, double_t t_lastspike, MaturingCommonPr
   double_t t_last_post = 0.0;
 
   // go through all postsynaptic spikes
-  for ( ; start != finish && !bDeleted; start++ )
+  for ( ; start != finish && !bDeleted; ++start )
     {
       // reject double spikes, since this it is unphysologic that they might both arrive back in the dendrite
       if (t_last_post == start->t_) continue;

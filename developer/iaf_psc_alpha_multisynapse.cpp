@@ -286,7 +286,7 @@ port nest::iaf_psc_alpha_multisynapse::connect_sender(SpikeEvent&, port receptor
   bool new_rp = true;
   
   // look if new port is encountered
-  for(std::vector<long>::const_iterator pii = P_.receptor_types_.begin(); pii != P_.receptor_types_.end(); pii++)
+  for(std::vector<long>::const_iterator pii = P_.receptor_types_.begin(); pii != P_.receptor_types_.end(); ++pii)
   {
     if (*pii == receptor_type)
     {

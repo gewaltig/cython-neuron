@@ -394,7 +394,7 @@ void STDPFACETSHWConnectionHom::send(Event& e, double_t t_lastspike, STDPFACETSH
 
   if(start != finish) //take only last postspike before current spike
   {
-    finish--;
+    --finish;
     plus_dt = (finish->t_ + dendritic_delay) - t_spike;
   }
 

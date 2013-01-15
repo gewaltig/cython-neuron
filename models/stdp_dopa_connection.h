@@ -248,7 +248,7 @@ namespace nest
 		eligibility_= eligibility_*std::exp((last_e_update_ -(start->t_+dendritic_delay))/cp.tau_e_)+cp.A_plus_*std::exp((last_spike_ - (start->t_+dendritic_delay))/cp.tau_plus_);
 		last_e_update_ = start->t_ + dendritic_delay;
 		last_post_spike_ = start->t_;
-		start++;
+		++start;
 	      } 
 	    update_weight(this_dopa_spike, cp);
 	    dopa_trace_ = dopa_trace_*std::exp((last_dopa_spike_-this_dopa_spike)/cp.tau_d_)+dopa_spikes[i].multiplicity_/cp.tau_d_;
@@ -319,7 +319,7 @@ inline
 	      eligibility_= eligibility_*std::exp((last_e_update_ - (start->t_+dendritic_delay))/cp.tau_e_)+cp.A_plus_*std::exp((t_lastspike - (start->t_+dendritic_delay))/cp.tau_plus_);
 	      last_e_update_ = start->t_ + dendritic_delay;
 	      last_post_spike_ = start->t_;
-	      start++;
+	      ++start;
 	    }
 	  update_weight(this_dopa_spike, cp);
 	   
@@ -334,7 +334,7 @@ inline
       eligibility_= eligibility_*std::exp((last_e_update_ - (start->t_+dendritic_delay))/cp.tau_e_)+cp.A_plus_*std::exp((t_lastspike - (start->t_+dendritic_delay))/cp.tau_plus_);
       last_e_update_ = start->t_ + dendritic_delay;
       last_post_spike_ = start->t_;
-      start++;
+      ++start;
     }
   update_weight(t_spike, cp);
   eligibility_= eligibility_*std::exp((last_e_update_-t_spike)/cp.tau_e_)-cp.A_minus_*std::exp(((last_post_spike_ + dendritic_delay) - t_spike)/cp.tau_minus_);

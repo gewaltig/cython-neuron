@@ -86,7 +86,7 @@ void DatumToPythonConverter::convert_me(DictionaryDatum &dd)
 
     DatumToPythonConverter dpc;
 
-    for(TokenMap::const_iterator where = dd->begin(); where != dd->end(); where ++) {
+    for(TokenMap::const_iterator where = dd->begin(); where != dd->end(); ++where) {
       subt = (Token*) ( &((*where).second) );
 
       PyDict_SetItemString(py_object_, (*where).first.toString().c_str(), dpc.convert(*subt->datum()));

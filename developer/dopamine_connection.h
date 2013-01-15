@@ -206,7 +206,7 @@ namespace nest
 	    while((start->t_ <  this_dopa_spike)&&(start != finish))
 	      {
 		update_weight(start->t_, cp);
-		start++;
+		++start;
 	      }
 	    update_weight(this_dopa_spike, cp);
 	    dopa_trace_ = dopa_trace_*std::exp((last_dopa_spike_-this_dopa_spike)/cp.tau_d_)+dopa_spikes[i].multiplicity_/cp.tau_d_;
@@ -311,7 +311,7 @@ void DOPAMINEConnection::send(Event& e, double_t t_lastspike, const DOPAMINEComm
 	  while((start != finish)&&(start->t_ < this_dopa_spike))
 	    {
 	      update_weight(start->t_, cp);
-	      start++;
+	      ++start;
 	    }
 	 
 	  update_weight(this_dopa_spike,  cp);
@@ -324,7 +324,7 @@ void DOPAMINEConnection::send(Event& e, double_t t_lastspike, const DOPAMINEComm
     {
       //attention, pre == post not considered !!!
       update_weight(start->t_,  cp);
-      start++;
+      ++start;
     }
   update_weight(t_spike, cp);
   

@@ -822,7 +822,7 @@ void Cva_dFunction::execute(SLIInterpreter *i) const
   ArrayDatum *ad = new ArrayDatum();
   ad->reserve((*dict)->size() * 2);
 
-  for(TokenMap::const_iterator t = (*dict)->begin(); t != (*dict)->end(); t ++)
+  for(TokenMap::const_iterator t = (*dict)->begin(); t != (*dict)->end(); ++t)
   {
     Token nt(new LiteralDatum((*t).first));
     ad->push_back_move(nt);
@@ -875,7 +875,7 @@ void KeysFunction::execute(SLIInterpreter *i) const
   assert(dict != NULL);
   ArrayDatum *ad = new ArrayDatum();
 
-  for(TokenMap::const_iterator t = (*dict)->begin(); t != (*dict)->end(); t ++)
+  for(TokenMap::const_iterator t = (*dict)->begin(); t != (*dict)->end(); ++t)
   {
     Token nt(new LiteralDatum((*t).first));
     assert(! nt.empty());
@@ -927,7 +927,7 @@ void ValuesFunction::execute(SLIInterpreter *i) const
     assert(dict != NULL);
     ArrayDatum *ad = new ArrayDatum();
 
-    for(TokenMap::const_iterator t = (*dict)->begin(); t != (*dict)->end(); t ++)
+    for(TokenMap::const_iterator t = (*dict)->begin(); t != (*dict)->end(); ++t)
     {
 	ad->push_back((*t).second);
     }

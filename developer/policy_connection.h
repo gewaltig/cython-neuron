@@ -200,7 +200,7 @@ namespace nest
 	    while((start->t_ < this_dopa_spike)&&(start != finish)) //update from post spike to post spike
 	      {
 		update_weight(start->t_, cp);
-		start++;
+		++start;
 	      }
 	    
 	    update_weight(this_dopa_spike, cp);
@@ -282,7 +282,7 @@ void PolicyConnection::send(Event& e, double_t t_lastspike, const PolicyCommonPr
 	  while((start != finish)&&(start->t_ < this_dopa_spike))
 	    {
 	      update_weight(start->t_, cp);
-	      start++;
+	      ++start;
 	    }
 	  update_weight(this_dopa_spike, cp);
 	  dopa_trace_ = dopa_trace_*std::exp((last_dopa_spike_-this_dopa_spike)/cp.tau_d_)+dopa_spikes.at(i).multiplicity_/cp.tau_d_;
@@ -294,7 +294,7 @@ void PolicyConnection::send(Event& e, double_t t_lastspike, const PolicyCommonPr
   while((start != finish)&&(start->t_ < t_spike))
     {
       update_weight(start->t_, cp);
-      start++;
+      ++start;
     }
   update_weight(t_spike, cp);
 

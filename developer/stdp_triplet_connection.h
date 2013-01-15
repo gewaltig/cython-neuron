@@ -227,7 +227,7 @@ void STDPTripletConnection::send(Event& e, double_t t_lastspike, const CommonSyn
     ky = start->triplet_Kminus_-1.0;
     //ky = target_->get_triplet_K_value(start)-1.0;
     //ky = target_->get_triplet_K_value(start->t_-dendritic_delay);
-    start++;
+    ++start;
     if (minus_dt == 0)
       continue;
     weight_ = facilitate_(weight_, Kplus_ * std::exp(minus_dt / tau_plus_),ky);

@@ -253,7 +253,7 @@ bool MaturingConnection::send(Event& e, double_t t_lastspike, MaturingCommonProp
     }
    
   // go through all postsynaptic spikes
-  for ( ; start != finish; start++ )
+  for ( ; start != finish; ++start )
     {
       // propagate NMDA activation state to point in time t = t_post + dendritic delay,
       // when the postsynaptic spike arrives at the synapse	

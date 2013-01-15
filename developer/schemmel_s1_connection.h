@@ -242,11 +242,11 @@ void SchemmelS1Connection::send(Event& e, double_t t_lastspike, const CommonSyna
 
   double_t minus_prepost_dt,minus_postpre_dt;
   while (start != finish)
-  {      
+  {
     minus_prepost_dt = t_lastspike - (start->t_ + dendritic_delay);
     minus_postpre_dt =  (start->t_ + dendritic_delay) - t_spike;
-    
-    start++;
+
+    ++start;
     if (minus_prepost_dt < 0) {
       weight_ = facilitate_(weight_, A_plus_ * std::exp(minus_prepost_dt / tau_plus_));
     }

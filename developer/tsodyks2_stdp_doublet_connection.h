@@ -257,7 +257,7 @@ void Tsodyks2STDPDoubletConnection::send(Event& e, double_t t_lastspike, const C
   while (start != finish)
   {
     minus_dt = t_lastspike - (start->t_ + dendritic_delay);
-    start++;
+    ++start;
     if (minus_dt == 0)
       continue;
     weight_ = potentiate_(weight_, Kplus_ * std::exp(minus_dt / tau_plus_));
