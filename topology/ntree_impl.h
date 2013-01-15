@@ -37,7 +37,7 @@ namespace nest {
       ntree_ = ntree_->children_[0];
 
     // Find the first non-empty leaf
-    while(ntree_->nodes_.size() == 0) {
+    while( ntree_->nodes_.empty() ) {
 
       next_leaf_();
       if (ntree_ == 0) break;
@@ -158,7 +158,7 @@ namespace nest {
         first_leaf_();
       }
 
-      if ((ntree_->nodes_.size() == 0) || (!mask_->inside(ntree_->nodes_[node_].first-anchor_))) {
+      if ( ntree_->nodes_.empty() || (!mask_->inside(ntree_->nodes_[node_].first-anchor_))) {
         ++(*this);
       }
     }

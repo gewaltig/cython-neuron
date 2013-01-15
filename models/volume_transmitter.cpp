@@ -105,7 +105,7 @@ void nest::volume_transmitter::update(Time const&, const long_t from, const long
   //all spikes stored in spikecounter_ are delivered to the target synapses
   if(V_.counter_ == P_.deliver_interval_)
     {
-      if (B_.spikecounter_.size() > 0)
+      if ( !B_.spikecounter_.empty() )
 	{
 	  for (nest::index t = 0; t < B_.targets_.size(); ++t)
 	    {

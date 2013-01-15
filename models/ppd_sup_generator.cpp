@@ -84,7 +84,7 @@ nest::ulong_t nest::ppd_sup_generator::Age_distribution_::update(double_t hazard
       n_spikes = 0;
       }
     
-    if (occ_refractory_.size()>0)
+    if ( !occ_refractory_.empty() )
       {
       occ_active_ += occ_refractory_[activate_] - n_spikes;
       occ_refractory_[activate_] = n_spikes;

@@ -113,7 +113,7 @@ void Network::init_()
   root_container->reserve(get_num_threads());
   root_container->set_model_id(-1);
 
-  assert(pristine_models_.size() > 0);
+  assert( !pristine_models_.empty() );
   Model* rootmodel= pristine_models_[0].first;
   assert(rootmodel != 0);
 

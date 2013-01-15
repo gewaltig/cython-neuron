@@ -275,7 +275,7 @@ void nest::individual_spike_generator::update(Time const & sliceT0, const long_t
       // if we have to deliver weighted spikes, we need to get the
       // event back to set its weight according to the entry in
       // spike_weights_, so we use a DSSpike event and event_hook()
-      if (P_.spike_weights_.size() != 0)
+      if ( !P_.spike_weights_.empty() )
         se = new DSSpikeEvent;
       else
 	se = new SpikeEvent;

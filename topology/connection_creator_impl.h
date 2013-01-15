@@ -347,7 +347,7 @@ namespace nest
 
           }
 
-          if ((positions.size()==0) or
+          if ( positions.empty() or
               ((not allow_autapses_) and (positions.size()==1) and (positions[0].second==target_id)) or
               ((not allow_multapses_) and (positions.size()<number_of_connections_)) ) {
             std::string msg = String::compose("Global target ID %1: Not enough sources found inside mask", target_id);
@@ -380,7 +380,7 @@ namespace nest
 
           // no kernel
 
-          if ((positions.size()==0) or
+          if ( positions.empty() or
               ((not allow_autapses_) and (positions.size()==1) and (positions[0].second==target_id)) or
               ((not allow_multapses_) and (positions.size()<number_of_connections_)) ) {
             std::string msg = String::compose("Global target ID %1: Not enough sources found inside mask", target_id);
@@ -528,7 +528,7 @@ namespace nest
           probabilities.push_back(1.0);
       }
 
-      if ((targets.size()==0) or
+      if ( targets.empty() or
           ((not allow_multapses_) and (targets.size()<number_of_connections_)) ) {
         std::string msg = String::compose("Global source ID %1: Not enough targets found", source_id);
         throw KernelException(msg.c_str());

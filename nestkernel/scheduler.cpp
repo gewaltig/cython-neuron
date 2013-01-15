@@ -1231,7 +1231,7 @@ void nest::Scheduler::create_rngs_(const bool ctor_call)
 
   // if old generators exist, remove them; since rng_ contains
   // lockPTRs, we don't have to worry about deletion
-  if ( rng_.size() > 0 )
+  if ( !rng_.empty() )
   {
     if ( !ctor_call )
       net_.message(SLIInterpreter::M_INFO, "Scheduler::create_rngs_", "Deleting existing random number generators");
