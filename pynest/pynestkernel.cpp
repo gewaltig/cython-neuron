@@ -158,8 +158,7 @@ Datum* PyObj_ToDatum(PyObject *pObj)
       }
       case NPY_OBJECT: // handle 0-dim numpy array, which are treated as scalars
       {
-        PyArrayObject *array = 0;
-        array = (PyArrayObject*) pObj;
+        PyArrayObject *array = (PyArrayObject*) pObj;
         assert(array != 0);
         return PyObj_ToDatum(PyArray_ToScalar(array->data, pObj));
       }
@@ -176,8 +175,7 @@ Datum* PyObj_ToDatum(PyObject *pObj)
 
   if (PyArray_Check(pObj)) { // handle numpy arrays by sending as VectorDatum
     
-    PyArrayObject *array = 0;
-    array = (PyArrayObject*) pObj;
+    PyArrayObject *array = (PyArrayObject*) pObj;
     assert(array != 0);
 
     Datum* vd = 0;

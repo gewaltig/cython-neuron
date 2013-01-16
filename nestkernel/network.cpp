@@ -366,8 +366,7 @@ index Network::add_node(index mod, long_t n)   //no_p
 
       if(is_local_vp(vp))
       {
-        Node *newnode = 0;
-        newnode = model->allocate(t);
+        Node *newnode = model->allocate(t);
         newnode->set_gid_(gid);
         newnode->set_model_id(mod);
         newnode->set_thread(t);
@@ -790,10 +789,10 @@ void Network::connect(index source_id, index target_id, index syn)
 
   Node* target_ptr = get_node(target_id);
 
-  Node* source_ptr = 0;
   //target_thread defaults to 0 for devices
   thread target_thread = target_ptr->get_thread();
-  source_ptr = get_node(source_id, target_thread); 
+
+  Node* source_ptr = get_node(source_id, target_thread);
 
   //normal nodes and devices with proxies
   if (target_ptr->has_proxies())
@@ -836,10 +835,10 @@ void Network::connect(index source_id, index target_id, double_t w, double_t d, 
 
   Node* target_ptr = get_node(target_id);
 
-  Node* source_ptr = 0;
   //target_thread defaults to 0 for devices
   thread target_thread = target_ptr->get_thread();
-  source_ptr = get_node(source_id, target_thread); 
+
+  Node* source_ptr = get_node(source_id, target_thread);
 
   //normal nodes and devices with proxies
   if (target_ptr->has_proxies())
@@ -880,10 +879,10 @@ bool Network::connect(index source_id, index target_id, DictionaryDatum& params,
 
   Node* target_ptr = get_node(target_id);
 
-  Node* source_ptr = 0;
   //target_thread defaults to 0 for devices
   thread target_thread = target_ptr->get_thread();
-  source_ptr = get_node(source_id, target_thread);
+
+  Node* source_ptr = get_node(source_id, target_thread);
 
   //normal nodes and devices with proxies
   if (target_ptr->has_proxies())
