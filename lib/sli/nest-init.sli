@@ -986,6 +986,58 @@ def
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+/*
+BeginDocumentation
+
+   Name: RandomPopulationConnectD - Randomly connect a population of
+   source nodes to a population of target nodes using normally distributed
+   parameters.
+
+   Synopsis:
+   source_array target_array N param_dict synapse_model RandomPopulationConnectD
+
+   Parameters:
+   source_array       - array containing the gids of the presynaptic populations
+   target_array       - array containing the gids of the postsynaptic populations
+   N                  - number of connections to be established
+   param_dict         - dictionary for discribing the parameter
+                        distributions and the property switches of
+			the connection routine
+   synapse_model      - synapse model of the connection
+
+   Options:
+
+   Description:
+   This connection routine randomly connects the pre- and
+   postsynaptic populations by randomly drawing N connections
+   from the given populations. The parameters of the connection
+   are given in a specialized dictionary.
+
+   Necessary entries are:
+
+   Optional entries are:
+
+   /!\ Currently this high-level connection routine can cope only with
+   static synapses and tsodyks synapses. /!\
+
+  Author: Tobias Potjans, Markus Diesmann
+  SeeAlso: RandomDivergentConnect, Connect
+*/
+
+/RandomPopulationConnect_ia_ia_i_d {
+  /Connect /synapse_model GetOption
+  RandomPopulationConnect_ia_ia_i_d_l
+} def
+
+/RandomPopulationConnectD trie
+[/arraytype /arraytype /integertype /dictionarytype /literaltype] 
+  /RandomPopulationConnect_ia_ia_i_d_l load addtotrie
+[/arraytype /arraytype /integertype /dictionarytype] 
+  /RandomPopulationConnect_ia_ia_i_d load addtotrie
+def
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 /*BeginDocumentation
  Name: FindConnections - Find connections that fulfill the given criteria
 

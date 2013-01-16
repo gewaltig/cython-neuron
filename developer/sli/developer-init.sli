@@ -41,18 +41,3 @@ statusdict /have_gsl get
     /RandomConnectSynfireInDegreeOutdegree_a_i_i_i load addtotrie
   def
 } if
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-/RandomPopulationConnect_ia_ia_i_d {
-  /Connect /synapse_model GetOption
-  RandomPopulationConnect_ia_ia_i_d_l
-} def
-
-/RandomPopulationConnectD trie
-[/arraytype /arraytype /integertype /dictionarytype /literaltype] 
-  /RandomPopulationConnect_ia_ia_i_d_l load addtotrie
-[/arraytype /arraytype /integertype /dictionarytype] 
-  /RandomPopulationConnect_ia_ia_i_d load addtotrie
-def
-

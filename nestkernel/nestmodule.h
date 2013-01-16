@@ -451,6 +451,12 @@ namespace nest
      } setacceptablelatency_l_dfunction;
 #endif
 
+     class RPopulationConnect_ia_ia_i_d_lFunction: public SLIFunction
+     {
+     public:
+       void execute(SLIInterpreter *) const;
+     } rpopulationconnect_ia_ia_i_d_lfunction;
+
      //@}
 
    private:
