@@ -363,6 +363,14 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } rconvergentconnect_ia_ia_ia_daa_daa_b_b_lfunction;
 
+#ifdef HAVE_GSL
+     class RPopulationConnect_ia_ia_i_d_lFunction: public SLIFunction
+     {
+      public:
+       void execute(SLIInterpreter *) const;
+     } rpopulationconnect_ia_ia_i_d_lfunction;
+#endif
+
      class ResetKernelFunction: public SLIFunction
      { 
       public:
@@ -450,12 +458,6 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } setacceptablelatency_l_dfunction;
 #endif
-
-     class RPopulationConnect_ia_ia_i_d_lFunction: public SLIFunction
-     {
-     public:
-       void execute(SLIInterpreter *) const;
-     } rpopulationconnect_ia_ia_i_d_lfunction;
 
      //@}
 
