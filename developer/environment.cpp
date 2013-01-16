@@ -331,9 +331,7 @@ void nest::environment::update(Time const &, const long_t from, const long_t to)
   for ( long_t offs = from ; offs < to ; ++offs )
     {
   
-     
       //reads out current action
-      int_t direction = 0;
       check_ref_period();
       
       //reward decays exponentially
@@ -360,6 +358,8 @@ void nest::environment::update(Time const &, const long_t from, const long_t to)
 
 	if ((P_.neuron_east_==current_spike)||(P_.neuron_west_==current_spike)||(P_.neuron_north_==current_spike)||(P_.neuron_south_==current_spike))
 	  {
+            int_t direction = 0;
+
 	    B_.ref_period_=P_.refractor_-B_.h; //in ms
 	    if (P_.neuron_east_==current_spike)
 	      direction=0;
@@ -370,7 +370,6 @@ void nest::environment::update(Time const &, const long_t from, const long_t to)
 	    else if(P_.neuron_south_==current_spike)
 	      direction=3;
 
-		   
 	    move(direction);
 	    plot_agent();
 	    B_.spiked_ = true;

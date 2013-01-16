@@ -349,9 +349,7 @@ void nest::environment_gauss::update(Time const &, const long_t from, const long
   for ( long_t offs = from ; offs < to ; ++offs )
     {
   
-     
       //reads out current action
-      int_t direction = 0;
       if(B_.ref_period_>0){B_.ref_period_-=B_.h;}
  
       //reward decays exponentially
@@ -377,6 +375,8 @@ void nest::environment_gauss::update(Time const &, const long_t from, const long
 
       if ((P_.neuron_east_==current_spike)||(P_.neuron_west_==current_spike)||(P_.neuron_north_==current_spike)||(P_.neuron_south_==current_spike))
 	 {
+            int_t direction = 0;
+
 	    B_.ref_period_=P_.refractor_-B_.h; //in ms
 	    if (P_.neuron_east_==current_spike)
 	      direction=0;
@@ -387,7 +387,6 @@ void nest::environment_gauss::update(Time const &, const long_t from, const long
 	    else if(P_.neuron_south_==current_spike)
 	      direction=3;
 
-		   
 	    move(direction);
 	    plot_agent();
 	 

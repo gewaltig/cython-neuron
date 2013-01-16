@@ -65,12 +65,12 @@ void FilesystemModule::FileNamesFunction::execute(SLIInterpreter *i) const
   StringDatum *sd=dynamic_cast<StringDatum *>(i->OStack.top().datum());
   assert(sd !=NULL);
 
-  dirent *TheEntry;
   DIR *TheDirectory=opendir(sd->c_str());
   if (TheDirectory!=NULL) {
     ArrayDatum* a=new ArrayDatum();
     i->EStack.pop();
     i->OStack.pop();
+    dirent *TheEntry;
     while ((TheEntry=readdir(TheDirectory))!=NULL) {
       Token string_token(new StringDatum(TheEntry->d_name));
       a->push_back_move(string_token);

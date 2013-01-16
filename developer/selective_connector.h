@@ -352,8 +352,6 @@ void SelectiveConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::
 
   typename std::deque<ConnectionT>::iterator conn_it; 
 
-  size_t i;
-
   port p = e.get_port();
 
   if (p<0) {
@@ -361,7 +359,7 @@ void SelectiveConnectorBase< ConnectionT, CommonPropertiesT, ConnectorModelT >::
 
     //for (size_t i = 0; i < connections_.size(); ++i)
 
-  for ( conn_it = connections_.begin(), i = 0; 
+  for ( conn_it = connections_.begin(), size_t i = 0; 
         conn_it != connections_.end();
         ++conn_it, ++i )
   {
