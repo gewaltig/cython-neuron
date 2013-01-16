@@ -443,7 +443,7 @@ BeginDocumentation
      //     ostreamPtr os_ntps;
      //ostreamPtr os_nspt;
      //ostreamPtr os_nspc;
-     std::ofstream os_ntps;
+     //std::ofstream os_ntps;
      std::ofstream os_nspt;
      std::ofstream os_nspc;
      std::ostringstream filename;

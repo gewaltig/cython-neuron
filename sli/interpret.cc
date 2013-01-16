@@ -1054,7 +1054,6 @@ char SLIInterpreter::debug_commandline(Token & next)
 
   std::string command;
   std::string arg;
-  std::string val;
 
   // /dev/tty is the UNIX  file representing the keyboard. We directly read from it to be able to close the input
   // with CTRL-D. If std::cin is closed with ctrl-D we cannot re-open it again and the

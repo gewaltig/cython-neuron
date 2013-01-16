@@ -256,7 +256,6 @@ void FilesystemModule::RemoveDirectoryFunction::execute(SLIInterpreter *i) const
 void FilesystemModule::TmpNamFunction::execute(SLIInterpreter *i) const
 {
   static unsigned int seed=std::time(0);
-  int rng= rand_r(&seed);
   char *env=getenv("TMPDIR");
   std::string tmpdir("/tmp");
   if(env)
@@ -264,8 +263,8 @@ void FilesystemModule::TmpNamFunction::execute(SLIInterpreter *i) const
 
   std::string tempfile;
   do {
+    int rng= rand_r(&seed);
     tempfile=tmpdir+String::compose("/nest-tmp-%1",rng);
-    rng=rand_r(&seed); // draw new number with seed as state 
   } while(std::ifstream(tempfile.c_str()));
 
   Token filename_t(new StringDatum(tempfile));

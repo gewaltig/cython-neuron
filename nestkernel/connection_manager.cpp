@@ -595,9 +595,8 @@ void ConnectionManager::connect(Node& s, Node& r, index s_gid, thread tid, Dicti
 // connect with a list of connection status dicts
 bool ConnectionManager::connect(ArrayDatum& conns)
 {
-    std::string msg;
 // #ifdef _OPENMP
-//     msg = String::compose( "Setting OpenMP num_threads to %1.",net_.get_num_threads());
+//     std::string msg = String::compose( "Setting OpenMP num_threads to %1.",net_.get_num_threads());
 //     net_.message(SLIInterpreter::M_INFO, "ConnectionManager::Connect", msg);
 //     omp_set_num_threads(net_.get_num_threads());
 // #endif
