@@ -55,6 +55,7 @@
 #include "arraydatum.h"
 #include "randomgen.h"
 #include "random_datums.h"
+#include "gslrandomgen.h"
 
 #include "nest_timemodifier.h"
 #include "nest_timeconverter.h"
@@ -1260,7 +1261,11 @@ void nest::Scheduler::create_rngs_(const bool ctor_call)
         seeds here would run the risk of using the same seed twice.
         For simplicity, we use 1 .. n_vps.
       */
+#ifdef HAVE_GSL
+      librandom::RngPtr rng(new librandom::GslRandomGen(gsl_rng_knuthran2002, s));
+#else
       librandom::RngPtr rng = librandom::RandomGen::create_knuthlfg_rng(s);
+#endif
 
       if ( !rng )
       {
@@ -1287,17 +1292,18 @@ void nest::Scheduler::create_grng_(const bool ctor_call)
     net_.message(SLIInterpreter::M_INFO, "Scheduler::create_grng_", "Creating new default global RNG");
 
   // create default RNG with default seed
+#ifdef HAVE_GSL
+  grng_ = librandom::RngPtr(new librandom::GslRandomGen(gsl_rng_knuthran2002, librandom::RandomGen::DefaultSeed));
+#else
   grng_ = librandom::RandomGen::create_knuthlfg_rng(librandom::RandomGen::DefaultSeed);
+#endif
 
   if ( !grng_ )
     {
       if ( !ctor_call )
-	net_.message(SLIInterpreter::M_ERROR, "Scheduler::create_grng_",
-		   "Error initializing knuthlfg");
+	net_.message(SLIInterpreter::M_ERROR, "Scheduler::create_grng_", "Error initializing knuthlfg");
       else
-	std::cerr << "\nScheduler::create_grng_\n"
-		  << "Error initializing knuthlfg"
-		  << std::endl;
+	std::cerr << "\nScheduler::create_grng_\n" << "Error initializing knuthlfg" << std::endl;
 
       throw KernelException();
     }
