@@ -1979,8 +1979,7 @@ namespace nest
     if (exact_multinomial)
     {
       // get global rng that is tested for synchronization for all threads
-//      librandom::RngPtr grng = get_network().get_grng();
-      librandom::RngPtr grng(new librandom::GslRandomGen(gsl_rng_knuthran, 1));
+      librandom::RngPtr grng = get_network().get_grng();
 
       // begin code adapted from gsl 1.8 //
       double_t sum_dist = 0.0; // corresponds to sum_p
@@ -2013,8 +2012,7 @@ namespace nest
       }
     }
     // rng for local vp random numbers
-//    librandom::RngPtr rng;
-    librandom::RngPtr rng(new librandom::GslRandomGen(gsl_rng_knuthran, 1));
+    librandom::RngPtr rng;
 
     // loop over local threads on one machine
     int_t p;
@@ -2027,7 +2025,7 @@ namespace nest
 
       if(get_network().is_local_vp(j))
       {
-//        rng = get_network().get_rng(get_network().vp_to_thread(j));
+        rng = get_network().get_rng(get_network().vp_to_thread(j));
         // normal deviate for parameter grabbing
         librandom::NormalRandomDev norm(rng);
 
