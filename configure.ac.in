@@ -441,7 +441,7 @@ if test $HAVE_PYTHON = yes; then
 	[if test "x$enableval" != xno ; then
 	   configure_cynest="yes"
          fi],
-         [ ])
+         [])
 
   if test "$configure_cynest" = "yes"; then
 	   PYNEST_SUBDIR="cynest"
