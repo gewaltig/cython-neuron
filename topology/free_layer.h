@@ -47,6 +47,11 @@ namespace nest
 
   protected:
 
+    /**
+     * Communicate positions across MPI processes
+     * @param iter Insert iterator which will recieve pairs of Position,GID
+     * @param filter Selector to optionally communicate only subset of nodes
+     */
     template <class Ins>
     void communicate_positions_(Ins iter, const Selector& filter);
 
@@ -82,6 +87,9 @@ namespace nest
 
       for(vector<Node*>::iterator i = this->local_begin(); i != this->local_end(); ++i) {
 
+        // Nodes are grouped by depth. When lid % nodes_per_depth ==
+        // first_lid, we have "wrapped around", and do not need to gather
+        // more positions.
         if ( ((*i)->get_lid() != first_lid) &&
              ((*i)->get_lid() % nodes_per_depth == first_lid ) ) {
           break;
@@ -128,10 +136,13 @@ namespace nest
   {
     assert(this->nodes_.size() >= positions_.size());
     
+    // This array will be filled with GID,pos_x,pos_y[,pos_z] for local nodes:
     std::vector<double_t> local_gid_pos;
     std::vector<Node*>::const_iterator nodes_begin;
     std::vector<Node*>::const_iterator nodes_end;
 
+    // Nodes in the subnet are grouped by depth, so to select by depth, we
+    // just adjust the begin and end pointers:
     if (filter.select_depth()) {
       local_gid_pos.reserve((D+1)*(this->nodes_.size()/this->depth_ + 1));
       nodes_begin = this->local_begin(filter.depth);
@@ -147,15 +158,19 @@ namespace nest
       if (filter.select_model() && ((*node_it)->get_model_id() != filter.model))
         continue;
 
+      // Push GID into array to communicate
       local_gid_pos.push_back((*node_it)->get_gid());
+      // Push coordinates one by one
       for(int j=0;j<D;++j)
         local_gid_pos.push_back(positions_[(*node_it)->get_subnet_index() % positions_.size()][j]);
     }
 
+    // This array will be filled with GID,pos_x,pos_y[,pos_z] for global nodes:
     std::vector<double_t> global_gid_pos;
     std::vector<int> displacements;
     Communicator::communicate(local_gid_pos,global_gid_pos,displacements);
 
+    // Unpack GIDs and coordinates
     for(index i = 0; i<global_gid_pos.size(); i+=D+1) {
       *iter++ = std::pair<Position<D>,index>(&global_gid_pos[i+1], global_gid_pos[i]);
     }
@@ -178,6 +193,8 @@ namespace nest
     std::vector<Node*>::const_iterator nodes_begin;
     std::vector<Node*>::const_iterator nodes_end;
 
+    // Nodes in the subnet are grouped by depth, so to select by depth, we
+    // just adjust the begin and end pointers:
     if (filter.select_depth()) {
       nodes_begin = this->local_begin(filter.depth);
       nodes_end = this->local_end(filter.depth);
@@ -196,6 +213,7 @@ namespace nest
 
   }
 
+  // Helper function to compare GIDs used for sorting (Position,GID) pairs
   template<int D>
   static bool gid_less(const std::pair<Position<D>,index>& a, const std::pair<Position<D>,index>& b)
   {

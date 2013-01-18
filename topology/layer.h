@@ -404,18 +404,64 @@ namespace nest
     friend class MaskedLayer<D>;
   };
 
+  /**
+   * Class for applying masks to layers. Contains begin and end methods to
+   * iterate over nodes inside a mask.
+   */
   template<int D>
   class MaskedLayer {
   public:
 
+    /**
+     * Regular constructor.
+     * @param layer           The layer to mask
+     * @param filter          Optionally select subset of neurons
+     * @param mask            The mask to apply to the layer
+     * @param include_global  If true, include all nodes, otherwise only local to MPI process
+     * @param allow_oversized If true, allow larges masks than layers when using periodic b.c.
+     */
     MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask, bool include_global, bool allow_oversized);
+
+    /**
+     * Constructor for applying "converse" mask to layer. To be used for
+     * applying a mask for the target layer to the source layer. The mask
+     * will be mirrored about the origin, and settings for periodicity for
+     * the target layer will be applied to the source layer.
+     * @param layer           The layer to mask (source layer)
+     * @param filter          Optionally select subset of neurons
+     * @param mask            The mask to apply to the layer
+     * @param include_global  If true, include all nodes, otherwise only local to MPI process
+     * @param allow_oversized If true, allow larges masks than layers when using periodic b.c.
+     * @param target          The layer which the given mask is defined for (target layer)
+     */
     MaskedLayer(Layer<D>& layer, Selector filter, const AbstractMask& mask, bool include_global, bool allow_oversized, Layer<D>& target);
+
     ~MaskedLayer();
+
+    /**
+     * Iterate over nodes inside mask
+     * @param anchor Position to apply mask to
+     * @returns an iterator for the nodes inside the mask centered on the anchor position
+     */
     typename Ntree<D,index>::masked_iterator begin(const Position<D>& anchor);
+
+    /**
+     * @return end iterator
+     */
     typename Ntree<D,index>::masked_iterator end();
 
   protected:
 
+    /**
+     * Will check that the mask can be applied to the layer. The mask must
+     * have the same dimensionality as the layer, and a grid mask may only
+     * be applied to a grid layer. Unless the allow_oversized flag is set,
+     * the mask must also not be larger than the layer in case of periodic
+     * boundary conditions. Will throw an exception if the mask does not
+     * fit.
+     * @param layer The layer to check for
+     * @param allow_oversized If true, oversized masks are allowed
+     */
     void check_mask_(Layer<D>& layer, bool allow_oversized);
 
     lockPTR<Ntree<D,index> > ntree_;
