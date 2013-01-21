@@ -211,6 +211,8 @@ namespace nest
 
     if (mask_.valid()) {
 
+      // By supplying the target layer to the MaskedLayer constructor, the
+      // mask is mirrored so it may be applied to the source layer instead
       MaskedLayer<D> masked_layer(source,source_filter_,*mask_,true,allow_oversized_,target);
 
       for (std::vector<Node*>::const_iterator tgt_it = target_begin;tgt_it != target_end;++tgt_it) {
