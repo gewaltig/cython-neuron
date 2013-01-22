@@ -36,51 +36,74 @@ namespace nest
     Wmax_(100.0),
 
     no_synapses_(0),
-    synapses_per_driver_(50),
-    driver_readout_time_(15.0), //in ms
-    hardware_stage_(3)
+    synapses_per_driver_(50),  //hardware efficiency of 50/256=20%,
+                               //which is comparable to Fieres et al. (2008)
+    driver_readout_time_(15.0) //in ms; measured on hardware
 
   {
-    lookuptable_causal_.resize(16);
-    lookuptable_acausal_.resize(16);
+    lookuptable_0_.resize(16);
+    lookuptable_1_.resize(16);
+    lookuptable_2_.resize(16);
 
     //intermediate Guetig (mu=0.4)
-    //with r=4 bits and n=36 SSPs
-    lookuptable_causal_.at(0) = 2;
-    lookuptable_causal_.at(1) = 3;
-    lookuptable_causal_.at(2) = 4;
-    lookuptable_causal_.at(3) = 4;
-    lookuptable_causal_.at(4) = 5;
-    lookuptable_causal_.at(5) = 6;
-    lookuptable_causal_.at(6) = 7;
-    lookuptable_causal_.at(7) = 8;
-    lookuptable_causal_.at(8) = 9;
-    lookuptable_causal_.at(9) = 10;
-    lookuptable_causal_.at(10) = 11;
-    lookuptable_causal_.at(11) = 12;
-    lookuptable_causal_.at(12) = 13;
-    lookuptable_causal_.at(13) = 14;
-    lookuptable_causal_.at(14) = 14;
-    lookuptable_causal_.at(15) = 15;
+    //with r=4 bits and n=36 SSPs, see [3]
+    lookuptable_0_.at(0) = 2;
+    lookuptable_0_.at(1) = 3;
+    lookuptable_0_.at(2) = 4;
+    lookuptable_0_.at(3) = 4;
+    lookuptable_0_.at(4) = 5;
+    lookuptable_0_.at(5) = 6;
+    lookuptable_0_.at(6) = 7;
+    lookuptable_0_.at(7) = 8;
+    lookuptable_0_.at(8) = 9;
+    lookuptable_0_.at(9) = 10;
+    lookuptable_0_.at(10) = 11;
+    lookuptable_0_.at(11) = 12;
+    lookuptable_0_.at(12) = 13;
+    lookuptable_0_.at(13) = 14;
+    lookuptable_0_.at(14) = 14;
+    lookuptable_0_.at(15) = 15;
 
-    lookuptable_acausal_.at(0) = 0;
-    lookuptable_acausal_.at(1) = 0;
-    lookuptable_acausal_.at(2) = 1;
-    lookuptable_acausal_.at(3) = 2;
-    lookuptable_acausal_.at(4) = 3;
-    lookuptable_acausal_.at(5) = 4;
-    lookuptable_acausal_.at(6) = 5;
-    lookuptable_acausal_.at(7) = 6;
-    lookuptable_acausal_.at(8) = 7;
-    lookuptable_acausal_.at(9) = 8;
-    lookuptable_acausal_.at(10) = 9;
-    lookuptable_acausal_.at(11) = 10;
-    lookuptable_acausal_.at(12) = 10;
-    lookuptable_acausal_.at(13) = 11;
-    lookuptable_acausal_.at(14) = 12;
-    lookuptable_acausal_.at(15) = 13;
+    lookuptable_1_.at(0) = 0;
+    lookuptable_1_.at(1) = 0;
+    lookuptable_1_.at(2) = 1;
+    lookuptable_1_.at(3) = 2;
+    lookuptable_1_.at(4) = 3;
+    lookuptable_1_.at(5) = 4;
+    lookuptable_1_.at(6) = 5;
+    lookuptable_1_.at(7) = 6;
+    lookuptable_1_.at(8) = 7;
+    lookuptable_1_.at(9) = 8;
+    lookuptable_1_.at(10) = 9;
+    lookuptable_1_.at(11) = 10;
+    lookuptable_1_.at(12) = 10;
+    lookuptable_1_.at(13) = 11;
+    lookuptable_1_.at(14) = 12;
+    lookuptable_1_.at(15) = 13;
 
-    weight_per_lut_entry_ = Wmax_ / (lookuptable_causal_.size() - 1);
+    for(size_t i = 0; i < lookuptable_0_.size(); ++i){
+      lookuptable_2_.at(i) = i;
+    }
+
+    configbit_0_.resize(4);
+    configbit_1_.resize(4);
+    
+    //see [4]
+    configbit_0_.at(0) = 0;
+    configbit_0_.at(1) = 0;
+    configbit_0_.at(2) = 1;
+    configbit_0_.at(3) = 0;
+    configbit_1_.at(0) = 0;
+    configbit_1_.at(1) = 1;
+    configbit_1_.at(2) = 0;
+    configbit_1_.at(3) = 0;
+
+    reset_pattern_.resize(6);
+    for(size_t i = 0; i < reset_pattern_.size(); ++i){
+      reset_pattern_.at(i) = true;
+    }
+    
+    weight_per_lut_entry_ = Wmax_ / (lookuptable_0_.size() - 1);
     calc_readout_cycle_duration_();
   }
 
@@ -103,10 +126,13 @@ namespace nest
     def<long_t>(d, "synapses_per_driver", synapses_per_driver_);
     def<double_t>(d, "driver_readout_time", driver_readout_time_);
     def<double_t>(d, "readout_cycle_duration", readout_cycle_duration_);
-    def<long_t>(d, "hardware_stage", hardware_stage_);
 
-    (*d)["lookuptable_causal"] = IntVectorDatum(new std::vector<long_t>(lookuptable_causal_));
-    (*d)["lookuptable_acausal"] = IntVectorDatum(new std::vector<long_t>(lookuptable_acausal_));
+    (*d)["lookuptable_0"] = IntVectorDatum(new std::vector<long_t>(lookuptable_0_));
+    (*d)["lookuptable_1"] = IntVectorDatum(new std::vector<long_t>(lookuptable_1_));
+    (*d)["lookuptable_2"] = IntVectorDatum(new std::vector<long_t>(lookuptable_2_));
+    (*d)["configbit_0"] = IntVectorDatum(new std::vector<long_t>(configbit_0_));
+    (*d)["configbit_1"] = IntVectorDatum(new std::vector<long_t>(configbit_1_));
+    (*d)["reset_pattern"] = IntVectorDatum(new std::vector<long_t>(reset_pattern_));
   }
  
   void STDPFACETSHWHomCommonProperties::set_status(const DictionaryDatum & d, ConnectorModel &cm)
@@ -116,52 +142,91 @@ namespace nest
     updateValue<double_t>(d, "tau_plus", tau_plus_);
     updateValue<double_t>(d, "tau_minus_stdp", tau_minus_);
     if(updateValue<double_t>(d, "Wmax", Wmax_)){
-      weight_per_lut_entry_ = Wmax_ / (lookuptable_causal_.size() - 1);
+      weight_per_lut_entry_ = Wmax_ / (lookuptable_0_.size() - 1);
     }
 
-    //TP: they should not be allowed to be changed! But needed ofr CopyModel
+    //TP: they should not be allowed to be changed! But needed for CopyModel ...
     updateValue<double_t>(d, "weight_per_lut_entry", weight_per_lut_entry_);
     updateValue<double_t>(d, "readout_cycle_duration", readout_cycle_duration_);
-
     if(updateValue<long_t>(d, "no_synapses", no_synapses_)){
       calc_readout_cycle_duration_();
     }
+
     if(updateValue<long_t>(d, "synapses_per_driver", synapses_per_driver_)){
       calc_readout_cycle_duration_();
     }
     if(updateValue<double_t>(d, "driver_readout_time", driver_readout_time_)){
       calc_readout_cycle_duration_();
     }
-    updateValue<long_t>(d, "hardware_stage", hardware_stage_);
 
-    if(d->known("lookuptable_causal")){
-      updateValue<std::vector<long_t> >(d, "lookuptable_causal", lookuptable_causal_);
+    if(d->known("lookuptable_0")){
+      updateValue<std::vector<long_t> >(d, "lookuptable_0", lookuptable_0_);
 
       //right size?
-      if(lookuptable_causal_.size() != lookuptable_acausal_.size()){
+      if(lookuptable_0_.size() != lookuptable_1_.size()){
         throw BadProperty("Look-up table has not 2^4 entries!");
       }
 
       //are look-up table entries out of bounds?
-      for(size_t i = 0; i < size_t(lookuptable_causal_.size()); i++){
-        if((lookuptable_causal_[i] < 0) || (lookuptable_causal_[i] > 15)){
+      for(size_t i = 0; i < size_t(lookuptable_0_.size()); ++i){
+        if((lookuptable_0_[i] < 0) || (lookuptable_0_[i] > 15)){
           throw BadProperty("Look-up table entries must be integers in [0,15]");
         }
       }
     }
-    if(d->known("lookuptable_acausal")){
-      updateValue<std::vector<long_t> >(d, "lookuptable_acausal", lookuptable_acausal_);
+    if(d->known("lookuptable_1")){
+      updateValue<std::vector<long_t> >(d, "lookuptable_1", lookuptable_1_);
 
       //right size?
-      if(lookuptable_acausal_.size() != lookuptable_causal_.size()){
+      if(lookuptable_1_.size() != lookuptable_0_.size()){
         throw BadProperty("Look-up table has not 2^4 entries!");
       }
 
       //are look-up table entries out of bounds?
-      for(size_t i = 0; i < size_t(lookuptable_acausal_.size()); i++){
-        if((lookuptable_acausal_[i] < 0) || (lookuptable_acausal_[i] > 15)){
+      for(size_t i = 0; i < size_t(lookuptable_1_.size()); ++i){
+        if((lookuptable_1_[i] < 0) || (lookuptable_1_[i] > 15)){
           throw BadProperty("Look-up table entries must be integers in [0,15]");
         }
+      }
+    }
+    if(d->known("lookuptable_2")){
+      updateValue<std::vector<long_t> >(d, "lookuptable_2", lookuptable_2_);
+
+      //right size?
+      if(lookuptable_2_.size() != lookuptable_0_.size()){
+        throw BadProperty("Look-up table has not 2^4 entries!");
+      }
+
+      //are look-up table entries out of bounds?
+      for(size_t i = 0; i < size_t(lookuptable_2_.size()); ++i){
+        if((lookuptable_2_[i] < 0) || (lookuptable_2_[i] > 15)){
+          throw BadProperty("Look-up table entries must be integers in [0,15]");
+        }
+      }
+    }
+
+    if(d->known("configbit_0")){
+      updateValue<std::vector<long_t> >(d, "configbit_0", configbit_0_);
+
+      //right size?
+      if(configbit_0_.size() != 4){
+        throw BadProperty("Wrong number of configuration bits (!=4).");
+      }
+    }
+    if(d->known("configbit_1")){
+      updateValue<std::vector<long_t> >(d, "configbit_1", configbit_1_);
+
+      //right size?
+      if(configbit_1_.size() != 4){
+        throw BadProperty("Wrong number of configuration bits (!=4).");
+      }
+    }
+    if(d->known("reset_pattern")){
+      updateValue<std::vector<long_t> >(d, "reset_pattern", reset_pattern_);
+
+      //right size?
+      if(reset_pattern_.size() != 6){
+        throw BadProperty("Wrong number of reset bits (!=6).");
       }
     }
   }
@@ -174,8 +239,8 @@ namespace nest
   STDPFACETSHWConnectionHom::STDPFACETSHWConnectionHom() :
     a_causal_(0.0),
     a_acausal_(0.0),
-    a_th_causal_(21.835), //exp(-10ms/20ms) * 36SSPs
-    a_th_acausal_(21.835),
+    a_thresh_th_(21.835), //exp(-10ms/20ms) * 36SSPs
+    a_thresh_tl_(21.835),
 
     init_flag_(false),
     synapse_id_(0),
@@ -188,8 +253,8 @@ namespace nest
   {
     a_causal_ = rhs.a_causal_;
     a_acausal_ = rhs.a_acausal_;
-    a_th_causal_ = rhs.a_th_causal_;
-    a_th_acausal_ = rhs.a_th_acausal_;
+    a_thresh_th_ = rhs.a_thresh_th_;
+    a_thresh_tl_ = rhs.a_thresh_tl_;
 
     init_flag_ = rhs.init_flag_;
     synapse_id_ = rhs.synapse_id_;
@@ -205,8 +270,8 @@ namespace nest
     // own properties, different for individual synapse
     def<double_t>(d, "a_causal", a_causal_);
     def<double_t>(d, "a_acausal", a_acausal_);
-    def<double_t>(d, "a_th_causal", a_th_causal_);
-    def<double_t>(d, "a_th_acausal", a_th_acausal_);
+    def<double_t>(d, "a_thresh_th", a_thresh_th_);
+    def<double_t>(d, "a_thresh_tl", a_thresh_tl_);
 
     def<bool>(d, "init_flag", init_flag_);
     def<long_t>(d, "synapse_id", synapse_id_);
@@ -222,12 +287,12 @@ namespace nest
 
     updateValue<double_t>(d, "a_causal", a_causal_);
     updateValue<double_t>(d, "a_acausal", a_acausal_);
-    updateValue<double_t>(d, "a_th_causal", a_th_causal_);
-    updateValue<double_t>(d, "a_th_acausal", a_th_acausal_);
+    updateValue<double_t>(d, "a_thresh_th", a_thresh_th_);
+    updateValue<double_t>(d, "a_thresh_tl", a_thresh_tl_);
 
     updateValue<long_t>(d, "synapse_id", synapse_id_);
 
-    //TP: they should not be allowed to be changed! But needed ofr CopyModel
+    //TP: they should not be allowed to be changed! But needed for CopyModel ...
     updateValue<bool>(d, "init_flag", init_flag_);
     updateValue<double_t>(d, "next_readout_time", next_readout_time_);
 
@@ -250,9 +315,12 @@ namespace nest
          d->known("synapses_per_drivers") ||
          d->known("driver_readout_times") ||
          d->known("readout_cycle_durations") ||
-         d->known("hardware_stages") ||
-         d->known("lookuptable_causals") ||
-         d->known("lookuptable_acausals") )
+         d->known("lookuptable_0s") ||
+         d->known("lookuptable_1s") ||
+         d->known("lookuptable_2s") ||
+         d->known("configbit_0s") ||
+         d->known("configbit_1s") ||
+         d->known("reset_patterns") )
      {
        cm.network().message(SLIInterpreter::M_ERROR, "STDPFACETSHWConnectionHom::set_status()", "you are trying to set common properties via an individual synapse.");
      }

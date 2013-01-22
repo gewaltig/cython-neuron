@@ -22,42 +22,46 @@
    plasticity using homogeneous parameters, i.e. all synapses have the same parameters.
 
   Description:
-   stdp_synapse is a connector to create synapses with spike time 
-   dependent plasticity (as defined in [1]). Here the weight dependence
-   exponent can be set separately for potentiation and depression.
-   The reduced symmetric nearest-neighbor spike pairing scheme [5]
-   as implemented in the FACETS (BrainScaleS) hardware systems [6] is used
-   instead of an all-to-all spike pairing scheme.
-   Consequently tau_minus_ is calculated within this synapse and not
-   at the neuron site via Kplus_ like in stdp_connection_hom.
-   
-  Examples:
-   multiplicative STDP [2]  mu_plus = mu_minus = 1.0
-   additive STDP       [3]  mu_plus = mu_minus = 0.0
-   Guetig STDP         [1]  mu_plus = mu_minus = [0.0,1.0]
-   van Rossum STDP     [4]  mu_plus = 0.0 mu_minus = 1.0 
+   stdp_facetshw_synapse is a connector to create synapses with spike-timing
+   dependent plasticity (as defined in [1]).
+   This connector is a modified version of stdp_synapse.
+   It includes constraints of the hardware developed in the FACETS (BrainScaleS) project [2,3],
+   as e.g. 4-bit weight resolution, sequential updates of groups of synapses
+   and reduced symmetric nearest-neighbor spike pairing scheme. For details see [3].
+   The modified spike pairing scheme requires the calculation of tau_minus_
+   within this synapse and not at the neuron site via Kplus_ like in stdp_connection_hom.
 
   Parameters:
    Common properties:
-    tau_plus        double - Time constant of STDP window, potentiation in ms 
-    tau_minus_stdp  double - Time constant of STDP window, depression in ms 
+    tau_plus        double - Time constant of STDP window, causal branch in ms 
+    tau_minus_stdp  double - Time constant of STDP window, anti-causal branch in ms 
     Wmax            double - Maximum allowed weight
 
-    no_synapses double             long - total number of synapses
+    no_synapses                    long - total number of synapses
     synapses_per_driver            long - number of synapses updated at once
-    driver_readout_time          double - time for processing of one synapse row (synapse driver)
-    readout_cycle_duration       double - duration between two subsequent updates of same synapse (synapse driver)
-    hardware_stage                 long - hardware version: 1 for chip-based
-                                          and 2 (and 3 for independent resets) for wafer-scale system
-    lookuptable_causal     vector<long> - look-up table, causal
-    lookuptable_acausal    vector<long> - look-up table, acausal
+    driver_readout_time          double - time for processing of one synapse row (synapse line driver)
+    readout_cycle_duration       double - duration between two subsequent updates of same synapse (synapse line driver)
+    lookuptable_0          vector<long> - three look-up tables (LUT)
+    lookuptable_1          vector<long>
+    lookuptable_2          vector<long>
+    configbit_0            vector<long> - configuration bits for evaluation function.
+                                          For details see code in function eval_function_ and [4]
+                                          (configbit[0]=e_cc, ..[1]=e_ca, ..[2]=e_ac, ..[3]=e_aa).
+                                          Depending on these two sets of configuration bits
+                                          weights are updated according LUTs (out of three: (1,0), (0,1), (1,1)).
+                                          For (0,0) continue without reset.
+    configbit_1            vector<long>
+    reset_pattern          vector<long> - configuration bits for reset behaviour.
+                                          Two bits for each LUT (reset causal and acausal).
+                                          In hardware only (all false; never reset)
+                                          or (all true; always reset) is allowed.
 
    Individual properties:
-    a_causal     double - causal and acausal spike pair accumulations
+    a_causal     double - causal and anti-causal spike pair accumulations
     a_acausal    double
-    a_th_causal  double - thresholds for causal and acausal spike pair accumulations
-                          no common property, because variation of analog synapse circuitry can be applied here
-    a_th_acausal double
+    a_thresh_th  double - two thresholds used in evaluation function.
+                          No common property, because variation of analog synapse circuitry can be applied here
+    a_thresh_tl  double
     synapse_id   long   - synapse ID, used to assign synapses to groups (synapse drivers)
 
   Notes:
@@ -70,33 +74,26 @@
   Transmits: SpikeEvent
    
   References:
-   [1] Guetig et al. (2003) Learning Input Correlations through Nonlinear
-       Temporally Asymmetric Hebbian Plasticity. Journal of Neuroscience
-
-   [2] Rubin, J., Lee, D. and Sompolinsky, H. (2001). Equilibrium
-       properties of temporally asymmetric Hebbian plasticity, PRL
-       86,364--367
-
-   [3] Song, S., Miller, K. D. and Abbott, L. F. (2000). Competitive
-       Hebbian learning through spike-timing-dependent synaptic
-       plasticity, Nature Neuroscience 3:9,919--926
-
-   [4] van Rossum, M. C. W., Bi, G-Q and Turrigiano, G. G. (2000). 
-       Stable Hebbian learning from spike timing-dependent
-       plasticity, Journal of Neuroscience, 20:23,8812--8821
-
-   [5] Morrison, A., Diesmann, M., and Gerstner, W. (2008).
+   [1] Morrison, A., Diesmann, M., and Gerstner, W. (2008).
        Phenomenological models of synaptic plasticity based on
        spike-timing, Biol. Cybern., 98,459--478
 
-   [6] Schemmel, J., Gruebl, A., Meier, K., and Mueller, E. (2006).
+   [2] Schemmel, J., Gruebl, A., Meier, K., and Mueller, E. (2006).
        Implementing synaptic plasticity in a VLSI spiking neural
        network model, In Proceedings of the 2006 International
        Joint Conference on Neural Networks, pp.1--6, IEEE Press
 
-  FirstVersion: March 2006
-  Author: Moritz Helias, Abigail Morrison, Thomas Pfeil (TP)
-  SeeAlso: synapsedict, tsodyks_synapse, static_synapse
+   [3] Pfeil, T., Potjans, T. C., Schrader, S., Potjans, W., Schemmel, J., Diesmann, M., & Meier, K. (2012).
+       Is a 4-bit synaptic weight resolution enough? - 
+       constraints on enabling spike-timing dependent plasticity in neuromorphic hardware.
+       Front. Neurosci. 6 (90).
+
+   [4] Friedmann, S. in preparation
+
+
+  FirstVersion: July 2011
+  Author: Thomas Pfeil (TP), Moritz Helias, Abigail Morrison
+  SeeAlso: stdp_synapse, synapsedict, tsodyks_synapse, static_synapse
 */
 
 #include "connection_het_wd.h"
@@ -152,9 +149,12 @@ namespace nest
       long_t synapses_per_driver_;
       double_t driver_readout_time_;
       double_t readout_cycle_duration_;
-      long_t hardware_stage_;
-      std::vector<long_t> lookuptable_causal_; //(not uint_t because of IntVectorDatum)
-      std::vector<long_t> lookuptable_acausal_;
+      std::vector<long_t> lookuptable_0_; //TODO: TP: size in memory could be reduced
+      std::vector<long_t> lookuptable_1_;
+      std::vector<long_t> lookuptable_2_; //TODO: TP: to save memory one could introduce vector<bool> & BoolVectorDatum
+      std::vector<long_t> configbit_0_;
+      std::vector<long_t> configbit_1_;
+      std::vector<long_t> reset_pattern_;
     };
 
 
@@ -239,18 +239,19 @@ namespace nest
   void check_event(SpikeEvent&) {}
 
  private:
+  bool eval_function_(double_t a_causal, double_t a_acausal, double_t a_thresh_th, double_t a_thresh_tl, std::vector<long_t> configbit);
+
   // transformation biological weight <-> discrete weight (represented in index of look-up table)
   uint_t weight_to_entry_(double_t weight, double_t weight_per_lut_entry);
   double_t entry_to_weight_(uint_t discrete_weight, double_t weight_per_lut_entry);
 
-  uint_t facilitate_(uint_t discrete_weight_, const STDPFACETSHWHomCommonProperties &cp);
-  uint_t depress_(uint_t discrete_weight_, const STDPFACETSHWHomCommonProperties &cp);
+  uint_t lookup_(uint_t discrete_weight_, std::vector<long_t> table);
 
   // data members of each connection
   double_t a_causal_;
   double_t a_acausal_;
-  double_t a_th_causal_;
-  double_t a_th_acausal_;
+  double_t a_thresh_th_;
+  double_t a_thresh_tl_;
 
   bool init_flag_;
   long_t synapse_id_;
@@ -258,6 +259,15 @@ namespace nest
   uint_t discrete_weight_; //TODO: TP: only needed in send, move to common properties or "static"?
   };
 
+inline
+bool STDPFACETSHWConnectionHom::eval_function_(double_t a_causal, double_t a_acausal, double_t a_thresh_th, double_t a_thresh_tl, std::vector<long_t> configbit)
+{
+  // compare charge on capacitors with thresholds and return evaluation bit
+  return (a_thresh_tl + configbit[2] * a_causal + configbit[1] * a_acausal)
+          / (1 + configbit[2] + configbit[1])
+          > (a_thresh_th + configbit[0] * a_causal + configbit[3] * a_acausal)
+          / (1 + configbit[0] + configbit[3]);
+}
 
 inline
 uint_t STDPFACETSHWConnectionHom::weight_to_entry_(double_t weight, double_t weight_per_lut_entry)
@@ -274,15 +284,10 @@ double_t STDPFACETSHWConnectionHom::entry_to_weight_(uint_t discrete_weight, dou
 }
 
 inline
-uint_t STDPFACETSHWConnectionHom::facilitate_(uint_t discrete_weight_, const STDPFACETSHWHomCommonProperties &cp)
+uint_t STDPFACETSHWConnectionHom::lookup_(uint_t discrete_weight_, std::vector<long_t> table)
 {
-  return cp.lookuptable_causal_[discrete_weight_];
-}
-
-inline
-uint_t STDPFACETSHWConnectionHom::depress_(uint_t discrete_weight_, const STDPFACETSHWHomCommonProperties &cp)
-{
-  return cp.lookuptable_acausal_[discrete_weight_];
+  // look-up in table
+  return table[discrete_weight_];
 }
 
 inline
@@ -301,14 +306,14 @@ inline
 inline
 void STDPFACETSHWConnectionHom::send(Event& e, double_t t_lastspike, STDPFACETSHWHomCommonProperties &cp)
 {
-  // synapse STDP depressing/facilitation dynamics
+  // synapse STDP dynamics
 
   double_t t_spike = e.get_stamp().get_ms();
 
   //init the readout time
   if(init_flag_ == false){
     synapse_id_ = cp.no_synapses_;
-    cp.no_synapses_++;
+    ++cp.no_synapses_;
     cp.calc_readout_cycle_duration_();
     next_readout_time_ = int(synapse_id_ / cp.synapses_per_driver_) * cp.driver_readout_time_;
     std::cout << "init synapse " << synapse_id_ << " - first readout time: " << next_readout_time_ << std::endl;
@@ -321,49 +326,25 @@ void STDPFACETSHWConnectionHom::send(Event& e, double_t t_lastspike, STDPFACETSH
     //transform weight to discrete representation
     discrete_weight_ = weight_to_entry_(weight_, cp.weight_per_lut_entry_);
 
-    if(cp.hardware_stage_ == 1){ //chip-based system STDP (common reset)
-      //check whether difference of causal and acausal accumulated spike pairs > 0 and abs of difference > threshold
-	  //std::cout << "ID: " << synapse_id_ <<  " spike: " << t_spike << ": " << fabs(a_causal_ - a_acausal_) << " >? " << a_th_causal_ << "; c/a " << a_causal_ << " " << a_acausal_ << std::endl;
-      if(fabs(a_causal_ - a_acausal_) > a_th_causal_){
-        if(a_causal_ - a_acausal_ > 0){ //causal?
-          discrete_weight_ = facilitate_(discrete_weight_, cp);
-        }else{ //acausal!
-          discrete_weight_ = depress_(discrete_weight_, cp);
-        }
-        //reset both accumulations
-        a_causal_ = 0;
-        a_acausal_ = 0;
-      }
-    } else if(cp.hardware_stage_ == 2){ //wafer-scale system STDP (common reset)
-      //check whether causal and acausal thresholds are crossed
-      if(((a_causal_ > a_th_causal_) == true) && ((a_acausal_ > a_th_acausal_) == false)){
-        discrete_weight_ = facilitate_(discrete_weight_, cp);
-        //common reset
-        a_causal_ = 0;
-        a_acausal_ = 0;
-      } else if(((a_acausal_ > a_th_acausal_) == true) && ((a_causal_ > a_th_causal_) == false)){
-        discrete_weight_ = depress_(discrete_weight_, cp);
-        //common reset
-        a_causal_ = 0;
-        a_acausal_ = 0;
-      //if both thresholds are crossed, reset
-      } else if(((a_causal_ > a_th_causal_) == true) && ((a_acausal_ > a_th_acausal_) == true)){
-        a_causal_ = 0;
-        a_acausal_ = 0;
-      }
-    } else if(cp.hardware_stage_ == 3){ //wafer-scale system STDP (independent reset)
-      //check whether causal and acausal thresholds are crossed
-      if(((a_causal_ > a_th_causal_) == true) && ((a_acausal_ > a_th_acausal_) == false)){
-        discrete_weight_ = facilitate_(discrete_weight_, cp);
-        a_causal_ = 0;
-      } else if(((a_acausal_ > a_th_acausal_) == true) && ((a_causal_ > a_th_causal_) == false)){
-        discrete_weight_ = depress_(discrete_weight_, cp);
-        a_acausal_ = 0;
-      } else if(((a_causal_ > a_th_causal_) == true) && ((a_acausal_ > a_th_acausal_) == true)){
-        a_causal_ = 0;
-        a_acausal_ = 0;
-      }
+    //obtain evaluation bits
+    bool eval_0 = eval_function_(a_causal_, a_acausal_, a_thresh_th_, a_thresh_tl_, cp.configbit_0_);
+    bool eval_1 = eval_function_(a_causal_, a_acausal_, a_thresh_th_, a_thresh_tl_, cp.configbit_1_);
+
+    //select LUT, update weight and reset capacitors
+    if(eval_0 == true && eval_1 == false){
+      discrete_weight_ = lookup_(discrete_weight_, cp.lookuptable_0_);
+      if(cp.reset_pattern_[0]) a_causal_ = 0;
+      if(cp.reset_pattern_[1]) a_acausal_ = 0;
+    } else if(eval_0 == false && eval_1 == true){
+      discrete_weight_ = lookup_(discrete_weight_, cp.lookuptable_1_);
+      if(cp.reset_pattern_[2]) a_causal_ = 0;
+      if(cp.reset_pattern_[3]) a_acausal_ = 0;
+    } else if(eval_0 == true && eval_1 == true){
+      discrete_weight_ = lookup_(discrete_weight_, cp.lookuptable_2_);
+      if(cp.reset_pattern_[4]) a_causal_ = 0;
+      if(cp.reset_pattern_[5]) a_acausal_ = 0;
     }
+    //do nothing, if eval_0 == false and eval_1 == false
 
     while(t_spike > next_readout_time_){
       next_readout_time_ += cp.readout_cycle_duration_;
