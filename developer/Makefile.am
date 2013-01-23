@@ -55,7 +55,6 @@ libdevelopermodule_la_SOURCES= \
                         iaf_psc_delta_canon_cvv.cpp iaf_psc_delta_canon_cvv.h\
 			iaf_psc_delta_nodelay.cpp iaf_psc_delta_nodelay.h\
                         stdp_connection_rsnn_spikepairing_hom.cpp stdp_connection_rsnn_spikepairing_hom.h\
-			stdp_connection_facetshw_hom.cpp stdp_connection_facetshw_hom.h\
 			pif_psc_delta_canon_cvv.cpp pif_psc_delta_canon_cvv.h\
 	 		inh_gamma_generator.cpp inh_gamma_generator.h\
 			ac_gamma_generator.cpp ac_gamma_generator.h\

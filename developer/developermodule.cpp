@@ -122,7 +122,6 @@
 #include "static_connection_mult0.h"
 
 #include "stdp_connection_rsnn_spikepairing_hom.h"
-#include "stdp_connection_facetshw_hom.h"
 
 #include "lossy_connection.h"
 
@@ -1043,7 +1042,6 @@ BeginDocumentation
     register_prototype_connection<StaticConnectionMult0>(*net_,    "static_synapse_mult0");
 
     register_prototype_connection_commonproperties<STDPRSNNSpikePairingConnectionHom, STDPRSNNSpikePairingHomCommonProperties>(*net_, "stdp_rsnn_spikepairing_synapse_hom");
-    register_prototype_connection_commonproperties<STDPFACETSHWConnectionHom, STDPFACETSHWHomCommonProperties>(*net_, "stdp_facetshw_synapse_hom");
 
     register_prototype_connection<LossyConnection>(*net_, "lossy_synapse");
 
