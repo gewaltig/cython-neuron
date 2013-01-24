@@ -1162,7 +1162,6 @@ void Getinterval_aFunction::execute(SLIInterpreter *i) const
 
 void Cvx_aFunction::execute(SLIInterpreter *i) const
 {
-  Name caller(i->getcurrentname());
   i->EStack.pop();
 
   assert(i->OStack.load()>0);
