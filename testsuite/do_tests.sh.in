@@ -241,7 +241,7 @@ run_test ()
     # expansion algorithms depending on whether the command is a built-in
     # or not, how many subshells have been forked and so on.
 
-    echo "#/bin/sh" >  "${TEST_RUNFILE}"
+    echo "#!/bin/sh" >  "${TEST_RUNFILE}"
     echo "set +e"   >> "${TEST_RUNFILE}"
 
     echo "${param_script}" | grep -q '\.sli'
