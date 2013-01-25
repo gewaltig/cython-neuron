@@ -996,7 +996,7 @@ AC_SUBST(PYNEST_MODULE)
 AC_SUBST(PYNEST_MODULENAME)
 AC_SUBST(HAVE_PYTHON)
 
-AM_CONFIG_HEADER(libnestutil/config.h)
+AC_CONFIG_HEADER(libnestutil/config.h)
 AC_CONFIG_FILES(libnestutil/sliconfig.h)
 AC_CONFIG_FILES(Makefile)
 AC_CONFIG_FILES(doc/Makefile)
