@@ -1050,8 +1050,6 @@ SeeAlso: Simulate, Node
     thread t = source.get_thread();
     index gid = source.get_gid();
 
-    //std::cout << "Network::send 1 " << gid << " " << e.get_sender().get_gid() << std::endl;
-
     assert(!source.has_proxies());
     connection_manager_.send(t, gid, e);
   }
