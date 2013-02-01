@@ -65,7 +65,7 @@
      Simulate,RandomConvergentConnect,
      RandomDivergentConnect,CopyModel,
      SetKernelStatus,PrintNetwork,SetDefaults,
-   voltage_trace,raster_plot,ResetKernel,FindConnections,
+   voltage_trace,raster_plot,ResetKernel,GetConnections,
    CreateLayer,ConnectLayers,GetPosition,GetLayer,
    GetElement,FindNearestElement,Displacement,Distance,
    DumpLayerNodes,DumpLayerConnections,FindCenterElement,
@@ -1098,8 +1098,8 @@ SLI documentation.
   \lstinline!nest.PrintNetwork()! & Print structure of network or
   subnet
   from NEST perspective. \\
-  \lstinline!nest.FindConnections()! & Retrieve outgoing connections
-  for a given source; see also
+  \lstinline!nest.GetConnections()! & Retrieve connections
+  (all or for a given source or target); see also
   \url{http://www.nest-initiative.org/index.php/Connection_Management}. \\
   \lstinline!nest.GetNodes()! & Applied to a layer, returns GIDs of
   the layer elements. For simple layers, these are the actual model

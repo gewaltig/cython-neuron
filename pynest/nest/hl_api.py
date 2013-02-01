@@ -95,7 +95,7 @@ def is_sequence_of_nonneg_ints(seq):
     Return True if the given object is a list or tuple of ints, False else
     """
 
-    return is_sequencetype(seq) and all([type(n) == type(0) and n >= 0 for n in seq])
+    return is_sequencetype(seq) and all([isinstance(n,int) and n >= 0 for n in seq])
 
 
 def raise_if_not_list_of_gids(seq, argname):
