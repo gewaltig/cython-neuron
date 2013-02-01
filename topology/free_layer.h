@@ -61,6 +61,22 @@ namespace nest
 
     /// Vector of positions. Should match node vector in Subnet.
     std::vector<Position<D> > positions_;
+
+    /// This class is used when communicating positions across MPI procs.
+    class NodePositionData {
+    public:
+      index get_gid() const { return gid_; }
+      Position<D> get_position() const { return Position<D>(pos_); }
+      bool operator<(const NodePositionData& other) const
+        { return gid_<other.gid_; }
+      bool operator==(const NodePositionData& other) const
+        { return gid_==other.gid_; }
+
+    private:
+      double_t gid_;
+      double_t pos_[D];
+    };
+
   };
 
   template <int D>
@@ -172,9 +188,20 @@ namespace nest
     std::vector<int> displacements;
     Communicator::communicate(local_gid_pos,global_gid_pos,displacements);
 
+    // To avoid copying the vector one extra time in order to sort, we
+    // sneakishly use reinterpret_cast
+    NodePositionData * pos_ptr;
+    NodePositionData * pos_end;
+    pos_ptr = reinterpret_cast<NodePositionData*>(&global_gid_pos[0]);
+    pos_end = pos_ptr + global_gid_pos.size()/(D+1);
+
+    // Get rid of any multiple entries
+    std::sort(pos_ptr, pos_end);
+    pos_end = std::unique(pos_ptr, pos_end);
+
     // Unpack GIDs and coordinates
-    for(index i = 0; i<global_gid_pos.size(); i+=D+1) {
-      *iter++ = std::pair<Position<D>,index>(&global_gid_pos[i+1], global_gid_pos[i]);
+    for(;pos_ptr < pos_end; pos_ptr++) {
+      *iter++ = std::pair<Position<D>,index>(pos_ptr->get_position(), pos_ptr->get_gid());
     }
 
   }
