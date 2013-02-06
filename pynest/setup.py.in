@@ -57,11 +57,13 @@ pre_includes = [
 pre_ldflags = [
     '-L@PKGBUILDDIR@/nestkernel/.libs',
     '-L@PKGBUILDDIR@/librandom/.libs',
+    '-L@PKGBUILDDIR@/libnestutil/.libs',
     '-L@PKGBUILDDIR@/sli/.libs',
     '@LINKED_USER_MODULES@',
     '@LINKED_MODULES@',
     '-lnest',
     '-lrandom',
+    '-lnestutil',
     '-lsli',
     '@SLI_LIBS@',
     '@GSL_LIBS@',
