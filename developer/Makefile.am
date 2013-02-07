@@ -82,7 +82,7 @@ libdevelopermodule_la_SOURCES= \
 #			iaf_psc_alpha_canon_nr.cpp iaf_psc_alpha_canon_nr.h\
 # 			ac_poisson_generator.cpp ac_poisson_generator.h\
 #	 		ginzburg_neuron.cpp ginzburg_neuron.h\
-#	 		iaf_cond_delta.cpp iaf_cond_delta.h\
+#	 		iaf_cond_delta.cpp iaf_cond_delta.h
 
 
 
