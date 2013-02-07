@@ -359,6 +359,7 @@ namespace nest
     register_parameter<Gaussian2DParameter>("gaussian2D");
     register_parameter<UniformParameter>("uniform");
     register_parameter<NormalParameter>("normal");
+    register_parameter<LognormalParameter>("lognormal");
 
   }
 

@@ -19,7 +19,7 @@
 \usepackage{longtable}
 \usepackage{tabularx}
 \usepackage[nottoc]{tocbibind}
-\usepackage{color}
+\usepackage[table]{xcolor}
 
 \usepackage{fancyhdr}
 \pagestyle{fancyplain}
@@ -820,22 +820,40 @@ in Chapter~\ref{ch:extending}.
 \begin{table}
 \begin{tabularx}{\linewidth}{l|p{0.2\linewidth}|X}
 Name & Parameters & Function \\\hline
+%
 constant & & {constant $p\in[0,1]$} \\
+%
+\rowcolor{lstcolor}
 \lstinline!uniform! & \lstinline!min!, \lstinline!max! & $p\in
 [\text{min},\text{max})$ uniformly \\
+%
+\lstinline!normal! &
+\lstinline!mean!, \lstinline!sigma!, \lstinline!min!, \lstinline!max! &
+$p \in [\text{min},\text{max})$ normal with given mean and $\sigma$ \\
+%
+\rowcolor{lstcolor}
+\lstinline!lognormal! &
+\lstinline!mu!, \lstinline!sigma!, \lstinline!min!, \lstinline!max! &
+$p \in [\text{min},\text{max})$ lognormal with given $\mu$ and $\sigma$ \\
+%
 \lstinline!linear! & \lstinline!a!, \lstinline!c! &
 \begin{equation*}
 p(d) = c + a d
 \end{equation*}\\
+%
+\rowcolor{lstcolor}
 \lstinline!exponential! & \lstinline!a!, \lstinline!c!, \lstinline!tau! &
 \begin{equation*}
 p(d) = c + a e^{-\frac{d}{\tau}}
 \end{equation*}\\
+%
 \lstinline!gaussian! & \lstinline!p_center!, \lstinline!sigma!, \lstinline!mean!,
 \lstinline!c! &
 \begin{equation*}
 p(d) = c + p_{\text{center}}  e^{-\frac{(d-\mu)^2}{2\sigma^2}}
 \end{equation*}\\
+%
+\rowcolor{lstcolor}
 \lstinline!gaussian2D! & \lstinline!p_center!, \lstinline!sigma_x!, 
 \lstinline!sigma_y!, \lstinline!mean_x!, \lstinline!mean_y!,\lstinline!rho!
 \lstinline!c! &
