@@ -1,16 +1,22 @@
 /*
  *  iaf_psc_alpha_multisynapse.h
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004-2008 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -22,12 +28,8 @@
 #include "archiving_node.h"
 #include "ring_buffer.h"
 #include "connection.h"
-#include "analog_data_logger.h"
-
-
-
-namespace nest{
-  class Network;
+#include "universal_data_logger.h"
+#include "recordables_map.h"
 
   /* BeginDocumentation
 Name: iaf_psc_alpha_multisynapse - Leaky integrate-and-fire neuron model with multiple ports.
@@ -44,9 +46,15 @@ Description:
 
 Sends: SpikeEvent
 
+Receives: SpikeEvent, CurrentEvent, DataLoggingRequest
+
 Author:  Schrader, adapted from iaf_psc_alpha
 SeeAlso: iaf_psc_alpha, iaf_psc_delta, iaf_psc_exp, iaf_cond_exp
 */
+
+namespace nest
+{
+  class Network;
 
   /**
    * Leaky integrate-and-fire neuron with alpha-shaped PSCs.
@@ -54,20 +62,14 @@ SeeAlso: iaf_psc_alpha, iaf_psc_delta, iaf_psc_exp, iaf_cond_exp
   class iaf_psc_alpha_multisynapse : public Archiving_Node
   {
     
-  public:        
-    
-    typedef Node base;
+  public:
     
     iaf_psc_alpha_multisynapse();
     iaf_psc_alpha_multisynapse(const iaf_psc_alpha_multisynapse&);
 
     /**
      * Import sets of overloaded virtual functions.
-     * We need to explicitly include sets of overloaded
-     * virtual functions into the current scope.
-     * According to the SUN C++ FAQ, this is the correct
-     * way of doing things, although all other compilers
-     * happily live without.
+     * @see Technical Issues / Virtual Functions: Overriding, Overloading, and Hiding
      */
 
     using Node::connect_sender;
@@ -77,23 +79,14 @@ SeeAlso: iaf_psc_alpha, iaf_psc_delta, iaf_psc_exp, iaf_cond_exp
     
     void handle(SpikeEvent &);
     void handle(CurrentEvent &);
-    void handle(PotentialRequest &);
-    void handle(SynapticCurrentRequest &);
+    void handle(DataLoggingRequest &);
 
     port connect_sender(SpikeEvent&, port);
     port connect_sender(CurrentEvent&, port);
-    port connect_sender(PotentialRequest&, port);
-    port connect_sender(SynapticCurrentRequest &, port);
+    port connect_sender(DataLoggingRequest&, port);
 
     void get_status(DictionaryDatum &) const;
-    void set_status(const DictionaryDatum &);
-
- /*  protected: */
-    
-/*     void init(); */
-/*     void calibrate(); */
-/*     void update(Time const &, const long_t, const long_t); */
-  
+    void set_status(const DictionaryDatum &);  
 
   private:
     
@@ -103,6 +96,9 @@ SeeAlso: iaf_psc_alpha, iaf_psc_delta, iaf_psc_exp, iaf_cond_exp
     
     void update(Time const &, const long_t, const long_t);
 
+    // The next two classes need to be friends to access the State_ class/member
+    friend class RecordablesMap<iaf_psc_alpha_multisynapse>;
+    friend class UniversalDataLogger<iaf_psc_alpha_multisynapse>;
     
     // ---------------------------------------------------------------- 
     
@@ -126,18 +122,18 @@ SeeAlso: iaf_psc_alpha, iaf_psc_delta, iaf_psc_exp, iaf_cond_exp
       /** External current in pA */
       double_t I_e_;
       
-      /** reset value of the membrane potential */
+      /** Reset value of the membrane potential */
       double_t V_reset_;
       
-      /** Threshold, RELATIVE TO RESTING POTENTAIL(!).
+      /** Threshold, RELATIVE TO RESTING POTENTIAL(!).
 	  I.e. the real threshold is (U0_+Theta_). */
       double_t Theta_;
       
-      /** Lower bound, RELATIVE TO RESTING POTENTAIL(!).
+      /** Lower bound, RELATIVE TO RESTING POTENTIAL(!).
 	  I.e. the real lower bound is (LowerBound_+Theta_). */
       double_t LowerBound_;
       
-      /** Time constant of excitatory synaptic current in ms. */
+      /** Time constants of synaptic currents in ms. */
       std::vector<double_t> tau_syn_;
       
       // type is long because other types are not put through in GetStatus
@@ -147,8 +143,11 @@ SeeAlso: iaf_psc_alpha, iaf_psc_delta, iaf_psc_exp, iaf_cond_exp
       Parameters_();  //!< Sets default parameter values
 
       void get(DictionaryDatum&) const;  //!< Store current values in dictionary
-      void set(const DictionaryDatum&);  //!< Set values from dicitonary
-      
+
+      /** Set values from dictionary.
+       * @returns Change in reversal potential E_L, to be passed to State_::set()
+       */
+      double set(const DictionaryDatum&);
     }; // Parameters_
 
     // ---------------------------------------------------------------- 
@@ -157,19 +156,24 @@ SeeAlso: iaf_psc_alpha, iaf_psc_delta, iaf_psc_exp, iaf_cond_exp
      * State variables of the model.
      */
     struct State_ {
-      
       double_t     y0_; //!< Constant current
-      std::vector<double_t>     y1_syn_;  
-      std::vector<double_t>     y2_syn_;
+      std::vector<double_t>  y1_syn_;  
+      std::vector<double_t>  y2_syn_;
       double_t     y3_; //!< This is the membrane potential RELATIVE TO RESTING POTENTIAL.
+      double_t     current_; //! This is the current in a time step. This is only here to allow logging
       
       int_t       r_; //!< Number of refractory steps remaining
 
       State_();  //!< Default initialization
       
       void get(DictionaryDatum&, const Parameters_&) const;
-      void set(const DictionaryDatum&, const Parameters_&);
 
+      /** Set values from dictionary.
+       * @param dictionary to take data from
+       * @param current parameters
+       * @param Change in reversal potential E_L specified by this dict
+       */
+      void set(const DictionaryDatum&, const Parameters_&, double);
     }; // State_
 
     // ---------------------------------------------------------------- 
@@ -178,27 +182,23 @@ SeeAlso: iaf_psc_alpha, iaf_psc_delta, iaf_psc_exp, iaf_cond_exp
      * Buffers of the model.
      */
     struct Buffers_ {
+      Buffers_(iaf_psc_alpha_multisynapse &);
+      Buffers_(const Buffers_ &, iaf_psc_alpha_multisynapse &);
       
       /** buffers and summs up incoming spikes/currents */
       std::vector<RingBuffer> spikes_;
-      RingBuffer currents_;  
+      RingBuffer currents_;
       
-      /** Buffer for membrane potential. */
-      AnalogDataLogger<PotentialRequest> potentials_;
-
-      // Buffers for the currents
-      AnalogDataLogger<SynapticCurrentRequest> syncurrents_;
-      
-
-    }; //Buffers_
+      //! Logger for all analog data
+      UniversalDataLogger<iaf_psc_alpha_multisynapse> logger_;
+    };
 
     // ---------------------------------------------------------------- 
 
     /**
      * Internal variables of the model.
      */
-    struct Variables_ { 
-      
+    struct Variables_ {
       std::vector<double_t> PSCInitialValues_;
       int_t       RefractoryCounts_;
       
@@ -215,10 +215,16 @@ SeeAlso: iaf_psc_alpha, iaf_psc_delta, iaf_psc_exp, iaf_cond_exp
 
     }; // Variables
     
-    // ---------------------------------------------------------------- 
+    // Access functions for UniversalDataLogger -------------------------------
+
+    //! Read out the real membrane potential
+    double_t get_V_m_() const { return S_.y3_ + P_.U0_; }
+    double_t get_current_() const { return S_.current_; }
+
+    // Data members ----------------------------------------------------------- 
     
     /**
-     * @defgroup iaf_psc_alpha_data
+     * @defgroup iaf_psc_alpha_multisynapse_data
      * Instances of private data structures for the different types
      * of data pertaining to the model.
      * @note The order of definitions is important for speed.
@@ -230,12 +236,13 @@ SeeAlso: iaf_psc_alpha, iaf_psc_delta, iaf_psc_exp, iaf_cond_exp
     Buffers_    B_;
     /** @} */
 
+   //! Mapping of recordables names to access functions
+   static RecordablesMap<iaf_psc_alpha_multisynapse> recordablesMap_;
   };
 
 inline
-port nest::iaf_psc_alpha_multisynapse::check_connection(Connection& c, port receptor_type)
+port iaf_psc_alpha_multisynapse::check_connection(Connection& c, port receptor_type)
 {
-
   SpikeEvent e;
   e.set_sender(*this);
   c.check_event(e);
@@ -249,23 +256,14 @@ port iaf_psc_alpha_multisynapse::connect_sender(CurrentEvent&, port receptor_typ
     throw UnknownReceptorType(receptor_type, get_name());
   return 0;
 }
- 
-inline
-port iaf_psc_alpha_multisynapse::connect_sender(PotentialRequest& pr, port receptor_type)
-{
-  if (receptor_type != 0)
-    throw UnknownReceptorType(receptor_type, get_name());
-  B_.potentials_.connect_logging_device(pr);
-  return 0;
-}
 
 inline
-port iaf_psc_alpha_multisynapse::connect_sender(SynapticCurrentRequest& sr, port receptor_type)
+port iaf_psc_alpha_multisynapse::connect_sender(DataLoggingRequest& dlr, 
+                                   port receptor_type)
 {
   if (receptor_type != 0)
     throw UnknownReceptorType(receptor_type, get_name());
-  B_.syncurrents_.connect_logging_device(sr);
-  return 0;
+  return B_.logger_.connect_logging_device(dlr, recordablesMap_);
 }
 
 inline
@@ -274,15 +272,17 @@ void iaf_psc_alpha_multisynapse::get_status(DictionaryDatum &d) const
   P_.get(d);
   S_.get(d, P_);
   Archiving_Node::get_status(d);
+
+  (*d)[names::recordables] = recordablesMap_.get_list();
 }
 
 inline
 void iaf_psc_alpha_multisynapse::set_status(const DictionaryDatum &d)
 {
   Parameters_ ptmp = P_;  // temporary copy in case of errors
-  ptmp.set(d);                       // throws if BadProperty
+  const double delta_EL = ptmp.set(d);         // throws if BadProperty
   State_      stmp = S_;  // temporary copy in case of errors
-  stmp.set(d, ptmp);                 // throws if BadProperty
+  stmp.set(d, ptmp, delta_EL);                 // throws if BadProperty
 
   // We now know that (ptmp, stmp) are consistent. We do not 
   // write them back to (P_, S_) before we are also sure that 

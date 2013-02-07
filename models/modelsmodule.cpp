@@ -53,6 +53,7 @@
 #include "iaf_cond_exp_sfa_rr.h"
 #include "iaf_neuron.h"
 #include "iaf_psc_alpha.h"
+#include "iaf_psc_alpha_multisynapse.h"
 #include "iaf_psc_delta.h"
 #include "iaf_psc_exp.h"
 #include "iaf_tum_2000.h"
@@ -137,14 +138,15 @@ namespace nest
 
   void ModelsModule::init(SLIInterpreter *)
   {
-    register_model<iaf_neuron>(net_,    "iaf_neuron");
-    register_model<iaf_psc_alpha>(net_, "iaf_psc_alpha");
-    register_model<iaf_psc_delta>(net_, "iaf_psc_delta");
-    register_model<iaf_psc_exp>(net_,   "iaf_psc_exp");
-    register_model<iaf_tum_2000>(net_,  "iaf_tum_2000");
-    register_model<mat2_psc_exp>(net_,  "mat2_psc_exp");
-    register_model<parrot_neuron>(net_, "parrot_neuron");
-    register_model<pp_psc_delta>(net_, "pp_psc_delta");
+    register_model<iaf_neuron>(net_,                 "iaf_neuron");
+    register_model<iaf_psc_alpha>(net_,              "iaf_psc_alpha");
+    register_model<iaf_psc_alpha_multisynapse>(net_, "iaf_psc_alpha_multisynapse");
+    register_model<iaf_psc_delta>(net_,              "iaf_psc_delta");
+    register_model<iaf_psc_exp>(net_,                "iaf_psc_exp");
+    register_model<iaf_tum_2000>(net_,               "iaf_tum_2000");
+    register_model<mat2_psc_exp>(net_,               "mat2_psc_exp");
+    register_model<parrot_neuron>(net_,              "parrot_neuron");
+    register_model<pp_psc_delta>(net_,               "pp_psc_delta");
 
     register_model<ac_generator>(net_,           "ac_generator");
     register_model<dc_generator>(net_,           "dc_generator");

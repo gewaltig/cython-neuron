@@ -62,7 +62,6 @@
 // Node headers
 //#include "ac_poisson_generator.h"
 
-// #include "iaf_psc_alpha_multisynapse.h"
 #include "iaf_psc_alpha_mod.h"
 #include "iaf_psc_alpha_norec.h"
 #include "iaf_psc_alpha_dynth.h"
@@ -934,7 +933,6 @@ BeginDocumentation
     register_model<environment>(*net_, "environment");
     register_model<environment_cliff>(*net_, "environment_cliff");
 
-    // register_model<iaf_psc_alpha_multisynapse>(*net_, "iaf_psc_alpha_multisynapse");
     register_model<iaf_psc_alpha_mod>(*net_, "iaf_psc_alpha_mod");
     register_model<iaf_psc_alpha_norec>(*net_, "iaf_psc_alpha_norec");
     register_model<iaf_psc_alpha_dynth>(*net_, "iaf_psc_alpha_dynth");

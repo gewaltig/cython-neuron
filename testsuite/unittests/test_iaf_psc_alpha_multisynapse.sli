@@ -56,8 +56,9 @@ taus eq assert_or_die
 npost dup GetStatus /tau_syn get length
 exch GetStatus /n_synapses get eq assert_or_die
 
-/amperemeter Create /am Set
-am <<
+/multimeter Create /mm Set
+mm <<
+    /record_from [/currents]
     /withgid false
     /withtime false
     /to_file false
@@ -83,11 +84,11 @@ sg npost /s2 Connect
 sg npost /s3 Connect
 sg npost /s4 Connect
 
-am npost 1. 8. /static_synapse Connect
+mm npost 1. 8. /static_synapse Connect
 
 2500 ms Simulate
 
-/d am GetStatus /events get def
+/d mm GetStatus /events get def
 d /currents get cva /currents Set
 
 % find indices where currents should be maximal (weight==1.0)

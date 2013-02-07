@@ -1,16 +1,22 @@
 /*
  *  iaf_psc_alpha_multisynapse.cpp
  *
- *  This file is part of NEST
+ *  This file is part of NEST.
  *
- *  Copyright (C) 2004-2008 by
- *  The NEST Initiative
+ *  Copyright (C) 2004 The NEST Initiative
  *
- *  See the file AUTHORS for details.
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  Permission is granted to compile and modify
- *  this file for non-commercial use.
- *  See the file LICENSE for details.
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -22,17 +28,35 @@
 #include "doubledatum.h"
 #include "dictutils.h"
 #include "numerics.h"
-#include "analog_data_logger_impl.h"
+#include "universal_data_logger_impl.h"
 
 #include <limits>
+
+/* ---------------------------------------------------------------- 
+ * Recordables map
+ * ---------------------------------------------------------------- */
+
+nest::RecordablesMap<nest::iaf_psc_alpha_multisynapse> nest::iaf_psc_alpha_multisynapse::recordablesMap_;
+
 namespace nest
 {
+  /*
+   * Override the create() method with one call to RecordablesMap::insert_() 
+   * for each quantity to be recorded.
+   */
+  template <>
+  void RecordablesMap<iaf_psc_alpha_multisynapse>::create()
+  {
+    // use standard names whereever you can for consistency!
+    insert_(names::V_m, &iaf_psc_alpha_multisynapse::get_V_m_);
+    insert_("currents", &iaf_psc_alpha_multisynapse::get_current_);
+  }
 
 /* ---------------------------------------------------------------- 
  * Default constructors defining default parameters and state
  * ---------------------------------------------------------------- */
 
-nest::iaf_psc_alpha_multisynapse::Parameters_::Parameters_()
+iaf_psc_alpha_multisynapse::Parameters_::Parameters_()
   : Tau_                 ( 10.0    ),  // ms
     C_                   (250.0    ),  // pF
     TauR_                (  2.0    ),  // ms
@@ -47,8 +71,7 @@ nest::iaf_psc_alpha_multisynapse::Parameters_::Parameters_()
   tau_syn_.clear();  
 }
 
-
-nest::iaf_psc_alpha_multisynapse::State_::State_()
+iaf_psc_alpha_multisynapse::State_::State_()
   : y0_   (0.0),  
     y3_   (0.0),
     r_    (0)
@@ -62,14 +85,13 @@ nest::iaf_psc_alpha_multisynapse::State_::State_()
  * Parameter and state extractions and manipulation functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_psc_alpha_multisynapse::Parameters_::get(DictionaryDatum &d) const
+void iaf_psc_alpha_multisynapse::Parameters_::get(DictionaryDatum &d) const
 {
-  //def<double>(d, names::V_m, y3_+U0_); // Membrane potential
   def<double>(d, names::E_L, U0_);   // Resting potential
   def<double>(d, names::I_e, I_e_);
   def<double>(d, names::V_th, Theta_+U0_); // threshold value
-  def<double>(d, names::V_min, LowerBound_+U0_);
   def<double>(d, names::V_reset, V_reset_+U0_);
+  def<double>(d, names::V_min, LowerBound_+U0_);
   def<double>(d, names::C_m, C_);
   def<double>(d, names::tau_m, Tau_);
   def<double>(d, names::t_ref, TauR_);
@@ -79,101 +101,143 @@ void nest::iaf_psc_alpha_multisynapse::Parameters_::get(DictionaryDatum &d) cons
   def<ArrayDatum>(d,"tau_syn", tau_syn_ad);
   
   (*d)["receptor_types"] = IntVectorDatum(new std::vector<long>(receptor_types_));
-
 }
 
-void nest::iaf_psc_alpha_multisynapse::Parameters_::set(const DictionaryDatum& d)
+double iaf_psc_alpha_multisynapse::Parameters_::set(const DictionaryDatum& d)
 {
-
+  // if U0_ is changed, we need to adjust all variables defined relative to U0_
+  const double ELold = U0_;
   updateValue<double>(d,names::E_L,U0_);
+  const double delta_EL = U0_ - ELold;
 
   if(updateValue<double>(d,names::V_reset,V_reset_))
     V_reset_ -=U0_;
-
-  updateValue<double>(d,names::I_e,I_e_);
+  else
+    V_reset_ -= delta_EL;
 
   if (updateValue<double>(d,names::V_th,Theta_)) 
     Theta_ -= U0_;
+  else
+    Theta_ -= delta_EL;
 
   if (updateValue<double>(d,names::V_min,LowerBound_)) 
     LowerBound_ -= U0_;
+  else
+    LowerBound_ -= delta_EL;
+    
+  updateValue<double>(d, names::I_e, I_e_);
+  updateValue<double>(d,names::C_m, C_);
+  updateValue<double>(d,names::tau_m, Tau_);
+  updateValue<double>(d,names::t_ref, TauR_);
 
-  updateValue<double>(d,names::C_m,C_);
-  updateValue<double>(d,names::tau_m,Tau_);
-  updateValue<double>(d,names::t_ref,TauR_);
+  if ( C_ <= 0. )
+    throw BadProperty("Capacitance must be > 0.");
 
-  if (updateValue<long>(d,"n_synapses",num_of_receptors_))
+  if ( Tau_ <= 0. )
+    throw BadProperty("Membrane time constant must be > 0.");
+
+  if (updateValue<long>(d, "n_synapses", num_of_receptors_))
     tau_syn_.resize(num_of_receptors_, 2.0);
 
   std::vector<double> tau_tmp;
   if (updateValue<std::vector<double> >(d, "tau_syn", tau_tmp))
   {
-    if(tau_tmp.size() != num_of_receptors_)
+    if (tau_tmp.size() != num_of_receptors_)
       throw DimensionMismatch(num_of_receptors_, tau_tmp.size());
+
+    for (size_t i = 0; i < tau_tmp.size(); ++i)
+    {
+      if (tau_tmp[i] <= 0)
+        throw BadProperty("All synaptic time constants must be > 0.");
+      if (tau_tmp[i] == Tau_)
+        throw BadProperty("Membrane and synapse time constant(s) must differ. See note in documentation.");
+    }
+
     tau_syn_ = tau_tmp;
   }
 
-  //  std::vector<long> recept_tmp;
+  if ( TauR_ < 0. )
+  	throw BadProperty("The refractory time t_ref can't be negative.");
+
+  if ( V_reset_ >= Theta_ )
+    throw BadProperty("Reset potential must be smaller than threshold.");
+
   updateValue<std::vector<long> >(d, "receptor_types", receptor_types_);
 
-  
-
+  return delta_EL;
 }
 
-void nest::iaf_psc_alpha_multisynapse::State_::get(DictionaryDatum &d, const Parameters_& p) const
+void iaf_psc_alpha_multisynapse::State_::get(DictionaryDatum &d, const Parameters_& p) const
 {
   def<double>(d, names::V_m, y3_ + p.U0_); // Membrane potential
 }
 
-void nest::iaf_psc_alpha_multisynapse::State_::set(const DictionaryDatum& d, const Parameters_& p)
+void iaf_psc_alpha_multisynapse::State_::set(const DictionaryDatum& d, const Parameters_& p, double delta_EL)
 {
   if ( updateValue<double>(d, names::V_m, y3_) )
     y3_ -= p.U0_;
+  else
+    y3_ -= delta_EL;
 }
+
+iaf_psc_alpha_multisynapse::Buffers_::Buffers_(iaf_psc_alpha_multisynapse& n)
+  : logger_(n)
+{}
+
+iaf_psc_alpha_multisynapse::Buffers_::Buffers_(const Buffers_ &, iaf_psc_alpha_multisynapse& n)
+  : logger_(n)
+{}
 
 
 /* ---------------------------------------------------------------- 
  * Default and copy constructor for node
  * ---------------------------------------------------------------- */
 
-nest::iaf_psc_alpha_multisynapse::iaf_psc_alpha_multisynapse()
+iaf_psc_alpha_multisynapse::iaf_psc_alpha_multisynapse()
   : Archiving_Node(), 
     P_(), 
-    S_()
-{}
+    S_(),
+    B_(*this)
+{
+  recordablesMap_.create();
+}
 
-nest::iaf_psc_alpha_multisynapse::iaf_psc_alpha_multisynapse(const iaf_psc_alpha_multisynapse& n)
+iaf_psc_alpha_multisynapse::iaf_psc_alpha_multisynapse(const iaf_psc_alpha_multisynapse& n)
   : Archiving_Node(n), 
     P_(n.P_), 
-    S_(n.S_)
+    S_(n.S_),
+    B_(n.B_, *this)
 {}
 
 /* ---------------------------------------------------------------- 
  * Node initialization functions
  * ---------------------------------------------------------------- */
 
-void nest::iaf_psc_alpha_multisynapse::init_state_(const Node& proto)
+void iaf_psc_alpha_multisynapse::init_state_(const Node& proto)
 {
   const iaf_psc_alpha_multisynapse& pr = downcast<iaf_psc_alpha_multisynapse>(proto);
   S_ = pr.S_;
 }
 
-void nest::iaf_psc_alpha_multisynapse::init_buffers_()
+void iaf_psc_alpha_multisynapse::init_buffers_()
 {
-
-  
+  B_.spikes_.clear();          // includes resize
   B_.currents_.clear();        // includes resize
-  B_.potentials_.clear_data(); // includes resize
+
+  B_.logger_.reset();
+
   Archiving_Node::clear_history();
 }
 
-void nest::iaf_psc_alpha_multisynapse::calibrate()
+void iaf_psc_alpha_multisynapse::calibrate()
 {
+  B_.logger_.init();  // ensures initialization in case mm connected after Simulate
+
   const double h = Time::get_resolution().get_ms(); 
 
   V_.receptor_types_size_ = P_.receptor_types_.size();
 
-  // if n_synapses has been DEcreased with SetStatus, force new dimension.
+  // if n_synapses has been Decreased with SetStatus, force new dimension.
   if (P_.num_of_receptors_ < V_.receptor_types_size_){
     V_.receptor_types_size_ = P_.num_of_receptors_;
     P_.receptor_types_.resize(V_.receptor_types_size_);
@@ -211,39 +275,31 @@ void nest::iaf_psc_alpha_multisynapse::calibrate()
   V_.RefractoryCounts_=r.get_steps();
   
   assert(V_.RefractoryCounts_ > 0); // better throw an exception
-
-  B_.currents_.resize();
-
-  B_.potentials_.calibrate(); 
-  B_.syncurrents_.calibrate();
-
 }
 
-void nest::iaf_psc_alpha_multisynapse::update(Time const & origin, const long_t from, const long_t to)
+void iaf_psc_alpha_multisynapse::update(Time const & origin, const long_t from, const long_t to)
 {
   assert(to >= 0 && (delay) from < Scheduler::get_min_delay());
   assert(from < to);
-  static double tmpcurrent;
 
   for ( long_t lag = from ; lag < to ; ++lag )
   {
-    
     if ( S_.r_ == 0 )
     {
       // neuron not refractory
       S_.y3_ = V_.P30_*(S_.y0_ + P_.I_e_) + V_.P33_*S_.y3_;
 
-      tmpcurrent=0.0;
+      S_.current_=0.0;
       for (unsigned int i=0; i < V_.receptor_types_size_; i++){
 	S_.y3_ += V_.P31_syn_[i]*S_.y1_syn_[i] + V_.P32_syn_[i]*S_.y2_syn_[i];
-	tmpcurrent+=S_.y2_syn_[i];
+	S_.current_ += S_.y2_syn_[i];
       }
 
       // lower bound of membrane potential
       S_.y3_ = ( S_.y3_<P_.LowerBound_ ? P_.LowerBound_ : S_.y3_); 
     }
     else // neuron is absolute refractory
-     --S_.r_;
+      --S_.r_;
 
     for (unsigned int i=0; i < V_.receptor_types_size_; i++)
     {      
@@ -273,15 +329,12 @@ void nest::iaf_psc_alpha_multisynapse::update(Time const & origin, const long_t 
     // set new input current
     S_.y0_ = B_.currents_.get_value(lag);
 
-    // voltage logging
-    B_.potentials_.record_data(origin.get_steps()+lag, S_.y3_ + P_.U0_);
-    
-    B_.syncurrents_.record_data(origin.get_steps()+lag, tmpcurrent);
-
+    // log state data
+    B_.logger_.record_data(origin.get_steps() + lag);
   }  
 }                           
 
-port nest::iaf_psc_alpha_multisynapse::connect_sender(SpikeEvent&, port receptor_type)
+port iaf_psc_alpha_multisynapse::connect_sender(SpikeEvent&, port receptor_type)
 {
   bool new_rp = true;
   
@@ -320,11 +373,11 @@ port nest::iaf_psc_alpha_multisynapse::connect_sender(SpikeEvent&, port receptor
   return receptor_type;
 }
 
-void nest::iaf_psc_alpha_multisynapse::handle(SpikeEvent & e)
+void iaf_psc_alpha_multisynapse::handle(SpikeEvent& e)
 {
   assert(e.get_delay() > 0);
 
-  for (unsigned int i=0; i < V_.receptor_types_size_; i++)
+  for (unsigned int i=0; i < V_.receptor_types_size_; ++i)
   {
     if (P_.receptor_types_[i] == e.get_rport()){
       B_.spikes_[i].add_value(e.get_rel_delivery_steps(network()->get_slice_origin()),
@@ -333,26 +386,21 @@ void nest::iaf_psc_alpha_multisynapse::handle(SpikeEvent & e)
   }
 }
 
-void nest::iaf_psc_alpha_multisynapse::handle(CurrentEvent& e)
+void iaf_psc_alpha_multisynapse::handle(CurrentEvent& e)
 {
   assert(e.get_delay() > 0);
 
-  const double_t c=e.get_current();
-  const double_t w=e.get_weight();
+  const double_t I = e.get_current();
+  const double_t w = e.get_weight();
 
   // add weighted current; HEP 2002-10-04
   B_.currents_.add_value(e.get_rel_delivery_steps(network()->get_slice_origin()), 
-		      w *c);
+		      w * I);
 }
 
-void nest::iaf_psc_alpha_multisynapse::handle(PotentialRequest& e)
+void iaf_psc_alpha_multisynapse::handle(DataLoggingRequest& e)
 {
-  B_.potentials_.handle(*this, e);
-}
-
-void nest::iaf_psc_alpha_multisynapse::handle(SynapticCurrentRequest& e)
-{
-  B_.syncurrents_.handle(*this, e);
+  B_.logger_.handle(e);
 }
 
 } // namespace

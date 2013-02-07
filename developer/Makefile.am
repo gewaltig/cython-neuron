@@ -83,7 +83,6 @@ libdevelopermodule_la_SOURCES= \
 # 			ac_poisson_generator.cpp ac_poisson_generator.h\
 #	 		ginzburg_neuron.cpp ginzburg_neuron.h\
 #	 		iaf_cond_delta.cpp iaf_cond_delta.h\
-#			iaf_psc_alpha_multisynapse.cpp iaf_psc_alpha_multisynapse.h
 
 
 

@@ -21,6 +21,7 @@ libmodelsmodule_la_SOURCES= \
 		music_message_in_proxy.cpp music_message_in_proxy.h\
 		iaf_neuron.h iaf_neuron.cpp\
 		iaf_psc_alpha.h iaf_psc_alpha.cpp\
+		iaf_psc_alpha_multisynapse.h iaf_psc_alpha_multisynapse.cpp\
 		iaf_psc_delta.h iaf_psc_delta.cpp\
 		iaf_psc_exp.h iaf_psc_exp.cpp\
 		iaf_tum_2000.h iaf_tum_2000.cpp\
