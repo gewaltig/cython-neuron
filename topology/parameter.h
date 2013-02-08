@@ -386,7 +386,7 @@ namespace nest
       {
         updateValue<double_t>(d, names::min, lower_);
         updateValue<double_t>(d, names::max, range_);
-        range_ += lower_;
+        range_ -= lower_;
       }
 
     double_t raw_value(const Position<2>&, librandom::RngPtr& rng) const
