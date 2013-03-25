@@ -14,6 +14,7 @@ noinst_LTLIBRARIES= libmodelsmodule.la
 
 libmodelsmodule_la_CXXFLAGS= @AM_CXXFLAGS@
 
+
 libmodelsmodule_la_SOURCES= \
 		music_event_in_proxy.cpp music_event_in_proxy.h\
 		music_event_out_proxy.cpp music_event_out_proxy.h\
@@ -64,6 +65,7 @@ libmodelsmodule_la_SOURCES= \
 		ht_connection.cpp ht_connection.h \
 		smp_generator.cpp smp_generator.h \
 		sli_neuron.cpp sli_neuron.h\
+		cython_neuron.cpp cython_neuron.h \
 		ginzburg_neuron.cpp ginzburg_neuron.h\
 		izhikevich.cpp izhikevich.h\
 	 	modelsmodule.h modelsmodule.cpp
@@ -72,9 +74,12 @@ AM_CPPFLAGS= -I$(top_srcdir)/libnestutil\
 		-I$(top_srcdir)/librandom\
 		-I$(top_srcdir)/sli\
 		-I$(top_srcdir)/nestkernel\
+		-I$(top_srcdir)/cynest\
 		@INCLTDL@ \
 		@GSL_CFLAGS@ @MUSIC_INCLUDE@ @MPI_INCLUDE@
 
+
 nobase_pkgdata_DATA= sli/models-init.sli
+
 
 EXTRA_DIST= sli

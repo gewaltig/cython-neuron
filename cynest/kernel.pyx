@@ -11,6 +11,8 @@ class NESTError(Exception):
 
 # This imports the C++ class wrappers
 cimport classes
+include "dynamicneuronssync.pyx"
+
 
 def cynest_signal_handler(signal,frame):
     raise KeyboardInterrupt()
@@ -35,9 +37,14 @@ cdef class NESTEngine:
         """
         if len(argv[0]) == 0:
             argv[0]='cynest'
+
         argv_bytes= [ str.encode('UTF-8') for str in argv]
         cdef bytes modulepath_bytes=modulepath.encode('UTF-8')
         result= self.thisptr.init(argv_bytes, modulepath_bytes)
+
+        cE = CythonEntry()
+        cE.putEntry(&cEntry)
+
         if result:
            signal.signal(signal.SIGINT, cynest_signal_handler)
         return result
@@ -69,9 +76,12 @@ cdef class NESTEngine:
         This function is part of the low-level API.
         """
         cdef bytes command_bytes=command.encode('UTF-8')
+
         result= self.thisptr.run(command_bytes)
         signal.signal(signal.SIGINT, cynest_signal_handler)
-        
+
+        processNeuronCreation(command_bytes) # checks if the command is a creation one and if the neuron parameter is a dynamic one
+
         return result
 
     cpdef run_pytoken(self, PyToken command):

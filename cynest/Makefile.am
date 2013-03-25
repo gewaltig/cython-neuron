@@ -24,6 +24,7 @@ EXTRA_DIST= setup.py.in\
 	checkpython.py \
 	pydatum.h \
 	pydatum.cpp \
+	buffer.h\
 	datumtopythonconverter.h \
 	datumtopythonconverter.cpp\
 	kernel.pyx\

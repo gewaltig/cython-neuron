@@ -20,13 +20,13 @@
  *
  */
 
-/* 
+/*
     This file is part of NEST
 
     modelsmodule.cpp -- sets up the modeldict with all models included
-    with the NEST distribution. 
+    with the NEST distribution.
 
-    Author(s): 
+    Author(s):
     Marc-Oliver Gewaltig
     R"udiger Kupper
     Hans Ekkehard Plesser
@@ -40,6 +40,7 @@
 #include "model.h"
 #include "genericmodel.h"
 #include <string>
+#include <dirent.h>
 
 // Neuron models
 #include "aeif_cond_alpha.h"
@@ -63,6 +64,7 @@
 #include "sli_neuron.h"
 #include "ginzburg_neuron.h"
 #include "izhikevich.h"
+#include "cython_neuron.h"
 
 // Stimulation devices
 #include "ac_generator.h"
@@ -105,12 +107,17 @@
 #include "stdp_dopa_connection.h"
 #include "ht_connection.h"
 
+#include <unistd.h>
+
+
 #ifdef HAVE_MUSIC
 #include "music_event_in_proxy.h"
 #include "music_event_out_proxy.h"
 #include "music_cont_in_proxy.h"
 #include "music_message_in_proxy.h"
 #endif
+
+using namespace std;
 
 namespace nest
 {
@@ -168,10 +175,12 @@ namespace nest
     register_model<correlation_detector>(net_, "correlation_detector");
     register_model<volume_transmitter>(net_, "volume_transmitter");
 
+    addCythonNeurons();
+
     // Create voltmeter as a multimeter pre-configured to record V_m.
     Dictionary vmdict;
     ArrayDatum ad;
-    ad.push_back(LiteralDatum(names::V_m.toString())); 
+    ad.push_back(LiteralDatum(names::V_m.toString()));
     vmdict[names::record_from] = ad;
     register_preconf_model<Multimeter>(net_, "voltmeter", vmdict);
 
@@ -190,7 +199,7 @@ namespace nest
     register_model<ht_neuron>(net_,       "ht_neuron");
 #endif
 
-#ifdef HAVE_MUSIC 
+#ifdef HAVE_MUSIC
     //// proxies for inter-application communication using MUSIC
     register_model<music_event_in_proxy>(net_, "music_event_in_proxy");
     register_model<music_event_out_proxy>(net_, "music_event_out_proxy");
@@ -214,8 +223,8 @@ namespace nest
     register_prototype_connection<STDPConnection>(net_,      "stdp_synapse");
     register_prototype_connection<HTConnection>(net_,        "ht_synapse");
 
-    register_prototype_connection_commonproperties < STDPConnectionHom, 
-                                                     STDPHomCommonProperties 
+    register_prototype_connection_commonproperties < STDPConnectionHom,
+                                                     STDPHomCommonProperties
                                                    > (net_, "stdp_synapse_hom");
 
     register_prototype_connection_commonproperties < STDPFACETSHWConnectionHom,
@@ -223,13 +232,43 @@ namespace nest
                                                    > (net_, "stdp_facetshw_synapse_hom");
 
     register_prototype_connection_commonproperties < STDPPLConnectionHom,
-                                                     STDPPLHomCommonProperties 
+                                                     STDPPLHomCommonProperties
                                                    > (net_, "stdp_pl_synapse_hom");
-    register_prototype_connection_commonproperties <STDPDopaConnection, 
+    register_prototype_connection_commonproperties <STDPDopaConnection,
                                                     STDPDopaCommonProperties
                                                    > (net_, "stdp_dopamine_synapse");
 
 
   }
 
+  void ModelsModule::addCythonNeurons() {
+    DIR *pdir = NULL; // remember, it's good practice to initialise a pointer to NULL!
+    string cDir ("");
+    cDir = cDir + getenv("HOME") + "/Programs/Nest/cython_models";
+
+    pdir = opendir (cDir.c_str()); // "." will refer to the current directory
+    struct dirent *pent = NULL;
+    string name("");
+
+    if (pdir != NULL) {
+	    while (pent = readdir (pdir)) // while there is still something in the directory to list
+	    {
+	        if (pent == NULL) // if pent has not been initialised correctly
+	        {
+	            break;
+	        }
+            	else {
+                name = pent->d_name;
+
+                if(name.length() > 3) {
+                    if(name.find(".so", name.length() - 3) != string::npos) {
+                        register_model<cython_neuron>(net_,       name.substr(0, name.length() - 3).c_str());
+                    }
+                }
+            }
+        }
+
+        closedir (pdir);
+    }
+  }
 } // namespace nest

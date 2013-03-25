@@ -68,6 +68,7 @@ namespace nest
      
      //! network where models are to be registered
      Network& net_;
+     void addCythonNeurons();
    };
 
 

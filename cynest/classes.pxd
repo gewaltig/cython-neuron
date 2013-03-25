@@ -35,4 +35,23 @@ cdef extern from "cynestkernel.h":
         Token* pop_token()
         bint check_engine()
 
+cdef extern from "buffer.h":
+    cdef cppclass CythonEntry:
+        CythonEntry()
+        void putEntry(void* value)
+        void* getEntry()
+
+cdef extern from "buffer.h":
+    cdef cppclass Cy_Dict:
+        Cy_Dict()
+        void setObject(string, double)
+        void removeObject(string)
+        double getObject(string)
+        void clear()
+        void resetIterator()
+        void nextElement()
+        string getCurrentKey()
+        double getCurrentValue()
+        int hasElement(string)
+        int getLength()
 
