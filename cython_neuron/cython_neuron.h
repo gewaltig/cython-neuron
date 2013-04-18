@@ -13,10 +13,8 @@
 #endif
 
 __PYX_EXTERN_C DL_IMPORT(int) createNeuron(void);
-__PYX_EXTERN_C DL_IMPORT(void) setNeuronParam(int, char *, double);
-__PYX_EXTERN_C DL_IMPORT(double) getNeuronParam(int, char *);
-__PYX_EXTERN_C DL_IMPORT(void) initIteratorNeuronParams(int);
-__PYX_EXTERN_C DL_IMPORT(int) hasNeuronNextParam(int);
+__PYX_EXTERN_C DL_IMPORT(void) setNeuronParams(int, PyObject *);
+__PYX_EXTERN_C DL_IMPORT(PyObject) *getNeuronParams(int);
 __PYX_EXTERN_C DL_IMPORT(void) update(int);
 __PYX_EXTERN_C DL_IMPORT(void) calibrate(int);
 

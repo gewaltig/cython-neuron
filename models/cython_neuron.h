@@ -102,7 +102,6 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
     cython_neuron();
     cython_neuron(const cython_neuron&);
 
-    ~cython_neuron();
     /**
      * Import sets of overloaded virtual functions.
      * We need to explicitly include sets of overloaded
@@ -141,12 +140,9 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
     void get(DictionaryDatum&) const;  //!< Store current values in dictionary
     void set(const DictionaryDatum&);  //!< Set values from dictionary
 
-    Cy_Dict* parameters;
     int neuronID;
     void initSharedObject();
-    void initParameters();
-    void updateParameters();
-    int (*cythonEntry)(std::string, int, std::string, Cy_Dict*); // For now it will simply print
+    int (*cythonEntry)(std::string, int, std::string, Datum*);
 
 
     // The next two classes need to be friends to access the State_ class/member

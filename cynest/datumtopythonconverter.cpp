@@ -203,3 +203,19 @@ PyObject *DatumToPythonConverter::convert(Datum &d)
   d.use_converter(*this);
   return py_object_;
 }
+
+PyObject *DatumToPythonConverter::convertDatum(Datum *d)
+{
+  return convert(*d);
+}
+
+void DatumToPythonConverter::updateDictionary(Datum* src, Datum* dest)
+{
+  DictionaryDatum* dSrc = (DictionaryDatum*)src;
+  DictionaryDatum* dDest = (DictionaryDatum*)dest;
+
+  for(Dictionary::iterator it = (*dSrc)->begin(); it != (*dSrc)->end(); ++it) {
+     (**dDest)[it->first] = (**dSrc)[it->first];
+  }
+}
+

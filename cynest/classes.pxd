@@ -22,6 +22,12 @@ cdef extern from "token.h":
         Token(Token)
         Token(Datum *)
 
+cdef extern from "datumtopythonconverter.h":
+    cdef cppclass DatumToPythonConverter:
+        DatumToPythonConverter()
+        object convertDatum(Datum*)
+        void updateDictionary(Datum* src, Datum* dest)
+
 cdef extern from "cynestkernel.h":
     cdef cppclass NESTEngine:
         NESTEngine()
@@ -33,6 +39,7 @@ cdef extern from "cynestkernel.h":
         bint run_token(Token)
         object pop()
         Token* pop_token()
+        Datum* PyObject_as_Datum(object)
         bint check_engine()
 
 cdef extern from "buffer.h":
@@ -40,18 +47,4 @@ cdef extern from "buffer.h":
         CythonEntry()
         void putEntry(void* value)
         void* getEntry()
-
-cdef extern from "buffer.h":
-    cdef cppclass Cy_Dict:
-        Cy_Dict()
-        void setObject(string, double)
-        void removeObject(string)
-        double getObject(string)
-        void clear()
-        void resetIterator()
-        void nextElement()
-        string getCurrentKey()
-        double getCurrentValue()
-        int hasElement(string)
-        int getLength()
 

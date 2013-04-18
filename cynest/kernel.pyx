@@ -168,16 +168,3 @@ cdef public object Token_to_PyObject(classes.Token *arg):
      return dat
 
 
-
-cdef public PyToken PyObject_to_Token(object arg):
-     """
-     Convert a Datum pointer to a Python object.
-     This function is exposed to C/C++ and used by the DatumToPythonConverter to
-     encapsulate arbitrary Tokens in PyToken objects.
-     """
-     dat=PyToken()
-     dat.thisptr= classes.Token(PyObject_as_datum(arg))
-     return dat
-
-
-

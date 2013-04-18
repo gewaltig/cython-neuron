@@ -94,6 +94,10 @@ class DatumToPythonConverter : public DatumConverter
    */
   PyObject * convert(Datum &d);
 
+  PyObject * convertDatum(Datum *d);
+
+  void updateDictionary(Datum* src, Datum* dest);
+
   inline
   PyObject *getPyObject()
   {
