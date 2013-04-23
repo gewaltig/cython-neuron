@@ -28,6 +28,15 @@ cdef class DataConverter:
     cdef void updateDictionary(self, classes.Datum* src, classes.Datum* dest):
         self.dTp.updateDictionary(src, dest)
 
+# 0 get_resolution
+# 1 tic
+# 2 step
+# 3 ms
+# 4 ms_stamp
+cdef class SpecialFunctions:
+    cdef c_double get_ms(c_int inputType, c_long longInputValue, c_double doubleInputValue):
+    cdef c_long get_long_output(c_int inputType, c_long longInputValue, c_double doubleInputValue):
+
 
 # this class represents the entry point with which the cython_neuron.cpp class can access to the cython side
 cdef class CythonEntry:
@@ -111,8 +120,8 @@ cdef int cEntry(string neuronName, int neuronID, string cmd, classes.Datum* args
               return nID
 
         else:
-              setNeuronMembers(nNBytes, neuronID, args)
+              #setNeuronMembers(nNBytes, neuronID, args)
               exec("loadedNeurons[nNBytes]."+ cmdBytes + "(neuronID)")
-              retrieveNeuronMembers(nNBytes, neuronID, args)
+              #retrieveNeuronMembers(nNBytes, neuronID, args)
               return neuronID
 

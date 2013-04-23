@@ -118,6 +118,7 @@ void nest::cython_neuron::calibrate()
     initSharedObject();
   }
 
+
   bool terminate=false;
 
   if(!state_->known(names::calibrate))
@@ -178,10 +179,7 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
 
     if(cythonEntry != NULL) {
     	cythonEntry(get_name(), neuronID, std::string("update"), &state_);   // call shared object
-	//printf("Currents : %f\n", parameters->getObject("currents"));
-	//printf("Lag : %f\n", parameters->getObject("t_lag"));
     }
-
 
     bool spike_emission= false;
 

@@ -48,3 +48,33 @@ cdef extern from "buffer.h":
         void putEntry(void* value)
         void* getEntry()
 
+cdef extern from "nest_time.h":
+    cdef cppclass Time:
+        cppclass step:
+            step(long t)
+        cppclass tic:
+            tic(long t)
+        cppclass ms:
+            ms(double t)
+            ms(long t)
+        cppclass ms_stamp:
+            ms_stamp(double t)
+            ms_stamp(long t)
+        Time()
+        Time(Time.step t)
+        Time(Time.tic t)
+        Time(Time.ms t)
+        Time(Time.ms_stamp t)
+        long get_tics()
+        long get_steps()
+        double get_ms()
+
+cdef extern from "nest_time.h" namespace "nest::Time":
+    Time get_resolution()
+
+cdef extern from "scheduler.h" namespace "nest::Scheduler":
+    unsigned int get_modulo(unsigned int d)
+    unsigned int get_slice_modulo(unsigned int d)
+    unsigned int get_min_delay()
+    unsigned int get_max_delay()
+
