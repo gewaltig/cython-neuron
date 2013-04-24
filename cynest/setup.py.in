@@ -21,9 +21,7 @@ from Cython.Build import cythonize
 cxx                 = '@CXX@'
 sources             = ['@PKGSRCDIR@/cynest/pynestkernel2.cpp',
                        '@PKGSRCDIR@/cynest/pydatum.cpp',
-                       '@PKGSRCDIR@/cynest/datumtopythonconverter.cpp',
-                       '@PKGSRCDIR@/nestkernel/nest_time.cpp',
-                       '@PKGSRCDIR@/cynest/scheduler.cpp']
+                       '@PKGSRCDIR@/cynest/datumtopythonconverter.cpp']
 
 # -fpermissive needed for ndarrayobject.h
 # to compile due to comma terminated enumerations

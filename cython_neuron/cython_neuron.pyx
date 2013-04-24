@@ -59,6 +59,11 @@ class MyNeuron(Neuron):
 neurons = []
 
 
+# sets the special functions used by the neurons
+cdef public void putSpecialFunctions(double (*get_ms)(int, long, double), long (*get_tics_or_steps)(int, int, long, double), unsigned int (*get_scheduler_value)(int, unsigned int)) with gil:
+    pass
+
+
 # creation of a new neuron and returning of the corresponding id. Now the id is just the location inside the list,
 # but it will be enhanced in order to take into account neuron deletions (in which case two neurons could have the same id)
 cdef public int createNeuron() with gil:

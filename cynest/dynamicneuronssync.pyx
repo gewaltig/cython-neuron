@@ -28,14 +28,23 @@ cdef class DataConverter:
     cdef void updateDictionary(self, classes.Datum* src, classes.Datum* dest):
         self.dTp.updateDictionary(src, dest)
 
-# 0 get_resolution
-# 1 tic
-# 2 step
-# 3 ms
-# 4 ms_stamp
+
 cdef class SpecialFunctions:
-    cdef c_double get_ms(c_int inputType, c_long longInputValue, c_double doubleInputValue):
-    cdef c_long get_long_output(c_int inputType, c_long longInputValue, c_double doubleInputValue):
+    cdef classes.SpecialFunctions *thisptr
+    def __cinit__(self):
+        self.thisptr= new classes.SpecialFunctions()
+        
+    def __dealloc__(self):
+        del self.thisptr
+
+    cdef double get_ms(self, int arg1, long arg2, double arg3):
+        return self.thisptr.get_ms(arg1, arg2, arg3)
+
+    cdef long get_tics_or_steps(self, int arg1, int arg2, long arg3, double arg4):
+        return self.thisptr.get_tics_or_steps(arg1, arg2, arg3, arg4)
+
+    cdef unsigned int get_scheduler_value(self, int arg1, unsigned int arg2):
+        return self.thisptr.get_scheduler_value(arg1, arg2)
 
 
 # this class represents the entry point with which the cython_neuron.cpp class can access to the cython side
@@ -47,7 +56,7 @@ cdef class CythonEntry:
     def __dealloc__(self):
         del self.thisptr
 
-    cdef putEntry(self, void* value):
+    cdef void putEntry(self, void* value):
         self.thisptr.putEntry(value)
     
     cdef void* getEntry(self):
@@ -58,7 +67,33 @@ cdef class CythonEntry:
 
 cdef DataConverter converter = DataConverter()
 loadedNeurons = {}
+cdef SpecialFunctions spFct = SpecialFunctions()
 modelsFolder = expanduser("~") + "/Programs/Nest/cython_models"
+
+
+
+def get_ms(arg1, arg2, arg3):
+    return spFct.get_ms(arg1, arg2, arg3)
+
+def get_tics_or_steps(arg1, arg2, arg3, arg4):
+    return spFct.get_tics_or_steps(arg1, arg2, arg3, arg4)
+
+def get_scheduler_value(arg1, arg2):
+    return spFct.get_scheduler_value(arg1, arg2)
+
+
+
+
+
+
+
+
+GETMSFUNC = CFUNCTYPE(c_double, c_int, c_long, c_double)
+GETTICSORSTEPSFUNC = CFUNCTYPE(c_long, c_int, c_int, c_long, c_double)
+GETSCHEDULERVALUE = CFUNCTYPE(c_uint, c_int, c_uint)
+getmsFCT = GETMSFUNC(get_ms)
+getticsorstepsFCT = GETTICSORSTEPSFUNC(get_tics_or_steps)
+getschedulervalueFCT = GETSCHEDULERVALUE(get_scheduler_value)
 
 
 def returnNeuronName(cmd):
@@ -82,6 +117,8 @@ def processNeuronCreation(cmd):
              libc = PyDLL(modelsFolder + "/" + n + ".so")
              exec("libc.init" + n + "()")
              loadedNeurons[n] = libc
+             loadedNeurons[n].putSpecialFunctions.restype = None
+             loadedNeurons[n].putSpecialFunctions(getmsFCT, getticsorstepsFCT, getschedulervalueFCT)
 
 
 # this method updates the neuron members based on the parameters argument
