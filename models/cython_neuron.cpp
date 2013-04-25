@@ -177,6 +177,7 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
     (*state_)[names::currents]=B_.currents_.get_value(lag);
     (*state_)[names::t_lag]=lag;
 
+
     if(cythonEntry != NULL) {
     	cythonEntry(get_name(), neuronID, std::string("update"), &state_);   // call shared object
     }
@@ -227,6 +228,13 @@ void nest::cython_neuron::handle(CurrentEvent& e)
 void nest::cython_neuron::handle(DataLoggingRequest& e)
 {
   B_.logger_.handle(e);
+}
+
+void nest::cython_neuron::setStatusCython()
+{
+    if(cythonEntry != NULL) {
+    	cythonEntry(get_name(), neuronID, std::string("setStatus"), &state_);   // call shared object
+    }
 }
 
 // This method retrieves the pointer to the cython entry point and calls the special initialization method

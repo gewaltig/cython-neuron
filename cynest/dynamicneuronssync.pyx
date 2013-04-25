@@ -64,6 +64,14 @@ cdef class CythonEntry:
 
 # end of class wrappers
 
+cdef class StandardParameters:
+    def __cinit__(self):
+        pass
+        
+    def __dealloc__(self):
+        pass
+
+
 
 cdef DataConverter converter = DataConverter()
 loadedNeurons = {}
@@ -135,6 +143,7 @@ cdef void retrieveNeuronMembers(bytes neuronName, int neuronID, classes.Datum* p
 
     cdef classes.Datum* members = converter.objectToDatum(loadedNeurons[neuronName].getNeuronParams(neuronID))
     converter.updateDictionary(members, parameters)
+    del members
 
 
 
@@ -160,6 +169,10 @@ cdef int cEntry(string neuronName, int neuronID, string cmd, classes.Datum* args
         elif cmdBytes == "update":
               setNeuronMembers(nNBytes, neuronID, args)
               loadedNeurons[nNBytes].update(neuronID)
+              retrieveNeuronMembers(nNBytes, neuronID, args)
+        elif cmdBytes == "setStatus":
+              setNeuronMembers(nNBytes, neuronID, args)
+              loadedNeurons[nNBytes].setStatus(neuronID)
               retrieveNeuronMembers(nNBytes, neuronID, args)
 
         return neuronID

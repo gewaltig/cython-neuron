@@ -137,6 +137,8 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
 
     void update(Time const &, const long_t, const long_t);
 
+    void setStatusCython();
+
     void get(DictionaryDatum&) const;  //!< Store current values in dictionary
     void set(const DictionaryDatum&);  //!< Set values from dictionary
 
@@ -162,7 +164,6 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
       RingBuffer ex_spikes_;
       RingBuffer in_spikes_;
       RingBuffer currents_;
-
 
       /** Logger for all analog data. */
       UniversalDataLogger<cython_neuron> logger_;
@@ -199,7 +200,7 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
     Token *calibrate_t; //!< points to calibrate
     Token *in_spikes_t; //!< number of excitatory spikes during the time slice
     Token *ex_spikes_t; //!< number of inhibitory spikes during the sime slice
-    Token *currents_t;  //!< external current
+    DoubleDatum *currents_t;  //!< external current
     Token *last_spike_t; //!< time of last spike
     Token *out_events_t; //!< Events produced by the neuron
     Token *spike_t;//< Boolean for fast spike initiation
@@ -257,6 +258,7 @@ void cython_neuron::get_status(DictionaryDatum &d) const
   // We needn't do anything else here, since d already points to
   // cython_neuron::state_, because of Node::get_status_dict_().
   //
+
   Archiving_Node::get_status(d);
   (*d)[names::recordables] = recordablesMap_.get_list();
 }
@@ -274,6 +276,8 @@ void cython_neuron::set_status(const DictionaryDatum &d)
     state_->insert(it->first, it->second);
     it->second.set_access_flag();
   }
+
+  setStatusCython();
 }
 
 } // namespace
