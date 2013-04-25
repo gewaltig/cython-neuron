@@ -124,10 +124,8 @@ def processNeuronCreation(cmd):
 # this method updates the neuron members based on the parameters argument
 cdef void setNeuronMembers(bytes neuronName, int neuronID, classes.Datum* parameters) with gil:
         cdef dict members = <dict>converter.datumToObject(parameters)
-        po = py_object(members)
         loadedNeurons[neuronName].setNeuronParams.argtypes = [c_int, py_object]
-
-        loadedNeurons[neuronName].setNeuronParams(neuronID, po)
+        loadedNeurons[neuronName].setNeuronParams(neuronID, py_object(members))
 
 
 # this method retrieves the neuron members and puts them in the parameters argument
@@ -135,8 +133,7 @@ cdef void retrieveNeuronMembers(bytes neuronName, int neuronID, classes.Datum* p
     cdef string key
     loadedNeurons[neuronName].getNeuronParams.restype = py_object
 
-    value = loadedNeurons[neuronName].getNeuronParams(neuronID)
-    cdef classes.Datum* members = converter.objectToDatum(value)
+    cdef classes.Datum* members = converter.objectToDatum(loadedNeurons[neuronName].getNeuronParams(neuronID))
     converter.updateDictionary(members, parameters)
 
 
@@ -156,9 +153,14 @@ cdef int cEntry(string neuronName, int neuronID, string cmd, classes.Datum* args
               setNeuronMembers(nNBytes, nID, args)
               return nID
 
-        else:
-              #setNeuronMembers(nNBytes, neuronID, args)
-              exec("loadedNeurons[nNBytes]."+ cmdBytes + "(neuronID)")
-              #retrieveNeuronMembers(nNBytes, neuronID, args)
-              return neuronID
+        elif cmdBytes == "calibrate":
+              setNeuronMembers(nNBytes, neuronID, args)
+              loadedNeurons[nNBytes].calibrate(neuronID)
+              retrieveNeuronMembers(nNBytes, neuronID, args)
+        elif cmdBytes == "update":
+              setNeuronMembers(nNBytes, neuronID, args)
+              loadedNeurons[nNBytes].update(neuronID)
+              retrieveNeuronMembers(nNBytes, neuronID, args)
+
+        return neuronID
 

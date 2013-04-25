@@ -183,6 +183,10 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
 
     bool spike_emission= false;
 
+    if((*state_).known(Name("spike_emission"))) {
+    	spike_emission = (*state_)[Name("spike_emission")];
+    }
+
     // threshold crossing
     if (spike_emission)
     {
