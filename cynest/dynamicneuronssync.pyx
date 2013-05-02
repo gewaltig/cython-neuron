@@ -185,11 +185,11 @@ lIR = byref(lI)
 
 cdef void updateNeuron(bytes neuronName, int neuronID):
     cdef StandardParams sp = stdParams[neuronName][neuronID]
-    #loadedNeurons[neuronName].setStdVars(neuronID, sp.spike[0], sp.in_spikes[0], sp.ex_spikes[0], sp.currents[0], sp.lag[0])
+    loadedNeurons[neuronName].setStdVars(neuronID, sp.spike[0], sp.in_spikes[0], sp.ex_spikes[0], sp.currents[0], sp.lag[0])
 
     loadedNeurons[neuronName].update(neuronID)
 
-    #loadedNeurons[neuronName].getStdVars(neuronID, sIR, isDR, esDR, cDR, lIR)
+    loadedNeurons[neuronName].getStdVars(neuronID, sIR, isDR, esDR, cDR, lIR)
     sp.spike[0] = sI.value
     sp.in_spikes[0] = isD.value
     sp.ex_spikes[0] = esD.value
@@ -218,16 +218,14 @@ cdef int cEntry(string neuronName, int neuronID, string cmd, classes.Datum* args
               setNeuronMembers(nNBytes, neuronID, args)
               loadedNeurons[nNBytes].calibrate(neuronID)
               retrieveNeuronMembers(nNBytes, neuronID, args)
-        elif cmdBytes == "preUpdate":
-              setNeuronMembers(nNBytes, neuronID, args)
         elif cmdBytes == "update":
-              #loadedNeurons[nNBytes].update(neuronID)
               updateNeuron(nNBytes, neuronID)
-        elif cmdBytes == "postUpdate":
-              retrieveNeuronMembers(nNBytes, neuronID, args)
         elif cmdBytes == "setStatus":
               setNeuronMembers(nNBytes, neuronID, args)
               loadedNeurons[nNBytes].setStatus(neuronID)
+              retrieveNeuronMembers(nNBytes, neuronID, args)
+        elif cmdBytes == "getStatus":
+              loadedNeurons[nNBytes].getStatus(neuronID)
               retrieveNeuronMembers(nNBytes, neuronID, args)
 
         return neuronID

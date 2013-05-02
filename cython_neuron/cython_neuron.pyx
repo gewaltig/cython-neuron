@@ -31,6 +31,9 @@ class Neuron:
     def setStatus(self):
         pass
 
+    def getStatus(self):
+        pass
+
     def get_ms_on_resolution(self):
         return spFct.get_msFct(0, -1, -1)
 
@@ -86,12 +89,6 @@ import sys
 
 class MyNeuron(Neuron):
     def __init__(self):
-        pass
-    def __dealloc__(self):
-        pass
-
-    def calibrate(self):
-
         self.tau_m   = 10.0  # ms
         self.C_m     = 250.0 # pF
         self.t_ref   =  2.0 # ms
@@ -109,6 +106,10 @@ class MyNeuron(Neuron):
         self.P33_ = 0.0
         self.RefractoryCounts_ = 0
 
+    def __dealloc__(self):
+        pass
+
+    def calibrate(self):
         self.ms_resolution = self.get_ms_on_resolution()
         self.P33_ = math.exp(-self.ms_resolution/self.tau_m)
         self.P30_ = 1/self.C_m*(1-self.P33_)*self.tau_m
@@ -184,7 +185,7 @@ cdef public int createNeuron() with gil:
     n.ex_spikes = 0.0
     n.currents = 0.0
     n.t_lag = 0
-    neurons.append(n) ## init not called???					TODO
+    neurons.append(n)
     return len(neurons) - 1
 
 
@@ -220,6 +221,7 @@ cdef public void calibrate(int neuronID) with gil:
     neurons[neuronID].calibrate()
 
 cdef public void setStatus(int neuronID) with gil:
-    neurons[neuronID].set()
+    neurons[neuronID].setStatus()
 
-
+cdef public void getStatus(int neuronID) with gil:
+    neurons[neuronID].getStatus()

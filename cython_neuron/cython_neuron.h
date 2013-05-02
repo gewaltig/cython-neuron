@@ -21,6 +21,7 @@ __PYX_EXTERN_C DL_IMPORT(void) getStdVars(int, long *, double *, double *, doubl
 __PYX_EXTERN_C DL_IMPORT(void) update(int);
 __PYX_EXTERN_C DL_IMPORT(void) calibrate(int);
 __PYX_EXTERN_C DL_IMPORT(void) setStatus(int);
+__PYX_EXTERN_C DL_IMPORT(void) getStatus(int);
 
 #endif /* !__PYX_HAVE_API__cython_neuron */
 
