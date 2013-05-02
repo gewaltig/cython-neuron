@@ -43,7 +43,11 @@ cdef class NESTEngine:
         result= self.thisptr.init(argv_bytes, modulepath_bytes)
 
         cE = CythonEntry()
-        cE.putEntry(&cEntry)
+        cE.putInit(&cInit)
+        cE.putCalibrate(&cCalibrate)
+        cE.putUpdate(&cUpdate)
+        cE.putSetStatus(&cSetStatus)
+        cE.putGetStatus(&cGetStatus)
         cE.putStdVars(&cStdVars)
 
         if result:

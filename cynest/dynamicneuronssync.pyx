@@ -80,11 +80,35 @@ cdef class CythonEntry:
     def __dealloc__(self):
         del self.thisptr
 
-    cdef void putEntry(self, void* value):
-        self.thisptr.putEntry(value)
+    cdef void putInit(self, void* value):
+        self.thisptr.putInit(value)
     
-    cdef void* getEntry(self):
-        return self.thisptr.getEntry()
+    cdef void* getInit(self):
+        return self.thisptr.getInit()
+
+    cdef void putCalibrate(self, void* value):
+        self.thisptr.putCalibrate(value)
+    
+    cdef void* getCalibrate(self):
+        return self.thisptr.getCalibrate()
+
+    cdef void putUpdate(self, void* value):
+        self.thisptr.putUpdate(value)
+    
+    cdef void* getUpdate(self):
+        return self.thisptr.getUpdate()
+
+    cdef void putSetStatus(self, void* value):
+        self.thisptr.putSetStatus(value)
+    
+    cdef void* getSetStatus(self):
+        return self.thisptr.getSetStatus()
+
+    cdef void putGetStatus(self, void* value):
+        self.thisptr.putGetStatus(value)
+    
+    cdef void* getGetStatus(self):
+        return self.thisptr.getGetStatus()
 
     cdef void putStdVars(self, void* value):
         self.thisptr.putStdVars(value)
@@ -183,13 +207,14 @@ esDR = byref(esD)
 cDR = byref(cD)
 lIR = byref(lI)
 
-cdef void updateNeuron(bytes neuronName, int neuronID):
+cdef void cUpdate(string nName, int neuronID) with gil:
+    cdef bytes neuronName = nName.encode('UTF-8')
     cdef StandardParams sp = stdParams[neuronName][neuronID]
-    #loadedNeurons[neuronName].setStdVars(neuronID, sp.spike[0], sp.in_spikes[0], sp.ex_spikes[0], sp.currents[0], sp.lag[0])
+    loadedNeurons[neuronName].setStdVars(neuronID, sp.spike[0], sp.in_spikes[0], sp.ex_spikes[0], sp.currents[0], sp.lag[0])
 
-    #loadedNeurons[neuronName].update(neuronID)
+    loadedNeurons[neuronName].update(neuronID)
 
-    #loadedNeurons[neuronName].getStdVars(neuronID, sIR, isDR, esDR, cDR, lIR)
+    loadedNeurons[neuronName].getStdVars(neuronID, sIR, isDR, esDR, cDR, lIR)
     sp.spike[0] = sI.value
     sp.in_spikes[0] = isD.value
     sp.ex_spikes[0] = esD.value
@@ -197,38 +222,39 @@ cdef void updateNeuron(bytes neuronName, int neuronID):
     sp.lag[0] = lI.value
 
 
-# this is the only callable method from cython_neuron.cpp. One can pass the command to execute and the parameters dictionary, which will be updated
-cdef int cEntry(string neuronName, int neuronID, string cmd, classes.Datum* args) with gil:
-        cdef bytes cmdBytes = cmd.encode('UTF-8')
+# this are the only callable methods from cython_neuron.cpp. One can pass the command to execute and the parameters dictionary, which will be updated
+cdef int cInit(string neuronName, int neuronID, classes.Datum* args) with gil:
         cdef bytes nNBytes = neuronName.encode('UTF-8')
-        
-        if args is NULL:
-              return -1
 
         # special initialization command
-        if cmdBytes == "_{init}_":
-              nID =  <int>loadedNeurons[nNBytes].createNeuron()
-              stdParams[nNBytes].append(StandardParams())
-              loadedNeurons[nNBytes].getStdVars.argtypes = [c_int, c_void_p, c_void_p, c_void_p, c_void_p, c_void_p]
-              loadedNeurons[nNBytes].setStdVars.argtypes = [c_int, c_long, c_double, c_double, c_double, c_long]
-              setNeuronMembers(nNBytes, nID, args)
-              retrieveNeuronMembers(nNBytes, nID, args)
-              return nID
-        elif cmdBytes == "calibrate":
-              setNeuronMembers(nNBytes, neuronID, args)
-              loadedNeurons[nNBytes].calibrate(neuronID)
-              retrieveNeuronMembers(nNBytes, neuronID, args)
-        elif cmdBytes == "update":
-              updateNeuron(nNBytes, neuronID)
-        elif cmdBytes == "setStatus":
-              setNeuronMembers(nNBytes, neuronID, args)
-              loadedNeurons[nNBytes].setStatus(neuronID)
-              retrieveNeuronMembers(nNBytes, neuronID, args)
-        elif cmdBytes == "getStatus":
-              loadedNeurons[nNBytes].getStatus(neuronID)
-              retrieveNeuronMembers(nNBytes, neuronID, args)
+        nID =  <int>loadedNeurons[nNBytes].createNeuron()
+        stdParams[nNBytes].append(StandardParams())
+        loadedNeurons[nNBytes].getStdVars.argtypes = [c_int, c_void_p, c_void_p, c_void_p, c_void_p, c_void_p]
+        loadedNeurons[nNBytes].setStdVars.argtypes = [c_int, c_long, c_double, c_double, c_double, c_long]
+        setNeuronMembers(nNBytes, nID, args)
+        retrieveNeuronMembers(nNBytes, nID, args)
+        return nID
 
-        return neuronID
+
+cdef void cCalibrate(string neuronName, int neuronID, classes.Datum* args) with gil:
+        cdef bytes nNBytes = neuronName.encode('UTF-8')
+
+        setNeuronMembers(nNBytes, neuronID, args)
+        loadedNeurons[nNBytes].calibrate(neuronID)
+        retrieveNeuronMembers(nNBytes, neuronID, args)
+        
+cdef void cSetStatus(string neuronName, int neuronID, classes.Datum* args) with gil:
+        cdef bytes nNBytes = neuronName.encode('UTF-8')
+        
+        setNeuronMembers(nNBytes, neuronID, args)
+        loadedNeurons[nNBytes].setStatus(neuronID)
+        retrieveNeuronMembers(nNBytes, neuronID, args)
+
+cdef void cGetStatus(string neuronName, int neuronID, classes.Datum* args) with gil:
+        cdef bytes nNBytes = neuronName.encode('UTF-8')
+        
+        loadedNeurons[nNBytes].getStatus(neuronID)
+        retrieveNeuronMembers(nNBytes, neuronID, args)
 
 cdef void cStdVars(string neuronName, int neuronID, long* spike, double* in_spikes, double* ex_spikes, double* currents, long* lag) with gil:
     cdef bytes nNBytes = neuronName.encode('UTF-8')

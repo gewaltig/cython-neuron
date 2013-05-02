@@ -144,8 +144,14 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
     void set(const DictionaryDatum&);  //!< Set values from dictionary
 
     int neuronID;
+    void initCython();
     void initSharedObject();
-    int (*cythonEntry)(std::string, int, std::string, Datum*);
+
+    int (*cythonInit)(std::string, int, Datum*);
+    void (*cythonCalibrate)(std::string, int, Datum*);
+    void (*cythonUpdate)(std::string, int);
+    void (*cythonSetStatus)(std::string, int, Datum*);
+    void (*cythonGetStatus)(std::string, int, Datum*);
     void (*cythonStdVars)(std::string, int, long*, double*, double*, double*, long*);
  
 

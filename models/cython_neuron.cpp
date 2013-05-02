@@ -40,7 +40,11 @@
  * Recordables map
  * ---------------------------------------------------------------- */
 
-void* CythonEntry::cEntry = NULL;
+void* CythonEntry::cInit = NULL;
+void* CythonEntry::cCalibrate = NULL;
+void* CythonEntry::cUpdate = NULL;
+void* CythonEntry::cGetStatus = NULL;
+void* CythonEntry::cSetStatus = NULL;
 void* CythonEntry::cStdVars = NULL;
 
 nest::RecordablesMap<nest::cython_neuron> nest::cython_neuron::recordablesMap_;
@@ -77,8 +81,7 @@ nest::cython_neuron::cython_neuron()
   state_->insert(names::calibrate,new ProcedureDatum());
   state_->insert(names::update,new ProcedureDatum());
   recordablesMap_.create();
-  cythonEntry = NULL;
-  cythonStdVars = NULL;
+  initCython();
 }
 
 nest::cython_neuron::cython_neuron(const cython_neuron& n)
@@ -87,10 +90,18 @@ nest::cython_neuron::cython_neuron(const cython_neuron& n)
     B_(n.B_, *this)
 {
   init_state_(n);
-  cythonEntry = NULL;
-  cythonStdVars = NULL;
+  initCython();
 }
 
+void nest::cython_neuron::initCython()
+{
+  cythonInit = NULL;
+  cythonCalibrate = NULL;
+  cythonUpdate = NULL;
+  cythonSetStatus = NULL;
+  cythonGetStatus = NULL;
+  cythonStdVars = NULL;
+}
 
 /* ----------------------------------------------------------------
  * Node initialization functions
@@ -117,7 +128,7 @@ void nest::cython_neuron::calibrate()
 {
   B_.logger_.init();
 
-  if(cythonEntry == NULL) {
+  if(cythonCalibrate == NULL) {
     initSharedObject();
   }
 
@@ -145,8 +156,8 @@ void nest::cython_neuron::calibrate()
       return;
     }
 
-    if(cythonEntry != NULL) {
-    	cythonEntry(get_name(), neuronID, names::calibrate.toString(), &state_);   // call shared object
+    if(cythonCalibrate != NULL) {
+    	cythonCalibrate(get_name(), neuronID,  &state_);   // call shared object
     }
 }
 
@@ -160,21 +171,12 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
   assert(from < to);
   (*state_)[names::t_origin]=origin.get_steps();
 
-  if(cythonEntry == NULL) {
+  if(cythonUpdate == NULL) {
     initSharedObject();
   }
 
-  /*if (state_->known(names::error))
-    {
-      std::string msg=String::compose("Node %1 still has its error state set.",get_gid());
-      net_->message(SLIInterpreter::M_ERROR,"cython_neuron::update",msg.c_str());
-      net_->message(SLIInterpreter::M_ERROR,"cython_neuron::update","Please check /calibrate and /update for errors");
-      net_->terminate();
-      return;
-    }*/
-
   std::string name = get_name();
-  std::string upd = names::update.toString();
+
   for ( long_t lag = from ; lag < to ; ++lag )
   {
     (*state_)[names::in_spikes]=B_.in_spikes_.get_value(lag); // in spikes arriving at right border
@@ -183,8 +185,8 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
     (*state_)[names::t_lag]=lag;
 
 
-    if(cythonEntry != NULL) {
-    	cythonEntry(name, neuronID, upd, &state_);   // call shared object
+    if(cythonUpdate != NULL) {
+    	cythonUpdate(name, neuronID);   // call shared object
     }
 
     long spike_emission = 0;
@@ -236,15 +238,15 @@ void nest::cython_neuron::handle(DataLoggingRequest& e)
 
 void nest::cython_neuron::setStatusCython()
 {
-    if(cythonEntry != NULL) {
-    	cythonEntry(get_name(), neuronID, std::string("setStatus"), &state_);   // call shared object
+    if(cythonSetStatus != NULL) {
+    	cythonSetStatus(get_name(), neuronID, &state_);   // call shared object
     }
 }
 
 void nest::cython_neuron::getStatusCython() const
 {
-    if(cythonEntry != NULL) {
-    	cythonEntry(get_name(), neuronID, std::string("getStatus"), &state_);   // call shared object
+    if(cythonGetStatus != NULL) {
+    	cythonGetStatus(get_name(), neuronID, &state_);   // call shared object
     }
 }
 
@@ -252,14 +254,22 @@ void nest::cython_neuron::getStatusCython() const
 void nest::cython_neuron::initSharedObject()
 {
     CythonEntry cEntry;
-    void* resultEntry = cEntry.getEntry();
+    void* resultInit = cEntry.getInit();
+    void* resultCalibrate = cEntry.getCalibrate();
+    void* resultUpdate = cEntry.getUpdate();
+    void* resultSetStatus = cEntry.getSetStatus();
+    void* resultGetStatus = cEntry.getGetStatus();
     void* resultStdVars = cEntry.getStdVars();
     
-    if(resultEntry != NULL) {
-	cythonEntry = (int (*)(std::string, int, std::string, Datum*))resultEntry;
+    if(resultInit != NULL && resultCalibrate != NULL && resultUpdate != NULL && resultSetStatus != NULL && resultGetStatus != NULL) {
+	cythonInit = (int (*)(std::string, int, Datum*))resultInit;
+	cythonCalibrate = (void (*)(std::string, int, Datum*))resultCalibrate;
+	cythonUpdate = (void (*)(std::string, int))resultUpdate;
+	cythonSetStatus = (void (*)(std::string, int, Datum*))resultSetStatus;
+	cythonGetStatus = (void (*)(std::string, int, Datum*))resultGetStatus;
 	cythonStdVars = (void (*)(std::string, int, long*, double*, double*, double*, long*))resultStdVars;
 
-	neuronID = cythonEntry(get_name(), -1, std::string("_{init}_"), &state_);
+	neuronID = cythonInit(get_name(), -1, &state_);
 
         IntegerDatum* sI = (IntegerDatum*)(*state_)[names::spike].datum();
         DoubleDatum* isD = (DoubleDatum*)(*state_)[names::in_spikes].datum();
@@ -271,7 +281,7 @@ void nest::cython_neuron::initSharedObject()
 
 	if(neuronID == -1) {
 		printf("Error initializating %s\n", get_name().c_str() );
-		cythonEntry = NULL;
+		initCython();
 	}
     }
 }

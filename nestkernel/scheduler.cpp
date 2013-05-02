@@ -132,6 +132,8 @@ void nest::Scheduler::init_()
   min_delay_ = max_delay_ = 0;
   update_ref_ = true;
 
+  rt_factor = 0.0;
+
 #ifdef HAVE_PTHREADS
   int status = pthread_cond_init(&done_, NULL);
   if(status != 0)
@@ -1200,6 +1202,8 @@ void nest::Scheduler::get_status(DictionaryDatum &d) const
   def<double>(d, "tics_per_ms", Time::get_tics_per_ms());
   def<double>(d, "resolution", Time::get_resolution().get_ms());
 
+  def<double_t>(d, "realtime factor", rt_factor);
+
   delay min_delay = 0;
   delay max_delay = 0;
   compute_delay_extrema_(min_delay, max_delay);
@@ -1571,7 +1575,6 @@ void nest::Scheduler::advance_time_()
 
 void nest::Scheduler::print_progress_()
 {
-  double_t rt_factor = 0.0;
 
   if (t_slice_end_.tv_sec != 0)
   {

@@ -45,8 +45,16 @@ cdef extern from "cynestkernel.h":
 cdef extern from "buffer.h":
     cdef cppclass CythonEntry:
         CythonEntry()
-        void putEntry(void* value)
-        void* getEntry()
+        void putInit(void* value)
+        void* getInit()
+        void putCalibrate(void* value)
+        void* getCalibrate()
+        void putUpdate(void* value)
+        void* getUpdate()
+        void putSetStatus(void* value)
+        void* getSetStatus()
+        void putGetStatus(void* value)
+        void* getGetStatus()
         void putStdVars(void* value)
         void* getStdVars()
 

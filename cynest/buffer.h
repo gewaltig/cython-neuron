@@ -8,16 +8,48 @@ using namespace nest;
 
 class CythonEntry {
 public:
-	static void* cEntry;
+	static void* cInit;
+	static void* cCalibrate;
+	static void* cUpdate;
+	static void* cSetStatus;
+	static void* cGetStatus;
 	static void* cStdVars;
 
 	CythonEntry(){}
 
-	void putEntry(void* value) {
-		CythonEntry::cEntry = value;
+	void putInit(void* value) {
+		CythonEntry::cInit = value;
 	}
-	void* getEntry() {
-		return CythonEntry::cEntry;
+	void* getInit() {
+		return CythonEntry::cInit;
+	}
+
+	void putCalibrate(void* value) {
+		CythonEntry::cCalibrate = value;
+	}
+	void* getCalibrate() {
+		return CythonEntry::cCalibrate;
+	}
+
+	void putUpdate(void* value) {
+		CythonEntry::cUpdate = value;
+	}
+	void* getUpdate() {
+		return CythonEntry::cUpdate;
+	}
+
+	void putSetStatus(void* value) {
+		CythonEntry::cSetStatus = value;
+	}
+	void* getSetStatus() {
+		return CythonEntry::cSetStatus;
+	}
+
+	void putGetStatus(void* value) {
+		CythonEntry::cGetStatus = value;
+	}
+	void* getGetStatus() {
+		return CythonEntry::cGetStatus;
 	}
 
 	void putStdVars(void* value) {
