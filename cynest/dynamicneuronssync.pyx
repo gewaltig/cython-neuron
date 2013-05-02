@@ -185,11 +185,11 @@ lIR = byref(lI)
 
 cdef void updateNeuron(bytes neuronName, int neuronID):
     cdef StandardParams sp = stdParams[neuronName][neuronID]
-    loadedNeurons[neuronName].setStdVars(neuronID, sp.spike[0], sp.in_spikes[0], sp.ex_spikes[0], sp.currents[0], sp.lag[0])
+    #loadedNeurons[neuronName].setStdVars(neuronID, sp.spike[0], sp.in_spikes[0], sp.ex_spikes[0], sp.currents[0], sp.lag[0])
 
-    loadedNeurons[neuronName].update(neuronID)
+    #loadedNeurons[neuronName].update(neuronID)
 
-    loadedNeurons[neuronName].getStdVars(neuronID, sIR, isDR, esDR, cDR, lIR)
+    #loadedNeurons[neuronName].getStdVars(neuronID, sIR, isDR, esDR, cDR, lIR)
     sp.spike[0] = sI.value
     sp.in_spikes[0] = isD.value
     sp.ex_spikes[0] = esD.value
