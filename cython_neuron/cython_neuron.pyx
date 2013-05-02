@@ -16,7 +16,7 @@ cdef SpecialFunctions spFct = SpecialFunctions()
 
 # base class
 class Neuron:
-    def __cinit__(self):
+    def __init__(self):
         pass
 
     def __dealloc__(self):
@@ -85,7 +85,7 @@ import math
 import sys
 
 class MyNeuron(Neuron):
-    def __cinit__(self):
+    def __init__(self):
         pass
     def __dealloc__(self):
         pass
@@ -118,53 +118,7 @@ class MyNeuron(Neuron):
         # if U0_ is changed, we need to adjust all variables defined relative to U0_
         ELold = self.E_L
         delta_EL = self.E_L - ELold
-  // if U0_ is changed, we need to adjust all variables defined relative to U0_
-  const double ELold = E_L_;
-  updateValue<double>(d, names::E_L, E_L_);
-  const double delta_EL = E_L_ - ELold;
-
-  if(updateValue<double>(d, names::V_reset, V_reset_))
-    V_reset_ -= E_L_;
-  else
-    V_reset_ -= delta_EL;
-
-  if (updateValue<double>(d, names::V_th, V_th_)) 
-    V_th_ -= E_L_;
-  else
-    V_th_ -= delta_EL;
-
-  if (updateValue<double>(d, names::V_min, V_min_))
-    V_min_ -= E_L_;
-  else
-    V_min_ -= delta_EL;
-    
-  updateValue<double>(d, names::I_e, I_e_);
-  updateValue<double>(d, names::C_m, c_m_);
-  updateValue<double>(d, names::tau_m, tau_m_);
-  updateValue<double>(d, names::t_ref, t_ref_);
-
-  if ( V_reset_ >= V_th_ )
-    throw BadProperty("Reset potential must be smaller than threshold.");
-    
-  if ( c_m_ <= 0 )
-    throw BadProperty("Capacitance must be >0.");
-
-  if ( t_ref_ < 0 )
-    throw BadProperty("Refractory time must not be negative.");
-    
-  if ( tau_m_ <= 0 )
-    throw BadProperty("Membrane time constant must be > 0.");
-
-  updateValue<bool>(d, "refractory_input", with_refr_input_);
-
-  return delta_EL;
-
-
-
-
-
-
-
+        # ...normally should go on, but useless for the purpose of the simulation
 
 
 
@@ -198,9 +152,9 @@ class MyNeuron(Neuron):
         if self.y3_ >= self.V_th:
             self.r_ = self.RefractoryCounts_
             self.y3_ = self.V_reset
-            self.spike_emission = True
+            self.spike = 1 # True
         else:
-            self.spike_emission = False
+            self.spike = 0 # False
 # $*"4gz>f!< : location symbol for end of code anchoring
 
 # End of the user herited class
@@ -209,7 +163,7 @@ class MyNeuron(Neuron):
 
 
 # every neuron on the NEST side as a counterpart here. This avoids creating objects each time
-neurons = []
+cdef neurons = []
 
 
 # sets the special functions used by the neurons
@@ -222,8 +176,14 @@ cdef public void putSpecialFunctions(double (*get_ms)(int, long, double), long (
 # creation of a new neuron and returning of the corresponding id. Now the id is just the location inside the list,
 # but it will be enhanced in order to take into account neuron deletions (in which case two neurons could have the same id)
 cdef public int createNeuron() with gil:
+# symbol for anchoring: <h4Da10làIIg>
     n = MyNeuron()
-    n.spike_emission = False
+# >gIIàl01aD4h< : end of anchoring
+    n.spike = 0 # add spike and other standard params
+    n.in_spikes = 0.0
+    n.ex_spikes = 0.0
+    n.currents = 0.0
+    n.t_lag = 0
     neurons.append(n) ## init not called???					TODO
     return len(neurons) - 1
 
@@ -231,12 +191,27 @@ cdef public int createNeuron() with gil:
 # used in order to set the neuron members
 cdef public void setNeuronParams(int neuronID, dict members) with gil:
     for key, value in members.iteritems():
-        if (key is not "") and (key is not "calibrate") and (key is not "update") and (key is not "setStatus"):
+        if (key is not "") and (key is not "calibrate") and (key is not "update"):
             setattr(neurons[neuronID], key, value)
 
 # used in order to get the neuron members
 cdef public dict getNeuronParams(int neuronID) with gil:
     return vars(neurons[neuronID])
+
+cdef public void setStdVars(int neuronID, long spike, double in_spikes, double ex_spikes, double currents, long lag) with gil:
+    neurons[neuronID].spike = spike
+    neurons[neuronID].in_spikes = in_spikes
+    neurons[neuronID].ex_spikes = ex_spikes
+    neurons[neuronID].currents = currents
+    neurons[neuronID].t_lag = lag
+
+cdef public void getStdVars(int neuronID, long* spike, double* in_spikes, double* ex_spikes, double* currents, long* lag) with gil:
+    spike[0] = neurons[neuronID].spike
+    in_spikes[0] = neurons[neuronID].in_spikes
+    ex_spikes[0] = neurons[neuronID].ex_spikes
+    currents[0] = neurons[neuronID].currents
+    lag[0] = neurons[neuronID].t_lag
+
 
 cdef public void update(int neuronID) with gil:
     neurons[neuronID].update()

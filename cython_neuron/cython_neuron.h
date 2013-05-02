@@ -16,6 +16,8 @@ __PYX_EXTERN_C DL_IMPORT(void) putSpecialFunctions(double (*)(int, long, double)
 __PYX_EXTERN_C DL_IMPORT(int) createNeuron(void);
 __PYX_EXTERN_C DL_IMPORT(void) setNeuronParams(int, PyObject *);
 __PYX_EXTERN_C DL_IMPORT(PyObject) *getNeuronParams(int);
+__PYX_EXTERN_C DL_IMPORT(void) setStdVars(int, long, double, double, double, long);
+__PYX_EXTERN_C DL_IMPORT(void) getStdVars(int, long *, double *, double *, double *, long *);
 __PYX_EXTERN_C DL_IMPORT(void) update(int);
 __PYX_EXTERN_C DL_IMPORT(void) calibrate(int);
 __PYX_EXTERN_C DL_IMPORT(void) setStatus(int);

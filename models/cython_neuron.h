@@ -145,6 +145,8 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
     int neuronID;
     void initSharedObject();
     int (*cythonEntry)(std::string, int, std::string, Datum*);
+    void (*cythonStdVars)(std::string, int, long*, double*, double*, double*, long*);
+ 
 
 
     // The next two classes need to be friends to access the State_ class/member

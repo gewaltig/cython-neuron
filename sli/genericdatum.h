@@ -73,6 +73,11 @@ public:
 	return d;
       }
 
+    D* get_p_val()
+    {
+	return &d;
+    }
+
     void print(std::ostream& o) const
     {
         o << d;

@@ -187,7 +187,7 @@ namespace nest
     extern const Name PSC_adapt_step;     //<- PSC increment
     extern const Name PSC_Unit_amplitude; //<- Scaling of PSC
 
-    // Specific to sli_neuron
+    // Specific to sli_neuron/cython_neuron
     extern const Name update;         // Command to execute the neuron
     extern const Name update_node;    // Command to execute the neuron
     extern const Name calibrate;      // Command to calibrate the neuron

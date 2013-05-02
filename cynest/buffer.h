@@ -9,12 +9,22 @@ using namespace nest;
 class CythonEntry {
 public:
 	static void* cEntry;
+	static void* cStdVars;
+
 	CythonEntry(){}
+
 	void putEntry(void* value) {
 		CythonEntry::cEntry = value;
 	}
 	void* getEntry() {
 		return CythonEntry::cEntry;
+	}
+
+	void putStdVars(void* value) {
+		CythonEntry::cStdVars = value;
+	}
+	void* getStdVars() {
+		return CythonEntry::cStdVars;
 	}
 };
 

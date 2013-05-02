@@ -44,6 +44,7 @@ cdef class NESTEngine:
 
         cE = CythonEntry()
         cE.putEntry(&cEntry)
+        cE.putStdVars(&cStdVars)
 
         if result:
            signal.signal(signal.SIGINT, cynest_signal_handler)

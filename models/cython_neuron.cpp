@@ -41,6 +41,7 @@
  * ---------------------------------------------------------------- */
 
 void* CythonEntry::cEntry = NULL;
+void* CythonEntry::cStdVars = NULL;
 
 nest::RecordablesMap<nest::cython_neuron> nest::cython_neuron::recordablesMap_;
 
@@ -77,6 +78,7 @@ nest::cython_neuron::cython_neuron()
   state_->insert(names::update,new ProcedureDatum());
   recordablesMap_.create();
   cythonEntry = NULL;
+  cythonStdVars = NULL;
 }
 
 nest::cython_neuron::cython_neuron(const cython_neuron& n)
@@ -86,6 +88,7 @@ nest::cython_neuron::cython_neuron(const cython_neuron& n)
 {
   init_state_(n);
   cythonEntry = NULL;
+  cythonStdVars = NULL;
 }
 
 
@@ -104,7 +107,7 @@ void nest::cython_neuron::init_buffers_()
   B_.ex_spikes_.clear();       // includes resize
   B_.in_spikes_.clear();       // includes resize
   B_.currents_.clear();        // includes resize
-  B_.logger_.reset(); // includes resize
+  B_.logger_.reset(); 	       // includes resize
   Archiving_Node::clear_history();
 }
 
@@ -143,7 +146,7 @@ void nest::cython_neuron::calibrate()
     }
 
     if(cythonEntry != NULL) {
-    	cythonEntry(get_name(), neuronID, std::string("calibrate"), &state_);   // call shared object
+    	cythonEntry(get_name(), neuronID, names::calibrate.toString(), &state_);   // call shared object
     }
 }
 
@@ -161,15 +164,17 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
     initSharedObject();
   }
 
-  if (state_->known(names::error))
+  /*if (state_->known(names::error))
     {
       std::string msg=String::compose("Node %1 still has its error state set.",get_gid());
       net_->message(SLIInterpreter::M_ERROR,"cython_neuron::update",msg.c_str());
       net_->message(SLIInterpreter::M_ERROR,"cython_neuron::update","Please check /calibrate and /update for errors");
       net_->terminate();
       return;
-    }
+    }*/
 
+  std::string name = get_name();
+  std::string upd = names::update.toString();
   for ( long_t lag = from ; lag < to ; ++lag )
   {
     (*state_)[names::in_spikes]=B_.in_spikes_.get_value(lag); // in spikes arriving at right border
@@ -179,14 +184,13 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
 
 
     if(cythonEntry != NULL) {
-    	cythonEntry(get_name(), neuronID, std::string("update"), &state_);   // call shared object
+    	cythonEntry(name, neuronID, upd, &state_);   // call shared object
     }
 
-    bool spike_emission= false;
+    long spike_emission = 0;
 
-    if((*state_).known(Name("spike_emission"))) {
-    	spike_emission = (*state_)[Name("spike_emission")];
-    }
+    // surely exists
+    spike_emission = (*state_)[names::spike];
 
     // threshold crossing
     if (spike_emission)
@@ -241,12 +245,23 @@ void nest::cython_neuron::setStatusCython()
 void nest::cython_neuron::initSharedObject()
 {
     CythonEntry cEntry;
-    void* result = cEntry.getEntry();
+    void* resultEntry = cEntry.getEntry();
+    void* resultStdVars = cEntry.getStdVars();
     
-    if(result != NULL) {
-	cythonEntry = (int (*)(std::string, int, std::string, Datum*))result;
+    if(resultEntry != NULL) {
+	cythonEntry = (int (*)(std::string, int, std::string, Datum*))resultEntry;
+	cythonStdVars = (void (*)(std::string, int, long*, double*, double*, double*, long*))resultStdVars;
 
 	neuronID = cythonEntry(get_name(), -1, std::string("_{init}_"), &state_);
+	// understand how to extract pointer from datum and call the function TODO
+        IntegerDatum* sI = (IntegerDatum*)(*state_)[names::spike].datum();
+        DoubleDatum* isD = (DoubleDatum*)(*state_)[names::in_spikes].datum();
+	DoubleDatum* esD = (DoubleDatum*)(*state_)[names::ex_spikes].datum();
+	DoubleDatum* cD = (DoubleDatum*)(*state_)[names::currents].datum();
+	IntegerDatum* lI = (IntegerDatum*)(*state_)[names::t_lag].datum();
+
+	cythonStdVars(get_name(), neuronID, sI->get_p_val(), isD->get_p_val(), esD->get_p_val(), cD->get_p_val(), lI->get_p_val());
+
 	if(neuronID == -1) {
 		printf("Error initializating %s\n", get_name().c_str() );
 		cythonEntry = NULL;

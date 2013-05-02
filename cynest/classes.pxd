@@ -47,6 +47,8 @@ cdef extern from "buffer.h":
         CythonEntry()
         void putEntry(void* value)
         void* getEntry()
+        void putStdVars(void* value)
+        void* getStdVars()
 
     cdef cppclass SpecialFunctions:
         SpecialFunctions()
