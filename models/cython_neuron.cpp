@@ -241,6 +241,13 @@ void nest::cython_neuron::setStatusCython()
     }
 }
 
+void nest::cython_neuron::getStatusCython() const
+{
+    if(cythonEntry != NULL) {
+    	cythonEntry(get_name(), neuronID, std::string("getStatus"), &state_);   // call shared object
+    }
+}
+
 // This method retrieves the pointer to the cython entry point and calls the special initialization method
 void nest::cython_neuron::initSharedObject()
 {
@@ -253,7 +260,7 @@ void nest::cython_neuron::initSharedObject()
 	cythonStdVars = (void (*)(std::string, int, long*, double*, double*, double*, long*))resultStdVars;
 
 	neuronID = cythonEntry(get_name(), -1, std::string("_{init}_"), &state_);
-	// understand how to extract pointer from datum and call the function TODO
+
         IntegerDatum* sI = (IntegerDatum*)(*state_)[names::spike].datum();
         DoubleDatum* isD = (DoubleDatum*)(*state_)[names::in_spikes].datum();
 	DoubleDatum* esD = (DoubleDatum*)(*state_)[names::ex_spikes].datum();

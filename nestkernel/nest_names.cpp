@@ -64,6 +64,12 @@ namespace nest
     const Name ex_spikes("ex_spikes");
     const Name error("error");
 
+    // Related to ArchivingNode
+    const Name tau_minus("tau_minus");  
+    const Name tau_minus_triplet("tau_minus_triplet");
+    const Name archiver_length("archiver_length");
+    const Name clear("clear");
+
     // Specific to precise timing neurons
     const Name Interpol_Order("Interpol_Order");
     const Name refractory_input("refractory_input");
@@ -158,7 +164,7 @@ namespace nest
     const Name PSC_adapt_step("PSC_adapt_step");
     const Name PSC_Unit_amplitude("PSC_Unit_amplitude");
 
-    // Specific to sli_neuron/cython_neuron
+    // Specific to sli_neuron
     const Name update("update");
     const Name update_node("update_node");
     const Name calibrate("calibrate");
@@ -207,14 +213,22 @@ namespace nest
     const Name mother_rng("mother_rng");
     const Name p_copy("p_copy");
 
-    // Specific to correlation detector
+    // Specific to correlation and correlomatrix detector
     const Name delta_tau("delta_tau");
     const Name tau_max("tau_max");
-    const Name histogram("histogram");
-    const Name count_histogram("count_histogram");
     const Name Tstart("Tstart");
     const Name Tstop("Tstop");
 
+    // Specific to correlation detector
+    const Name histogram("histogram");
+    const Name histogram_correction("histogram_correction");
+    const Name count_histogram("count_histogram");
+
+    // Specific to correlomatrix detector
+    const Name N_channels("N_channels");
+    const Name covariance("covariance");
+    const Name count_covariance("count_covariance");
+    
     const Name origin("origin");
     const Name start("start");
     const Name stop("stop");
@@ -316,7 +330,7 @@ namespace nest
     const Name theta("theta");
 
     // Node types
-    const Name type("type");
+    const Name type("node_type");
     const Name structure("structure");
     const Name neuron("neuron");
     const Name stimulator("stimulator");
