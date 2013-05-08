@@ -1,0 +1,1 @@
+Your can create your neuron by following a few constraints:\n- Your main class must extend from Neuron (ex: myneuron(Neuron))\n- The name of your main class and the file name must be the same (ex: keeping the previous example, naming the .py file myneuron.py)\n

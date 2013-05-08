@@ -5,7 +5,7 @@ from Cython.Distutils import build_ext
 ext_modules = [Extension("cython_neuron", ["cython_neuron.pyx"])]
 
 setup(
-  name = 'Cython Neuron app',
+  name = 'Cython Neuron',
   cmdclass = {'build_ext': build_ext},
   ext_modules = ext_modules
 )
