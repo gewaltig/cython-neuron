@@ -197,7 +197,12 @@ cdef public void setNeuronParams(int neuronID, dict members) with gil:
 
 # used in order to get the neuron members
 cdef public dict getNeuronParams(int neuronID) with gil:
-    return vars(neurons[neuronID])
+    output = {}
+    for key, value in vars(neurons[neuronID]).iteritems():
+        if key.startswith('_') == False:
+            output[key] = value
+
+    return output
 
 cdef public void setStdVars(int neuronID, long spike, double in_spikes, double ex_spikes, double currents, long lag) with gil:
     neurons[neuronID].spike = spike
