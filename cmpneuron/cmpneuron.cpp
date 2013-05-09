@@ -148,7 +148,8 @@ int main (int argc, char* argv[]) {
 	printHelp();
   }
   else if(strcmp(argv[1], "--doc") == 0) {
-	system("xdg-open cmpneuron_doc.pdf");
+	string cmd = string("xdg-open ") + getExecDirectory() + string("cmpneuron_doc.pdf");
+	system(cmd.c_str());
   }
   else {
   	copyIntermediateFiles(argv[1]);
