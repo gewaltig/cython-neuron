@@ -1,7 +1,6 @@
 import sys
 import re
-from os.path import expanduser
-from os.path import join
+import os
 from os import listdir
 from ctypes import *
 
@@ -31,6 +30,8 @@ cdef class DataConverter:
 
 cdef class SpecialFunctions:
     cdef classes.SpecialFunctions *thisptr
+    cdef string modelsFolder
+
     def __cinit__(self):
         self.thisptr= new classes.SpecialFunctions()
         
@@ -45,6 +46,12 @@ cdef class SpecialFunctions:
 
     cdef unsigned int get_scheduler_value(self, int arg1, unsigned int arg2):
         return self.thisptr.get_scheduler_value(arg1, arg2)
+
+    cdef void setModelsFolder(self, string value):
+        self.modelsFolder = value
+
+    cdef string getModelsFolder(self):
+        return self.modelsFolder
 
 
 cdef class StandardParams:
@@ -119,13 +126,25 @@ cdef class CythonEntry:
 # end of class wrappers
 
 
-
 cdef DataConverter converter = DataConverter()
 loadedNeurons = {}
 cdef SpecialFunctions spFct = SpecialFunctions()
 cdef stdParams = {}
-modelsFolder = expanduser("~") + "/Programs/Nest/cython_models"
 
+
+cdef void setModelsFolder(bytes kernelDir):
+    path1, path2 = os.path.split(kernelDir)
+    path3, path4 = os.path.split(path1)
+    path5, path6 = os.path.split(path3)
+    path7, path8 = os.path.split(path5)
+    
+    spFct.setModelsFolder(path7 + os.sep + "cython_models")
+    # we try to create the folder (even if it already present)
+    try:
+        os.makedirs(spFct.getModelsFolder())
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
 
 
 def get_ms(arg1, arg2, arg3):
@@ -160,7 +179,7 @@ def returnNeuronName(cmd):
         return ""
 
 def getDynamicNeuronsName():
-    listSo = listdir(modelsFolder)
+    listSo = listdir(spFct.getModelsFolder())
     return [so[0:len(so) - 3] for so in listSo if ".so" in so]
 
 # this method is called at every execution of the cynest.Create() method and seeks for dynamic neurons. If the neuron is dynamic,
@@ -170,7 +189,7 @@ def processNeuronCreation(cmd):
     if n is not "":
         nList = getDynamicNeuronsName()
         if n in nList and not loadedNeurons.has_key(n):
-             libc = PyDLL(modelsFolder + "/" + n + ".so")
+             libc = PyDLL(spFct.getModelsFolder() + "/" + n + ".so")
              exec("libc.init" + n + "()")
              loadedNeurons[n] = libc
              loadedNeurons[n].putSpecialFunctions.restype = None

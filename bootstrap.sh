@@ -51,4 +51,7 @@ autoheader
 echo "  -> Running automake ..."
 automake --foreign --add-missing --force-missing --copy
 
+echo "  -> Compiling cmpneuron ..."
+`g++ ./cmpneuron/cmpneuron.cpp -o ./cmpneuron/cmpneuron`
+
 echo "Done."

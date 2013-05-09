@@ -11,6 +11,8 @@ class NESTError(Exception):
 
 # This imports the C++ class wrappers
 cimport classes
+
+
 include "dynamicneuronssync.pyx"
 
 
@@ -49,6 +51,9 @@ cdef class NESTEngine:
         cE.putSetStatus(&cSetStatus)
         cE.putGetStatus(&cGetStatus)
         cE.putStdVars(&cStdVars)
+
+        setModelsFolder(os.path.dirname(os.path.realpath(__file__)))
+
 
         if result:
            signal.signal(signal.SIGINT, cynest_signal_handler)
