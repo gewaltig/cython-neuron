@@ -148,8 +148,7 @@ int main (int argc, char* argv[]) {
 	printHelp();
   }
   else if(strcmp(argv[1], "--doc") == 0) {
-	// Open documentation TODO
-	printf("Warning: documentation not yet available. Sorry!\n");
+	system("xdg-open cmpneuron_doc.pdf");
   }
   else {
   	copyIntermediateFiles(argv[1]);
