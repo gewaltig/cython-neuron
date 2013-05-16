@@ -39,15 +39,15 @@
 /* ----------------------------------------------------------------
  * Recordables map
  * ---------------------------------------------------------------- */
+nest::RecordablesMap<nest::cython_neuron> nest::cython_neuron::recordablesMap_;
 
+// Static CythonEntry members initialization (mandatory, otherwise compilation error!)
 void* CythonEntry::cInit = NULL;
 void* CythonEntry::cCalibrate = NULL;
 void* CythonEntry::cUpdate = NULL;
 void* CythonEntry::cGetStatus = NULL;
 void* CythonEntry::cSetStatus = NULL;
 void* CythonEntry::cStdVars = NULL;
-
-nest::RecordablesMap<nest::cython_neuron> nest::cython_neuron::recordablesMap_;
 
 namespace nest
 {
@@ -253,6 +253,7 @@ void nest::cython_neuron::getStatusCython() const
 // This method retrieves the pointer to the cython entry point and calls the special initialization method
 void nest::cython_neuron::initSharedObject()
 {
+    // Function pointers retrieving
     CythonEntry cEntry;
     void* resultInit = cEntry.getInit();
     void* resultCalibrate = cEntry.getCalibrate();
@@ -262,6 +263,7 @@ void nest::cython_neuron::initSharedObject()
     void* resultStdVars = cEntry.getStdVars();
     
     if(resultInit != NULL && resultCalibrate != NULL && resultUpdate != NULL && resultSetStatus != NULL && resultGetStatus != NULL) {
+	// Function pointers casting	
 	cythonInit = (int (*)(std::string, int, Datum*))resultInit;
 	cythonCalibrate = (void (*)(std::string, int, Datum*))resultCalibrate;
 	cythonUpdate = (void (*)(std::string, int))resultUpdate;
@@ -269,14 +271,17 @@ void nest::cython_neuron::initSharedObject()
 	cythonGetStatus = (void (*)(std::string, int, Datum*))resultGetStatus;
 	cythonStdVars = (void (*)(std::string, int, long*, double*, double*, double*, long*))resultStdVars;
 
+	// Neuron initialization
 	neuronID = cythonInit(get_name(), -1, &state_);
 
+	// Pointers to Standard Parameters retrieving
         IntegerDatum* sI = (IntegerDatum*)(*state_)[names::spike].datum();
         DoubleDatum* isD = (DoubleDatum*)(*state_)[names::in_spikes].datum();
 	DoubleDatum* esD = (DoubleDatum*)(*state_)[names::ex_spikes].datum();
 	DoubleDatum* cD = (DoubleDatum*)(*state_)[names::currents].datum();
 	IntegerDatum* lI = (IntegerDatum*)(*state_)[names::t_lag].datum();
 
+	// Pointers to Standard Parameters passing (to the .so neuron)
 	cythonStdVars(get_name(), neuronID, sI->get_p_val(), isD->get_p_val(), esD->get_p_val(), cD->get_p_val(), lI->get_p_val());
 
 	if(neuronID == -1) {

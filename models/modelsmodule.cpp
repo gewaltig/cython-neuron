@@ -241,8 +241,13 @@ namespace nest
 
   }
 
+  /* This method registers custom cython neurons by looking for .so files
+     in the /cython_models/ folder, retrieving their names and
+     registering new neurons with class cython_neuron and as name
+     the corresponding file name.
+  */
   void ModelsModule::addCythonNeurons() {
-    DIR *pdir = NULL; // remember, it's good practice to initialise a pointer to NULL!
+    DIR *pdir = NULL;
     string cDir ("");
     cDir = cDir + getenv("HOME") + "/Programs/Nest/cython_models";
 
@@ -261,6 +266,7 @@ namespace nest
                 name = pent->d_name;
 
                 if(name.length() > 3) {
+		    // only files having extension .so must be registered
                     if(name.find(".so", name.length() - 3) != string::npos) {
                         register_model<cython_neuron>(net_,       name.substr(0, name.length() - 3).c_str());
                     }

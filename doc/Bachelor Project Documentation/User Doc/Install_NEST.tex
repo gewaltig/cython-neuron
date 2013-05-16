@@ -1,0 +1,62 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% University/School Laboratory Report
+% LaTeX Template
+% Version 2.0 (4/12/12)
+%
+% This template has been downloaded from:
+% http://www.latextemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+% Original header:
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass{article}
+
+\usepackage{graphicx} % Allows the inclusion of images
+
+\title{How to Install CyNEST} % Title
+
+\author{Jonny \textsc{Quarta}} % Author name
+
+\date{\today} % Specify a date for the report
+
+\begin{document}
+
+\maketitle % Insert the title, author and date
+
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs
+
+\renewcommand{\labelenumi}{\alph{enumi}.} % Make numbering in the enumerate environment by letter rather than number (e.g. section 6)
+
+%----------------------------------------------------------------------------------------
+%	SECTION 1
+%----------------------------------------------------------------------------------------
+
+
+In order to correctly install CyNEST (and configure the cmpneuron tool), you must achieve the following operations :
+\\ \\
+\begin{itemize}
+\item Place your terminal in the \emph{nest-cynest} folder (where the NEST code is situated).
+
+\item Execute \textbf{./bootstrap.sh}.\\ This will run the automake, autoconf and libtoolize tools, as well as compiling the \emph{cmpneuron.cpp} file contained in the \emph{cmpneuron} folder.
+
+\item Leave the current directory and create another one (the name is ininfluent), then enter this new folder.
+
+\item You have to call the \emph{configure} file in the \emph{nest-cynest} folder.\\Hence type \\ \textbf{../nest-cynest/configure --prefix="install-dir" --enable-cynest}\\ in your terminal, where \emph{install-dir} is the directory where you want to install CyNEST.
+
+\item Type \textbf{make -j4} and then \textbf{make install} in the terminal. This will compile and install CyNEST on the computer. After the installation is completed, it is possible to  load python and then type \textbf{import cynest} in the python terminal. Then cynest can be used.
+
+\item In order to make cmpneuron callable from terminal, go into the \emph{nest-cynest/cmpneuron} folder and copy the following files (\emph{cmpneuron}, \emph{cython\_neuron.pyx}, \emph{cmpneuron\_doc.pdf} and \emph{setup.py}) in the bin folder where CyNEST has been installed (\emph{"NEST\_Dir"/bin}).\\For more information about the cmpneuron tool, type \textbf{cmpneuron --doc} in the terminal.
+
+\end{itemize}
+
+\end{document}
