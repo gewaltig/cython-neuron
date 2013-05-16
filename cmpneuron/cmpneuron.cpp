@@ -139,6 +139,12 @@ void printHelp() {
   printf("\ncmpneuron : this tool has been created in order to add user custom python neurons to CyNEST.\nFor correct working, at least Cython 0.18 must be installed on the machine.\n\nThe syntax is :\n\tcmpneuron <filename>\nor\n\tcmpneuron <option>\n\nNote that when typing the filename, the .py must be omitted (ex: 'cmpneuron myneuron' and NOT 'cmpneuron myneuron.py')\nAlso keep in mind that in order the program to correctly run, your shell must be situated in the same directory as the .py file.\n\nThe options are:\n--help :  Prints this help\n--doc  :  Opens a pdf file containing the documentation (please read before creating any neuron!)\n\n");
 }
 
+bool fexists(const char *filename)
+{
+  ifstream ifile(filename);
+  return ifile;
+}
+
 int main (int argc, char* argv[]) {
   if(argc != 2) {
   	printf("Error: argument not valid. Please type 'cmpneuron --help' for more information\n");
@@ -152,6 +158,11 @@ int main (int argc, char* argv[]) {
 	system(cmd.c_str());
   }
   else {
+	string file = string(argv[1]) + string(".py");
+	if(!fexists(file.c_str())) {
+		printf("Error: the file doesn't exist. Please type 'cmpneuron --help' for more information\n");
+		return -1;
+	}
   	copyIntermediateFiles(argv[1]);
   	updateSetup(argv[1]);
   	updatePyx(argv[1]);
