@@ -117,32 +117,232 @@ Even worse is the Python case: the neuron .so file isn't a normal C or C++ share
 Since NEST already uses Cython for the high level API (CyNEST), the bridge between the general handler and the plugin neuron will be this interface. But how to access functions of CyNEST from this C++ class? The answer is using static function pointers. At the starting of NEST, the high API  will fill these pointers with its own functions, but these pointers are also accessible from the general handler, and since finally the CyNEST is compiled into C++, everything can work. Note that in order everything to work fine, \textbf{at least Cython 0.18 must be installed}. \\ \\
 These pointers are situated in the \emph{cynest/buffer.h} file, inside the \emph{CythonEntry} class:
 \begin{verbatim}
-	static void* cInit;
-	static void* cCalibrate;
-	static void* cUpdate;
-	static void* cSetStatus;
-	static void* cGetStatus;
-	static void* cStdVars;
+static void* cInit;
+static void* cCalibrate;
+static void* cUpdate;
+static void* cSetStatus;
+static void* cGetStatus;
+static void* cStdVars;
 \end{verbatim}
 In order to get or set one of these, some methods are available (only one pointer is shown) :
 \begin{verbatim}
-	void putInit(void* value) {
-		CythonEntry::cInit = value;
-	}
-	void* getInit() {
-		return CythonEntry::cInit;
-	}
+void putInit(void* value) {
+    CythonEntry::cInit = value;
+}
+void* getInit() {
+    return CythonEntry::cInit;
+}
 \end{verbatim}
-Note that it is necessary to make the pointer accessible only through methods. In fact, whereas on the C++ side there's no major problem and it can be accessed directly by the variable name, on the Cython side that's not the same.
+Note that it is necessary to make the pointer accessible only through methods. In fact, whereas on the C++ side there's no major problem as it can be accessed directly by the variable name, Cython has some restrictions that must be respected.\\
+
+Before a neuron can call one of these functions, the corresponding pointers must be retrieved, calling methods like \emph{getInit()}, which is performed during neuron initialization. The method \emph{cython\_neuron::initSharedObjects} does this (here's shown the Calibrate functions) :
+\begin{verbatim}
+void* resultCalibrate = cEntry.getCalibrate();
+cythonCalibrate = (void (*)(std::string, int, Datum*))resultCalibrate;
+\end{verbatim}
+The neuron will then call the \emph{cythonInit} function, which will initialize the neuron on the Cython side, and the \emph{cythonStdVars} function, which will pass the Standard Parameters to the other side. Standard Parameters use and the exact behaviour of these functions will be explained in later sections. \\
+The only thing to know is that \emph{cythonInit} will return a neuron pointer, which is usefull to identify an exact neuron among others of the same type. Therefore, for each call to the cython functions, the neuron type and the id are mandatory. Here's an example within the Update method:\\ \\
+\begin{verbatim}
+for ( long_t lag = from ; lag < to ; ++lag )
+  {
+    (*state_)[names::in_spikes]=B_.in_spikes_.get_value(lag);
+    (*state_)[names::ex_spikes]=B_.ex_spikes_.get_value(lag);
+    (*state_)[names::currents]=B_.currents_.get_value(lag);
+    (*state_)[names::t_lag]=lag;
 
 
+    if(cythonUpdate != NULL) {
+    	  cythonUpdate(name, neuronID);   // call shared object
+    }
+    ...
+
+    // surely exists
+    spike_emission = (*state_)[names::spike];
+
+    // threshold crossing
+    if (spike_emission)
+    {
+      ...
+    }
+    ...
+  }
+\end{verbatim}
+As one can see, the \emph{cythonUpdate} function only needs the neuron type and the id. The \emph{state\_} members contains the totality of neuron parameters and is passed to the \emph{cythonInit} function in order to fill the corresponding cython neuron. In fact, for every neuron on the C++ side, there's a corresponding neuron on the Cython side (identified by the neuron type and id). In this way, when the C++ neuron will call the Cython one, this latter will already have all the needed parameters, without asking for them.
+
+\subsection{Standard Parameters}
+When a neuron calls one of the Cython functions, such as \emph{cythonCalibrate} or \emph{cythonUpdate}, the parameters contained in \emph{status\_} have to be passed to the corresponding cython neuron. The naive approach of doing this is by copying them into the cython neuron, calling the corresponding function and retry them back.\\
+This could work for \emph{cythonCalibare}, but not for \emph{cythonUpdate} as it is called many times and this approach would slow down the system. \\
+Furthermore, as one can realize, during a simulation the only important parameters constantly updated by the C++ neuron are :\\
+\begin{itemize}
+\item currents
+\item in\_spikes
+\item ex\_spikes
+\item t\_lag
+\item spike
+\end{itemize}
+These are called \textbf{Standard Parameters} and are the only one worth copying in the Cython neuron before calling the corresponding function.\\
+A good way of speeding up the parameter passing is by giving to the Cython neuron direct pointers to these values, as one can see:
+\begin{verbatim}
+IntegerDatum* sI = (IntegerDatum*)(*state_)[names::spike].datum();
+...
+cythonStdVars(get_name(), neuronID, sI->get_p_val(), isD->get_p_val(), 
+     esD->get_p_val(), cD->get_p_val(), lI->get_p_val());
+\end{verbatim}
+Therefore, the Cython neuron will change the values pointed by these pointers without making any copy.\\
+However, it is sometimes important to set or retrieve the totality of parameters and this is done during \emph{cythonSetStatus}, \emph{cythonGetStatus} and \emph{cythonCalibrate}.
+More information is detailed in the following section.
 \section{CyNEST Side}
+This section will deal with the Cython side of the project, which has to load the shared file representing the neuron, call all its functions and passing parameters.
+\subsection{C++ - Cython Interface}
+Cython has a mechanism that allow one to interface C++ classes with Cython code. This is essential because this side has to fill the pointers previously presented.
+The file \emph{cynest/classes.pyd} represents this interface and looks like:
+\begin{verbatim}
+cdef extern from "buffer.h":
+    cdef cppclass CythonEntry:
+        CythonEntry()
+        void putInit(void* value)
+        void* getInit()
+        void putCalibrate(void* value)
+        ...
 
-\section{cmpneuron Tool}
+    cdef cppclass SpecialFunctions:
+        SpecialFunctions()
+        double get_ms(int, long, double)
+        long get_tics_or_steps(int, int, long, double)
+        unsigned int get_scheduler_value(int, unsigned int)
+\end{verbatim}
+The following step is to create for each one of these classes, a corresponding wrapping class callable from any Cython code.
+\subsection{Filling the pointers}
+The wrapper class for \emph{CythonEntry} is situated in the \emph{cynest/dynamicneuronsync.pyx} file and looks like :
+\begin{verbatim}
+cdef class CythonEntry:
+    cdef classes.CythonEntry *thisptr
+    def __cinit__(self):
+        self.thisptr= new classes.CythonEntry()
+        
+    def __dealloc__(self):
+        del self.thisptr
+
+    cdef void putInit(self, void* value):
+        self.thisptr.putInit(value)
+    
+    cdef void* getInit(self):
+        return self.thisptr.getInit()
+
+    cdef void putCalibrate(self, void* value):
+        self.thisptr.putCalibrate(value)
+    ...
+\end{verbatim}
+In order to fill the function pointers, one just has to call \emph{putInit)}, \emph{putCalibrate} and so on. This is accomplished by the file \emph{cynest/kernel.pyx}, by just creating a new \emph{CyrthonEntry} object, calling one of these methods and giving to the pointer another Cython method and is done during the initialization of CyNEST.
+\subsection{Neurons creation}
+When a user uses CyNEST within a Python terminal and writes \emph{cynest.Create("myneuron")}, the software must check if the neuron exists and if it's one of the special cython neurons. This is the purpose of the \emph{processNeuronCreation} function, found in the \emph{cynest/dynamicneuronsync.pyx} file. It's mission is to check if a shared file corresponding to that neuron is present and load it:
+\begin{verbatim}
+def processNeuronCreation(cmd):
+    n = returnNeuronName(cmd)
+    if n is not "":
+        nList = getDynamicNeuronsName()
+        if n in nList and not loadedNeurons.has_key(n):
+             libc = PyDLL(spFct.getModelsFolder() + "/" + n + ".so")
+             exec("libc.init" + n + "()")
+             loadedNeurons[n] = libc
+             ...
+\end{verbatim}
+A very important point to realize is that, differently from Python, since Cython is a compiled code it cannot dynamically load another file, for instance using \emph{import myneuron}. This is a huge drawback that will limit performances and coding style. The only way of dynamically loading a file is by using the \emph{ctypes} library included in Python.\\
+This is what has been done in the previous code by calling\emph{... = PyDLL(...)}. The picture depicting the structure of the project shows that on the plugin side, a file named \emph{cython\_neuron.pyx} is mixed with the user written neuron. This is true and the final output becomes a shared file. This latter will contain interface functions callable from other code (in this case the Cython side of the project).\\ \\
+However, since ctypes has been created for Python, it cannot be used in a proper way with Cython, mostly when dealing with pointers. As an example, Cython code cannot direct pass a pointer to a shared file function, but must make a copy of the pointed value in a special ctypes object, create a corresponding ctypes pointer, make all the necessary computations and retrieve that value from the ctypes pointer.\\ 
+This makes the Standard Parameters approach very limitative, loosing a lot of its original benefits.
+\subsection{Neuron basic functions}
+This section will explain the behaviour of the neuron functions callable from the C++ side of the project. These are:
+\begin{itemize}
+\item cInit: this function, called by \emph{cythonInit}, will initialize the neuron. The steps are:  call the \emph{createNeuorn()} method of the plugin file, append a new entry in a special table created to store the Standard Parameters and synchronize the neuron. This is done by calling the \emph{setNeuronMembers} and \emph{retrieveNeuronMembers} functions, therefore enabling the two neurons (one on the C++ side and the other on the Cython side) to have exactly the same number of parameters. Finally, the function returns the neuron id.
+
+\item cCalibrate: this function will give to the Cython neuron the C++ neuron parameters, then call the corresponding function (\emph{calibrate}) and retrieve the updated parameters.
+
+
+\item cSetStatus: this function will give to the Cython neuron the C++ neuron parameters, then call the corresponding function (\emph{setStatus}) and retrieve the updated parameters. In fact, a neuron could adjust some of them relatively to other ones.
+
+
+\item cGetStatus: this will call the corresponding function (\emph{getStatus}) and retrieve the updated parameters. During an execution, the only time the non Standard Parameters are used is when the user calls the \emph{cynest.GetStatus(...)} command on the Python terminal. That's why it is important to retrieve them.
+
+
+\item cStdVars: this function will save the Standard Parameters pointers in a special double array object of type \emph{StandardParams}.
+
+\item cUpdate: this is the most important function. Here's the implementation:
+\begin{verbatim}
+cdef void cUpdate(string nName, int neuronID) with gil:
+    ...
+    cdef StandardParams sp = stdParams[neuronName][neuronID]
+    loadedNeurons[neuronName].setStdVars(neuronID, sp.spike[0], 
+    	    sp.in_spikes[0], sp.ex_spikes[0], sp.currents[0], sp.lag[0])
+
+    loadedNeurons[neuronName].update(neuronID)
+
+    loadedNeurons[neuronName].getStdVars(neuronID, sIR, isDR, 
+         esDR, cDR, lIR)
+    sp.spike[0] = sI.value
+    sp.in_spikes[0] = isD.value
+    ...
+\end{verbatim}
+The logic of the function is very simple : first the Standard Parameters are passed to the shared file, by value and not by pointer, then the \emph{update} function is called. However, the dealing with the retrieving, the special ctypes objects are used. Finally, when every computation has been performed, the ctypes objects values are copied in the pointed values. As previously said, this is a huge limitation of the mechanism.
+\end{itemize}
+
+\subsection{Parameters passing}
+As explained in the last subsection, two possible modes of parameter passing are possible: Standard Parameters and nn Standard Parameters. Let's see how they work:
+\begin{itemize}
+\item Standard Parameters:\\
+This is done by calling the \emph{setStdVars} and \emph{getStdVars} in the \emph{cUpdate} function, as previosuly said. But where are these functions? These are situated in the \emph{cmpneuron/cython \_neuron.pyx} file and are very straightforward (the way this file is compiled is discussed in the following section):
+\begin{verbatim}
+cdef public void setStdVars(int neuronID, long spike, double in_spikes, 
+            double ex_spikes, double currents, long lag) with gil:
+    neurons[neuronID].spike = spike
+    neurons[neuronID].in_spikes = in_spikes
+    neurons[neuronID].ex_spikes = ex_spikes
+    neurons[neuronID].currents = currents
+    neurons[neuronID].t_lag = lag
+
+
+cdef public void getStdVars(int neuronID, long* spike, double* in_spikes, 
+            double* ex_spikes, double* currents, long* lag) with gil:
+    spike[0] = neurons[neuronID].spike
+    in_spikes[0] = neurons[neuronID].in_spikes
+    ex_spikes[0] = neurons[neuronID].ex_spikes
+    currents[0] = neurons[neuronID].currents
+    lag[0] = neurons[neuronID].t_lag
+\end{verbatim}
+The first one just copies the arguments to a special array. This array represents the counterpart neurons of the C++ ones.\\
+The second function just copies to Standard parameters contained in the neuron to the pointed values.
+\item Non Standard Parameters:\\
+This exchange mechanism is a little more tricky. It's implemented through the functions \emph{setNeuronMembers} and \emph{retrieveNeuronMembers}. Here's the code for the first one:
+\begin{verbatim}
+cdef void setNeuronMembers(bytes neuronName, int neuronID, classes.Datum* parameters) with gil:
+    cdef dict members = <dict>converter.datumToObject(parameters)
+    loadedNeurons[neuronName].setNeuronParams.argtypes = [c_int, py_object]
+    loadedNeurons[neuronName].setNeuronParams(neuronID, py_object(members))
+\end{verbatim}
+The first line of the function is a conversion. As one can see, the function arguments contain a special \emph{Datum} object. This comes from the C++ side and represents an SLI object (can contain integers, doubles, booleans, lists, dictionaries and every other builtin type). In this case it is a \emph{DictionaryDatum} representing the totality of neuron parameters.\\
+The \emph{converter} is a wrapper object of type \emph{DataConverter} and its role is to transform a \emph{Datum} into a Python object, in this case a dictionary. The converters this object wrap are CyNEST parts, therefore for more information see the CyNEST doc.\\
+Once the dictionary is ready, this is passed to the \emph{setneuronParams} function contained in tghe \emph{cmpneuron/cython\_neuron.pyx} file, which will simply loop over the dictionary and add the corresponding values to theneuron fields.\\ \\
+
+
+The retrieving of the neuron parameters works quite similarly:
+\begin{verbatim}
+cdef void retrieveNeuronMembers(bytes neuronName, int neuronID, 
+        classes.Datum* parameters) with gil:
+    ...
+    cdef classes.Datum* members = converter.objectToDatum
+           (loadedNeurons[neuronName].getNeuronParams(neuronID))
+    converter.updateDictionary(members, parameters)
+    ...
+\end{verbatim}
+The converter transforms the retrieved object (which is just a dictionary containing all the neuron parameters on the plugin side, except for those beginning with '\_'. Seet next section for more explanations) into a \emph{Datum} pointer. This latter will then update the real \emph{Datum} object used on the C++ side.
+\end{itemize}
+\subsection{Special Functions}
+
+\section{Compiling the Plugin Neuron}
 
 \section{Performances}
 
-\section{Improvements}
+\section{Limitations and Improvements}
 
 \section{Conclusion}
 \end{document}
