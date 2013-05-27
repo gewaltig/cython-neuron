@@ -204,12 +204,6 @@ cdef extern from "buffer.h":
         void* getInit()
         void putCalibrate(void* value)
         ...
-
-    cdef cppclass SpecialFunctions:
-        SpecialFunctions()
-        double get_ms(int, long, double)
-        long get_tics_or_steps(int, int, long, double)
-        unsigned int get_scheduler_value(int, unsigned int)
 \end{verbatim}
 The following step is to create for each one of these classes, a corresponding wrapping class callable from any Cython code.
 \subsection{Filling the pointers}
@@ -337,12 +331,148 @@ cdef void retrieveNeuronMembers(bytes neuronName, int neuronID,
 The converter transforms the retrieved object (which is just a dictionary containing all the neuron parameters on the plugin side, except for those beginning with '\_'. Seet next section for more explanations) into a \emph{Datum} pointer. This latter will then update the real \emph{Datum} object used on the C++ side.
 \end{itemize}
 \subsection{Special Functions}
+Sometimes, a neuron model needs some special information from the system, such as simulation parameters. The values represent time units, simulation delays, ect...\\
+Therefore, the system has to enable the final user to access these variables and this is achieved by what is called \textbf{Special Functions}. The class \emph{SpecialFunctions} contained in the file \emph{cynest/buffer.h} possesses all the necessary to provide that functionality :
+\begin{verbatim}
+class SpecialFunctions {
+private:
+    Time createTime(int inputType, long longInputValue, double doubleInputValue) {
+        ...
+    }
 
+public:
+    double get_ms(int inputType, long longInputValue, double doubleInputValue) {
+        ...
+    }
+
+    long get_tics_or_steps(int inputType, int outputType, 
+          long longInputValue, double doubleInputValue) {
+        ...
+    }
+
+    unsigned int get_scheduler_value(int outputValue, unsigned int arg) {
+        ...
+    }
+
+};
+\end{verbatim}
+The purpose of this system is to emulate a command such as :
+\begin{verbatim}
+    Scheduler::get_min_delay()
+or
+    Time::get_resolution().get_ms()
+or
+    Time::step(steps).get_tics()
+\end{verbatim}
+The first line is emulated through the function \emph{get\_scheduler\_value} choosing between some possibilities by setting the \emph{outputValue} argument to:
+\begin{itemize}
+\item 0 for \emph{Scheduler::get\_modulo(arg)}
+\item 1 for \emph{Scheduler::get\_slice\_modulo(arg)}
+\item 2 for \emph{Scheduler::get\_min\_delay()}
+\item 3 for \emph{Scheduler::get\_max\_delay()}
+\end{itemize}
+The second and third lines are emulated using a slight different mechanism. The user can specify the unit of the Time class creation (which corresponds to the unit in which the neural network is simulated), via the \emph{SpecialFunctions::createTime} method, following these rules:
+\begin{itemize}
+\item 0 for Time::get\_resolution()
+\item 1 for Time(Time::tic(tics))
+\item 2 for Time(Time::step(steps))
+\item 3 for Time(Time::ms(ms))
+\item 4 for Time(Time::ms\_stamp(ms\_stamp))
+\end{itemize}
+Note that since tics, steps are integer values and ms, ms\_stamp are double values, the method needs two different arguments, choosen with respect to \emph{inputType}.\\
+Once the Time object has been created, the \emph{SpecialFunctions::get\_ms} and \emph{SpecialFunctions::get\_tics\_or\_steps} methods will return the choosen unit.
+For the latter method, the output unit has to be choosen, giving 1 for tics and 2 for steps.\\ \\
+The next step is to interface with Cython and this is done in the \emph{cynest/classes.pyx} file:
+\begin{verbatim}
+cdef cppclass SpecialFunctions:
+    SpecialFunctions()
+    double get_ms(int, long, double)
+    long get_tics_or_steps(int, int, long, double)
+    unsigned int get_scheduler_value(int, unsigned int)
+\end{verbatim}
+This class will be of course wrapped in another one. The final purpose is to a pointer corresponding to each one of these methods to the plugin neuron, and this is achieved using ctypes, with the following code:
+\begin{verbatim}
+def get_ms(arg1, arg2, arg3):
+    return spFct.get_ms(arg1, arg2, arg3)
+...
+GETMSFUNC = CFUNCTYPE(c_double, c_int, c_long, c_double)
+...
+getmsFCT = GETMSFUNC(get_ms)
+...
+def processNeuronCreation(cmd):
+   ...
+   loadedNeurons[n].putSpecialFunctions(getmsFCT, ...)
+\end{verbatim}
+Where \emph{spFct} is a \emph{SpecialFunction} object (the wrapper class) and \emph{putSpecialFunctions} is a method contained in the \emph{cmpneuron/cython\_neuron.pyx} file.
+\\
+The user will finally access these functionalities by calling the following commands:
+\begin{verbatim}
+def get_ms_on_resolution(self):
+    return spFct.get_msFct(0, -1, -1)
+
+def get_ms_on_tics(self, tics):
+    return spFct.get_msFct(1, tics, -1)
+
+def get_ms_on_steps(self, steps):
+    return spFct.get_msFct(2, steps, -1)
+...
+\end{verbatim}
+There are many more (15 in total). See the user documentation or the code for the complete list.
+Note that these functions are callable from the base \emph{Neuron} class (see next section) and their behaviour is quite simple : they just call the pointer functions previously setted giving the correct arguments. Also note that \emph{spFct} is a different object from the other one since we are in a different file. That object just holds the function pointers setted by \emph{putSpecialFunctions}.
 \section{Compiling the Plugin Neuron}
-
+Once the CyNEST can correctly recognize new cython neurons, the final step is to create shared files. This is the work of the \textbf{cmpneuron} tool. It takes a .py file and returns after compilation a .so file, corresponding to the loadable neuron. See the cmpneuron documentation for more detail about the utilization.\\ \\
+This section will briefly explain the steps this tool performs in order to compile the neuron.\\
+The idea is simple: the template file (\emph{cython\_neuron.pyx}) contains the base, other than all the previously exposed functions, the base class Neuron. cmpneuron will copy the user class, extending from Neuron, in the file and create objects of this type.\\ \\ 
+Let's admit a user has written a new neuron, called MyNeuron in the MyNeuron.py file. Then cmpneuron will perform the following steps:
+\begin{itemize}
+\item Copying of the files \emph{cython\_neuron.pyx} and \emph{setup.py} (contained in the executable directory) to the user directory (the one containing the user .py file).
+\item Modification of the \emph{setup.py} file, by replacing the line
+\begin{verbatim}
+    ext_modules = [Extension("cython_neuron", ["cython_neuron.pyx"])]
+\end{verbatim}
+with
+\begin{verbatim}
+    ext_modules = [Extension("MyNeuron", ["cython_neuron.pyx"])]
+\end{verbatim}
+\item Modification of the template \emph{cython\_neuron.pyx} file by adding the content of \emph{MyNeuron.py} to a special location, delimited by some anchoring symbols (see the template). At the location where the actual neuron is created, the tool will also modify the line (with anchoring symbols) like this:
+\begin{verbatim}
+    n = MyNeuron()
+\end{verbatim}
+\item Compilation of the modified files by invoking Cython with this command:
+\begin{verbatim}
+    python setup.py build_ext --inplace
+\end{verbatim}
+\item Deletion of intermediate files.
+\end{itemize}
+Once the shared file is created, it can be put by the user in the special folder \emph{NEST\_Folder/cython\_models}, where NEST\_Folder is the folder in which CyNEST has been installed.
 \section{Performances}
-
-\section{Limitations and Improvements}
-
+The system has been tested during a single-threaded simulation of 40 ms concerning over 1000 randomly connected neurons and compared to their native and SLI counterparts. The results are:
+\begin{itemize}
+\item Native neuron: realtime factor is 0.3254
+\item SLI neuron: realtime factor is 0.0046
+\item Cython neuron: realtime factor is 0.0049
+\end{itemize}
+We can therefore conclude that the Cython neuron is 66.38 slower than the native version, whereas it is approximatively the same as the SLI neuron.\\
+Note that during different test trials, values could slightly change because of the random factor introduced in the network.\\
+Why is the system so slow? Several reasons can explain that:
+\begin{itemize}
+\item Parameter passing is extremely slow and seems to be the major bottleneck. As previously explained, there is any possibility to directly pass a C pointer to a dynamically loaded file, but one should use ctypes pointers instead, which are slow (since Python is used).
+\item The neuron itself is another important bottleneck! Since the user can write the neuron in Python, Cython cannot optimize too much and has to import the entire Python machinery.
+\end{itemize}
 \section{Conclusion}
+At the end of the project, the system works quite well and implements the suited features.\\
+However, as previously stated, it has some major limitations, the main one being the slowness. In addition, one can create custom objects inside the neuron, but the field names have to start with "\_".\\
+Another main limitation is represented by the proposed neuron accesses: there is no way to handle events and access some (maybe) usefull system fields. This should be implemented in the future. \\ \\ \\
+An important question therefore arises: is there a better way to propose more or less the same 
+functionalities, but making the neuron much faster?\\
+Maybe yes! It could be possible, but the price would be the syntax reduction. The neuron should become a "highly configurable" one. The user should configure it by using a very simple language which enables:
+\begin{itemize}
+\item Fields creation, but only of builtin types (integers, booleans, doubles and strings).
+\item Basic operations (+, -, *, /, \%) for formulas evaluation.
+\item Basic control flow structures (if\ldots else, while\ldots).
+\item External mathematical functions, provided by the language.
+\item Special external functions or fields, provided by the language, which will call NEST functions or access NEST parameters.
+\end{itemize}
+That should be compiled in a "Java-bytecode"-like language, which would be loaded by the neuron before the simulation and executed using a buffer for instructions and a stack for variables.\\
+Such a solution should be much faster than their Cython counterpart.
 \end{document}

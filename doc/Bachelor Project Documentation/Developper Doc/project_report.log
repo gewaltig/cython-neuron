@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.11.29)  22 MAY 2013 18:01
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.11.29)  27 MAY 2013 16:56
 entering extended mode
  %&-line parsing enabled.
 **project_report.tex
@@ -150,129 +150,196 @@ Overfull \hbox (22.4968pt too wide) in paragraph at lines 190--190
 t_p_val(),[] 
  []
 
-[7]
-Overfull \hbox (16.66698pt too wide) in paragraph at lines 216--217
+
+Overfull \hbox (16.66698pt too wide) in paragraph at lines 210--211
 \OT1/cmr/m/n/10 The wrap-per class for \OT1/cmr/m/it/10 Cytho-nEn-try \OT1/cmr/
 m/n/10 is sit-u-ated in the \OT1/cmr/m/it/10 cynest/dynamicneuronsync.pyx
  []
 
-
-Overfull \hbox (51.91518pt too wide) in paragraph at lines 238--239
+[7]
+Overfull \hbox (51.91518pt too wide) in paragraph at lines 232--233
 \OT1/cmr/m/n/10 When a user uses CyNEST within a Python ter-mi-nal and writes \
 OT1/cmr/m/it/10 cynest.Create("myneuron")\OT1/cmr/m/n/10 ,
  []
 
 
-Overfull \hbox (11.99689pt too wide) in paragraph at lines 249--249
+Overfull \hbox (11.99689pt too wide) in paragraph at lines 243--243
 []             \OT1/cmtt/m/n/10 libc = PyDLL(spFct.getModelsFolder() + "/" + n 
 + ".so")[] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 250--254
+Underfull \hbox (badness 10000) in paragraph at lines 244--248
 
  []
 
 [8]
-Overfull \hbox (8.63585pt too wide) in paragraph at lines 265--266
+Overfull \hbox (8.63585pt too wide) in paragraph at lines 259--260
 \OT1/cmr/m/n/10 Stan-dard Pa-ram-e-ters are used is when the user calls the \OT
 1/cmr/m/it/10 cynest.GetStatus(...)
  []
 
 [9]
-Overfull \hbox (10.74715pt too wide) in paragraph at lines 285--285
+Overfull \hbox (10.74715pt too wide) in paragraph at lines 279--279
  []    \OT1/cmtt/m/n/10 loadedNeurons[neuronName].setStdVars(neuronID, sp.spike
 [0],[] 
  []
 
 
-Overfull \hbox (42.24687pt too wide) in paragraph at lines 285--285
+Overfull \hbox (42.24687pt too wide) in paragraph at lines 279--279
  []         \OT1/cmtt/m/n/10 sp.in_spikes[0], sp.ex_spikes[0], sp.currents[0], 
 sp.lag[0])[] 
  []
 
 
-Overfull \hbox (0.24724pt too wide) in paragraph at lines 285--285
+Overfull \hbox (0.24724pt too wide) in paragraph at lines 279--279
  []    \OT1/cmtt/m/n/10 loadedNeurons[neuronName].getStdVars(neuronID, sIR, isD
 R,[] 
  []
 
 
-Overfull \hbox (52.74678pt too wide) in paragraph at lines 311--311
+Overfull \hbox (52.74678pt too wide) in paragraph at lines 305--305
  []\OT1/cmtt/m/n/10 cdef public void setStdVars(int neuronID, long spike, doubl
 e in_spikes,[] 
  []
 
 
-Overfull \hbox (26.49701pt too wide) in paragraph at lines 311--311
+Overfull \hbox (26.49701pt too wide) in paragraph at lines 305--305
  []            \OT1/cmtt/m/n/10 double ex_spikes, double currents, long lag) wi
 th gil:[] 
  []
 
 
-Overfull \hbox (63.24669pt too wide) in paragraph at lines 311--311
+Overfull \hbox (63.24669pt too wide) in paragraph at lines 305--305
  []\OT1/cmtt/m/n/10 cdef public void getStdVars(int neuronID, long* spike, doub
 le* in_spikes,[] 
  []
 
 
-Overfull \hbox (42.24687pt too wide) in paragraph at lines 311--311
+Overfull \hbox (42.24687pt too wide) in paragraph at lines 305--305
  []            \OT1/cmtt/m/n/10 double* ex_spikes, double* currents, long* lag)
  with gil:[] 
  []
 
 [10]
-Overfull \hbox (178.74568pt too wide) in paragraph at lines 321--321
+Overfull \hbox (178.74568pt too wide) in paragraph at lines 315--315
  []\OT1/cmtt/m/n/10 cdef void setNeuronMembers(bytes neuronName, int neuronID, 
 classes.Datum* parameters) with gil:[] 
  []
 
 
-Overfull \hbox (21.24706pt too wide) in paragraph at lines 321--321
+Overfull \hbox (21.24706pt too wide) in paragraph at lines 315--315
  []    \OT1/cmtt/m/n/10 cdef dict members = <dict>converter.datumToObject(param
 eters)[] 
  []
 
 
-Overfull \hbox (73.7466pt too wide) in paragraph at lines 321--321
+Overfull \hbox (73.7466pt too wide) in paragraph at lines 315--315
  []    \OT1/cmtt/m/n/10 loadedNeurons[neuronName].setNeuronParams.argtypes = [c
 _int, py_object][] 
  []
 
 
-Overfull \hbox (73.7466pt too wide) in paragraph at lines 321--321
+Overfull \hbox (73.7466pt too wide) in paragraph at lines 315--315
  []    \OT1/cmtt/m/n/10 loadedNeurons[neuronName].setNeuronParams(neuronID, py_
 object(members))[] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 322--325
+Underfull \hbox (badness 10000) in paragraph at lines 316--319
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 322--325
+Underfull \hbox (badness 10000) in paragraph at lines 316--319
 
  []
 
 
-Overfull \hbox (10.74715pt too wide) in paragraph at lines 336--336
+Overfull \hbox (10.74715pt too wide) in paragraph at lines 330--330
  []\OT1/cmtt/m/n/10 cdef void retrieveNeuronMembers(bytes neuronName, int neuro
 nID,[] 
  []
 
 
-Overfull \hbox (15.9971pt too wide) in paragraph at lines 336--336
+Overfull \hbox (15.9971pt too wide) in paragraph at lines 330--330
  []           \OT1/cmtt/m/n/10 (loadedNeurons[neuronName].getNeuronParams(neuro
 nID))[] 
  []
 
-[11] [12] (./project_report.aux) ) 
+[11]
+Overfull \hbox (85.49625pt too wide) in paragraph at lines 358--358
+[]    \OT1/cmtt/m/n/10 Time createTime(int inputType, long longInputValue, doub
+le doubleInputValue) {[] 
+ []
+
+
+Overfull \hbox (74.99634pt too wide) in paragraph at lines 358--358
+[]    \OT1/cmtt/m/n/10 double get_ms(int inputType, long longInputValue, double
+ doubleInputValue) {[] 
+ []
+
+
+Overfull \hbox (38.24666pt too wide) in paragraph at lines 358--358
+[]    \OT1/cmtt/m/n/10 unsigned int get_scheduler_value(int outputValue, unsign
+ed int arg) {[] 
+ []
+
+[12]
+Underfull \hbox (badness 10000) in paragraph at lines 382--386
+
+ []
+
+
+Overfull \hbox (5.9221pt too wide) in paragraph at lines 382--386
+\OT1/cmr/m/n/10 The next step is to in-ter-face with Cython and this is done in
+ the \OT1/cmr/m/it/10 cynest/classes.pyx
+ []
+
+[13]
+Underfull \hbox (badness 10000) in paragraph at lines 423--427
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 423--427
+
+ []
+
+
+Overfull \hbox (42.24687pt too wide) in paragraph at lines 432--432
+ []    \OT1/cmtt/m/n/10 ext_modules = [Extension("cython_neuron", ["cython_neur
+on.pyx"])][] 
+ []
+
+
+Overfull \hbox (15.9971pt too wide) in paragraph at lines 436--436
+ []    \OT1/cmtt/m/n/10 ext_modules = [Extension("MyNeuron", ["cython_neuron.py
+x"])][] 
+ []
+
+[14]
+Overfull \hbox (2.56508pt too wide) in paragraph at lines 447--448
+\OT1/cmr/m/it/10 NEST[]Folder/cython[]models\OT1/cmr/m/n/10 , where NEST[]Folde
+r is the folder in which CyNEST
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 463--469
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 463--469
+
+ []
+
+[15] [16] (./project_report.aux) ) 
 Here is how much of TeX's memory you used:
- 940 strings out of 495061
- 11881 string characters out of 1182620
+ 941 strings out of 495061
+ 11897 string characters out of 1182620
  65570 words of memory out of 3000000
- 4157 multiletter control sequences out of 15000+50000
+ 4158 multiletter control sequences out of 15000+50000
  8710 words of font info for 31 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
  25i,6n,19p,614b,302s stack positions out of 5000i,500n,10000p,200000b,50000s
@@ -285,9 +352,9 @@ ive/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texmf-texlive/fonts/ty
 pe1/public/amsfonts/cm/cmsy10.pfb></usr/share/texmf-texlive/fonts/type1/public/
 amsfonts/cm/cmti10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm
 /cmtt10.pfb>
-Output written on project_report.pdf (12 pages, 194787 bytes).
+Output written on project_report.pdf (16 pages, 206400 bytes).
 PDF statistics:
- 78 PDF objects out of 1000 (max. 8388607)
+ 91 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 
