@@ -57,6 +57,7 @@ string getExecDirectory() {
 
 string getFileContent(const char* path) {
   ifstream infile (path);
+  infile.clear();
 
   // get size of file
   infile.seekg (0,infile.end);
@@ -64,7 +65,9 @@ string getFileContent(const char* path) {
   infile.seekg (0);
 
   // allocate memory for file content
-  char* buffer = new char[size];
+  char* buffer = new char[size + 1];
+
+  memset(buffer, 0, size + 1);
 
   // read content of infile
   infile.read (buffer,size);
@@ -113,6 +116,7 @@ void updateSetup(char* neuronName) {
   string newExtMod = string("ext_modules = [Extension(\"") + string(neuronName) + string("\", [\"") + string(neuronName) + string(".pyx\"])]");
   int pos = setup.find(extMod);
   string output = setup.substr(0, pos) + newExtMod + setup.substr(pos + extMod.length());
+
   writeContentToFile(output, "setup.py");
 }
 
@@ -124,9 +128,11 @@ void updatePyx(char* neuronName) {
   string anchor1 = string("<!f>zg4\"*$");
   string anchor2 = string("<h4Da10làIIg>");
   int pos1 = pyx.find(anchor1);
-  int pos2 = pyx.find(anchor2);
 
-  string output = pyx.substr(0, pos1 + anchor1.length() + 1) + py + pyx.substr(pos1 + anchor1.length() + 1, pos2 - (pos1 + anchor1.length() + 2)) + string("\n    n = ") + string(neuronName) + string("()\n") + pyx.substr(pos2 + anchor2.length() + 1);
+  string output = pyx.substr(0, pos1 + anchor1.length() + 1) + string("\n") + py + string("\n") + pyx.substr(pos1 + anchor1.length() + 1);
+  int pos2 = output.find(anchor2);
+
+  output = output.substr(0, pos2 + anchor2.length() + 1) + string("\n    n = ") + string(neuronName) + string("()\n") + output.substr(pos2 + anchor2.length() + 1);
 
   writeContentToFile(output, pyxNeuron.c_str());
 }
