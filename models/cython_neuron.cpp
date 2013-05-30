@@ -48,6 +48,7 @@ void* CythonEntry::cUpdate = NULL;
 void* CythonEntry::cGetStatus = NULL;
 void* CythonEntry::cSetStatus = NULL;
 void* CythonEntry::cStdVars = NULL;
+void* CythonEntry::cDestroy = NULL;
 
 namespace nest
 {
@@ -95,6 +96,13 @@ nest::cython_neuron::cython_neuron(const cython_neuron& n)
   initCython();
 }
 
+nest::cython_neuron::~cython_neuron()
+{
+    if(cythonDestroy != NULL) {
+    	cythonDestroy(get_name(), neuronID);   // call shared object
+    }
+}
+
 void nest::cython_neuron::initCython()
 {
   cythonInit = NULL;
@@ -103,6 +111,7 @@ void nest::cython_neuron::initCython()
   cythonSetStatus = NULL;
   cythonGetStatus = NULL;
   cythonStdVars = NULL;
+  cythonDestroy = NULL;
 }
 
 /* ----------------------------------------------------------------
@@ -269,8 +278,9 @@ void nest::cython_neuron::initSharedObject()
     void* resultSetStatus = cEntry.getSetStatus();
     void* resultGetStatus = cEntry.getGetStatus();
     void* resultStdVars = cEntry.getStdVars();
+    void* resultDestroy = cEntry.getDestroy();
     
-    if(resultInit != NULL && resultCalibrate != NULL && resultUpdate != NULL && resultSetStatus != NULL && resultGetStatus != NULL) {
+    if(resultInit != NULL && resultCalibrate != NULL && resultUpdate != NULL && resultSetStatus != NULL && resultGetStatus != NULL && resultDestroy != NULL) {
 	// Function pointers casting	
 	cythonInit = (int (*)(std::string, Datum*))resultInit;
 	cythonCalibrate = (void (*)(std::string, int, Datum*))resultCalibrate;
@@ -278,6 +288,7 @@ void nest::cython_neuron::initSharedObject()
 	cythonSetStatus = (void (*)(std::string, int, Datum*))resultSetStatus;
 	cythonGetStatus = (void (*)(std::string, int, Datum*))resultGetStatus;
 	cythonStdVars = (void (*)(std::string, int, long*, double*, double*, double*, long*))resultStdVars;
+        cythonDestroy = (void (*)(std::string, int))resultDestroy;
 
 	// Neuron initialization
 	neuronID = cythonInit(get_name(), &state_);

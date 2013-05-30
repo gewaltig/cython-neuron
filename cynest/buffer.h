@@ -14,6 +14,7 @@ public:
 	static void* cSetStatus;
 	static void* cGetStatus;
 	static void* cStdVars;
+	static void* cDestroy;
 
 	CythonEntry(){}
 
@@ -57,6 +58,13 @@ public:
 	}
 	void* getStdVars() {
 		return CythonEntry::cStdVars;
+	}
+
+	void putDestroy(void* value) {
+		CythonEntry::cDestroy = value;
+	}
+	void* getDestroy() {
+		return CythonEntry::cDestroy;
 	}
 };
 

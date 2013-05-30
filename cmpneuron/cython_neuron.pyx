@@ -1,13 +1,14 @@
 cdef class SpecialFunctions:
-    def __cinit__(self):
-        pass
-        
-    def __dealloc__(self):
-        pass
-
     cdef double (*get_msFct)(int, long, double)
     cdef long (*get_tics_or_stepsFct)(int, int, long, double)
     cdef unsigned int (*get_scheduler_valueFct)(int, unsigned int)
+    cdef int neuron_index
+
+    def __cinit__(self):
+        neuron_index = 0
+        
+    def __dealloc__(self):
+        pass
 
 
 cdef SpecialFunctions spFct = SpecialFunctions()
@@ -90,7 +91,7 @@ class Neuron:
 
 
 # every neuron on the NEST side as a counterpart here. This avoids creating objects each time
-cdef neurons = []
+cdef neurons = {}
 
 
 # sets the special functions used by the neurons
@@ -101,10 +102,18 @@ cdef public void putSpecialFunctions(double (*get_ms)(int, long, double), long (
 
 
 cdef public int neuronExists(int neuronID):
-    if neuronID >= 0 and neuronID < len(neurons):
+    if neurons.has_key(neuronID):
         return 1
     else:
         return 0
+
+cdef public int getNbNeurons():
+    return len(neurons)
+
+
+cdef public void destroy(int neuronID):
+    if neuronExists(neuronID) == 1:
+        del neurons[neuronID]
 
 # creation of a new neuron and returning of the corresponding id. Now the id is just the location inside the list,
 # but it will be enhanced in order to take into account neuron deletions (in which case two neurons could have the same id)
@@ -116,8 +125,9 @@ cdef public int createNeuron() with gil:
     n.ex_spikes = 0.0
     n.currents = 0.0
     n.t_lag = 0
-    neurons.append(n)
-    return len(neurons) - 1
+    neurons[spFct.neuron_index] = n
+    spFct.neuron_index = spFct.neuron_index + 1
+    return spFct.neuron_index - 1
 
 
 # used in order to set the neuron members

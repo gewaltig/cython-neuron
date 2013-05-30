@@ -51,6 +51,7 @@ cdef class NESTEngine:
         cE.putSetStatus(&cSetStatus)
         cE.putGetStatus(&cGetStatus)
         cE.putStdVars(&cStdVars)
+        cE.putDestroy(&cDestroy)
 
         setModelsFolder(os.path.dirname(os.path.realpath(__file__)))
 

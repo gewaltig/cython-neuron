@@ -57,6 +57,8 @@ cdef extern from "buffer.h":
         void* getGetStatus()
         void putStdVars(void* value)
         void* getStdVars()
+        void putDestroy(void* value)
+        void* getDestroy()
 
     cdef cppclass SpecialFunctions:
         SpecialFunctions()

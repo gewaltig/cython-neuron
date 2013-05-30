@@ -185,7 +185,8 @@ def runNeurons(ms):
     print "Running cython neurons"
     # cython neuron
     b = Brunel2000()
-    b.run("cython_iaf_psc_delta", ms)
+    #b.run("cython_iaf_psc_delta", ms)
+    b.run("sample_neuron", ms)
     CythonRTF = cynest.GetKernelStatus()["realtime factor"]
 
 

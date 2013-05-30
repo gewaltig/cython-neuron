@@ -124,6 +124,12 @@ cdef class CythonEntry:
     cdef void* getStdVars(self):
         return self.thisptr.getStdVars()
 
+    cdef void putDestroy(self, void* value):
+        self.thisptr.putDestroy(value)
+    
+    cdef void* getDestroy(self):
+        return self.thisptr.getDestroy()
+
 # end of class wrappers
 
 
@@ -313,4 +319,13 @@ cdef void cStdVars(string neuronName, int neuronID, long* spike, double* in_spik
     sp.setStdVars(spike, in_spikes, ex_spikes, currents, lag)
     stdParams[nNBytes][neuronID] = sp
 
-
+cdef void cDestroy(string neuronName, int neuronID) with gil:
+    cdef bytes nNBytes = neuronName.encode('UTF-8')
+  
+    if not loadedNeurons.has_key(nNBytes):
+        return
+      
+    loadedNeurons[nNBytes].destroy(neuronID)
+    if loadedNeurons[nNBytes].getNbNeurons() == 0:
+        del stdParams[nNBytes]
+        del loadedNeurons[nNBytes]

@@ -13,6 +13,9 @@
 #endif
 
 __PYX_EXTERN_C DL_IMPORT(void) putSpecialFunctions(double (*)(int, long, double), long (*)(int, int, long, double), unsigned int (*)(int, unsigned int));
+__PYX_EXTERN_C DL_IMPORT(int) neuronExists(int);
+__PYX_EXTERN_C DL_IMPORT(int) getNbNeurons(void);
+__PYX_EXTERN_C DL_IMPORT(void) destroy(int);
 __PYX_EXTERN_C DL_IMPORT(int) createNeuron(void);
 __PYX_EXTERN_C DL_IMPORT(void) setNeuronParams(int, PyObject *);
 __PYX_EXTERN_C DL_IMPORT(PyObject) *getNeuronParams(int);

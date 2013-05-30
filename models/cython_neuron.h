@@ -100,6 +100,7 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
     typedef Node base;
 
     cython_neuron();
+    ~cython_neuron();
     cython_neuron(const cython_neuron&);
 
     /**
@@ -155,6 +156,7 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
     void (*cythonSetStatus)(std::string, int, Datum*);
     void (*cythonGetStatus)(std::string, int, Datum*);
     void (*cythonStdVars)(std::string, int, long*, double*, double*, double*, long*);
+    void (*cythonDestroy)(std::string, int);
  
 
 
