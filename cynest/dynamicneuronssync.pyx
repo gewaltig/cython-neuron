@@ -186,12 +186,15 @@ def getDynamicNeuronsName():
 
 def loadNewNeuron(n):
     if not loadedNeurons.has_key(n):
-        libc = PyDLL(spFct.getModelsFolder() + "/" + n + ".so")
-        exec("libc.init" + n + "()")
-        loadedNeurons[n] = libc
-        loadedNeurons[n].putSpecialFunctions.restype = None
-        loadedNeurons[n].putSpecialFunctions(getmsFCT, getticsorstepsFCT, getschedulervalueFCT)
-        stdParams[n] = [] # new neuron name creation for standard parameters
+        try:
+            libc = PyDLL(spFct.getModelsFolder() + "/" + n + ".so")
+            exec("libc.init" + n + "()")
+            loadedNeurons[n] = libc
+            loadedNeurons[n].putSpecialFunctions.restype = None
+            loadedNeurons[n].putSpecialFunctions(getmsFCT, getticsorstepsFCT, getschedulervalueFCT)
+            stdParams[n] = [] # new neuron name creation for standard parameters
+        except:
+            pass
 
 
 # this method is called at every execution of the cynest.Create() method and seeks for dynamic neurons. If the neuron is dynamic,
@@ -221,7 +224,6 @@ cdef void retrieveNeuronMembers(bytes neuronName, int neuronID, classes.Datum* p
     del members
 
 
-
 sI = c_long()
 isD = c_double()
 esD = c_double()
@@ -235,6 +237,10 @@ lIR = byref(lI)
 
 cdef void cUpdate(string nName, int neuronID) with gil:
     cdef bytes neuronName = nName.encode('UTF-8')
+
+    if not loadedNeurons.has_key(neuronName):
+        return
+
     cdef StandardParams sp = stdParams[neuronName][neuronID]
     loadedNeurons[neuronName].setStdVars(neuronID, sp.spike[0], sp.in_spikes[0], sp.ex_spikes[0], sp.currents[0], sp.lag[0])
 
@@ -254,6 +260,9 @@ cdef int cInit(string neuronName, classes.Datum* args) with gil:
 
         loadNewNeuron(nNBytes)
 
+        if not loadedNeurons.has_key(nNBytes):
+            return -1
+
         # special initialization command
         nID =  <int>loadedNeurons[nNBytes].createNeuron()
         stdParams[nNBytes].append(StandardParams())
@@ -268,25 +277,38 @@ cdef int cInit(string neuronName, classes.Datum* args) with gil:
 cdef void cCalibrate(string neuronName, int neuronID, classes.Datum* args) with gil:
         cdef bytes nNBytes = neuronName.encode('UTF-8')
 
+        if not loadedNeurons.has_key(nNBytes):
+            return
+
         setNeuronMembers(nNBytes, neuronID, args)
         loadedNeurons[nNBytes].calibrate(neuronID)
         retrieveNeuronMembers(nNBytes, neuronID, args)
         
 cdef void cSetStatus(string neuronName, int neuronID, classes.Datum* args) with gil:
         cdef bytes nNBytes = neuronName.encode('UTF-8')
-        
+  
+        if not loadedNeurons.has_key(nNBytes):
+            return
+      
         setNeuronMembers(nNBytes, neuronID, args)
         loadedNeurons[nNBytes].setStatus(neuronID)
         retrieveNeuronMembers(nNBytes, neuronID, args)
 
 cdef void cGetStatus(string neuronName, int neuronID, classes.Datum* args) with gil:
         cdef bytes nNBytes = neuronName.encode('UTF-8')
-        
+  
+        if not loadedNeurons.has_key(nNBytes):
+            return
+      
         loadedNeurons[nNBytes].getStatus(neuronID)
         retrieveNeuronMembers(nNBytes, neuronID, args)
 
 cdef void cStdVars(string neuronName, int neuronID, long* spike, double* in_spikes, double* ex_spikes, double* currents, long* lag) with gil:
     cdef bytes nNBytes = neuronName.encode('UTF-8')
+
+    if not loadedNeurons.has_key(nNBytes):
+        return
+
     cdef StandardParams sp = StandardParams()
     sp.setStdVars(spike, in_spikes, ex_spikes, currents, lag)
     stdParams[nNBytes][neuronID] = sp

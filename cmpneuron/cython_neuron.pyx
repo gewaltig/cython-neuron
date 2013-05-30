@@ -100,6 +100,12 @@ cdef public void putSpecialFunctions(double (*get_ms)(int, long, double), long (
     spFct.get_scheduler_valueFct = get_scheduler_value
 
 
+cdef public int neuronExists(int neuronID):
+    if neuronID >= 0 and neuronID < len(neurons):
+        return 1
+    else:
+        return 0
+
 # creation of a new neuron and returning of the corresponding id. Now the id is just the location inside the list,
 # but it will be enhanced in order to take into account neuron deletions (in which case two neurons could have the same id)
 cdef public int createNeuron() with gil:
