@@ -72,7 +72,15 @@ class Brunel2000:
         self.p_rate = 1000.0*self.nu_ex*self.C_E
         cynest.SetKernelStatus({"print_time": True,
                               "local_num_threads":self.threads})
-        #cynest.SetDefaults("cython_neuron", 
+        #cynest.SetDefaults("cython_iaf_psc_delta", 
+        #                 {"C_m": 1.0,
+        #                  "tau_m": self.tau_m,
+        #                  "t_ref": 2.0,
+        #                  "E_L": 0.0,
+        #                  "V_th": self.V_th,
+        #                  "V_reset": 10.0})
+
+        #cynest.SetDefaults("iaf_psc_delta", 
         #                 {"C_m": 1.0,
         #                  "tau_m": self.tau_m,
         #                  "t_ref": 2.0,

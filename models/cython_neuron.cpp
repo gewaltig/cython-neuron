@@ -75,7 +75,8 @@ nest::cython_neuron::Buffers_::Buffers_(const Buffers_ &, cython_neuron &n)
 nest::cython_neuron::cython_neuron()
   : Archiving_Node(),
     state_(new Dictionary()),
-    B_(*this)
+    B_(*this),
+    selfPtr(this)
 {
   // We add empty defaults for /calibrate and /update, so that the uninitialised node runs without errors.
   state_->insert(names::calibrate,new ProcedureDatum());
@@ -87,7 +88,8 @@ nest::cython_neuron::cython_neuron()
 nest::cython_neuron::cython_neuron(const cython_neuron& n)
   : Archiving_Node(n),
     state_(new Dictionary(*n.state_)),
-    B_(n.B_, *this)
+    B_(n.B_, *this),
+    selfPtr(this)
 {
   init_state_(n);
   initCython();
@@ -238,6 +240,9 @@ void nest::cython_neuron::handle(DataLoggingRequest& e)
 
 void nest::cython_neuron::setStatusCython()
 {
+    if(cythonSetStatus == NULL) {
+        initSharedObject();
+    }
     if(cythonSetStatus != NULL) {
     	cythonSetStatus(get_name(), neuronID, &state_);   // call shared object
     }
@@ -245,6 +250,9 @@ void nest::cython_neuron::setStatusCython()
 
 void nest::cython_neuron::getStatusCython() const
 {
+    if(cythonGetStatus == NULL) {
+        selfPtr->initSharedObject();
+    }
     if(cythonGetStatus != NULL) {
     	cythonGetStatus(get_name(), neuronID, &state_);   // call shared object
     }
@@ -264,7 +272,7 @@ void nest::cython_neuron::initSharedObject()
     
     if(resultInit != NULL && resultCalibrate != NULL && resultUpdate != NULL && resultSetStatus != NULL && resultGetStatus != NULL) {
 	// Function pointers casting	
-	cythonInit = (int (*)(std::string, int, Datum*))resultInit;
+	cythonInit = (int (*)(std::string, Datum*))resultInit;
 	cythonCalibrate = (void (*)(std::string, int, Datum*))resultCalibrate;
 	cythonUpdate = (void (*)(std::string, int))resultUpdate;
 	cythonSetStatus = (void (*)(std::string, int, Datum*))resultSetStatus;
@@ -272,7 +280,7 @@ void nest::cython_neuron::initSharedObject()
 	cythonStdVars = (void (*)(std::string, int, long*, double*, double*, double*, long*))resultStdVars;
 
 	// Neuron initialization
-	neuronID = cythonInit(get_name(), -1, &state_);
+	neuronID = cythonInit(get_name(), &state_);
 
 	// Pointers to Standard Parameters retrieving
         IntegerDatum* sI = (IntegerDatum*)(*state_)[names::spike].datum();

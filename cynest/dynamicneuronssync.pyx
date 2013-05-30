@@ -1,6 +1,7 @@
 import sys
 import re
 import os
+import errno
 from os import listdir
 from ctypes import *
 
@@ -182,19 +183,25 @@ def getDynamicNeuronsName():
     listSo = listdir(spFct.getModelsFolder())
     return [so[0:len(so) - 3] for so in listSo if ".so" in so]
 
+
+def loadNewNeuron(n):
+    if not loadedNeurons.has_key(n):
+        libc = PyDLL(spFct.getModelsFolder() + "/" + n + ".so")
+        exec("libc.init" + n + "()")
+        loadedNeurons[n] = libc
+        loadedNeurons[n].putSpecialFunctions.restype = None
+        loadedNeurons[n].putSpecialFunctions(getmsFCT, getticsorstepsFCT, getschedulervalueFCT)
+        stdParams[n] = [] # new neuron name creation for standard parameters
+
+
 # this method is called at every execution of the cynest.Create() method and seeks for dynamic neurons. If the neuron is dynamic,
 # it is loaded for further utilization
 def processNeuronCreation(cmd):
     n = returnNeuronName(cmd)
     if n is not "":
         nList = getDynamicNeuronsName()
-        if n in nList and not loadedNeurons.has_key(n):
-             libc = PyDLL(spFct.getModelsFolder() + "/" + n + ".so")
-             exec("libc.init" + n + "()")
-             loadedNeurons[n] = libc
-             loadedNeurons[n].putSpecialFunctions.restype = None
-             loadedNeurons[n].putSpecialFunctions(getmsFCT, getticsorstepsFCT, getschedulervalueFCT)
-             stdParams[n] = [] # new neuron name creation for standard parameters
+        if n in nList:
+            loadNewNeuron(n)
 
 
 # this method updates the neuron members based on the parameters argument
@@ -242,8 +249,10 @@ cdef void cUpdate(string nName, int neuronID) with gil:
 
 
 # this are the only callable methods from cython_neuron.cpp. One can pass the command to execute and the parameters dictionary, which will be updated
-cdef int cInit(string neuronName, int neuronID, classes.Datum* args) with gil:
+cdef int cInit(string neuronName, classes.Datum* args) with gil:
         cdef bytes nNBytes = neuronName.encode('UTF-8')
+
+        loadNewNeuron(nNBytes)
 
         # special initialization command
         nID =  <int>loadedNeurons[nNBytes].createNeuron()
@@ -251,6 +260,7 @@ cdef int cInit(string neuronName, int neuronID, classes.Datum* args) with gil:
         loadedNeurons[nNBytes].getStdVars.argtypes = [c_int, c_void_p, c_void_p, c_void_p, c_void_p, c_void_p]
         loadedNeurons[nNBytes].setStdVars.argtypes = [c_int, c_long, c_double, c_double, c_double, c_long]
         setNeuronMembers(nNBytes, nID, args)
+
         retrieveNeuronMembers(nNBytes, nID, args)
         return nID
 

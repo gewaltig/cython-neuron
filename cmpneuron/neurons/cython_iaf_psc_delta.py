@@ -30,9 +30,10 @@ class cython_iaf_psc_delta(Neuron):
         self.RefractoryCounts_ = self.get_steps_on_ms(self.t_ref)
 
     def setStatus(self):
+        pass
         # if U0_ is changed, we need to adjust all variables defined relative to U0_
-        ELold = self.E_L
-        delta_EL = self.E_L - ELold
+        Lold = self.E_L
+        #delta_EL = self.E_L - ELold
         # ...normally should go on, but useless for the purpose of the simulation
 
 

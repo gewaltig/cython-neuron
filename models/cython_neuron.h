@@ -131,6 +131,8 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
 
     DictionaryDatum get_status_dict_();
 
+    cython_neuron *const selfPtr;
+
     void init_state_(const Node& proto);
     void init_buffers_();
     void calibrate();
@@ -147,7 +149,7 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
     void initCython();
     void initSharedObject();
 
-    int (*cythonInit)(std::string, int, Datum*);
+    int (*cythonInit)(std::string, Datum*);
     void (*cythonCalibrate)(std::string, int, Datum*);
     void (*cythonUpdate)(std::string, int);
     void (*cythonSetStatus)(std::string, int, Datum*);

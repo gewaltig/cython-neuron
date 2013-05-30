@@ -124,7 +124,7 @@ cdef public void setNeuronParams(int neuronID, dict members) with gil:
 cdef public dict getNeuronParams(int neuronID) with gil:
     output = {}
     for key, value in vars(neurons[neuronID]).iteritems():
-        if key.startswith('_') == False:
+        if key.startswith('_') == False and type(value).__name__ in dir(__builtins__):
             output[key] = value
 
     return output
