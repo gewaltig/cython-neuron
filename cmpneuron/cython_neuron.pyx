@@ -145,6 +145,7 @@ cdef public dict getNeuronParams(int neuronID) with gil:
 
     return output
 
+# Setting and getting the Standard Parameters (during update)
 cdef public void setStdVars(int neuronID, long spike, double in_spikes, double ex_spikes, double currents, long lag) with gil:
     neurons[neuronID].spike = spike
     neurons[neuronID].in_spikes = in_spikes
@@ -160,6 +161,7 @@ cdef public void getStdVars(int neuronID, long* spike, double* in_spikes, double
     lag[0] = neurons[neuronID].t_lag
 
 
+# Normal callable functions
 cdef public void update(int neuronID) with gil:
     neurons[neuronID].update()
 

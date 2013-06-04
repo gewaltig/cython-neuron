@@ -44,6 +44,7 @@ cdef class NESTEngine:
         cdef bytes modulepath_bytes=modulepath.encode('UTF-8')
         result= self.thisptr.init(argv_bytes, modulepath_bytes)
 
+        # These methods initialize the system for cython neurons
         cE = CythonEntry()
         cE.putInit(&cInit)
         cE.putCalibrate(&cCalibrate)

@@ -7,6 +7,7 @@ from ctypes import *
 
 # begin of class wrappers
 
+# This class is useful for converting Datum into python objects and vice-versa
 cdef class DataConverter:
     cdef classes.DatumToPythonConverter *dTp
     cdef classes.NESTEngine *pTd
@@ -28,7 +29,11 @@ cdef class DataConverter:
     cdef void updateDictionary(self, classes.Datum* src, classes.Datum* dest):
         self.dTp.updateDictionary(src, dest)
 
-
+# This class contains the special functions needed by
+# the cython_neuron in order to access the Time and Scheduler classes
+# Note that other methods having nothing to do with that are present.
+# modelsFolder has been put into that class otherwise it's not persistent 
+# during the execution.
 cdef class SpecialFunctions:
     cdef classes.SpecialFunctions *thisptr
     cdef string modelsFolder
@@ -54,7 +59,7 @@ cdef class SpecialFunctions:
     cdef string getModelsFolder(self):
         return self.modelsFolder
 
-
+# Class for storing the pointer to Standard Parameters
 cdef class StandardParams:
     cdef long* spike
     cdef double* in_spikes
@@ -133,12 +138,14 @@ cdef class CythonEntry:
 # end of class wrappers
 
 
+# Global objects
 cdef DataConverter converter = DataConverter()
 loadedNeurons = {}
 cdef SpecialFunctions spFct = SpecialFunctions()
 cdef stdParams = {}
 
-
+# This method tries to find the Cython_models folder based on
+# the location of the executable
 cdef void setModelsFolder(bytes kernelDir):
     path1, path2 = os.path.split(kernelDir)
     path3, path4 = os.path.split(path1)
@@ -154,6 +161,8 @@ cdef void setModelsFolder(bytes kernelDir):
             raise
 
 
+
+# Special Functions helpers (will point to the good C++ function)
 def get_ms(arg1, arg2, arg3):
     return spFct.get_ms(arg1, arg2, arg3)
 
@@ -164,20 +173,17 @@ def get_scheduler_value(arg1, arg2):
     return spFct.get_scheduler_value(arg1, arg2)
 
 
-
-
-
-
-
-
 GETMSFUNC = CFUNCTYPE(c_double, c_int, c_long, c_double)
 GETTICSORSTEPSFUNC = CFUNCTYPE(c_long, c_int, c_int, c_long, c_double)
 GETSCHEDULERVALUE = CFUNCTYPE(c_uint, c_int, c_uint)
 getmsFCT = GETMSFUNC(get_ms)
 getticsorstepsFCT = GETTICSORSTEPSFUNC(get_tics_or_steps)
 getschedulervalueFCT = GETSCHEDULERVALUE(get_scheduler_value)
+# End of Special Function helpers
 
 
+# Matches a string of the type ... Create is order to find 
+# creations commands. It it's the case, returns the neuron name
 def returnNeuronName(cmd):
     m = re.search('^{ /(.+?) .*Create }.*$', cmd)
     if hasattr(m, 'group'):
@@ -185,11 +191,14 @@ def returnNeuronName(cmd):
     else:
         return ""
 
+# Loads the list of the neuron names contained in the cython_models folder.
 def getDynamicNeuronsName():
     listSo = listdir(spFct.getModelsFolder())
     return [so[0:len(so) - 3] for so in listSo if ".so" in so]
 
 
+# Loads a new neuron type based on the name. It implies a file called
+# <name>.so is present is the cython_models folder
 def loadNewNeuron(n):
     if not loadedNeurons.has_key(n):
         try:
@@ -203,8 +212,8 @@ def loadNewNeuron(n):
             pass
 
 
-# this method is called at every execution of the cynest.Create() method and seeks for dynamic neurons. If the neuron is dynamic,
-# it is loaded for further utilization
+# this method is called at every execution of the cynest.Create() method and seeks for dynamic neurons. 
+#If the neuron is dynamic, it is loaded for further utilization
 def processNeuronCreation(cmd):
     n = returnNeuronName(cmd)
     if n is not "":
@@ -230,6 +239,7 @@ cdef void retrieveNeuronMembers(bytes neuronName, int neuronID, classes.Datum* p
     del members
 
 
+# Pointers used to store the address of Standard Parameters passed to the cython neuron
 sI = c_long()
 isD = c_double()
 esD = c_double()
@@ -260,7 +270,9 @@ cdef void cUpdate(string nName, int neuronID) with gil:
     sp.lag[0] = lI.value
 
 
-# this are the only callable methods from cython_neuron.cpp. One can pass the command to execute and the parameters dictionary, which will be updated
+# Initialization method. Called from the C++ side. Creates a new neuron and
+# synchronizes the parameters (set and retrieve NeuronMembers)
+# Returns the id of the new neuron
 cdef int cInit(string neuronName, classes.Datum* args) with gil:
         cdef bytes nNBytes = neuronName.encode('UTF-8')
 
@@ -279,7 +291,8 @@ cdef int cInit(string neuronName, classes.Datum* args) with gil:
         retrieveNeuronMembers(nNBytes, nID, args)
         return nID
 
-
+# Calibration method. Called from the C++ side. Calls the
+# calibrate method of the cython neuron
 cdef void cCalibrate(string neuronName, int neuronID, classes.Datum* args) with gil:
         cdef bytes nNBytes = neuronName.encode('UTF-8')
 
@@ -289,7 +302,9 @@ cdef void cCalibrate(string neuronName, int neuronID, classes.Datum* args) with 
         setNeuronMembers(nNBytes, neuronID, args)
         loadedNeurons[nNBytes].calibrate(neuronID)
         retrieveNeuronMembers(nNBytes, neuronID, args)
-        
+   
+# SetStatus method. Called from the C++ side. Calls the
+# setStatus method of the cython neuron     
 cdef void cSetStatus(string neuronName, int neuronID, classes.Datum* args) with gil:
         cdef bytes nNBytes = neuronName.encode('UTF-8')
   
@@ -300,6 +315,8 @@ cdef void cSetStatus(string neuronName, int neuronID, classes.Datum* args) with 
         loadedNeurons[nNBytes].setStatus(neuronID)
         retrieveNeuronMembers(nNBytes, neuronID, args)
 
+# GetStatus method. Called from the C++ side. Calls the
+# getStatus method of the cython neuron
 cdef void cGetStatus(string neuronName, int neuronID, classes.Datum* args) with gil:
         cdef bytes nNBytes = neuronName.encode('UTF-8')
   
@@ -309,6 +326,9 @@ cdef void cGetStatus(string neuronName, int neuronID, classes.Datum* args) with 
         loadedNeurons[nNBytes].getStatus(neuronID)
         retrieveNeuronMembers(nNBytes, neuronID, args)
 
+# Standard Parameters method. Called from the C++ side. 
+# Puts the S.P. pointers into a temporary structure
+# used when calling the update function.
 cdef void cStdVars(string neuronName, int neuronID, long* spike, double* in_spikes, double* ex_spikes, double* currents, long* lag) with gil:
     cdef bytes nNBytes = neuronName.encode('UTF-8')
 
@@ -319,6 +339,9 @@ cdef void cStdVars(string neuronName, int neuronID, long* spike, double* in_spik
     sp.setStdVars(spike, in_spikes, ex_spikes, currents, lag)
     stdParams[nNBytes][neuronID] = sp
 
+# Destroying method. Called from the C++ side. Calls the
+# destroyer of the neuron. Frees the library if no neuron
+# of that type is present
 cdef void cDestroy(string neuronName, int neuronID) with gil:
     cdef bytes nNBytes = neuronName.encode('UTF-8')
   
