@@ -53,6 +53,7 @@ import types
 # These variables MUST be set by __init__.py right after importing.
 # There is no safety net, whatsoever.
 nest = sps = spp = sr = None
+cvc = dvc = dtc = rcc = rdc = None
 
 class NESTError(Exception):
     def __init__(self, msg) :
@@ -543,7 +544,7 @@ def GetStatus(nodes, keys=None) :
             cmd='{ GetStatus /%s get} Map' % keys
 
     if (type(nodes[0]) == dict) or is_sequencetype(nodes[0]):
-        nest.push_connection_datums(nodes)
+        nest.engine.push_connections(nodes)
     else:
         sps(nodes)
    
@@ -728,30 +729,8 @@ def ConvergentConnect(pre, post, weight=None, delay=None, model="static_synapse"
     of floats), delay also has to be given as float or as list of
     floats.
     """
-
-    if weight == None and delay == None:
-        for d in post :
-            sps(pre)
-            sps(d)
-            sr('/%s ConvergentConnect' % model)
-
-    elif weight != None and delay != None:
-        weight = broadcast(weight, len(pre), (float,), "weight")
-        if len(weight) != len(pre):
-            raise NESTError("weight must be a float, or sequence of floats of length 1 or len(pre)")
-        delay = broadcast(delay, len(pre), (float,), "delay")
-        if len(delay) != len(pre):
-            raise NESTError("delay must be a float, or sequence of floats of length 1 or len(pre)")
-        
-        for d in post:
-            sps(pre)
-            sps(d)
-            sps(weight)
-            sps(delay)
-            sr('/%s ConvergentConnect' % model)
-
-    else:
-        raise NESTError("Both 'weight' and 'delay' have to be given.")
+    
+    cvc(pre, post, weight, delay, model)
 
 
 def RandomConvergentConnect(pre, post, n, weight=None, delay=None, model="static_synapse", options=None):
@@ -764,43 +743,7 @@ def RandomConvergentConnect(pre, post, n, weight=None, delay=None, model="static
     allow_multapses.
     """
 
-    # store current options, set desired options
-    old_options = None
-    error = False
-    if options:
-        old_options = sli_func('GetOptions', '/RandomConvergentConnect',
-                               litconv=True)
-        del old_options['DefaultOptions'] # in the way when restoring
-        sli_func('SetOptions', '/RandomConvergentConnect', options,
-                 litconv=True)
-
-    if weight == None and delay == None:
-        sli_func(
-            '/m Set /n Set /pre Set { pre exch n m RandomConvergentConnect } forall',
-            post, pre, n, '/'+model, litconv=True)
-    
-    elif weight != None and delay != None:
-        weight = broadcast(weight, n, (float,), "weight")
-        if len(weight) != n:
-            raise NESTError("weight must be a float, or sequence of floats of length 1 or n")
-        delay = broadcast(delay, n, (float,), "delay")
-        if len(delay) != n:
-            raise NESTError("delay must be a float, or sequence of floats of length 1 or n")
-
-        sli_func(
-            '/m Set /d Set /w Set /n Set /pre Set { pre exch n w d m RandomConvergentConnect } forall',
-            post, pre, n, weight, delay, '/'+model, litconv=True)
-    
-    else:
-        error = True
-
-    # restore old options
-    if old_options:
-        sli_func('SetOptions', '/RandomConvergentConnect', old_options,
-                 litconv=True)
-
-    if error:
-        raise NESTError("Both 'weight' and 'delay' have to be given.")
+    rcc(pre, post, n, weight, delay, model, options)
 
 
 def DivergentConnect(pre, post, weight=None, delay=None, model="static_synapse"):
@@ -811,32 +754,10 @@ def DivergentConnect(pre, post, weight=None, delay=None, model="static_synapse")
     floats.
     """
 
-    if weight == None and delay == None:
-        for s in pre :
-            sps(s)
-            sps(post)
-            sr('/%s DivergentConnect' % model)
-
-    elif weight != None and delay != None:
-        weight = broadcast(weight, len(post), (float,), "weight")
-        if len(weight) != len(post):
-            raise NESTError("weight must be a float, or sequence of floats of length 1 or len(post)")
-        delay = broadcast(delay, len(post), (float,), "delay")
-        if len(delay) != len(post):
-            raise NESTError("delay must be a float, or sequence of floats of length 1 or len(post)")
-        cmd='/%s DivergentConnect' % model
-        for s in pre :
-            sps(s)
-            sps(post)
-            sps(weight)
-            sps(delay)
-            sr(cmd)
-    
-    else:
-        raise NESTError("Both 'weight' and 'delay' have to be given.")
+    dvc(pre, post, weight, delay, model)
 
 
-def DataConnect(pre, params=None, model=None):
+def DataConnect(pre, params=None, model=None, variant=2):
     """
     Connect neurons from lists of connection data.
 
@@ -851,7 +772,7 @@ def DataConnect(pre, params=None, model=None):
     model=None
 
     Variant 1 of DataConnect connects each neuron in pre to the targets given in params, using synapse type model.
-    The dictionary parames must contain at least the following keys:
+    The dictionary params must contain at least the following keys:
     'target'
     'weight'
     'delay'
@@ -872,12 +793,12 @@ def DataConnect(pre, params=None, model=None):
     if params:
 	if not model:
 		model="static_synapse"
-	cmd='(%s) DataConnect_i_dict_s ' % model
     
-	for s,p in zip(pre,params):
-		sps(s)
-		sps(p)
-		sr(cmd)
+        if variant == 1:
+            dtc1(pre, params, model)
+        elif variant == 2:
+            dtc2(pre, params, model)
+
     else:
 	    # Call the variant where all connections are
 	    # given explicitly
@@ -898,43 +819,7 @@ def RandomDivergentConnect(pre, post, n, weight=None, delay=None, model="static_
     allow_multapses.
     """
     
-    # store current options, set desired options
-    old_options = None
-    error = False
-    if options:
-        old_options = sli_func('GetOptions', '/RandomDivergentConnect',
-                               litconv=True)
-        del old_options['DefaultOptions'] # in the way when restoring
-        sli_func('SetOptions', '/RandomDivergentConnect', options,
-                 litconv=True)
-
-    if weight == None and delay == None:
-        sli_func(
-            '/m Set /n Set /post Set { n post m RandomDivergentConnect } forall',
-            pre, post, n, '/'+model, litconv=True)
-
-    elif weight != None and delay != None:
-        weight = broadcast(weight, n, (float,), "weight")
-        if len(weight) != n:
-            raise NESTError("weight must be a float, or sequence of floats of length 1 or n")
-        delay = broadcast(delay, n, (float,), "delay")
-        if len(delay) != n:
-            raise NESTError("delay must be a float, or sequence of floats of length 1 or n")
-
-        sli_func(
-            '/m Set /d Set /w Set /n Set /post Set { n post w d m RandomDivergentConnect } forall',
-            pre, post, n, weight, delay, '/'+model, litconv=True)
-
-    else:
-        error = True
-
-    # restore old options
-    if old_options:
-        sli_func('SetOptions', '/RandomDivergentConnect', old_options,
-                 litconv=True)
-
-    if error:
-        raise NESTError("Both 'weight' and 'delay' have to be given.")
+    rdc(pre, post, n, weight, delay, model, options)
 
 
 def CGConnect(pre, post, cg, parameter_map={}, model="static_synapse"):

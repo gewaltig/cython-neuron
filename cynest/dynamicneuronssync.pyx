@@ -135,6 +135,9 @@ cdef class CythonEntry:
     cdef void* getDestroy(self):
         return self.thisptr.getDestroy()
 
+    cdef void registerNeurons(self, string cDir):
+        self.thisptr.registerNeurons(cDir);
+
 # end of class wrappers
 
 
@@ -148,12 +151,14 @@ cdef stdParams = {}
 # the location of the executable
 cdef void setModelsFolder(bytes kernelDir):
     path1, path2 = os.path.split(kernelDir)
-    path3, path4 = os.path.split(path1)
-    path5, path6 = os.path.split(path3)
-    path7, path8 = os.path.split(path5)
+
+    while not (os.path.isdir(path1 + os.sep + "bin") and os.path.isdir(path1 + os.sep + "include") and os.path.isdir(path1 + os.sep + "lib") and os.path.isdir(path1 + os.sep + "share")):
+        path1, path2 = os.path.split(path1)
     
-    spFct.setModelsFolder(path7 + os.sep + "cython_models")
+    spFct.setModelsFolder(path1 + os.sep + "cython_models")
     # we try to create the folder (even if it already present)
+    
+
     try:
         os.makedirs(spFct.getModelsFolder())
     except OSError as exception:

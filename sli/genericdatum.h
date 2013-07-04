@@ -73,6 +73,7 @@ public:
 	return d;
       }
 
+    // Added by Jonny Quarta
     D* get_p_val()
     {
 	return &d;

@@ -204,11 +204,13 @@ PyObject *DatumToPythonConverter::convert(Datum &d)
   return py_object_;
 }
 
+// Added by Jonny Quarta
 PyObject *DatumToPythonConverter::convertDatum(Datum *d)
 {
   return convert(*d);
 }
 
+// Added by Jonny Quarta
 void DatumToPythonConverter::updateDictionary(Datum* src, Datum* dest)
 {
   DictionaryDatum* dSrc = (DictionaryDatum*)src;

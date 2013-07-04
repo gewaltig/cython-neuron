@@ -356,7 +356,7 @@ Name: stop - raise a stop signal
 Synopsis:
   stop -> -
 
-Desctiption:
+Description:
   stop causes the execution stack to be popped until an
   enclosing stopped context is found. Effectively, the
   stopped/stop combination equals the catch/throw pair of

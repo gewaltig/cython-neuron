@@ -16,6 +16,8 @@ public:
 	static void* cStdVars;
 	static void* cDestroy;
 
+        static void* cRegisterNeurons;
+
 	CythonEntry(){}
 
 	void putInit(void* value) {
@@ -65,6 +67,15 @@ public:
 	}
 	void* getDestroy() {
 		return CythonEntry::cDestroy;
+	}
+
+	void putRegisterNeurons(void* value) {
+		CythonEntry::cRegisterNeurons = value;
+	}
+	void registerNeurons(std::string cDir) {
+		void (*register_n)(std::string);
+		register_n = (void (*)(std::string))cRegisterNeurons;
+		register_n(cDir);
 	}
 };
 

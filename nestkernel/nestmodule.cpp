@@ -912,17 +912,48 @@ namespace nest
     i->EStack.pop();
   }
 
+  // Connect for gid dict syn_id
+  // See lib/sli/nest-init.sli for details
+  void NestModule::Connect_i_D_iFunction::execute(SLIInterpreter *i) const
+  {
+    i->assert_stack_load(3);
+
+    index source = getValue<long>(i->OStack.pick(2));
+    DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(1));
+    index synmodel_id = getValue<long>(i->OStack.pick(0));
+ 
+    params->clear_access_flags();
+    index target=getValue<long>(params->lookup(names::target));
+
+    if ( get_network().connect(source, target, params, synmodel_id) )
+    {
+      // dict access control only if we actually made a connection
+      std::string missed;
+      if ( !params->all_accessed(missed) )
+      {
+	//if ( get_network().dict_miss_is_error() )
+//	  throw UnaccessedDictionaryEntry(missed);
+//	else
+	  get_network().message(SLIInterpreter::M_WARNING, "Connect", 
+				("Unread dictionary entries: " + missed).c_str());
+      }
+    }
+
+    i->OStack.pop(3);
+    i->EStack.pop();
+  }
+
+
   // Connect for gid gid dict
   // See lib/sli/nest-init.sli for details
   void NestModule::Connect_i_i_D_lFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(4);
-     
+
     index source = getValue<long>(i->OStack.pick(3));
     index target = getValue<long>(i->OStack.pick(2));
     DictionaryDatum params = getValue<DictionaryDatum>(i->OStack.pick(1));
     const Name synmodel_name = getValue<std::string>(i->OStack.pick(0));
-
     const Token synmodel = get_network().get_synapsedict().lookup(synmodel_name);
     if ( synmodel.empty() )
       throw UnknownSynapseType(synmodel_name.toString());
@@ -1164,6 +1195,8 @@ namespace nest
      
     const Name synmodel_name = getValue<std::string>(i->OStack.pick(0));
     const Token synmodel = get_network().get_synapsedict().lookup(synmodel_name);
+
+
     if ( synmodel.empty() )
       throw UnknownSynapseType(synmodel_name.toString());
     const index synmodel_id = static_cast<index>(synmodel);
@@ -2351,6 +2384,7 @@ namespace nest
     i->createcommand("Connect_i_i_d_d_l", &connect_i_i_d_d_lfunction);
     i->createcommand("Connect_i_i_d_d_i", &connect_i_i_d_d_ifunction);
     i->createcommand("Connect_i_i_D_l", &connect_i_i_D_lfunction);
+    i->createcommand("Connect_i_D_i", &connect_i_D_ifunction);
     i->createcommand("DataConnect_i_dict_s", &dataconnect_i_dict_sfunction);
     i->createcommand("DataConnect_a", &dataconnect_afunction);
 

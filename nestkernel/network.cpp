@@ -1281,7 +1281,7 @@ void Network::convergent_connect(const TokenArray source_ids, index target_id, c
         connect(*source, *target, source_id, target_thread, weights.get(i), delays.get(i), syn);
       else if (short_wd_lists)
         connect(*source, *target, source_id, target_thread, weights.get(0), delays.get(0), syn);
-      else 
+      else
         connect(*source, *target, source_id, target_thread, syn);
     }
     catch (IllegalConnection& e)

@@ -132,6 +132,7 @@ void nest::Scheduler::init_()
   min_delay_ = max_delay_ = 0;
   update_ref_ = true;
 
+  // Added by Jonny Quarta
   rt_factor = 0.0;
 
 #ifdef HAVE_PTHREADS
@@ -1202,6 +1203,7 @@ void nest::Scheduler::get_status(DictionaryDatum &d) const
   def<double>(d, "tics_per_ms", Time::get_tics_per_ms());
   def<double>(d, "resolution", Time::get_resolution().get_ms());
 
+  // Added by Jonny Quarta
   def<double_t>(d, "realtime factor", rt_factor);
 
   delay min_delay = 0;

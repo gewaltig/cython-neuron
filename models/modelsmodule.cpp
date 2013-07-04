@@ -64,6 +64,7 @@
 #include "sli_neuron.h"
 #include "ginzburg_neuron.h"
 #include "izhikevich.h"
+// Added by Jonny Quarta
 #include "cython_neuron.h"
 
 // Stimulation devices
@@ -119,6 +120,10 @@
 
 using namespace std;
 
+// Added by Jonny Quarta
+void* CythonEntry::cRegisterNeurons = NULL;
+nest::Network* ModelsModule::nPtr = NULL;
+
 namespace nest
 {
   // At the time when ModelsModule is constructed, the SLI Interpreter
@@ -145,6 +150,8 @@ namespace nest
 
   void ModelsModule::init(SLIInterpreter *)
   {
+    nPtr = &net_;
+
     register_model<iaf_neuron>(net_,                 "iaf_neuron");
     register_model<iaf_psc_alpha>(net_,              "iaf_psc_alpha");
     register_model<iaf_psc_alpha_multisynapse>(net_, "iaf_psc_alpha_multisynapse");
@@ -175,7 +182,9 @@ namespace nest
     register_model<correlation_detector>(net_, "correlation_detector");
     register_model<volume_transmitter>(net_, "volume_transmitter");
 
-    addCythonNeurons();
+    // Added by Jonny Quarta
+    CythonEntry cEntry;
+    cEntry.putRegisterNeurons((void*)addCythonNeurons);
 
     // Create voltmeter as a multimeter pre-configured to record V_m.
     Dictionary vmdict;
@@ -241,15 +250,14 @@ namespace nest
 
   }
 
+  // Added by Jonny Quarta
   /* This method registers custom cython neurons by looking for .so files
      in the /cython_models/ folder, retrieving their names and
      registering new neurons with class cython_neuron and as name
      the corresponding file name.
   */
-  void ModelsModule::addCythonNeurons() {
-    DIR *pdir = NULL;
-    string cDir ("");
-    cDir = cDir + getenv("HOME") + "/Programs/Nest/cython_models";
+  void ModelsModule::addCythonNeurons(std::string cDir) {
+    DIR *pdir = NULL;    
 
     pdir = opendir (cDir.c_str()); // "." will refer to the current directory
     struct dirent *pent = NULL;
@@ -268,7 +276,7 @@ namespace nest
                 if(name.length() > 3) {
 		    // only files having extension .so must be registered
                     if(name.find(".so", name.length() - 3) != string::npos) {
-                        register_model<cython_neuron>(net_,       name.substr(0, name.length() - 3).c_str());
+                        register_model<cython_neuron>(*nPtr,       name.substr(0, name.length() - 3).c_str());
                     }
                 }
             }

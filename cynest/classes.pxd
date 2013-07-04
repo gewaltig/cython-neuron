@@ -59,6 +59,7 @@ cdef extern from "buffer.h":
         void* getStdVars()
         void putDestroy(void* value)
         void* getDestroy()
+        void registerNeurons(string)
 
     cdef cppclass SpecialFunctions:
         SpecialFunctions()

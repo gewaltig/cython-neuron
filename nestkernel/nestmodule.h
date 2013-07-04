@@ -333,6 +333,12 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } connect_i_i_D_lfunction;
 
+     class Connect_i_D_iFunction: public SLIFunction
+     {
+      public:
+       void execute(SLIInterpreter *) const;
+     } connect_i_D_ifunction;
+
      class DivergentConnect_i_ia_a_a_lFunction: public SLIFunction
      {
       public:

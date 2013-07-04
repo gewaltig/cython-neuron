@@ -36,9 +36,15 @@ sli_pop = _kernel.engine.pop
 hl_api.spp = sli_pop
 spp = sli_pop
 
+hl_api.dtc1 = _kernel.engine.data_connect1
+hl_api.dtc2 = _kernel.engine.data_connect2
+hl_api.cvc = _kernel.engine.convergent_connect
+hl_api.dvc = _kernel.engine.divergent_connect
+hl_api.rcc = _kernel.engine.random_convergent_connect
+hl_api.rdc = _kernel.engine.random_divergent_connect
    
 def sli_run(*args):
-    raise NESTError("PyNEST is not initialized properly. Please call init() first.")
+    raise NESTError("CyNEST is not initialized properly. Please call init() first.")
 
 def sli_func(s, *args, **kwargs):
     """This function is a convenience function for executing the 
@@ -84,6 +90,8 @@ kernel_sr = _kernel.engine.run
 hl_api.sr = sli_run
 sr = sli_run
 hl_api.sli_func = sli_func
+_kernel.sli_func = sli_func
+_kernel.broadcast = hl_api.broadcast
 
 initialized = False
 
@@ -94,7 +102,7 @@ def catching_sr(cmd):
     """
 
     kernel_sr('{ %s } runprotected'%cmd)
-    if not sli_pop():
+    if _kernel.engine.run_protected() and not sli_pop():
         errorname = sli_pop()
         message = sli_pop()
         commandname = sli_pop()

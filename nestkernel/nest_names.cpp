@@ -169,6 +169,7 @@ namespace nest
     const Name update_node("update_node");
     const Name calibrate("calibrate");
     const Name calibrate_node("calibrate_node");
+    // Added by Jonny Quarta
     const Name spike("spike");
 
     // Specific to mirollo_strogatz_ps

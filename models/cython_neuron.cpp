@@ -202,7 +202,7 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
 
     long spike_emission = 0;
 
-    // surely exists
+    // surely exists    
     spike_emission = (*state_)[names::spike];
 
     // threshold crossing

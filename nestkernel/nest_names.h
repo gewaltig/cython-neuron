@@ -192,7 +192,7 @@ namespace nest
     extern const Name update_node;    // Command to execute the neuron
     extern const Name calibrate;      // Command to calibrate the neuron
     extern const Name calibrate_node; // Command to calibrate the neuron
-    extern const Name spike;          // true if the neuron spikes and false if not.
+    extern const Name spike;          // true if the neuron spikes and false if not. Added by Jonny Quarta
 
     // Specific to mirollo_strogatz_ps
     extern const Name phi;

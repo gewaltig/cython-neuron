@@ -295,6 +295,7 @@ namespace nest
     void calibrate_clock();
 
   private:
+    // Added by Jonny Quarta
     double_t rt_factor;
     /**
      * Initialize the scheduler by initializing the buffers.
