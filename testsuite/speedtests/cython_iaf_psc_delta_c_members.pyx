@@ -21,8 +21,7 @@ import sys
 
 
 
-
-cdef class cython_iaf_psc_delta_c_members(CyNeuron):	
+cdef class cython_iaf_psc_delta_c_members(Neuron):	
     cdef double ms_resolution
     cdef double tau_m
     cdef double C_m
@@ -66,7 +65,7 @@ cdef class cython_iaf_psc_delta_c_members(CyNeuron):
         self.RefractoryCounts_ = self.time_scheduler.get_steps_on_ms(self.t_ref)
 
     cpdef update(self):
-
+        
         if self.r_ == 0:
             # neuron not refractory
             self.y3_ = self.P30_*(self.y0_ + self.I_e_) + self.P33_*self.y3_ + (self.ex_spikes + self.in_spikes)

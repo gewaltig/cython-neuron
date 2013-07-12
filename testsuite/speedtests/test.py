@@ -195,12 +195,7 @@ def runNeurons(ms, version = 1):
     elif version == 3:
         cynest.RegisterNeuron("cython_iaf_psc_delta_pyobject")
         b.run("cython_iaf_psc_delta_pyobject", ms)
-    elif version == 4:
-        cynest.RegisterNeuron("cython_iaf_psc_delta_py")
-        b.run("cython_iaf_psc_delta_py", ms)
-    elif version == 0:
-        cynest.RegisterNeuron("cython_iaf_psc_delta_betatest")
-        b.run("cython_iaf_psc_delta_betatest", ms)
+
         
     CythonRTF = cynest.GetKernelStatus()["realtime factor"]
 
@@ -214,7 +209,7 @@ def runNeurons(ms, version = 1):
 #    print "Faster factor (sli / cython) : " + str(SliRTF / CythonRTF)
 
 print "\n\nWelcome to some speedtests\n"
-print "Type start(version, time=40) in order to start a test.\n\nversion: 1 for c_members, 2 for pydict, 3 for pyobject, 4 for py_neuron and 0 for other beta tests"
+print "Type start(version, time=40) in order to start a test.\n\nversion: 1 for c_members, 2 for pydict, 3 for pyobject"
 
 def start(v, t=40):
     runNeurons(t, v)

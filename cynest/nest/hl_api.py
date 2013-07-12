@@ -504,10 +504,6 @@ def Create(model, n=1, params=None):
         except:
             raise NESTError("SetStatus failed, but nodes already have been created. The ids of the new nodes are: %s" % ids)
 
-#    if model in cython_models:
-#        for i in ids:
-#            GetStatus([i])
-#segmentation fault if uncommented, but necessary, todo
     return ids
 
         

@@ -16,7 +16,7 @@ class Params:
 import math
 import sys
 
-cdef class cython_iaf_psc_delta_pyobject(CyNeuron):
+cdef class cython_iaf_psc_delta_pyobject(Neuron):
     cdef object params
     cdef double ms_resolution
 

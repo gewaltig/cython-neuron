@@ -36,7 +36,6 @@ class PyObjectDatum: public Datum
 
 private:
   PyObject* pyObj;
-  
   double* currents;
   double* in_spikes;
   double* ex_spikes;
@@ -58,13 +57,14 @@ private:
 public:
   PyObjectDatum(PyObject *py) {
 	  pyObj = py;
-	  this->currents = NULL;
-	  this->in_spikes = NULL;
-	  this->ex_spikes = NULL;
-	  this->t_lag = NULL;
-	  this->spike = NULL;
+	  currents = NULL;
+	  in_spikes = NULL;
+	  ex_spikes = NULL;
+	  t_lag = NULL;
+	  spike = NULL;
 	  Py_XINCREF(pyObj);
 	  
+	  // the cython model shouldn't use or access these parameters
 	  forbiddenParamsLength = 16;
 	  forbiddenParams[0] = "archiver_length";
 	  forbiddenParams[1] = "frozen";
@@ -87,19 +87,23 @@ public:
   PyObjectDatum(PyObjectDatum* py) {
 	  this->pyObj = py->pyObj;
 	  Py_XINCREF(pyObj);
-	  // todo
   }
   ~PyObjectDatum() {}
 
 
 
 
-void putStdParams(double* curr, double* is, double* es, long* tl, long* sp) {
-	this->currents = curr;
-	this->in_spikes = is;
-	this->ex_spikes = es;
-	this->t_lag = tl;
-	this->spike = sp;
+void putStdParams(double** curr, double** is, double** es, long** tl, long** sp) {
+	PyGILState_STATE s = PyGILState_Ensure();
+	
+	// numeric conversion in order to create a long variable containing the address of the std params 
+	*curr = currents = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPCurrents", NULL));
+	*is = in_spikes = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPIn_Spikes", NULL));
+	*es = ex_spikes = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPEx_Spikes", NULL));
+	*tl = t_lag = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPT_Lag", NULL));
+	*sp = spike = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPSpike", NULL));
+	
+	PyGILState_Release(s);
 }
 
 void call_method(std::string cmd) {
@@ -112,10 +116,8 @@ void call_method(std::string cmd) {
 
 void call_update() {
 	PyGILState_STATE s = PyGILState_Ensure();
-
-	PyObject_CallMethod(this->pyObj, "setStdParams", "dddl", *currents, *in_spikes, *ex_spikes, *t_lag);
+	
 	PyObject_CallMethod(this->pyObj, "update", NULL);
-	*spike = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getSpike", NULL));
 
     PyGILState_Release(s);
 }

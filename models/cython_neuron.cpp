@@ -124,17 +124,17 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
 {
   for ( long_t lag = from ; lag < to ; ++lag )
   {
-	currents = B_.currents_.get_value(lag);
-    in_spikes = B_.in_spikes_.get_value(lag); // in spikes arriving at right border
-    ex_spikes = B_.ex_spikes_.get_value(lag); // ex spikes arriving at right border
-    t_lag = lag;
+	*currents = B_.currents_.get_value(lag);
+    *in_spikes = B_.in_spikes_.get_value(lag); // in spikes arriving at right border
+    *ex_spikes = B_.ex_spikes_.get_value(lag); // ex spikes arriving at right border
+    *t_lag = lag;
 
 
     // surely exists, otherwise segfault before
 	pyObj->call_update();
 
     // threshold crossing
-    if (spike)
+    if (*spike)
     {
       set_spiketime(Time::step(origin.get_steps()+lag+1));
       SpikeEvent se;

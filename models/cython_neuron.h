@@ -130,11 +130,11 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
   private:
 
 	// Pointers to Standard Parameters retrieving
-	double currents;
-    double in_spikes;
-	double ex_spikes;
-	long t_lag;
-	long spike;
+	double* currents;
+    double* in_spikes;
+	double* ex_spikes;
+	long* t_lag;
+	long* spike;
 
     DictionaryDatum get_status_dict_();
     
