@@ -1,29 +1,18 @@
 include "/home/jonny/Programs/Nest/include/Neuron.pyx"
-  
+
 
 import math
 import sys
 
-cdef class cython_iaf_psc_delta(Neuron):	
-    cdef double ms_resolution
-    cdef double tau_m
-    cdef double C_m
-    cdef double t_ref
-    cdef double E_L
-    cdef double I_e_
-    cdef double V_th
-    cdef double V_min_
-    cdef double V_reset
-    cdef bint with_refr_input_
-    cdef double y0_
-    cdef double y3_
-    cdef double r_
-    cdef double refr_spikes_buffer_
-    cdef double P30_
-    cdef double P33_
-    cdef int RefractoryCounts_
-    
-    def __cinit__(self):	
+# This is the slowest version, up to x20 slower. It extends from a Python object, so the user 
+# doesn-t have to care of GetStatus and SetStatus
+
+
+
+
+
+class cython_iaf_psc_delta_py(PyNeuron):	    
+    def __init__(self):	
         self.tau_m   = 10.0  # ms
         self.C_m     = 250.0 # pF
         self.t_ref   =  2.0 # ms
@@ -41,13 +30,13 @@ cdef class cython_iaf_psc_delta(Neuron):
         self.P33_ = 0.0
         self.RefractoryCounts_ = 0
 
-    cpdef calibrate(self):
+    def calibrate(self):
         self.ms_resolution = self.time_scheduler.get_ms_on_resolution()
         self.P33_ = math.exp(-self.ms_resolution/self.tau_m)
         self.P30_ = 1/self.C_m*(1-self.P33_)*self.tau_m
         self.RefractoryCounts_ = self.time_scheduler.get_steps_on_ms(self.t_ref)
 
-    cpdef update(self):
+    def update(self):
 
         if self.r_ == 0:
             # neuron not refractory

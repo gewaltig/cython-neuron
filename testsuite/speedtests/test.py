@@ -171,7 +171,7 @@ class Brunel_balanced(Brunel2000):
 
 
 
-def runNeurons(ms):
+def runNeurons(ms, version = 1):
     print "Running native, SLI and cython neurons for " + str(ms) + " ms\n\n"
 
     print "Running native neurons"
@@ -185,8 +185,23 @@ def runNeurons(ms):
     print "Running cython neurons"
     # cython neuron
     b = Brunel2000()
-    cynest.RegisterNeuron("cython_iaf_psc_delta")
-    b.run("cython_iaf_psc_delta", ms)
+    
+    if version == 1:
+        cynest.RegisterNeuron("cython_iaf_psc_delta_c_members")
+        b.run("cython_iaf_psc_delta_c_members", ms)
+    elif version == 2:
+        cynest.RegisterNeuron("cython_iaf_psc_delta_pydict")
+        b.run("cython_iaf_psc_delta_pydict", ms)
+    elif version == 3:
+        cynest.RegisterNeuron("cython_iaf_psc_delta_pyobject")
+        b.run("cython_iaf_psc_delta_pyobject", ms)
+    elif version == 4:
+        cynest.RegisterNeuron("cython_iaf_psc_delta_py")
+        b.run("cython_iaf_psc_delta_py", ms)
+    elif version == 0:
+        cynest.RegisterNeuron("cython_iaf_psc_delta_betatest")
+        b.run("cython_iaf_psc_delta_betatest", ms)
+        
     CythonRTF = cynest.GetKernelStatus()["realtime factor"]
 
 
@@ -198,7 +213,9 @@ def runNeurons(ms):
 #    print "Faster factor (native / sli) : " + str(NativRTF / SliRTF)
 #    print "Faster factor (sli / cython) : " + str(SliRTF / CythonRTF)
 
+print "\n\nWelcome to some speedtests\n"
+print "Type start(version, time=40) in order to start a test.\n\nversion: 1 for c_members, 2 for pydict, 3 for pyobject, 4 for py_neuron and 0 for other beta tests"
 
-def start():
-    runNeurons(40)
+def start(v, t=40):
+    runNeurons(t, v)
 

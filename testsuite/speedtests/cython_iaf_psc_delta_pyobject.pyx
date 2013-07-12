@@ -1,5 +1,13 @@
 include "/home/jonny/Programs/Nest/include/Neuron.pyx"
-  
+
+
+#
+#
+#
+#
+#
+
+
 
 class Params:
     def __init__(self):
@@ -8,7 +16,7 @@ class Params:
 import math
 import sys
 
-cdef class cython_iaf_psc_delta(Neuron):
+cdef class cython_iaf_psc_delta_pyobject(CyNeuron):
     cdef object params
     cdef double ms_resolution
 

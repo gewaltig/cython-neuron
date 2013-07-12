@@ -4,7 +4,7 @@ include "/home/jonny/Programs/Nest/include/Neuron.pyx"
 import math
 import sys
 
-cdef class cython_iaf_psc_delta(Neuron):	
+cdef class cython_iaf_psc_delta_pydict(CyNeuron):	
     cdef dict params
     cdef double ms_resolution        
     
