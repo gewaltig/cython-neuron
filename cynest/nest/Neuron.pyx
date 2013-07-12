@@ -9,29 +9,31 @@ cdef class CyNeuron:
     def __cinit__(self):
         pass
 
-    cpdef calibrate(self):
-        pass
+    cpdef int calibrate(self):
+        return 0
         
-    cpdef update(self):
-        pass
+    cpdef int update(self):
+        return 0
         
-    cpdef getStatus(self):
+    cpdef dict getStatus(self):
         return {}
         
-    cpdef setStatus(self, params):
-        pass
+    cpdef int setStatus(self, dict params):
+        return 0
         
-    cpdef setTimeScheduler(self, ts):
+    cpdef int setTimeScheduler(self, object ts):
         self.time_scheduler = ts
+        return 0
         
-    cpdef getSpike(self):
+    cpdef long getSpike(self):
         return self.spike
     
-    cpdef setStdParams(self, curr, in_s, ex_s, t_l):
+    cpdef int setStdParams(self, double curr, double in_s, double ex_s, long t_l):
         self.currents = curr
         self.in_spikes = in_s
         self.ex_spikes = ex_s
         self.t_lag = t_l
+        return 0
 
 
 class PyNeuron:    
