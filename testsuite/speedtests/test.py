@@ -185,18 +185,18 @@ def runNeurons(ms):
     print "Running cython neurons"
     # cython neuron
     b = Brunel2000()
-    #b.run("cython_iaf_psc_delta", ms)
-    b.run("sample_neuron", ms)
+    cynest.RegisterNeuron("cython_iaf_psc_delta")
+    b.run("cython_iaf_psc_delta", ms)
     CythonRTF = cynest.GetKernelStatus()["realtime factor"]
 
 
-    print "Running SLI neurons"
-    call(["nest", "brunel-sli_neuron.sli"])
-    SliRTF = 0.0045;
+#    print "Running SLI neurons"
+#    call(["nest", "brunel-sli_neuron.sli"])
+#    SliRTF = 0.0045;
 
     print "Faster factor (native / cython) : " + str(NativRTF / CythonRTF)
-    print "Faster factor (native / sli) : " + str(NativRTF / SliRTF)
-    print "Faster factor (sli / cython) : " + str(SliRTF / CythonRTF)
+#    print "Faster factor (native / sli) : " + str(NativRTF / SliRTF)
+#    print "Faster factor (sli / cython) : " + str(SliRTF / CythonRTF)
 
 
 def start():

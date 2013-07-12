@@ -54,9 +54,6 @@ namespace nest
      ModelsModule(Network&);
      ~ModelsModule();
 
-     // Added by Jonny Quarta
-     static Network* nPtr;
-
      /**
       * Initialize module by registering models with the network.
       * @param SLIInterpreter* SLI interpreter
@@ -68,14 +65,13 @@ namespace nest
      const std::string name(void) const;
      const std::string commandstring(void) const;
 
-     // Added by Jonny Quarta
-     static void addCythonNeurons(std::string);
-
      private:
 
      //! network where models are to be registered
      Network& net_;
    };
+   
+   void register_cython_model(Network* net, std::string model);
 } // namespace
 
 #endif

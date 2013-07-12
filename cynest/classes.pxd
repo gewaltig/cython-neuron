@@ -41,31 +41,13 @@ cdef extern from "cynestkernel.h":
         Token* pop_token()
         Datum* PyObject_as_Datum(object)
         bint check_engine()
+        void register_cython_model(string)
 
-cdef extern from "buffer.h":
-    cdef cppclass CythonEntry:
-        CythonEntry()
-        void putInit(void* value)
-        void* getInit()
-        void putCalibrate(void* value)
-        void* getCalibrate()
-        void putUpdate(void* value)
-        void* getUpdate()
-        void putSetStatus(void* value)
-        void* getSetStatus()
-        void putGetStatus(void* value)
-        void* getGetStatus()
-        void putStdVars(void* value)
-        void* getStdVars()
-        void putDestroy(void* value)
-        void* getDestroy()
-        void registerNeurons(string)
-
-    cdef cppclass SpecialFunctions:
+cdef extern from "time_scheduler.h":
+    cdef cppclass TimeScheduler:
         SpecialFunctions()
         double get_ms(int, long, double)
         long get_tics_or_steps(int, int, long, double)
         unsigned int get_scheduler_value(int, unsigned int)
-
         
 

@@ -120,10 +120,6 @@
 
 using namespace std;
 
-// Added by Jonny Quarta
-void* CythonEntry::cRegisterNeurons = NULL;
-nest::Network* ModelsModule::nPtr = NULL;
-
 namespace nest
 {
   // At the time when ModelsModule is constructed, the SLI Interpreter
@@ -150,8 +146,6 @@ namespace nest
 
   void ModelsModule::init(SLIInterpreter *)
   {
-    nPtr = &net_;
-
     register_model<iaf_neuron>(net_,                 "iaf_neuron");
     register_model<iaf_psc_alpha>(net_,              "iaf_psc_alpha");
     register_model<iaf_psc_alpha_multisynapse>(net_, "iaf_psc_alpha_multisynapse");
@@ -181,10 +175,6 @@ namespace nest
     register_model<Multimeter>(net_,           "multimeter");
     register_model<correlation_detector>(net_, "correlation_detector");
     register_model<volume_transmitter>(net_, "volume_transmitter");
-
-    // Added by Jonny Quarta
-    CythonEntry cEntry;
-    cEntry.putRegisterNeurons((void*)addCythonNeurons);
 
     // Create voltmeter as a multimeter pre-configured to record V_m.
     Dictionary vmdict;
@@ -246,43 +236,10 @@ namespace nest
     register_prototype_connection_commonproperties <STDPDopaConnection,
                                                     STDPDopaCommonProperties
                                                    > (net_, "stdp_dopamine_synapse");
-
-
   }
-
-  // Added by Jonny Quarta
-  /* This method registers custom cython neurons by looking for .so files
-     in the /cython_models/ folder, retrieving their names and
-     registering new neurons with class cython_neuron and as name
-     the corresponding file name.
-  */
-  void ModelsModule::addCythonNeurons(std::string cDir) {
-    DIR *pdir = NULL;    
-
-    pdir = opendir (cDir.c_str()); // "." will refer to the current directory
-    struct dirent *pent = NULL;
-    string name("");
-
-    if (pdir != NULL) {
-	    while (pent = readdir (pdir)) // while there is still something in the directory to list
-	    {
-	        if (pent == NULL) // if pent has not been initialised correctly
-	        {
-	            break;
-	        }
-            	else {
-                name = pent->d_name;
-
-                if(name.length() > 3) {
-		    // only files having extension .so must be registered
-                    if(name.find(".so", name.length() - 3) != string::npos) {
-                        register_model<cython_neuron>(*nPtr,       name.substr(0, name.length() - 3).c_str());
-                    }
-                }
-            }
-        }
-
-        closedir (pdir);
-    }
+  
+  void register_cython_model(Network *net, std::string model)
+  {
+	 register_model<cython_neuron>(*net, model.c_str());
   }
 } // namespace nest

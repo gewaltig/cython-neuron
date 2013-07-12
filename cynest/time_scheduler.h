@@ -1,87 +1,13 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+#ifndef TIMESCHEDULER_H
+#define TIMESCHEDULER_H
 
 #include "../nestkernel/nest_time.h"
 #include "../nestkernel/scheduler.h"
 
 using namespace nest;
 
-class CythonEntry {
-public:
-	static void* cInit;
-	static void* cCalibrate;
-	static void* cUpdate;
-	static void* cSetStatus;
-	static void* cGetStatus;
-	static void* cStdVars;
-	static void* cDestroy;
 
-        static void* cRegisterNeurons;
-
-	CythonEntry(){}
-
-	void putInit(void* value) {
-		CythonEntry::cInit = value;
-	}
-	void* getInit() {
-		return CythonEntry::cInit;
-	}
-
-	void putCalibrate(void* value) {
-		CythonEntry::cCalibrate = value;
-	}
-	void* getCalibrate() {
-		return CythonEntry::cCalibrate;
-	}
-
-	void putUpdate(void* value) {
-		CythonEntry::cUpdate = value;
-	}
-	void* getUpdate() {
-		return CythonEntry::cUpdate;
-	}
-
-	void putSetStatus(void* value) {
-		CythonEntry::cSetStatus = value;
-	}
-	void* getSetStatus() {
-		return CythonEntry::cSetStatus;
-	}
-
-	void putGetStatus(void* value) {
-		CythonEntry::cGetStatus = value;
-	}
-	void* getGetStatus() {
-		return CythonEntry::cGetStatus;
-	}
-
-	void putStdVars(void* value) {
-		CythonEntry::cStdVars = value;
-	}
-	void* getStdVars() {
-		return CythonEntry::cStdVars;
-	}
-
-	void putDestroy(void* value) {
-		CythonEntry::cDestroy = value;
-	}
-	void* getDestroy() {
-		return CythonEntry::cDestroy;
-	}
-
-	void putRegisterNeurons(void* value) {
-		CythonEntry::cRegisterNeurons = value;
-	}
-	void registerNeurons(std::string cDir) {
-		void (*register_n)(std::string);
-		register_n = (void (*)(std::string))cRegisterNeurons;
-		register_n(cDir);
-	}
-};
-
-
-
-class SpecialFunctions {
+class TimeScheduler {
 private:
 	/*
 	 0 get_resolution

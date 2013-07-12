@@ -80,3 +80,71 @@ cdef class SLIDataContainer:
 
 
 
+# This class contains the special functions needed by
+# the cython_neuron in order to access the Time and Scheduler classes
+# Note that other methods having nothing to do with that are present.
+# modelsFolder has been put into that class otherwise it's not persistent 
+# during the execution.
+cdef class TimeScheduler:
+    cdef classes.TimeScheduler *thisptr
+
+    def __cinit__(self):
+        self.thisptr= new classes.TimeScheduler()
+        
+    def __dealloc__(self):
+        del self.thisptr
+
+    cdef double get_ms(self, int arg1, long arg2, double arg3):
+        return self.thisptr.get_ms(arg1, arg2, arg3)
+
+    cdef long get_tics_or_steps(self, int arg1, int arg2, long arg3, double arg4):
+        return self.thisptr.get_tics_or_steps(arg1, arg2, arg3, arg4)
+
+    cdef unsigned int get_scheduler_value(self, int arg1, unsigned int arg2):
+        return self.thisptr.get_scheduler_value(arg1, arg2)
+        
+    def get_ms_on_resolution(self):
+        return self.get_ms(0, -1, -1)
+
+    def get_ms_on_tics(self, tics):
+        return self.get_ms(1, tics, -1)
+
+    def get_ms_on_steps(self, steps):
+        return self.get_ms(2, steps, -1)
+
+    def get_tics_on_resolution(self):
+        return self.get_tics_or_steps(0, 1, -1, -1)
+
+    def get_tics_on_steps(self, steps):
+        return self.get_tics_or_steps(2, 1, steps, -1)
+
+    def get_tics_on_ms(self, ms):
+        return self.get_tics_or_steps(3, 1, -1, ms)
+
+    def get_tics_on_ms_stamp(self, ms_stamp):
+        return self.get_tics_or_steps(4, 1, -1, ms_stamp)
+
+    def get_steps_on_resolution(self):
+        return self.get_tics_or_steps(0, 2, -1, -1)
+
+    def get_steps_on_tics(self, tics):
+        return self.get_tics_or_steps(1, 2, tics, -1)
+
+    def get_steps_on_ms(self, ms):
+        return self.get_tics_or_steps(3, 2, -1, ms)
+
+    def get_steps_on_ms_stamp(self, ms_stamp):
+        return self.get_tics_or_steps(4, 2, -1, ms_stamp)
+
+    def get_modulo(self, value):
+        return self.get_scheduler_value(0, value)
+
+    def get_slice_modulo(self, value):
+        return self.get_scheduler_value(1, value)
+
+    def get_min_delay(self):
+        return self.get_scheduler_value(2, -1)
+
+    def get_max_delay(self):
+        return self.get_scheduler_value(3, -1)
+

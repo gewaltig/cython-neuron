@@ -52,6 +52,8 @@ class NESTEngine
 
   bool check_engine();
 
+  void register_cython_model(std::string model);
+
  private:
 
   /**

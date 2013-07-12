@@ -217,6 +217,7 @@ public:
   static SLIType IntVectortype;
   static SLIType DoubleVectortype;
   static SLIType Iteratortype;
+  static SLIType Pyobjecttype;
 
   // SLIType default actions
   static DatatypeFunction         datatypefunction;

@@ -1,44 +1,54 @@
+include "/home/jonny/Programs/Nest/include/Neuron.pyx"
+  
+
 import math
 import sys
 
-class cython_iaf_psc_delta(Neuron):
-    def __init__(self):
+cdef class cython_iaf_psc_delta(Neuron):	
+    cdef double ms_resolution
+    cdef double tau_m
+    cdef double C_m
+    cdef double t_ref
+    cdef double E_L
+    cdef double I_e_
+    cdef double V_th
+    cdef double V_min_
+    cdef double V_reset
+    cdef bint with_refr_input_
+    cdef double y0_
+    cdef double y3_
+    cdef double r_
+    cdef double refr_spikes_buffer_
+    cdef double P30_
+    cdef double P33_
+    cdef int RefractoryCounts_
+    
+    def __cinit__(self):	
         self.tau_m   = 10.0  # ms
         self.C_m     = 250.0 # pF
         self.t_ref   =  2.0 # ms
         self.E_L     = -70.0 # mV
         self.I_e_     = 0.0 # pA
-        self.V_th    = -55.0 - self.E_L # mV, rel to U0_
+        self.V_th    = -55.0 - self.E_L  # mV, rel to U0_
         self.V_min_   = -sys.float_info.max # relative U0_-55.0-U0_),  // mV, rel to U0_
-        self.V_reset = -70.0 - self.E_L
+        self.V_reset = -70.0 - self.E_L 
         self.with_refr_input_ = False
         self.y0_      = 0.0
-        self.y3_      = 0.0
+        self.y3_     = 0.0
         self.r_       = 0
         self.refr_spikes_buffer_ = 0.0
         self.P30_ = 0.0
         self.P33_ = 0.0
         self.RefractoryCounts_ = 0
 
-    def __dealloc__(self):
-        pass
-
-    def calibrate(self):
-        self.ms_resolution = self.get_ms_on_resolution()
+    cpdef calibrate(self):
+        self.ms_resolution = self.time_scheduler.get_ms_on_resolution()
         self.P33_ = math.exp(-self.ms_resolution/self.tau_m)
         self.P30_ = 1/self.C_m*(1-self.P33_)*self.tau_m
-        self.RefractoryCounts_ = self.get_steps_on_ms(self.t_ref)
+        self.RefractoryCounts_ = self.time_scheduler.get_steps_on_ms(self.t_ref)
 
-    def setStatus(self):
-        pass
-        # if U0_ is changed, we need to adjust all variables defined relative to U0_
-        Lold = self.E_L
-        #delta_EL = self.E_L - ELold
-        # ...normally should go on, but useless for the purpose of the simulation
+    cpdef update(self):
 
-
-
-    def update(self):
         if self.r_ == 0:
             # neuron not refractory
             self.y3_ = self.P30_*(self.y0_ + self.I_e_) + self.P33_*self.y3_ + (self.ex_spikes + self.in_spikes)
@@ -63,7 +73,7 @@ class cython_iaf_psc_delta(Neuron):
                 self.in_spikes = 0
 
             self.r_ -= 1
-   
+
         # threshold crossing
         if self.y3_ >= self.V_th:
             self.r_ = self.RefractoryCounts_

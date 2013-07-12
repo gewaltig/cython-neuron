@@ -23,6 +23,7 @@ import cynest.hl_api
 import cynest.kernel as _kernel
 
 hl_api.nest = _kernel
+hl_api.t_sched = _kernel.TimeScheduler()
 
 _kernel.engine= _kernel.NESTEngine()
 
@@ -42,6 +43,7 @@ hl_api.cvc = _kernel.engine.convergent_connect
 hl_api.dvc = _kernel.engine.divergent_connect
 hl_api.rcc = _kernel.engine.random_convergent_connect
 hl_api.rdc = _kernel.engine.random_divergent_connect
+hl_api.reg = _kernel.engine.register_cython_model
    
 def sli_run(*args):
     raise NESTError("CyNEST is not initialized properly. Please call init() first.")

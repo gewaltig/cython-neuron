@@ -925,7 +925,7 @@ namespace nest
     params->clear_access_flags();
     index target=getValue<long>(params->lookup(names::target));
 
-   if (get_network().connect(source, target, params, synmodel_id)=
+   if (get_network().connect(source, target, params, synmodel_id))
     {/*
       // dict access control only if we actually made a connection
       std::string missed;

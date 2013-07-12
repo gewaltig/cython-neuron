@@ -21,7 +21,6 @@ cdef public class PyToken[object PyToken, type PyTokenType]:
          if self.thisptr:
             del self.thisptr
 
-include "dynamicneuronssync.pyx"
 include "datamanager.pyx"
 
 sli_func = None
@@ -69,22 +68,12 @@ cdef class NESTEngine:
         cdef bytes modulepath_bytes=modulepath.encode('UTF-8')
         result= self.thisptr.init(argv_bytes, modulepath_bytes)
 
-        # These methods initialize the system for cython neurons
-        cE = CythonEntry()
-        cE.putInit(&cInit)
-        cE.putCalibrate(&cCalibrate)
-        cE.putUpdate(&cUpdate)
-        cE.putSetStatus(&cSetStatus)
-        cE.putGetStatus(&cGetStatus)
-        cE.putStdVars(&cStdVars)
-        cE.putDestroy(&cDestroy)
-
-        setModelsFolder(os.path.dirname(os.path.realpath(__file__)))
-        cE.registerNeurons(spFct.getModelsFolder())
-
         if result:
            signal.signal(signal.SIGINT, cynest_signal_handler)
         return result
+
+    def register_cython_model(self, model):
+        self.thisptr.register_cython_model(model)
 
     def push(self, value):
         """
@@ -130,8 +119,6 @@ cdef class NESTEngine:
             self._protected = False
 
         signal.signal(signal.SIGINT, cynest_signal_handler)
-
-        processNeuronCreation(command_bytes) # checks if the command is a creation one and if the neuron parameter is a dynamic one
 
         return result
 

@@ -24,7 +24,8 @@ EXTRA_DIST= setup.py.in\
 	checkpython.py \
 	pydatum.h \
 	pydatum.cpp \
-	buffer.h\
+	pyobjectdatum.h \
+	pyobjectdatum.cpp \
 	datumtopythonconverter.h \
 	datumtopythonconverter.cpp\
 	kernel.pyx\
@@ -49,6 +50,7 @@ install-data-hook: install-exec
 	@INSTALL_PROGRAM@ -m 644 @PKGSRCDIR@/cynest/README.PyNEST $(DESTDIR)@PKGDOCDIR@/
 	@INSTALL_PROGRAM@ -m 644 @PKGSRCDIR@/cynest/LICENSE.PyNEST $(DESTDIR)@PKGDOCDIR@/
 	mkdir -p $(DESTDIR)@PKGDATADIR@/extras
+	cp $(VPATH)/nest/Neuron.pyx $(DESTDIR)@PYNEST_PREFIX@/include/Neuron.pyx
 	@INSTALL_PROGRAM@ do_tests.py $(DESTDIR)@PKGDATADIR@/extras/
 	for dir in @SLI_SUBDIRS@; do \
 	  $(MAKE) -k -C @PKGBUILDDIR@/$$dir install-pynest-component 2> /dev/null || true ; done

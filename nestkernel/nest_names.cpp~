@@ -164,7 +164,7 @@ namespace nest
     const Name PSC_adapt_step("PSC_adapt_step");
     const Name PSC_Unit_amplitude("PSC_Unit_amplitude");
 
-    // Specific to sli_neuron/cython_neuron
+    // Specific to sli_neuron
     const Name update("update");
     const Name update_node("update_node");
     const Name calibrate("calibrate");

@@ -47,23 +47,13 @@ rules:
 Authors: Jochen Eppler, Marc-Oliver Gewaltig, Moritz Helias, Eilif Mueller
 """
 
-import pyximport
 import string
 import types
-import os
-import sys
 
 # These variables MUST be set by __init__.py right after importing.
 # There is no safety net, whatsoever.
 nest = sps = spp = sr = None
 cvc = dvc = dtc = rcc = rdc = None
-reg = None
-t_sched = None
-
-pyximport.install()
-
-
-cython_models = []
 
 class NESTError(Exception):
     def __init__(self, msg) :
@@ -457,13 +447,6 @@ def CopyModel(existing, new, params=None):
 
 # -------------------- Functions for node handling
 
-def RegisterNeuron(model_name):
-	sys.path.append(os.getcwd())
-	exec("import " + model_name)
-	globals()[model_name] = locals()[model_name]
-	cython_models.append(model_name)
-	reg(model_name)
-
 def Create(model, n=1, params=None):
     """
     Create n instances of type model. Parameters for the new nodes can
@@ -491,23 +474,12 @@ def Create(model, n=1, params=None):
     lastgid = spp()
     ids = list(range(lastgid - n + 1, lastgid + 1))
 
-	# have to check if cython model or normal model, then process multiple creations
-    if model in cython_models:
-        for i in ids:
-            exec("tmpobj___ = " + model + "." + model + "()")
-            tmpobj___.setTimeScheduler(t_sched)
-            SetStatus([i], {'pyobject':tmpobj___})
-
     if broadcast_params:
         try:
             SetStatus(ids, broadcast(params, n, (dict,)))
         except:
             raise NESTError("SetStatus failed, but nodes already have been created. The ids of the new nodes are: %s" % ids)
 
-#    if model in cython_models:
-#        for i in ids:
-#            GetStatus([i])
-#segmentation fault if uncommented, but necessary, todo
     return ids
 
         
@@ -785,7 +757,7 @@ def DivergentConnect(pre, post, weight=None, delay=None, model="static_synapse")
     dvc(pre, post, weight, delay, model)
 
 
-def DataConnect(pre, params=None, model=None, variant=1):
+def DataConnect(pre, params=None, model=None, variant=2):
     """
     Connect neurons from lists of connection data.
 

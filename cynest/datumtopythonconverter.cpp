@@ -210,23 +210,5 @@ PyObject *DatumToPythonConverter::convertDatum(Datum *d)
   return convert(*d);
 }
 
-// Added by Jonny Quarta
-void DatumToPythonConverter::updateDictionary(Datum* src, Datum* dest)
-{
-  DictionaryDatum* dSrc = (DictionaryDatum*)src;
-  DictionaryDatum* dDest = (DictionaryDatum*)dest;
-
-  for(Dictionary::iterator it = (*dSrc)->begin(); it != (*dSrc)->end(); ++it) {
-     // checking if the field is a dictionary, in which case recursively calling the method
-     /*if(strcmp((**dSrc)[it->first].type().name(), typeid(tempDict).name()) == 0) {
-	updateDictionary(&(*(**dSrc)[it->first]), &tempDict);
-        (**dDest)[it->first] = tempDict;
-     }
-     else {*/
-     	(**dDest)[it->first] = (**dSrc)[it->first];
-     //}
-  }
-}
-
 
 

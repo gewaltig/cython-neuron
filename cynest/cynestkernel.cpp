@@ -68,6 +68,7 @@ extern "C"
 #include "arraydatum.h"
 #include "booldatum.h"
 #include "stringdatum.h"
+#include "pyobjectdatum.h"
 #include "connectiondatum.h"
 #include "datumtopythonconverter.h"
 #include "psignal.h"
@@ -511,6 +512,10 @@ Token* NESTEngine::pop_token()
     return t;
 }
 
+void NESTEngine::register_cython_model(std::string model)
+{
+	nest::register_cython_model(pNet_, model);
+}
 
 Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
 {
@@ -760,6 +765,7 @@ Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
     return d;
   }
 
+  return new PyObjectDatum(pObj);
   std::string error = String::compose("Python object of type '%1' cannot be converted to SLI.\n"
                                       "If you think this is an error, tell us at nest_user@nest-initiative.org",
                                       pObj->ob_type->tp_name);

@@ -108,6 +108,7 @@ SLIType SLIInterpreter::Ostreamtype;
 SLIType SLIInterpreter::IntVectortype;
 SLIType SLIInterpreter::DoubleVectortype;
 SLIType SLIInterpreter::Iteratortype;
+SLIType SLIInterpreter::Pyobjecttype;
 
 //SLIType SLIInterpreter::IOstreamtype;
 
@@ -177,7 +178,9 @@ void SLIInterpreter::inittypes(void)
   IntVectortype.settypename("intvectortype");
   IntVectortype.setdefaultaction(datatypefunction);    
   DoubleVectortype.settypename("doublevectortype");
-  DoubleVectortype.setdefaultaction(datatypefunction);    
+  DoubleVectortype.setdefaultaction(datatypefunction);
+  Pyobjecttype.settypename("pyobjecttype");
+  Pyobjecttype.setdefaultaction(datatypefunction);    
 }
 
 void SLIInterpreter::initdictionaries(void)

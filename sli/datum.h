@@ -122,6 +122,12 @@ class Datum
     executable_=false;
   }
 
+  // Temporary: that should not be here, deleted once I understand how to link pyobjectdatum.h with Python.h
+  virtual void call_method(std::string cmd) {}
+  virtual void call_update() {}
+  virtual void call_status_method(std::string cmd, void* status) {}
+  virtual void putStdParams(double*, double*, double*, long*, long*) {}
+
   virtual void  print(std::ostream & ) const =0;
   virtual void  pprint(std::ostream &) const =0;
 

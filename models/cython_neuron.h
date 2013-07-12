@@ -29,7 +29,6 @@
 #include "ring_buffer.h"
 #include "connection.h"
 #include "universal_data_logger.h"
-#include "buffer.h"
 #include <string>
 
 namespace nest{
@@ -111,7 +110,7 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
      * way of doing things, although all other compilers
      * happily live without.
      */
-
+	
     using Node::connect_sender;
     using Node::handle;
 
@@ -130,9 +129,16 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
 
   private:
 
-    DictionaryDatum get_status_dict_();
+	// Pointers to Standard Parameters retrieving
+	double currents;
+    double in_spikes;
+	double ex_spikes;
+	long t_lag;
+	long spike;
 
-    cython_neuron *const selfPtr;
+    DictionaryDatum get_status_dict_();
+    
+	Datum* pyObj;
 
     void init_state_(const Node& proto);
     void init_buffers_();
@@ -145,20 +151,6 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
 
     void get(DictionaryDatum&) const;  //!< Store current values in dictionary
     void set(const DictionaryDatum&);  //!< Set values from dictionary
-
-    int neuronID;
-    void initCython();
-    void initSharedObject();
-
-    int (*cythonInit)(std::string, Datum*);
-    void (*cythonCalibrate)(std::string, int, Datum*);
-    void (*cythonUpdate)(std::string, int);
-    void (*cythonSetStatus)(std::string, int, Datum*);
-    void (*cythonGetStatus)(std::string, int, Datum*);
-    void (*cythonStdVars)(std::string, int, long*, double*, double*, double*, long*);
-    void (*cythonDestroy)(std::string, int);
- 
-
 
     // The next two classes need to be friends to access the State_ class/member
     friend class RecordablesMap<cython_neuron>;
@@ -204,19 +196,7 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
      * @{
      */
     mutable DictionaryDatum state_;
-    /**
-     * These are pointers into the status dictionary and must be updated in
-     * calibrate.
-     */
-    Token *vm_t; //!< Points to V_m
-    Token *update_t; //!< points to update
-    Token *calibrate_t; //!< points to calibrate
-    Token *in_spikes_t; //!< number of excitatory spikes during the time slice
-    Token *ex_spikes_t; //!< number of inhibitory spikes during the sime slice
-    DoubleDatum *currents_t;  //!< external current
-    Token *last_spike_t; //!< time of last spike
-    Token *out_events_t; //!< Events produced by the neuron
-    Token *spike_t;//< Boolean for fast spike initiation
+
     Buffers_        B_;
 
     //! Mapping of recordables names to access functions

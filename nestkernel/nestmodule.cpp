@@ -912,8 +912,7 @@ namespace nest
     i->EStack.pop();
   }
 
-  // Connect for gid dict syn_id
-  // See lib/sli/nest-init.sli for details
+  // Used for alternative 2
   void NestModule::Connect_i_D_iFunction::execute(SLIInterpreter *i) const
   {
     i->assert_stack_load(3);
