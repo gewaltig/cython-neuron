@@ -62,7 +62,7 @@ t_sched = None
 
 pyximport.install()
 
-
+sys.path.append(os.getcwd())
 cython_models = []
 
 class NESTError(Exception):
@@ -458,7 +458,6 @@ def CopyModel(existing, new, params=None):
 # -------------------- Functions for node handling
 
 def RegisterNeuron(model_name):
-	sys.path.append(os.getcwd())
 	exec("import " + model_name)
 	globals()[model_name] = locals()[model_name]
 	cython_models.append(model_name)
@@ -491,7 +490,7 @@ def Create(model, n=1, params=None):
     lastgid = spp()
     ids = list(range(lastgid - n + 1, lastgid + 1))
 
-	# have to check if cython model or normal model, then process multiple creations
+    # have to check if cython model or normal model, then process multiple creations
     if model in cython_models:
         for i in ids:
             exec("tmpobj___ = " + model + "." + model + "()")

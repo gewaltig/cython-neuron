@@ -766,6 +766,8 @@ Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
   }
 
   return new PyObjectDatum(pObj);
+
+
   std::string error = String::compose("Python object of type '%1' cannot be converted to SLI.\n"
                                       "If you think this is an error, tell us at nest_user@nest-initiative.org",
                                       pObj->ob_type->tp_name);

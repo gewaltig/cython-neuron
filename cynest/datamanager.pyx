@@ -82,9 +82,6 @@ cdef class SLIDataContainer:
 
 # This class contains the special functions needed by
 # the cython_neuron in order to access the Time and Scheduler classes
-# Note that other methods having nothing to do with that are present.
-# modelsFolder has been put into that class otherwise it's not persistent 
-# during the execution.
 cdef class TimeScheduler:
     cdef classes.TimeScheduler *thisptr
 
@@ -103,6 +100,8 @@ cdef class TimeScheduler:
     cdef unsigned int get_scheduler_value(self, int arg1, unsigned int arg2):
         return self.thisptr.get_scheduler_value(arg1, arg2)
         
+
+
     def get_ms_on_resolution(self):
         return self.get_ms(0, -1, -1)
 

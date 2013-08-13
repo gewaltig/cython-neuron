@@ -1,5 +1,8 @@
 cdef class Neuron:
+    # object used in order to access Time or Scheduler methods.
+    # It is overwritten by the kernel in order to make it available.
     cdef object time_scheduler
+    # Standard Parameters
     cdef double currents
     cdef double in_spikes
     cdef double ex_spikes
@@ -23,17 +26,9 @@ cdef class Neuron:
         
     cpdef setTimeScheduler(self, ts):
         self.time_scheduler = ts
-        
-    cpdef getSpike(self):
-        return self.spike
-    
-    cpdef setStdParams(self, curr, in_s, ex_s, t_l):
-        self.currents = curr
-        self.in_spikes = in_s
-        self.ex_spikes = ex_s
-        self.t_lag = t_l
        
-    # we convert the address of the variables into long
+    # We convert the address of the variables into long in order to extract the pointers
+
     cpdef getPCurrents(self):
         return <long>(&(self.currents))
         
