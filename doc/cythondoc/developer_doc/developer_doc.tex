@@ -210,9 +210,9 @@ More information is detailed in the following section.
 
 \section{Special Functions}
 Sometimes, a neuron model needs some special information from the system, such as simulation parameters. The values represent time units, simulation delays, ect...\\
-Therefore, the system has to enable the final user to access these variables and this is achieved by what is called \textbf{Special Functions}. The class \emph{SpecialFunctions} contained in the file \emph{cynest/buffer.h} possesses all the necessary to provide that functionality :
+Therefore, the system has to enable the final user to access these variables and this is achieved by what is called \textbf{Special Functions}. The base Neuron class contains a \emph{time\_scheduler} object possessing all the necessary to provide that functionality. This cython object relies on the C++ counterpart, which is the \emph{TimeScheduler} object located in the \emph{cynest/time\_scheduler.cpp} :
 \begin{verbatim}
-class SpecialFunctions {
+class TimeScheduler {
 private:
     Time createTime(int inputType, long longInputValue, double doubleInputValue) {
         ...
@@ -249,7 +249,7 @@ The first line is emulated through the function \emph{get\_scheduler\_value} cho
 \item 2 for \emph{Scheduler::get\_min\_delay()}
 \item 3 for \emph{Scheduler::get\_max\_delay()}
 \end{itemize}
-The second and third lines are emulated using a slight different mechanism. The user can specify the unit of the Time class creation (which corresponds to the unit in which the neural network is simulated), via the \emph{SpecialFunctions::createTime} method, following these rules:
+The second and third lines are emulated using a slight different mechanism. The user can specify the unit of the Time class creation (which corresponds to the unit in which the neural network is simulated), via the \emph{TimeScheduler::createTime} method, following these rules:
 \begin{itemize}
 \item 0 for Time::get\_resolution()
 \item 1 for Time(Time::tic(tics))
@@ -258,32 +258,20 @@ The second and third lines are emulated using a slight different mechanism. The 
 \item 4 for Time(Time::ms\_stamp(ms\_stamp))
 \end{itemize}
 Note that since tics, steps are integer values and ms, ms\_stamp are double values, the method needs two different arguments, choosen with respect to \emph{inputType}.\\
-Once the Time object has been created, the \emph{SpecialFunctions::get\_ms} and \emph{SpecialFunctions::get\_tics\_or\_steps} methods will return the choosen unit.
+Once the Time object has been created, the \emph{TimeScheduler::get\_ms} and \emph{TimeScheduler::get\_tics\_or\_steps} methods will return the choosen unit.
 For the latter method, the output unit has to be choosen, giving 1 for tics and 2 for steps.\\ \\
 The next step is to interface with Cython and this is done in the \emph{cynest/classes.pyx} file:
 \begin{verbatim}
-cdef cppclass SpecialFunctions:
-    SpecialFunctions()
+cdef cppclass TimeScheduler:
+    TimeScheduler()
     double get_ms(int, long, double)
     long get_tics_or_steps(int, int, long, double)
     unsigned int get_scheduler_value(int, unsigned int)
 \end{verbatim}
-This class will be of course wrapped in another one. The final purpose is to a pointer corresponding to each one of these methods to the plugin neuron, and this is achieved using ctypes, with the following code:
-\begin{verbatim}
-def get_ms(arg1, arg2, arg3):
-    return spFct.get_ms(arg1, arg2, arg3)
-...
-GETMSFUNC = CFUNCTYPE(c_double, c_int, c_long, c_double)
-...
-getmsFCT = GETMSFUNC(get_ms)
-...
-def processNeuronCreation(cmd):
-   ...
-   loadedNeurons[n].putSpecialFunctions(getmsFCT, ...)
-\end{verbatim}
-Where \emph{spFct} is a \emph{SpecialFunction} object (the wrapper class) and \emph{putSpecialFunctions} is a method contained in the \emph{cmpneuron/cython\_neuron.pyx} file.
-\\
-The user will finally access these functionalities by calling the following commands:
+This class will be of course wrapped into another one. The final purpose is to send the wrapper class to the base neuron, so that the user can access the functionalities by calling this object (which is \emph{time\_scheduler}).
+
+
+The user will finally access these functionalities by calling the following commands (for any additional information, see the \emph{cynest/datamanager.pyx} file):
 \begin{verbatim}
 def get_ms_on_resolution(self):
     return spFct.get_msFct(0, -1, -1)
@@ -296,7 +284,7 @@ def get_ms_on_steps(self, steps):
 ...
 \end{verbatim}
 There are many more (15 in total). See the user documentation or the code for the complete list.
-Note that these functions are callable from the base \emph{Neuron} class (see next section) and their behaviour is quite simple : they just call the pointer functions previously setted giving the correct arguments. Also note that \emph{spFct} is a different object from the other one since we are in a different file. That object just holds the function pointers setted by \emph{putSpecialFunctions}.
+Note that, as previously said, these functions are callable from the base \emph{Neuron} class by accessing the \emph{time\_scheduler} object.
 
 \section{Performances}
 The system has been tested during a single-threaded simulation of 40 ms concerning over 1000 randomly connected neurons and compared to their native and SLI counterparts. The results are:
@@ -308,32 +296,4 @@ The system has been tested during a single-threaded simulation of 40 ms concerni
 We can therefore conclude that the Cython neuron is only about 3 times slower than the native version, whereas the SLI neuron is up to 70 times slower.\\
 Note that during different test trials, values could slightly change because of the random factor introduced in the network.\\
 
-
-\section{Problems and Difficulties}
-The overall project wasn't so difficult because Cython hides a lot of low level details important when dealing with shared libraries. The main problem was to understand how Cython works and correctly use its syntax, which is not as simple as it seems.\\
-But before even beginning the project, a great amount of work as been accomplished in order to understand how NEST works and how all its classes are related.\\
-Some little encountered problems were:
-\begin{itemize}
-\item Installing the good version. Package managers don't actually know which is the latest Cython release, so one must care of installing the one on the website.
-\item The Global Lock Interpreter has to be used in order to maintain cython data persistent. This is done using the code \emph{with gil} after a function declaration.
-\item C++ pointers cannot be directly given to shared object functions and another solution has to be found.
-\item The Cython syntax can be confusing, making sometimes mandatory to write code in a less elegant way. As an example, the \emph{Cannot convert Python object to...} error is a very common and annoying one.
-\item Some global objects are not persistent (do not store the last updated value) during the program execution and have to be placed inside classes in order to be.
-\end{itemize}
-\section{Conclusion}
-At the end of the project, the system works quite well and implements the suited features.\\
-However, as previously stated, it has some major limitations, the main one being the slowness. In a previous version, one could create custom objects inside the neuron, but the field names have to start with "\_", otherwise an error occurs. This problem has been recently fixed and that's now possible to choose if a neuron field is public or private by beginning its name with \_ or not. If a custom type field doesn't have a private name, it is simply ignored when passed to NEST.\\
-Another main limitation is represented by the proposed neuron accesses: there is no way to handle events and access some (maybe) usefull system fields. This should be implemented in the future. \\ \\ \\
-An important question therefore arises: is there a better way to propose more or less the same 
-functionalities, but making the neuron much faster?\\
-Maybe yes! It could be possible, but the price would be the syntax reduction. The neuron should become a "highly configurable" one. The user should configure it by using a very simple language which enables:
-\begin{itemize}
-\item Fields creation, but only of builtin types (integers, booleans, doubles and strings).
-\item Basic operations (+, -, *, /, \%) for formulas evaluation.
-\item Basic control flow structures (if\ldots else, while\ldots).
-\item External mathematical functions, provided by the language.
-\item Special external functions or fields, provided by the language, which will call NEST functions or access NEST parameters.
-\end{itemize}
-That should be compiled in a "Java-bytecode"-like language, which would be loaded by the neuron before the simulation and executed using a buffer for instructions and a stack for variables.\\
-Such a solution should be much faster than their Cython counterpart.
 \end{document}

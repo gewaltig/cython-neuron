@@ -45,7 +45,7 @@ cdef extern from "cynestkernel.h":
 
 cdef extern from "time_scheduler.h":
     cdef cppclass TimeScheduler:
-        SpecialFunctions()
+        TimeScheduler()
         double get_ms(int, long, double)
         long get_tics_or_steps(int, int, long, double)
         unsigned int get_scheduler_value(int, unsigned int)
