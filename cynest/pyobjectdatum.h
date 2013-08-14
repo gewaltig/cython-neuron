@@ -134,10 +134,19 @@ void call_method(std::string cmd) {
 }
 
 void call_update() {
-	// we do not need to check, that would slow down a little bit
+	// important, otherwise segmentation fault
+	PyGILState_STATE s = PyGILState_Ensure();
+	
 	updateFct(this->pyObj, NULL);
+
+    PyGILState_Release(s);
 }
 
+void call_update_optimized() {
+	// without the GIL the function is faster and, much more
+	// important, the multithreading is not affected
+	updateFct(this->pyObj, NULL);
+}
 
 
 bool isOK(std::string method)

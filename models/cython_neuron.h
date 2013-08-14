@@ -129,16 +129,17 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
 
   private:
 
-	// Pointers to Standard Parameters retrieving
-	double* currents;
+    // Pointers to Standard Parameters retrieving
+    double* currents;
     double* in_spikes;
-	double* ex_spikes;
-	long* t_lag;
-	long* spike;
+    double* ex_spikes;
+    long* t_lag;
+    long* spike;
 
     DictionaryDatum get_status_dict_();
     
-	Datum* pyObj;
+    Datum* pyObj;
+    bool optimized;
 
     void init_state_(const Node& proto);
     void init_buffers_();

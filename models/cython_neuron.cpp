@@ -114,6 +114,13 @@ void nest::cython_neuron::calibrate()
 	// Pointers to Standard Parameters passing
 	(*state_)[Name("pyobject")]->putStdParams(&currents, &in_spikes, &ex_spikes, &t_lag, &spike);
 	(*state_)[Name("pyobject")]->call_method(std::string("calibrate"));
+
+	if(state_->known(Name("optimized")) && (*state_)[Name("optimized")]) {
+		optimized = true;
+	}
+	else {
+		optimized = false;
+	}
   }
 }
 
@@ -130,8 +137,12 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
     *t_lag = lag;
 
 
-    // surely exists, otherwise segfault before
+    if(this->optimized) {
+	pyObj->call_update_optimized();
+    }
+    else {
 	pyObj->call_update();
+    }
 
     // threshold crossing
     if (*spike)

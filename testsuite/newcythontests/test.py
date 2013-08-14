@@ -44,7 +44,7 @@ class Brunel2000:
     N_E   = 800 # to change
     N_I   = 200 # to change
     J_E   = 0.1
-    threads=1
+    threads=4
     N_rec   = 50    # Number of neurons to record from
     built=False
     connected=False
@@ -90,7 +90,7 @@ class Brunel2000:
         #                  "V_th": self.V_th,
         #                  "V_reset": 10.0})
 
-    def build(self, neuronName):
+    def build(self, neuronName, custom):
         """
         Create all nodes, used in the model.
         """
@@ -107,19 +107,22 @@ class Brunel2000:
         self.spikes=cynest.Create("spike_detector",2, 
                                 [{"label": "brunel-py-ex"},
                                  {"label": "brunel-py-in"}])
+        if custom == True:
+	    cynest.SetStatus(self.nodes, [{"optimized":True}])
+
         self.nodes_E= self.nodes[:self.N_E]
         self.nodes_I= self.nodes[self.N_E:]
         self.spikes_E=self.spikes[:1]
         self.spikes_I=self.spikes[1:]
         self.built=True
 
-    def connect(self, neuronName):
+    def connect(self, neuronName, custom):
         """
         Connect all nodes in the model.
         """
         if self.connected: return
         if not self.built:
-            self.build(neuronName)
+            self.build(neuronName, custom)
 
         cynest.CopyModel("static_synapse_hom_wd",
                        "excitatory",
@@ -138,13 +141,13 @@ class Brunel2000:
         cynest.ConvergentConnect(self.nodes_I[:self.N_rec],self.spikes_I)
         self.connected=True
 
-    def run(self, neuronName, simtime=40.):
+    def run(self, neuronName, custom, simtime=40.):
         """
         Simulate the model for simtime milliseconds and print the
         firing rates of the network during htis period.  
         """
         if not self.connected:
-            self.connect(neuronName)
+            self.connect(neuronName, custom)
         cynest.Simulate(simtime)
         events = cynest.GetStatus(self.spikes,"n_events")
         self.rate_ex= events[0]/simtime*1000.0/self.N_rec
@@ -179,7 +182,7 @@ def runNeurons(ms, version = 1):
     print "Running native neurons"
     # native neuron
     b = Brunel2000()
-    b.run("iaf_psc_delta", ms)
+    b.run("iaf_psc_delta", False, ms)
     NativRTF = cynest.GetKernelStatus()["realtime factor"]
 
     cynest.ResetKernel()
@@ -189,9 +192,9 @@ def runNeurons(ms, version = 1):
     b = Brunel2000()
     
     if version == 1:
-        b.run("cython_iaf_psc_delta_c_members", ms)
+        b.run("cython_iaf_psc_delta_c_members", True, ms)
     elif version == 2:
-        b.run("cython_iaf_psc_delta_pydict", ms)
+        b.run("cython_iaf_psc_delta_pydict", True, ms)
 
         
     CythonRTF = cynest.GetKernelStatus()["realtime factor"]
