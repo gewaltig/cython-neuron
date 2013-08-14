@@ -143,7 +143,7 @@ There is however a way in order to acces the most important values and the base 
 
 \end{itemize}
 
-As an example, writing \emph{self.time\_scheduler.get\_ms\_on\_resolution()} is the same as writing (in the NEST code, C++) \emph{Time::get\_resolution().get\_ms()} and \emph{self.time\_scheduler.get\_steps\_on\_ms(ms)} the same as \emph{Time(Time::ms(ms)).get\_steps()}. In addition, writing \emph{self.time\_scheduler.get\_min\_delay()} could be compared to the C++ \emph{Scheduler::get\_min\_delay()}.\\
+As an example, writing \emph{self.time\_scheduler.get\_ms\_on\_resolution()} is the same as writing (in the NEST code, C++) \emph{Time::get\_resolution().get\_ms()} and \\ \emph{self.time\_scheduler.get\_steps\_on\_ms(ms)} the same as \emph{Time(Time::ms(ms)).get\_steps()}. In addition, writing \emph{self.time\_scheduler.get\_min\_delay()} could be compared to the C++ \emph{Scheduler::get\_min\_delay()}.\\
 Note that calling these functions takes much time because the call spreads through many other methods in order to achieve the Time or Scheduler classes. It is therefore advised to avoid these calls in the update method and to create variables instead.
 
 \section{Using the new neuron}
