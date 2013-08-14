@@ -42,20 +42,29 @@
 %----------------------------------------------------------------------------------------
 
 
-In order to correctly install CyNEST (and configure the cmpneuron tool), you must achieve the following operations :
+In order to correctly install CyNEST, you must achieve the following very simple operations :
 \\ \\
 \begin{itemize}
 \item Place your terminal in the \emph{nest-cynest} folder (where the NEST code is situated).
 
-\item Execute \textbf{./bootstrap.sh}.\\ This will run the automake, autoconf and libtoolize tools, as well as compiling the \emph{cmpneuron.cpp} file contained in the \emph{cmpneuron} folder.
+\item Execute \textbf{./bootstrap.sh}.\\ This will run the automake, autoconf and libtoolize tools, generating the \emph{configure} file.
 
 \item Leave the current directory and create another one (the name is ininfluent), then enter this new folder.
 
-\item You have to call the \emph{configure} file in the \emph{nest-cynest} folder.\\Hence type \\ \textbf{../nest-cynest/configure --prefix="install-dir" --enable-cynest}\\ in your terminal, where \emph{install-dir} is the directory where you want to install CyNEST.
+\item Call the \emph{configure} file in the \emph{nest-cynest} folder.\\Hence type \\ \textbf{../nest-cynest/configure --prefix="install-dir" - -enable-cynest}\\ in your terminal, where \emph{install-dir} is the directory where you want to install CyNEST.
 
-\item Type \textbf{make -j4} and then \textbf{make install} in the terminal. This will compile and install CyNEST on the computer. After the installation is completed, it is possible to  load python and then type \textbf{import cynest} in the python terminal. Then cynest can be used.
+\item Type \textbf{make -j4} and then \textbf{make install} in the terminal. This will compile and install CyNEST on the computer. 
 
-\item In order to make cmpneuron callable from terminal, go into the \emph{nest-cynest/cmpneuron} folder and copy the following files (\emph{cmpneuron}, \emph{cython\_neuron.pyx}, \emph{cmpneuron\_doc.pdf} and \emph{setup.py}) in the bin folder where CyNEST has been installed (\emph{"NEST\_Dir"/bin}).\\For more information about the cmpneuron tool, type \textbf{cmpneuron --doc} in the terminal.
+\item Configure the paths in the terminal. You can do that by modifying, for example, the \emph{/home/"user"/.bashrc} file. Add the following lines:
+\begin{verbatim}
+export PATH="[installation path of CyNEST]/bin:$PATH"
+
+export PYTHONPATH="[installation path of CyNEST]/lib/
+                    python2.7/site-packages:$PYTHONPATH"
+\end{verbatim}
+
+\item It is now possible to load python and, by typing \textbf{import cynest} in the python terminal, CyNEST can be used.
+
 
 \end{itemize}
 

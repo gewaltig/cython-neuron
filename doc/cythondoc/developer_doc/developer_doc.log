@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.11.29)  13 AUG 2013 17:20
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.11.29)  14 AUG 2013 09:58
 entering extended mode
  %&-line parsing enabled.
 **developer_doc.tex
@@ -117,110 +117,95 @@ Underfull \hbox (badness 10000) in paragraph at lines 78--79
  []
 
 [3]
-Overfull \hbox (116.99597pt too wide) in paragraph at lines 110--110
-[]    \OT1/cmtt/m/n/10 # We convert the address of the variables into long in o
-rder to extract the pointers[] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 125--126
+Underfull \hbox (badness 10000) in paragraph at lines 126--127
 
  []
 
 [4] [5]
-Overfull \hbox (111.74602pt too wide) in paragraph at lines 176--176
-[]    \OT1/cmtt/m/n/10 (*state_)[Name("pyobject")]->call_status_method(std::str
-ing("setStatus"), &state_);[] 
- []
+Underfull \hbox (badness 10000) in paragraph at lines 192--195
 
-
-Overfull \hbox (27.74675pt too wide) in paragraph at lines 185--185
-[]    \OT1/cmtt/m/n/10 (*state_)[Name("pyobject")]->call_method(std::string("ca
-librate"));[] 
- []
-
-Missing character: There is no Ã in font cmr10!
-Missing character: There is no ¯ in font cmr10!
-
-Underfull \hbox (badness 10000) in paragraph at lines 189--192
-
- []
-
-
-Overfull \hbox (1.49698pt too wide) in paragraph at lines 206--206
-[]\OT1/cmtt/m/n/10 IntegerDatum* sI = (IntegerDatum*)(*state_)[names::spike].da
-tum();[] 
  []
 
 [6]
-Overfull \hbox (22.4968pt too wide) in paragraph at lines 206--206
-[]\OT1/cmtt/m/n/10 cythonStdVars(get_name(), neuronID, sI->get_p_val(), isD->ge
-t_p_val(),[] 
+Underfull \hbox (badness 10000) in paragraph at lines 209--210
+
  []
 
 
-Overfull \hbox (85.49625pt too wide) in paragraph at lines 236--236
-[]    \OT1/cmtt/m/n/10 Time createTime(int inputType, long longInputValue, doub
-le doubleInputValue) {[] 
+Underfull \hbox (badness 10000) in paragraph at lines 209--210
+
  []
 
 
-Overfull \hbox (74.99634pt too wide) in paragraph at lines 236--236
-[]    \OT1/cmtt/m/n/10 double get_ms(int inputType, long longInputValue, double
- doubleInputValue) {[] 
+Overfull \hbox (11.99689pt too wide) in paragraph at lines 231--231
+[]    \OT1/cmtt/m/n/10 *in_spikes = B_.in_spikes_.get_value(lag); // arriving i
+n spikes[] 
  []
 
 
-Overfull \hbox (38.24666pt too wide) in paragraph at lines 236--236
-[]    \OT1/cmtt/m/n/10 unsigned int get_scheduler_value(int outputValue, unsign
-ed int arg) {[] 
+Overfull \hbox (11.99689pt too wide) in paragraph at lines 231--231
+[]    \OT1/cmtt/m/n/10 *ex_spikes = B_.ex_spikes_.get_value(lag); // arriving e
+x spikes[] 
+ []
+
+
+Overfull \hbox (1.49698pt too wide) in paragraph at lines 244--244
+[]                              \OT1/cmtt/m/n/10 double** es, long** tl, long**
+ sp) {[] 
+ []
+
+
+Overfull \hbox (1.49698pt too wide) in paragraph at lines 244--244
+[]          \OT1/cmtt/m/n/10 PyObject_CallMethod(this->pyObj, "getPCurrents", N
+ULL));[] 
  []
 
 [7]
-Underfull \hbox (badness 10000) in paragraph at lines 260--264
+Underfull \hbox (badness 10000) in paragraph at lines 253--254
+
+ []
+
+[8] [9]
+Overfull \hbox (13.33337pt too wide) in paragraph at lines 323--327
+\OT1/cmr/m/n/10 Once the Time ob-ject has been cre-ated, the \OT1/cmr/m/it/10 T
+imeSched-uler::get[]ms \OT1/cmr/m/n/10 and \OT1/cmr/m/it/10 TimeSched-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 323--327
 
  []
 
 
-Overfull \hbox (5.9221pt too wide) in paragraph at lines 260--264
+Overfull \hbox (5.9221pt too wide) in paragraph at lines 323--327
 \OT1/cmr/m/n/10 The next step is to in-ter-face with Cython and this is done in
  the \OT1/cmr/m/it/10 cynest/classes.pyx
  []
 
-[8]
-Underfull \hbox (badness 10000) in paragraph at lines 308--310
+[10]
+Underfull \hbox (badness 10000) in paragraph at lines 359--361
 
  []
 
-[9]
-Underfull \hbox (badness 10000) in paragraph at lines 324--330
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 324--330
-
- []
-
-[10] [11] (./developer_doc.aux) ) 
+[11] (./developer_doc.aux) ) 
 Here is how much of TeX's memory you used:
- 941 strings out of 495061
- 11888 string characters out of 1182620
- 63580 words of memory out of 3000000
- 4158 multiletter control sequences out of 15000+50000
+ 940 strings out of 495061
+ 11872 string characters out of 1182620
+ 64580 words of memory out of 3000000
+ 4157 multiletter control sequences out of 15000+50000
  8710 words of font info for 31 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
- 25i,6n,19p,549b,245s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/share/texmf-texlive/fonts/type1/public/a
-msfonts/cm/cmbx10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/
-cmbx12.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmcsc10.pfb
-></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share
-/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf-texli
-ve/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texmf-texlive/fonts/typ
-e1/public/amsfonts/cm/cmsy10.pfb></usr/share/texmf-texlive/fonts/type1/public/a
-msfonts/cm/cmti10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/
-cmtt10.pfb>
-Output written on developer_doc.pdf (11 pages, 197012 bytes).
+ 25i,6n,19p,552b,245s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/share/texmf-texlive/fonts/type1/public/amsfon
+ts/cm/cmbx10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmbx1
+2.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmcsc10.pfb></us
+r/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texm
+f-texlive/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texmf-texlive/fo
+nts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texmf-texlive/fonts/type1/pu
+blic/amsfonts/cm/cmsy10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfon
+ts/cm/cmti10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmtt1
+0.pfb>
+Output written on developer_doc.pdf (11 pages, 192751 bytes).
 PDF statistics:
  75 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

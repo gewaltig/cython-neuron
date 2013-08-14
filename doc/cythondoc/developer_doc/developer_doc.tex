@@ -101,7 +101,8 @@ cdef class Neuron:
     cpdef setTimeScheduler(self, ts):
         self.time_scheduler = ts
        
-    # We convert the address of the variables into long in order to extract the pointers
+    # We convert the address of the variables into 
+    # long in order to extract the pointers
 
     cpdef getPCurrents(self):
         return <long>(&(self.currents))
@@ -171,7 +172,8 @@ Every custom model is handled by the \emph{cython\_neuron} class, which contains
 Each time one of the custom methods is called, this class will class the apposite method of the PyObjectDatum object, which is contained in the status\_ dictionary. Here is an example:
 \begin{verbatim}
 if(state_->known(Name("pyobject"))) {
-    (*state_)[Name("pyobject")]->call_status_method(std::string("setStatus"), &state_);
+    (*state_)[Name("pyobject")]->
+         call_status_method(std::string("setStatus"), &state_);
 }
 \end{verbatim}
 The calibrate method is handled more or less the same way:
@@ -180,15 +182,16 @@ if(state_->known(Name("pyobject"))) {
     pyObj = &(*(*state_)[Name("pyobject")]);
 	  
     ...
-    (*state_)[Name("pyobject")]->call_method(std::string("calibrate"));
+    (*state_)[Name("pyobject")]->
+                     call_method(std::string("calibrate"));
 }
 \end{verbatim}
 As one can see, the \emph{pyobject} element is accessed and the calibrate method is called. \emph{pyObj} is extracted and then used during the update for the purpose of efficiency (no element lookup).
 
 \subsection{Update Optimization with Standard Parameters}
-When a neuron calls one of the Cython functions, such as \emph{cythonCalibrate} or \emph{cythonUpdate}, the parameters contained in \emph{status\_} have to be passed to the corresponding cython neuron. The naïve approach of doing that is by copying them into the cython neuron, calling the corresponding function and retry them back.\\
-This could work for \emph{cythonCalibare}, but not for \emph{cythonUpdate} as it is called many times and this approach would slow down the system. \\
-Furthermore, as one can realize, during a simulation the only important constantly updated parameters by the C++ neuron are :\\
+When a neuron calls one of the cython neuron (element \emph{pyobject} of \emph{status\_}) functions, such as \emph{calibrate} or \emph{update}, the parameters contained in \emph{status\_} have to be passed to the corresponding cython neuron. The naive approach of doing that is by copying them into the cython neuron, calling the corresponding function and retry them back.\\
+This could work for \emph{calibare}, but not for \emph{update} as it is called many times and this approach would slow down the system. \\
+Furthermore, as one can realize, during a simulation the only important constantly updated parameters by the system are :\\
 \begin{itemize}
 \item currents
 \item in\_spikes
@@ -196,17 +199,74 @@ Furthermore, as one can realize, during a simulation the only important constant
 \item t\_lag
 \item spike
 \end{itemize}
-These are called \textbf{Standard Parameters} and are the only one worth copying in the Cython neuron before calling the corresponding function.\\
-A good way of speeding up the parameter passing is by giving to the Cython neuron direct pointers to these values, as one can see:
+These are called \textbf{Standard Parameters} and are the only one worth copying in the cython neuron before calling the corresponding function.\\
+The best way of speeding up the parameter passing is by giving to the cython neuron direct pointers to these values. This is done during the calibration:
 \begin{verbatim}
-IntegerDatum* sI = (IntegerDatum*)(*state_)[names::spike].datum();
-...
-cythonStdVars(get_name(), neuronID, sI->get_p_val(), isD->get_p_val(), 
-     esD->get_p_val(), cD->get_p_val(), lI->get_p_val());
+// Pointers to Standard Parameters passing
+(*state_)[Name("pyobject")]->putStdParams(&currents, 
+                  &in_spikes, &ex_spikes, &t_lag, &spike);
 \end{verbatim}
-Therefore, the Cython neuron will change the values pointed by these pointers without making any copy.\\
-However, it is sometimes important to set or retrieve the totality of parameters and this is done during \emph{cythonSetStatus}, \emph{cythonGetStatus} and \emph{cythonCalibrate}.
-More information is detailed in the following section.
+Therefore, the cython neuron will change the values pointed by these pointers without making any copy, thus speeding up the system. \\ \\
+
+The update method has been highly optimized:
+\begin{verbatim}  
+for ( long_t lag = from ; lag < to ; ++lag )
+  {
+	*currents = B_.currents_.get_value(lag);
+    *in_spikes = B_.in_spikes_.get_value(lag); // arriving in spikes
+    *ex_spikes = B_.ex_spikes_.get_value(lag); // arriving ex spikes
+    *t_lag = lag;
+
+
+    // surely exists, otherwise segfault before
+	pyObj->call_update();
+
+    // threshold crossing
+    if (*spike)
+    {
+      ...
+    }
+    ...
+  }
+\end{verbatim}
+There is no lookup of the \emph{status\_} dictionary as well as any unimportant test. The Standard Parameters values are directly changed.
+
+\subsection{Handling the Standard Parameters pointers}
+How are the Standard Parameters pointers extracted? This is done in the \emph{putStdParams} method of the \emph{PyObjectDatum} object:
+\begin{verbatim}
+void putStdParams(double** curr, double** is, 
+                              double** es, long** tl, long** sp) {
+    ...
+	// numeric conversion in order to create a long variable 
+	// containing the address of the std params 
+	*curr = currents = PyInt_AsLong(
+	          PyObject_CallMethod(this->pyObj, "getPCurrents", NULL));
+\end{verbatim}
+The object makes therefore two copies of the pointer, one for its own use and the other for the c++ neuron (which has to modify the values during the update). The \emph{getPCurrents} method is contained in the \emph{Neuron.pyx} file and looks like this:
+\begin{verbatim}
+cpdef getPCurrents(self):
+    return <long>(&(self.currents))
+\end{verbatim}
+Hence the fact that a pointer is nothing else than an integer value representing the variable address is used. This approach is mandatory since there is no possibility to directly pass a long pointer through python to c++. This is some sort of cast allowing python to see the address just like a normal integer.
+
+\subsection{Handling the parameters passing}
+The last task \emph{PyObjectDatum} has to accomplish is the parameter passing during \emph{getStatus} and \emph{setStatus}. This is done by the \emph{call\_status\_method}.\\
+\begin{itemize}
+\item When setting the parameters, a new python dictionary has to be created, filled with the elements of \emph{status\_} (after having been correctly translated by CyNEST) and given to the cython neuron \emph{setStatus} method. Note that we do not want to translate every \emph{status\_} element because the cython neuron doesn't care about general parameters. The other reason is that we, of course, do not want to translate the cython neuron as well (remember it is included in the \emph{status\_} dictionary)!
+
+\item When getting the parameters, a new python dictionary is received by the \emph{getStatus} method of the cython neuron. The content must then update the \emph{status\_} dictionary. The final step is to also include the Standard Parameters.
+\end{itemize}
+For the purpose of completeness, here is an example showing the \emph{getStatus} operation:
+\begin{verbatim}
+// looping through the received python dictionary
+while (PyDict_Next(dict, &pos, &key, &subPyObj)) 
+{
+    (**status)[PyString_AsString(key)] = 
+                 dataConverter.objectToDatum(subPyObj);
+}
+// std params updating
+...
+\end{verbatim}
 
 \section{Special Functions}
 Sometimes, a neuron model needs some special information from the system, such as simulation parameters. The values represent time units, simulation delays, ect...\\
@@ -214,21 +274,24 @@ Therefore, the system has to enable the final user to access these variables and
 \begin{verbatim}
 class TimeScheduler {
 private:
-    Time createTime(int inputType, long longInputValue, double doubleInputValue) {
+    Time createTime(int inputType, long longInputValue, 
+                                  double doubleInputValue) {
         ...
     }
 
 public:
-    double get_ms(int inputType, long longInputValue, double doubleInputValue) {
+    double get_ms(int inputType, long longInputValue, 
+                                  double doubleInputValue) {
         ...
     }
 
     long get_tics_or_steps(int inputType, int outputType, 
-          long longInputValue, double doubleInputValue) {
+             long longInputValue, double doubleInputValue) {
         ...
     }
 
-    unsigned int get_scheduler_value(int outputValue, unsigned int arg) {
+    unsigned int get_scheduler_value(int outputValue, 
+                                         unsigned int arg) {
         ...
     }
 

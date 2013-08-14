@@ -140,14 +140,18 @@ void call_status_method(std::string cmd, void* status_) {
 	DictionaryDatum* status = static_cast<DictionaryDatum*>(status_);
 	
 	if(cmd.compare("setStatus") == 0) {
+		// creation of an empty python dictionary
 		PyObject* dict = PyDict_New();
 
+		// filling the dictionary
 		for(Dictionary::iterator it = (*status)->begin(); it != (*status)->end(); ++it) {
+			// if the status_ element is not forbidden (is actually one of the model parameters), it is copied
 			if(isOK(it->first.toString()) == true) {
 				PyObject_SetItem(dict, PyString_FromString(it->first.toString().c_str()), dataConverter.datumToObject( (**status)[it->first.toString()].datum()));
 			}
 		}
 		
+		// after the python dict has been filled, we can call the method
 		PyObject_CallMethodObjArgs(this->pyObj, PyString_FromString("setStatus"), dict, NULL);
 	}
 	else if(cmd.compare("getStatus") == 0) {
@@ -156,11 +160,13 @@ void call_status_method(std::string cmd, void* status_) {
 		PyObject *key=0;
 		Py_ssize_t pos = 0;
 
+		// looping through the received python dictionary
 		while (PyDict_Next(dict, &pos, &key, &subPyObj)) 
 		{
 			(**status)[PyString_AsString(key)] = dataConverter.objectToDatum(subPyObj);
 		}
 		
+		// the std params also have to be updated
 		if(currents != NULL && in_spikes != NULL && ex_spikes != NULL && t_lag != NULL && spike != NULL) {
 			(**status)["currents"] = *currents;
 			(**status)["in_spikes"] = *in_spikes;
