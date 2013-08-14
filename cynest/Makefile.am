@@ -52,7 +52,7 @@ install-data-hook: install-exec
 	mkdir -p $(DESTDIR)@PKGDATADIR@/extras
 	mkdir -p $(DESTDIR)@PYNEST_PREFIX@/share/doc/nest/cythondoc
 	cp $(VPATH)/nest/Neuron.pyx $(DESTDIR)@PYNEST_PREFIX@/include/Neuron.pyx
-	cp $(VPATH)/../doc/How_to_Install_CyNEST.pdf $(DESTDIR)@PYNEST_PREFIX@/share/doc/nest/How_to_Install_CyNEST.pdf
+	cp $(VPATH)/../doc/How_to_Install_CyNEST.pdf "$(DESTDIR)@PYNEST_PREFIX@/share/doc/nest/CyNEST Installation.pdf"
 	cp $(VPATH)/../doc/cythondoc/user_doc/user_doc.pdf "$(DESTDIR)@PYNEST_PREFIX@/share/doc/nest/cythondoc/Custom Neurons - User Documentation.pdf"
 	cp $(VPATH)/../doc/cythondoc/developer_doc/developer_doc.pdf "$(DESTDIR)@PYNEST_PREFIX@/share/doc/nest/cythondoc/Custom Neurons - Developer Documentation.pdf"
 	@INSTALL_PROGRAM@ do_tests.py $(DESTDIR)@PKGDATADIR@/extras/
