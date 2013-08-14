@@ -115,6 +115,7 @@ void putStdParams(double** curr, double** is, double** es, long** tl, long** sp)
 	*tl = t_lag = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPT_Lag", NULL));
 	*sp = spike = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPSpike", NULL));
 	
+	// we also extract the direct pointer to the update c function
 	struct PyMethodDef* updateRef = getUpdateRef(this->pyObj->ob_type->tp_methods);
 	if(updateRef != NULL) {
 		this->updateFct = updateRef->ml_meth;
@@ -133,13 +134,8 @@ void call_method(std::string cmd) {
 }
 
 void call_update() {
-	// important, otherwise segmentation fault
-	PyGILState_STATE s = PyGILState_Ensure();
-	
-	//PyObject_CallMethod(this->pyObj, "update", NULL);
+	// we do not need to check, that would slow down a little bit
 	updateFct(this->pyObj, NULL);
-
-    PyGILState_Release(s);
 }
 
 
