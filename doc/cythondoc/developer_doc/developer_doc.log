@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.11.29)  14 AUG 2013 09:58
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.11.29)  14 AUG 2013 11:55
 entering extended mode
  %&-line parsing enabled.
 **developer_doc.tex
@@ -103,6 +103,11 @@ File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 55.
 
+Overfull \hbox (3.22272pt too wide) in paragraph at lines 62--63
+\OT1/cmr/m/n/10 This sec-tion deals with the global struc-ture of the new in-te
+r-face be-tween CyNEST
+ []
+
 <Ressources/Interface_Structure.png, id=10, 949.5475pt x 490.83376pt>
 File: Ressources/Interface_Structure.png Graphic file (type png)
 
@@ -205,7 +210,7 @@ nts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texmf-texlive/fonts/type1/pu
 blic/amsfonts/cm/cmsy10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfon
 ts/cm/cmti10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmtt1
 0.pfb>
-Output written on developer_doc.pdf (11 pages, 192751 bytes).
+Output written on developer_doc.pdf (11 pages, 192443 bytes).
 PDF statistics:
  75 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

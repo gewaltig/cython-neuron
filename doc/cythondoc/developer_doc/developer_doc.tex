@@ -43,10 +43,10 @@ These neurons can be connected throught weighted connexions and their activity r
 
 In the NEST code, every model extends from a parent class, implementing only basic functions, such as collecting the incoming spikes. The real model is written in the child classes, so that, using polymorphism, adding new neurons is accomplished relatively easily.\\
 However, each time one wants to add a new neuron, he has to write it in C++ (a difficult language) and recompile the whole project. This makes the tool not so flexible and slows down developpement time.\\
-That's why the need for a plugin system has arised. Since NEST provides an interface enabling the user to execute the simulator from a PYthon terminal, the system has to be designed in order to facilitate the python utilization.
-Therefore, this new feature should enable to easily write neurons and import them like normal python objects, these being automatically recognized and executed by NEST like normal neurons. In addition, since C++ is a difficult language, models should be written in a more scientific language such as Cython.\\ \\
+That's why the need for a plugin system has arised. Since NEST provides an interface enabling the user to execute the simulator from a Python terminal, the system has to be designed in order to facilitate the python utilization.
+Therefore, this new feature should enable to easily write neurons and import them like normal python objects, these being automatically recognized and executed by NEST. In addition, since C++ is a difficult language, models should be written in a more scientific language such as Cython.\\ \\
 The purpose of this project is the creation of a plugin system having these features. This is accomplished using a relatively new technology, Cython. This special tool enables one to write Python code and compile it into C++ or writing cython code and interface it with Python.\\
-During the next sections, first the NEST structure will be presented, then a global description of the interface will be depicted. After that, more details are given, beginning with the NEST C++ side, followed by the CyNEST (the Cython) side. Finally, performances and improvements are analyzed.
+During the next sections, first the NEST structure will be presented, then a global description of the interface will be depicted. After that, more details are given, beginning with the Python side of the project, followed by the C++ side. Finally, performances are analyzed.
 
 \section{NEST Structure}
 The aim of this section is to enable the reader understanding the global NEST structure, which is essential in order to grasp the details of the new interface, presented in the next sections.\\
@@ -59,7 +59,7 @@ Basically, NEST is composed of three major parts:
 For more information, see the original documentation\\ (http://www.nest-initiative.org/index.php/Software:About\_NEST).
 
 \section{Global Interface Structure}
-This section deals with the global structure of the new interface between NEST and custom neurons. 
+This section deals with the global structure of the new interface between CyNEST and custom neurons. 
 
 \begin{figure}[h]
 \begin{center}

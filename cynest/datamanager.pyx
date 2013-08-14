@@ -82,6 +82,7 @@ cdef class SLIDataContainer:
 
 # This class contains the special functions needed by
 # the cython_neuron in order to access the Time and Scheduler classes
+# See the developer documentation for more details
 cdef class TimeScheduler:
     cdef classes.TimeScheduler *thisptr
 

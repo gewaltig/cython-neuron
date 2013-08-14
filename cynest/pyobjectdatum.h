@@ -45,6 +45,8 @@ private:
   int forbiddenParamsLength;
   std::string forbiddenParams[16];
 
+  PyCFunction updateFct;
+
   PyObjectDatum *clone(void) const
   {
         return new PyObjectDatum(*this);
@@ -63,7 +65,7 @@ public:
 	  t_lag = NULL;
 	  spike = NULL;
 	  Py_XINCREF(pyObj);
-	  
+
 	  // the cython model shouldn't use or access these parameters
 	  forbiddenParamsLength = 16;
 	  forbiddenParams[0] = "archiver_length";
@@ -91,9 +93,19 @@ public:
   ~PyObjectDatum() {}
 
 
-
+struct PyMethodDef* getUpdateRef(struct PyMethodDef *tp_methods) {
+	int i = 0;
+	while(&(tp_methods[i]) != NULL) {
+		if(std::string("update").compare(tp_methods[i].ml_name) == 0) {
+			return &(tp_methods[i]);
+		}
+		i++;
+	}
+	return NULL;
+}
 
 void putStdParams(double** curr, double** is, double** es, long** tl, long** sp) {
+	// important, otherwise segmentation fault
 	PyGILState_STATE s = PyGILState_Ensure();
 	
 	// numeric conversion in order to create a long variable containing the address of the std params 
@@ -103,10 +115,16 @@ void putStdParams(double** curr, double** is, double** es, long** tl, long** sp)
 	*tl = t_lag = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPT_Lag", NULL));
 	*sp = spike = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPSpike", NULL));
 	
+	struct PyMethodDef* updateRef = getUpdateRef(this->pyObj->ob_type->tp_methods);
+	if(updateRef != NULL) {
+		this->updateFct = updateRef->ml_meth;
+	}
+
 	PyGILState_Release(s);
 }
 
 void call_method(std::string cmd) {
+	// important, otherwise segmentation fault
 	PyGILState_STATE s = PyGILState_Ensure();
 
 	PyObject_CallMethod(this->pyObj, cmd.c_str(), NULL);
@@ -115,9 +133,11 @@ void call_method(std::string cmd) {
 }
 
 void call_update() {
+	// important, otherwise segmentation fault
 	PyGILState_STATE s = PyGILState_Ensure();
 	
-	PyObject_CallMethod(this->pyObj, "update", NULL);
+	//PyObject_CallMethod(this->pyObj, "update", NULL);
+	updateFct(this->pyObj, NULL);
 
     PyGILState_Release(s);
 }
@@ -136,6 +156,7 @@ bool isOK(std::string method)
 }
 
 void call_status_method(std::string cmd, void* status_) {
+	// important, otherwise segmentation fault
 	PyGILState_STATE s = PyGILState_Ensure();
 	DictionaryDatum* status = static_cast<DictionaryDatum*>(status_);
 	
