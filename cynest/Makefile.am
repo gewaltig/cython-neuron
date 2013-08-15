@@ -22,8 +22,6 @@ EXTRA_DIST= setup.py.in\
 	cynestkernel.h\
 	cynestkernel.cpp \
 	checkpython.py \
-	pydatum.h \
-	pydatum.cpp \
 	pyobjectdatum.h \
 	cython_neuron.h \
 	cython_neuron.cpp \

@@ -11,22 +11,11 @@ cdef extern from "datum.h":
   cdef cppclass Datum:
         pass
 
-cdef extern from "namedatum.h":
-    cdef cppclass NameDatum:
-        NameDatum(string)
-        NameDatum(NameDatum)
-        string toString()
 
 cdef extern from "token.h":
     cdef cppclass Token:
         Token(Token)
         Token(Datum *)
-
-cdef extern from "datumtopythonconverter.h":
-    cdef cppclass DatumToPythonConverter:
-        DatumToPythonConverter()
-        object convertDatum(Datum*)
-        void updateDictionary(Datum* src, Datum* dest)
 
 cdef extern from "cynestkernel.h":
     cdef cppclass NESTEngine:

@@ -19,10 +19,7 @@ from Cython.Build import cythonize
 
 
 cxx                 = '@CXX@'
-sources             = ['@PKGSRCDIR@/cynest/pynestkernel2.cpp',
-                       '@PKGSRCDIR@/cynest/pydatum.cpp',
-                       '@PKGSRCDIR@/cynest/cython_neuron.cpp',
-                       '@PKGSRCDIR@/cynest/datumtopythonconverter.cpp']
+sources             = ['@PKGSRCDIR@/cynest/datumtopythonconverter.cpp']
 
 # -fpermissive needed for ndarrayobject.h
 # to compile due to comma terminated enumerations
@@ -221,7 +218,6 @@ setup(name         = 'Cynest',
       ext_modules  = [Extension("cynest.kernel",
                                sources= ["@PKGSRCDIR@/cynest/kernel.pyx",
                                          '@PKGSRCDIR@/cynest/cynestkernel.cpp',
-                                         '@PKGSRCDIR@/cynest/cython_neuron.cpp',
                                          '@PKGSRCDIR@/cynest/datumtopythonconverter.cpp'],
                                language="c++",**extdict)])
 
