@@ -105,7 +105,6 @@ am_libmodelsmodule_la_OBJECTS =  \
 	libmodelsmodule_la-ht_connection.lo \
 	libmodelsmodule_la-smp_generator.lo \
 	libmodelsmodule_la-sli_neuron.lo \
-	libmodelsmodule_la-cython_neuron.lo \
 	libmodelsmodule_la-ginzburg_neuron.lo \
 	libmodelsmodule_la-izhikevich.lo \
 	libmodelsmodule_la-modelsmodule.lo
@@ -450,7 +449,6 @@ libmodelsmodule_la_SOURCES = \
 		ht_connection.cpp ht_connection.h \
 		smp_generator.cpp smp_generator.h \
 		sli_neuron.cpp sli_neuron.h\
-		cython_neuron.cpp cython_neuron.h \
 		ginzburg_neuron.cpp ginzburg_neuron.h\
 		izhikevich.cpp izhikevich.h\
 	 	modelsmodule.h modelsmodule.cpp
@@ -522,7 +520,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmodelsmodule_la-aeif_cond_exp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmodelsmodule_la-cont_delay_connection.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmodelsmodule_la-correlation_detector.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmodelsmodule_la-cython_neuron.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmodelsmodule_la-dc_generator.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmodelsmodule_la-gamma_sup_generator.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmodelsmodule_la-ginzburg_neuron.Plo@am__quote@
@@ -918,13 +915,6 @@ libmodelsmodule_la-sli_neuron.lo: sli_neuron.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='sli_neuron.cpp' object='libmodelsmodule_la-sli_neuron.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmodelsmodule_la_CXXFLAGS) $(CXXFLAGS) -c -o libmodelsmodule_la-sli_neuron.lo `test -f 'sli_neuron.cpp' || echo '$(srcdir)/'`sli_neuron.cpp
-
-libmodelsmodule_la-cython_neuron.lo: cython_neuron.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmodelsmodule_la_CXXFLAGS) $(CXXFLAGS) -MT libmodelsmodule_la-cython_neuron.lo -MD -MP -MF $(DEPDIR)/libmodelsmodule_la-cython_neuron.Tpo -c -o libmodelsmodule_la-cython_neuron.lo `test -f 'cython_neuron.cpp' || echo '$(srcdir)/'`cython_neuron.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmodelsmodule_la-cython_neuron.Tpo $(DEPDIR)/libmodelsmodule_la-cython_neuron.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='cython_neuron.cpp' object='libmodelsmodule_la-cython_neuron.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmodelsmodule_la_CXXFLAGS) $(CXXFLAGS) -c -o libmodelsmodule_la-cython_neuron.lo `test -f 'cython_neuron.cpp' || echo '$(srcdir)/'`cython_neuron.cpp
 
 libmodelsmodule_la-ginzburg_neuron.lo: ginzburg_neuron.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmodelsmodule_la_CXXFLAGS) $(CXXFLAGS) -MT libmodelsmodule_la-ginzburg_neuron.lo -MD -MP -MF $(DEPDIR)/libmodelsmodule_la-ginzburg_neuron.Tpo -c -o libmodelsmodule_la-ginzburg_neuron.lo `test -f 'ginzburg_neuron.cpp' || echo '$(srcdir)/'`ginzburg_neuron.cpp

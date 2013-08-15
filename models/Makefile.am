@@ -65,7 +65,6 @@ libmodelsmodule_la_SOURCES= \
 		ht_connection.cpp ht_connection.h \
 		smp_generator.cpp smp_generator.h \
 		sli_neuron.cpp sli_neuron.h\
-		cython_neuron.cpp cython_neuron.h \
 		ginzburg_neuron.cpp ginzburg_neuron.h\
 		izhikevich.cpp izhikevich.h\
 	 	modelsmodule.h modelsmodule.cpp

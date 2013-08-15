@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.11.29)  14 AUG 2013 10:20
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.11.29)  14 AUG 2013 16:41
 entering extended mode
  %&-line parsing enabled.
 **user_doc.tex
@@ -112,21 +112,21 @@ File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 77.
  [2] [3]
-Overfull \hbox (24.51747pt too wide) in paragraph at lines 146--148
+Overfull \hbox (24.51747pt too wide) in paragraph at lines 140--142
 \OT1/cmr/m/it/10 self.time[]scheduler.get[]steps[]on[]ms(ms) \OT1/cmr/m/n/10 th
 e same as \OT1/cmr/m/it/10 Time(Time::ms(ms)).get[]steps()\OT1/cmr/m/n/10 .
  []
 
-[4]
-Underfull \hbox (badness 10000) in paragraph at lines 160--162
+[4] [5]
+Underfull \hbox (badness 10000) in paragraph at lines 180--182
 
  []
 
-[5] (./user_doc.aux) ) 
+[6] (./user_doc.aux) ) 
 Here is how much of TeX's memory you used:
  932 strings out of 495061
  11628 string characters out of 1182620
- 64575 words of memory out of 3000000
+ 63575 words of memory out of 3000000
  4152 multiletter control sequences out of 15000+50000
  8710 words of font info for 31 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
@@ -140,9 +140,9 @@ pe1/public/amsfonts/cm/cmr17.pfb></usr/share/texmf-texlive/fonts/type1/public/a
 msfonts/cm/cmsy10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/
 cmti10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
 
-Output written on user_doc.pdf (5 pages, 131166 bytes).
+Output written on user_doc.pdf (6 pages, 135442 bytes).
 PDF statistics:
- 54 PDF objects out of 1000 (max. 8388607)
+ 57 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 

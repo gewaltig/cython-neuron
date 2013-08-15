@@ -82,6 +82,10 @@ extern "C"
 #include "cynestkernel.h"
 #include "kernel.h"
 
+// Little hack for making the file recognized. Otherwise,
+// the compiler doesn't seem to consider it (only the .h) 
+#include "cython_neuron.cpp"
+
 /*
 The following instance of nest::spikecounter needs to be defined
 under MacOS X to prevent the linker from throwing away the

@@ -199,3 +199,9 @@ void nest::cython_neuron::getStatusCython() const
 		(*state_)[Name("pyobject")]->call_status_method(std::string("getStatus"), &state_);
 	}
 }
+
+
+void nest::register_cython_model(nest::Network *net, std::string model)
+{
+	nest::register_model<cython_neuron>(*net, model.c_str());
+}

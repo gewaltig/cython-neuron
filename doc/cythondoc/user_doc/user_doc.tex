@@ -83,18 +83,12 @@ Here's a brief description of every method :
 Note that the way the user handles the model parameters is completely unimportant to NEST, as long as they are correctly interfaced with the system (using the \emph{setStatus} and \emph{getStatus} methods).
 
 
-\section{Restrictions}
-As everything on Earth, nothing is perfect and few restrictions have to be followed in order to write compilable code. Here's the list:
-\begin{itemize}
-\item Some special neuron members are already defined, their type cannot be changed and their values should not be updated (not always true, see next section).
-\item If the neuron declares a new member of custom type (maybe defined in another file), it should not be put in the dictionary created during the \emph{getStatus} method. This "makes" the parameter private and CyNEST will not try to convert it from Python to C++ (custom objects cannot be translated into C++ objects). However, if the member has a builtin type (integer, boolean, double, dictionary, list, etc...), there is no problem.
-\item Every other cython limitation also applies.
-\end{itemize}
 
 \section{Standard Parameters and Special Functions}
 This section deals with the communication between the custom neuron and other ones.\\
 As one could imagine, not everything can be done when writing a custom neuron with respect to writing a static C++ one. As an example, events cannot be accessed (SpikeEvent, CurrentEvent, etc...). However, these situations are handled in a very general way, providing almost the same confort as normal neurons do.
-\subsection*{Standard Parameters}
+
+\subsection{Standard Parameters}
 During a model simulation, the communication between the custom neuron and the kernel is very important. In particular, the kernel should know, at least when he needs, the value of the different neuron members. However, during the actual simulation only a few members are important to NEST and these are called Standard Parameters.
 These have been declared and are updated before every call to the \emph{update} method. Here's the list:
 \begin{itemize}
@@ -107,7 +101,7 @@ These have been declared and are updated before every call to the \emph{update} 
 All these Standard Parameters are contained in the base Neuron class and, since their behaviour is highly optimized, provide a very little performance loss compared to a native neuron. They do not need to be included in the \emph{setStatus} and \emph{getStatus} methods.
 
 
-\subsection*{Special Functions}
+\subsection{Special Functions}
 When writing a neuron, one could need some other special parameters concerning the way the simulation has been set. In a normal C++ neuron, the totality of those values would be accessible from the Time and Scheduler classes (for more information about these classes, see the NEST official documentation), but these classes are not visible from the custom neuron side. 
 There is however a way in order to acces the most important values and the base Neuron class provides an object, \emph{time\_scheduler}, which in turn contains the entire list of methods (15 in total):
 \begin{itemize}
@@ -146,6 +140,32 @@ There is however a way in order to acces the most important values and the base 
 As an example, writing \emph{self.time\_scheduler.get\_ms\_on\_resolution()} is the same as writing (in the NEST code, C++) \emph{Time::get\_resolution().get\_ms()} and \\ \emph{self.time\_scheduler.get\_steps\_on\_ms(ms)} the same as \emph{Time(Time::ms(ms)).get\_steps()}. In addition, writing \emph{self.time\_scheduler.get\_min\_delay()} could be compared to the C++ \emph{Scheduler::get\_min\_delay()}.\\
 Note that calling these functions takes much time because the call spreads through many other methods in order to achieve the Time or Scheduler classes. It is therefore advised to avoid these calls in the update method and to create variables instead.
 
+
+\section{Restrictions}
+As everything on Earth, nothing is perfect and few restrictions have to be followed in order to write compilable code. Here's the list:
+\begin{itemize}
+\item Some special neuron members are already defined, their type cannot be changed and their values should not be updated (not always true, see next section).
+\item If the neuron declares a new member of custom type (maybe defined in another file), it should not be put in the dictionary created during the \emph{getStatus} method. This "makes" the parameter private and CyNEST will not try to convert it from Python to C++ (custom objects cannot be translated into C++ objects). However, if the member has a builtin type (integer, boolean, double, dictionary, list, etc...), there is no problem.
+\item Every other cython limitation also applies.
+\end{itemize}
+
+
+\section{Optimization and Multithreading}
+Perhaps the major limitation (not discussed yet) of the feature is multithreading. In fact, when trying to increase the number of threads in order to speed up the simulation, one actually encounters a decrease in speed.\\
+This is due to the GIL, which prevents different threads from accessing the same ressources.\\
+This problem is solved by specifying to each neuron a special parameter. After a neuron instance has been created, it is possible to set the \emph{optimized} parameter to True, like this:
+\begin{verbatim}
+cynest.RegisterNeuron("myNeuron")
+
+n = cynest.Create("myNeuron")
+
+cynest.SetStatus(n, [{"optimized":True}])
+\end{verbatim}
+This option prevents the GIL from being used, further increases the speed and, most importantly, makes multithreading available by not slowing too much.\\
+However there is a drawback: the model cannot contain any python object, not even a simple dictionary. Therefore, the user can only write classic C parameters (if this is not respected, segmentation faults will occur).\\
+This is why the two options are available.
+
+
 \section{Using the new neuron}
 After the custom neuron has been written, it can be simply imported and used in the python terminal. In order to achieve that, the user has to use the \emph{cynest.RegisterNeuron(...)} method and then use it like a normal one. The .pyx file should be placed in the same location as the python terminal has been invoked and no file extension has to be written (just like a normal python import).\\
 Note that when registering the neuron, the pyx file is automatically compiled and linked, so compilation errors could occur. In this case, just check them and fix the neuron model.
@@ -155,9 +175,9 @@ The system has been tested during a single-threaded simulation of 40 ms concerni
 \begin{itemize}
 \item Native neuron: realtime factor is 0.3254
 \item SLI neuron: realtime factor is 0.0046
-\item Cython neuron: realtime factor is 0.1047
+\item Cython neuron: realtime factor is 0.2711
 \end{itemize}
-We can therefore conclude that the Cython neuron is only about 3 times slower than the native version, whereas the SLI neuron is up to 70 times slower.\\
+We can therefore conclude that the cython neuron is only about 20\% slower than the native version, whereas the SLI neuron is up to 70 times slower. Note that the highly optimized version has been tested, the other one being 70\% slower.\\
 Note that during different test trials, values could slightly change because of the random factor introduced in the network.\\
 
 \end{document}

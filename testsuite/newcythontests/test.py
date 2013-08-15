@@ -44,7 +44,7 @@ class Brunel2000:
     N_E   = 800 # to change
     N_I   = 200 # to change
     J_E   = 0.1
-    threads=4
+    threads=1
     N_rec   = 50    # Number of neurons to record from
     built=False
     connected=False

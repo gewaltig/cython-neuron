@@ -313,7 +313,8 @@ EXTRA_DIST = setup.py.in\
 	pydatum.h \
 	pydatum.cpp \
 	pyobjectdatum.h \
-	pyobjectdatum.cpp \
+	cython_neuron.h \
+	cython_neuron.cpp \
 	datumtopythonconverter.h \
 	datumtopythonconverter.cpp\
 	kernel.pyx\

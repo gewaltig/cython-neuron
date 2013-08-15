@@ -64,8 +64,6 @@
 #include "sli_neuron.h"
 #include "ginzburg_neuron.h"
 #include "izhikevich.h"
-// Added by Jonny Quarta
-#include "cython_neuron.h"
 
 // Stimulation devices
 #include "ac_generator.h"
@@ -236,10 +234,5 @@ namespace nest
     register_prototype_connection_commonproperties <STDPDopaConnection,
                                                     STDPDopaCommonProperties
                                                    > (net_, "stdp_dopamine_synapse");
-  }
-  
-  void register_cython_model(Network *net, std::string model)
-  {
-	 register_model<cython_neuron>(*net, model.c_str());
   }
 } // namespace nest

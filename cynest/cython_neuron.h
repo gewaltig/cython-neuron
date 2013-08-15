@@ -30,6 +30,7 @@
 #include "connection.h"
 #include "universal_data_logger.h"
 #include <string>
+#include "genericmodel.h"
 
 namespace nest{
 
@@ -273,6 +274,8 @@ void cython_neuron::set_status(const DictionaryDatum &d)
 
   setStatusCython();
 }
+
+void register_cython_model(Network* net, std::string model);
 
 } // namespace
 

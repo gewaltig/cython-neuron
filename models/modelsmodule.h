@@ -70,8 +70,6 @@ namespace nest
      //! network where models are to be registered
      Network& net_;
    };
-   
-   void register_cython_model(Network* net, std::string model);
 } // namespace
 
 #endif
