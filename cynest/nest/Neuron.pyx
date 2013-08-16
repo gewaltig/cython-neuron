@@ -42,7 +42,8 @@ cdef class Neuron:
     cpdef getPSpike(self):
         return <long>(&(self.spike))
 
-
+# This class contains the totality of the imported objects
+# needed for accessing classes on the project side
 cdef class ObjectManager:
     cdef object schedulerObj
     cdef object timeObj
@@ -72,6 +73,10 @@ cdef class ObjectManager:
 
 cdef ObjectManager objectManager = ObjectManager()
 
+
+# These methods are called from the project in order to
+# fill the different imported objects
+
 def setScheduler(obj):
     objectManager.setScheduler(obj)
 
@@ -92,7 +97,9 @@ def setMs_stamp(obj):
 
 
 
-
+# When creating a new objects (of the ones below), their internal 
+# real object must be cloned in order to create another instance.
+# Thus we call the create method of the imported object
 
 cdef class Unit:
     cdef object ob
@@ -169,10 +176,14 @@ cdef class Time:
         return self.time_ob.pred()
 
 
+# These are static methods (on the project side)
+# Note that the imported objects itself are accessed
+# instead of copies of them. This proves the static type
+# of these methods.
+
 cpdef Time_get_resolution():
     return objectManager.timeObj.get_resolution()
 
-      
 cpdef Time_set_resolution(d):
     objectManager.timeObj.set_resolution(d)
 

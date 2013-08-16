@@ -79,7 +79,14 @@ cdef class SLIDataContainer:
             return composed_cmd
 
 
-
+# In order to avoid the problem of nested classes,
+# not supported by Cython, a UnitManager class has
+# been created, which can embed on the C++ side
+# objects of ms, tic, step and ms_stamp type (classes.Time._ _ _).
+# The code is the following:
+# 1: tic, 2:step, 3:ms, 4:ms_stamp
+# The usefullness is that a classes.Time objects can be created
+# based on the internal state of UnitManager
 
 cdef class Unit:
     cdef classes.UnitManager *thisptr
@@ -125,13 +132,24 @@ cdef class Time:
     cdef classes.Time thisptr
 
     def __cinit__(self, Unit t):
+        # This function generates a classes.Time object
+        # based of the internal state of UnitManager,
+        # which is in turn based on the real type of t
         self.thisptr = t.thisptr[0].generateTime()
 
+    # Creates a Time object from a classes.Time one
+    # (somehow ugly)
     cdef Time getTime(self, classes.Time t):
         cdef Time tm = Time(ms(0.0))
         tm.thisptr = t
         return tm
 
+    # This method creates a new instance of the object.
+    # It is actually a way for creating new instances
+    # from an object instead of a class definition.
+    # That's useful in the imported pyx files
+    # since they have no access to the class definitions
+    # but they can handle general objects
     def create(self, t):
         return Time(t)
 
