@@ -46,7 +46,7 @@ cdef class cython_iaf_psc_delta_pydict(Neuron):
       
             # lower bound of membrane potential
             if self.params["y3_"] < self.params["V_min_"]:
-                self.params["y3_"] = self.params["V_min_"]	 
+                self.params["y3_"] = self.params["V_min_"]
     
         else: # neuron is absolute refractory
             # read spikes from buffer and accumulate them, discounting

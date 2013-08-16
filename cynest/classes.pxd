@@ -43,6 +43,17 @@ cdef extern from "time_scheduler.h":
         long get_tics()
         long get_steps()
         double get_ms()
+        void set_to_zero()
+        void calibrate()
+        void advance()
+        Time succ()
+        Time pred()
+        bint is_grid_time()
+        bint is_neg_inf()
+        bint is_pos_inf()
+        bint is_finite()
+        bint is_step()
+
 
     cdef cppclass UnitManager:
         UnitManager(int, long)
@@ -51,4 +62,25 @@ cdef extern from "time_scheduler.h":
 
 cdef extern from "time_scheduler.h" namespace "nest::Time":
     Time get_resolution()
+    void set_resolution(double)
+    void reset_resolution()
+    bint resolution_is_default()
+    double get_ms_per_tic()
+    double get_tics_per_ms()
+    long get_tics_per_step()
+    long get_old_tics_per_step()
+    long get_tics_per_step_default()
+    Time min()
+    Time max()
+    Time pos_inf()
+    Time neg_inf()
 
+
+
+
+
+cdef extern from "time_scheduler.h" namespace "nest::Scheduler":
+    unsigned int get_modulo(unsigned int)
+    unsigned int get_slice_modulo(unsigned int)
+    unsigned int get_min_delay()
+    unsigned int get_max_delay()

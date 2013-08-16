@@ -126,9 +126,11 @@ cdef class Time:
 
     def __cinit__(self, Unit t):
         self.thisptr = t.thisptr[0].generateTime()
-       
-    cdef set(self, classes.Time t):
-        self.thisptr = t
+
+    cdef Time getTime(self, classes.Time t):
+        cdef Time tm = Time(ms(0.0))
+        tm.thisptr = t
+        return tm
 
     def create(self, t):
         return Time(t)
@@ -142,10 +144,90 @@ cdef class Time:
     def get_ms(self):
         return self.thisptr.get_ms()
 
-    def get_resolution(self):
-        cdef classes.Time t = classes.get_resolution()
-        cdef Time tm = Time(ms(0.0))
-        tm.set(t)
-        return tm
+    def set_to_zero(self):
+        self.thisptr.set_to_zero()
 
+    def calibrate(self):
+        self.thisptr.calibrate()
+
+    def advance(self):
+        self.thisptr.advance()
+
+    def is_grid_time(self):
+        return self.thisptr.is_grid_time()
+
+    def is_neg_inf(self):
+        return self.thisptr.is_neg_inf()
+
+    def is_pos_inf(self):
+        return self.thisptr.is_pos_inf()
+
+    def is_finite(self):
+        return self.thisptr.is_finite()
+
+    def is_step(self):
+        return self.thisptr.is_step()
+
+    def succ(self):
+        return self.getTime(self.thisptr.succ())
+
+    def pred(self):
+        return self.getTime(self.thisptr.pred())
+
+
+# static methods
+
+    def get_resolution(self):
+        return self.getTime(classes.get_resolution())
+        
+    def set_resolution(self, d):
+        classes.set_resolution(d)
+
+    def reset_resolution(self):
+        classes.reset_resolution()
+
+    def resolution_is_default(self):
+        return classes.resolution_is_default()
+
+    def get_ms_per_tic(self):
+        return classes.get_ms_per_tic()
+
+    def get_tics_per_ms(self):
+        return classes.get_tics_per_ms()
+
+    def get_tics_per_step(self):
+        return classes.get_tics_per_steps()
+
+    def get_old_tics_per_step(self):
+        return classes.get_old_tics_per_step()
+
+    def get_tics_per_step_default(self):
+        return classes.get_tics_per_step_default()
+
+    def min(self):
+        return self.getTime(classes.min())
+
+    def max(self):
+        return self.getTime(classes.max())
+
+    def pos_inf(self):
+        return self.getTime(classes.pos_inf())
+
+    def neg_inf(self):
+        return self.getTime(classes.neg_inf())
+
+
+
+cdef class Scheduler:
+    def get_modulo(self, v):
+        return classes.get_modulo(v)
+
+    def get_slice_modulo(self, v):
+        return classes.get_slice_modulo(v)
+
+    def get_min_delay(self):
+        return classes.get_min_delay()
+
+    def get_max_delay(self):
+        return classes.get_max_delay()
 

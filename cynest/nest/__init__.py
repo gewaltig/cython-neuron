@@ -24,6 +24,7 @@ import cynest.kernel as _kernel
 
 hl_api.nest = _kernel
 
+hl_api.schedulerObj = _kernel.Scheduler()
 hl_api.timeObj = _kernel.Time(_kernel.ms(0.0))
 hl_api.ticObj = _kernel.tic(0)
 hl_api.stepObj = _kernel.step(0)

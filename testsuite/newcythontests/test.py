@@ -29,6 +29,7 @@ cynest.ResetKernel()
 
 cynest.RegisterNeuron("cython_iaf_psc_delta_c_members")
 cynest.RegisterNeuron("cython_iaf_psc_delta_pydict")
+cynest.RegisterNeuron("testmodel")
 
 class Brunel2000:
     """
@@ -195,6 +196,10 @@ def runNeurons(ms, version = 1):
         b.run("cython_iaf_psc_delta_c_members", True, ms)
     elif version == 2:
         b.run("cython_iaf_psc_delta_pydict", False, ms)
+    elif version == 3:
+        b.run("testmodel", False, ms)
+    elif version == 4:
+        b.run("testmodel", True, ms)
 
         
     CythonRTF = cynest.GetKernelStatus()["realtime factor"]

@@ -44,11 +44,15 @@ cdef class Neuron:
 
 
 cdef class ObjectManager:
+    cdef object schedulerObj
     cdef object timeObj
     cdef object ticObj
     cdef object stepObj
     cdef object msObj
     cdef object ms_stampObj
+
+    def setScheduler(self, obj):
+        self.schedulerObj = obj
 
     def setTime(self, obj):
         self.timeObj = obj
@@ -67,6 +71,9 @@ cdef class ObjectManager:
 
 
 cdef ObjectManager objectManager = ObjectManager()
+
+def setScheduler(obj):
+    objectManager.setScheduler(obj)
 
 def setTime(obj):
     objectManager.setTime(obj)
@@ -131,10 +138,89 @@ cdef class Time:
     def get_ms(self):
         return self.time_ob.get_ms()
 
+    def set_to_zero(self):
+        self.time_ob.set_to_zero()
+
+    def calibrate(self):
+        self.time_ob.calibrate()
+
+    def advance(self):
+        self.time_ob.advance()
+
+    def is_grid_time(self):
+        return self.time_ob.is_grid_time()
+
+    def is_neg_inf(self):
+        return self.time_ob.is_neg_inf()
+
+    def is_pos_inf(self):
+        return self.time_ob.is_pos_inf()
+
+    def is_finite(self):
+        return self.time_ob.is_finite()
+
+    def is_step(self):
+        return self.time_ob.is_step()
+
+    def succ(self):
+        return self.time_ob.succ()
+
+    def pred(self):
+        return self.time_ob.pred()
 
 
 cpdef Time_get_resolution():
     return objectManager.timeObj.get_resolution()
 
+      
+cpdef Time_set_resolution(d):
+    objectManager.timeObj.set_resolution(d)
 
+cpdef Time_reset_resolution():
+    objectManager.timeObj.reset_resolution()
+
+cpdef Time_resolution_is_default():
+    return objectManager.timeObj.resolution_is_default()
+
+cpdef Time_get_ms_per_tic():
+    return objectManager.timeObj.get_ms_per_tic()
+
+cpdef Time_get_tics_per_ms():
+    return objectManager.timeObj.get_tics_per_ms()
+
+cpdef Time_get_tics_per_step():
+    return objectManager.timeObj.get_tics_per_steps()
+
+cpdef Time_get_old_tics_per_step():
+    return objectManager.timeObj.get_old_tics_per_step()
+
+cpdef Time_get_tics_per_step_default():
+    return objectManager.timeObj.get_tics_per_step_default()
+
+cpdef Time_min():
+    return objectManager.timeObj.min()
+
+cpdef Time_max():
+    return objectManager.timeObj.max()
+
+cpdef Time_pos_inf():
+    return objectManager.timeObj.pos_inf()
+
+cpdef Time_neg_inf():
+    return objectManager.timeObj.neg_inf()
+
+
+
+
+cpdef Scheduler_get_modulo(v):
+    return objectManager.schedulerObj.get_modulo(v)
+
+cpdef Scheduler_get_slice_modulo(v):
+    return objectManager.schedulerObj.get_slice_modulo(v)
+
+cpdef Scheduler_get_min_delay():
+    return objectManager.schedulerObj.get_min_delay()
+
+cpdef Scheduler_get_max_delay():
+    return objectManager.schedulerObj.get_max_delay()
 

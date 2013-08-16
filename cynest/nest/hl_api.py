@@ -59,7 +59,7 @@ nest = sps = spp = sr = None
 cvc = dvc = dtc = rcc = rdc = None
 reg = None
 #t_sched = None
-timeObj = ticObj = stepObj = msObj = ms_stampObj = None
+schedulerObj = timeObj = ticObj = stepObj = msObj = ms_stampObj = None
 
 pyximport.install()
 
@@ -461,6 +461,7 @@ def CopyModel(existing, new, params=None):
 def RegisterNeuron(model_name):
 	exec("import " + model_name)
 	globals()[model_name] = locals()[model_name]
+	exec(model_name + ".setScheduler(schedulerObj)")
 	exec(model_name + ".setTime(timeObj)")
 	exec(model_name + ".setTic(ticObj)")
 	exec(model_name + ".setStep(stepObj)")
