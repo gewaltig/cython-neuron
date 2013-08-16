@@ -41,10 +41,10 @@ cdef class cython_iaf_psc_delta_c_members(Neuron):
         self.RefractoryCounts_ = 0
 
     cpdef calibrate(self):
-        self.ms_resolution = self.time_scheduler.get_ms_on_resolution()
+        self.ms_resolution = Time_get_resolution().get_ms()
         self.P33_ = math.exp(-self.ms_resolution/self.tau_m)
         self.P30_ = 1/self.C_m*(1-self.P33_)*self.tau_m
-        self.RefractoryCounts_ = self.time_scheduler.get_steps_on_ms(self.t_ref)
+        self.RefractoryCounts_ = Time(ms(self.t_ref)).get_steps()
 
 
     cpdef update(self):

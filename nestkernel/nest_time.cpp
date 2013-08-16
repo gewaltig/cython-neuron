@@ -317,6 +317,9 @@ nest::Time::Time(Time::ms_stamp t)
   assert(t.ms_ <= t_ms_);
 }
 
+
+
+
 nest::Time nest::Time::operator+=(const Time &t)
 {
   const tic_t new_tics = t_tics_ + t.t_tics_;

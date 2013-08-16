@@ -58,7 +58,8 @@ import sys
 nest = sps = spp = sr = None
 cvc = dvc = dtc = rcc = rdc = None
 reg = None
-t_sched = None
+#t_sched = None
+timeObj = ticObj = stepObj = msObj = ms_stampObj = None
 
 pyximport.install()
 
@@ -460,6 +461,11 @@ def CopyModel(existing, new, params=None):
 def RegisterNeuron(model_name):
 	exec("import " + model_name)
 	globals()[model_name] = locals()[model_name]
+	exec(model_name + ".setTime(timeObj)")
+	exec(model_name + ".setTic(ticObj)")
+	exec(model_name + ".setStep(stepObj)")
+	exec(model_name + ".setMs(msObj)")
+	exec(model_name + ".setMs_stamp(ms_stampObj)")
 	cython_models.append(model_name)
 	reg(model_name)
 
@@ -494,7 +500,6 @@ def Create(model, n=1, params=None):
     if model in cython_models:
         for i in ids:
             exec("tmpobj___ = " + model + "." + model + "()")
-            tmpobj___.setTimeScheduler(t_sched)
             SetStatus([i], {'pyobject':tmpobj___})
 
     if broadcast_params:

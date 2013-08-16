@@ -194,7 +194,7 @@ def runNeurons(ms, version = 1):
     if version == 1:
         b.run("cython_iaf_psc_delta_c_members", True, ms)
     elif version == 2:
-        b.run("cython_iaf_psc_delta_pydict", True, ms)
+        b.run("cython_iaf_psc_delta_pydict", False, ms)
 
         
     CythonRTF = cynest.GetKernelStatus()["realtime factor"]

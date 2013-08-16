@@ -11,6 +11,11 @@ cdef extern from "datum.h":
   cdef cppclass Datum:
         pass
 
+cdef extern from "namedatum.h":
+    cdef cppclass NameDatum:
+        NameDatum(string)
+        NameDatum(NameDatum)
+        string toString()
 
 cdef extern from "token.h":
     cdef cppclass Token:
@@ -32,11 +37,18 @@ cdef extern from "cynestkernel.h":
         bint check_engine()
         void register_cython_model(string)
 
+
 cdef extern from "time_scheduler.h":
-    cdef cppclass TimeScheduler:
-        TimeScheduler()
-        double get_ms(int, long, double)
-        long get_tics_or_steps(int, int, long, double)
-        unsigned int get_scheduler_value(int, unsigned int)
-        
+    cdef cppclass Time:
+        long get_tics()
+        long get_steps()
+        double get_ms()
+
+    cdef cppclass UnitManager:
+        UnitManager(int, long)
+        UnitManager(int, double)
+        Time generateTime()
+
+cdef extern from "time_scheduler.h" namespace "nest::Time":
+    Time get_resolution()
 

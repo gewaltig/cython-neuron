@@ -27,10 +27,10 @@ cdef class cython_iaf_psc_delta_pydict(Neuron):
         self.params["RefractoryCounts_"] = 0
 
     cpdef calibrate(self):
-        self.ms_resolution = self.time_scheduler.get_ms_on_resolution()
+        self.ms_resolution = Time_get_resolution().get_ms()
         self.params["P33_"] = math.exp(-self.ms_resolution/self.params["tau_m"])
         self.params["P30_"] = 1/self.params["C_m"]*(1-self.params["P33_"])*self.params["tau_m"]
-        self.params["RefractoryCounts_"] = self.time_scheduler.get_steps_on_ms(self.params["t_ref"])
+        self.params["RefractoryCounts_"] = Time(ms(self.params["t_ref"])).get_steps()
 
 
     cpdef update(self):

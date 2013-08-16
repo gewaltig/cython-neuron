@@ -80,71 +80,72 @@ cdef class SLIDataContainer:
 
 
 
-# This class contains the special functions needed by
-# the cython_neuron in order to access the Time and Scheduler classes
-# See the developer documentation for more details
-cdef class TimeScheduler:
-    cdef classes.TimeScheduler *thisptr
 
-    def __cinit__(self):
-        self.thisptr= new classes.TimeScheduler()
-        
+cdef class Unit:
+    cdef classes.UnitManager *thisptr
+
     def __dealloc__(self):
         del self.thisptr
 
-    cdef double get_ms(self, int arg1, long arg2, double arg3):
-        return self.thisptr.get_ms(arg1, arg2, arg3)
+cdef class tic(Unit):
+    def __cinit__(self, t):
+        self.thisptr= new classes.UnitManager(1, <long>t)
 
-    cdef long get_tics_or_steps(self, int arg1, int arg2, long arg3, double arg4):
-        return self.thisptr.get_tics_or_steps(arg1, arg2, arg3, arg4)
-
-    cdef unsigned int get_scheduler_value(self, int arg1, unsigned int arg2):
-        return self.thisptr.get_scheduler_value(arg1, arg2)
-        
+    def create(self, t):
+        return tic(t)
 
 
-    def get_ms_on_resolution(self):
-        return self.get_ms(0, -1, -1)
+cdef class step(Unit):
+    def __cinit__(self, t):
+        self.thisptr= new classes.UnitManager(2, <long>t)
+       
+    def create(self, t):
+        return step(t)
 
-    def get_ms_on_tics(self, tics):
-        return self.get_ms(1, tics, -1)
 
-    def get_ms_on_steps(self, steps):
-        return self.get_ms(2, steps, -1)
+cdef class ms(Unit):
+    def __cinit__(self, t):
+        self.thisptr= new classes.UnitManager(3, <double>t)
 
-    def get_tics_on_resolution(self):
-        return self.get_tics_or_steps(0, 1, -1, -1)
+    def create(self, t):
+        return ms(t)
 
-    def get_tics_on_steps(self, steps):
-        return self.get_tics_or_steps(2, 1, steps, -1)
 
-    def get_tics_on_ms(self, ms):
-        return self.get_tics_or_steps(3, 1, -1, ms)
+cdef class ms_stamp(Unit):
+    def __cinit__(self, t):
+        self.thisptr= new classes.UnitManager(4, <double>t)
 
-    def get_tics_on_ms_stamp(self, ms_stamp):
-        return self.get_tics_or_steps(4, 1, -1, ms_stamp)
+    def create(self, t):
+        return ms_stamp(t)
 
-    def get_steps_on_resolution(self):
-        return self.get_tics_or_steps(0, 2, -1, -1)
 
-    def get_steps_on_tics(self, tics):
-        return self.get_tics_or_steps(1, 2, tics, -1)
 
-    def get_steps_on_ms(self, ms):
-        return self.get_tics_or_steps(3, 2, -1, ms)
 
-    def get_steps_on_ms_stamp(self, ms_stamp):
-        return self.get_tics_or_steps(4, 2, -1, ms_stamp)
+cdef class Time:
+    cdef classes.Time thisptr
 
-    def get_modulo(self, value):
-        return self.get_scheduler_value(0, value)
+    def __cinit__(self, Unit t):
+        self.thisptr = t.thisptr[0].generateTime()
+       
+    cdef set(self, classes.Time t):
+        self.thisptr = t
 
-    def get_slice_modulo(self, value):
-        return self.get_scheduler_value(1, value)
+    def create(self, t):
+        return Time(t)
 
-    def get_min_delay(self):
-        return self.get_scheduler_value(2, -1)
+    def get_tics(self):
+        return self.thisptr.get_tics()
 
-    def get_max_delay(self):
-        return self.get_scheduler_value(3, -1)
+    def get_steps(self):
+        return self.thisptr.get_steps()
+
+    def get_ms(self):
+        return self.thisptr.get_ms()
+
+    def get_resolution(self):
+        cdef classes.Time t = classes.get_resolution()
+        cdef Time tm = Time(ms(0.0))
+        tm.set(t)
+        return tm
+
 

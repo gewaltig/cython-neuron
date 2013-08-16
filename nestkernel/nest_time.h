@@ -179,7 +179,7 @@ namespace nest
       	: ms_(t){}
       ms_stamp(long_t t=0)
         : ms_(static_cast<double_t>(t)){}
-      
+
     private:
       double_t ms_;
     };
@@ -232,7 +232,8 @@ namespace nest
      * @see Time(Time::ms)
      */
     Time(Time::ms_stamp);
-    
+
+
     /**
      * Set resolution, ie, number of tics per step.
      * @note After a change of resolution, all existing Time objects must
@@ -254,7 +255,7 @@ namespace nest
      * Return time resolution in tics per step.
      */
     static 
-    Time get_resolution(); 
+    Time get_resolution();
 
     /**
      * Returns true if resolution is default resolution.
