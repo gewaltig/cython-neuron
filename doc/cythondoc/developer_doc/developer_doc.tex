@@ -97,9 +97,7 @@ cdef class Neuron:
         pass
         
     ...
-        
-    cpdef setTimeScheduler(self, ts):
-        self.time_scheduler = ts
+
        
     # We convert the address of the variables into 
     # long in order to extract the pointers
@@ -120,10 +118,13 @@ Indeed, the first thing to do is typing \emph{cynest.RegisterNeuron(...)}. This 
 def RegisterNeuron(model_name):
     exec("import " + model_name)
     globals()[model_name] = locals()[model_name]
+    exec(model_name + ".setScheduler(schedulerObj)")
+    exec(model_name + ".setTime(timeObj)")
+    ...
     cython_models.append(model_name)
     reg(model_name)
 \end{verbatim}
-Here we can see that the model is compiled and imported. \emph{cython\_models} is a list containing the name of the custom models, used when the software has to check if a neuron is normal or custom. The final step is to actually register the model into the system and is accomplished by the \emph{reg} function, which actually corresponds to the \emph{register\_cython\_model} method contained in the \emph{cynest/cynestkernel.cpp} file.\\
+Here we can see that the model is compiled and imported. \emph{cython\_models} is a list containing the name of the custom models, used when the software has to check if a neuron is normal or custom. The final step is to actually register the model into the system and is accomplished by the \emph{reg} function, which actually corresponds to the \emph{register\_cython\_model} method contained in the \emph{cynest/cynestkernel.cpp} file. The other instructions contained in exec statements will be discussed in later sections. \\
 
 When a new model instance is created, NEST will search that particular model among its classes. But how to know if a model has a corresponding class (i.e., if it exists)? The \emph{models/modelsmodule.cpp} class provides the answer. Every new model is registered in the \textbf{models dictionary}, so that when a new instance has to be created, NEST just checks in this dictionary, looks for that particular model and creates the corresponding class object.\\
 In order to register a new model, a code such this has to be written :
@@ -144,10 +145,9 @@ Here, the main task is to check whether the neuron is a normal or a custom one, 
 if model in cython_models:
     for i in ids:
         exec("tmpobj___ = " + model + "." + model + "()")
-        tmpobj___.setTimeScheduler(t_sched)
         SetStatus([i], {'pyobject':tmpobj___})
 \end{verbatim}
-The function actually creates an intermediate object corresponding to the custom model, sets the \textbf{time scheduler} parameter (which will be discussed in later sections) and gives this temporary object to the neuron on the c++ side. Do not forget that for every custom neuron there is, in addition to the python model, also the corresponding c++ class, which always is \emph{cython\_neuron.cpp}.
+The function actually creates an intermediate object corresponding to the custom modeland gives this temporary object to the neuron on the c++ side. Do not forget that for every custom neuron there is, in addition to the python model, also the corresponding c++ class, which always is \emph{cython\_neuron.cpp}.
 
 \subsection{Python - C++ Transformation}
 The last step before the \emph{cython\_neuron} class can access a functional object is to transform it from Python to C++. Normally, builtin types are already handled by CyNEST, but the need for an additional handling system arises. \\
@@ -302,9 +302,9 @@ while (PyDict_Next(dict, &pos, &key, &subPyObj))
 \end{verbatim}
 
 
-\section{Special Functions}
+\section{Special Objects}
 Sometimes, a neuron model needs some special information from the system, such as simulation parameters. The values represent time units, simulation delays, ect...\\
-Therefore, the system has to enable the final user to access these variables and this is achieved by what is called \textbf{Special Functions}. The base Neuron class contains a \emph{time\_scheduler} object possessing all the necessary to provide that functionality. This cython object relies on the C++ counterpart, which is the \emph{TimeScheduler} object located in the \emph{cynest/time\_scheduler.cpp} :
+Therefore, the system has to enable the final user to access these variables and this is achieved by what is called \textbf{Special Objects}. The base Neuron class contains a \emph{time\_scheduler} object possessing all the necessary to provide that functionality. This cython object relies on the C++ counterpart, which is the \emph{TimeScheduler} object located in the \emph{cynest/time\_scheduler.cpp} :
 \begin{verbatim}
 class TimeScheduler {
 private:

@@ -84,7 +84,7 @@ Note that the way the user handles the model parameters is completely unimportan
 
 
 
-\section{Standard Parameters and Special Functions}
+\section{Standard Parameters and Special Objects}
 This section deals with the communication between the custom neuron and other ones.\\
 As one could imagine, not everything can be done when writing a custom neuron with respect to writing a static C++ one. As an example, events cannot be accessed (SpikeEvent, CurrentEvent, etc...). However, these situations are handled in a very general way, providing almost the same confort as normal neurons do.
 
@@ -101,43 +101,90 @@ These have been declared and are updated before every call to the \emph{update} 
 All these Standard Parameters are contained in the base Neuron class and, since their behaviour is highly optimized, provide a very little performance loss compared to a native neuron. They do not need to be included in the \emph{setStatus} and \emph{getStatus} methods.
 
 
-\subsection{Special Functions}
-When writing a neuron, one could need some other special parameters concerning the way the simulation has been set. In a normal C++ neuron, the totality of those values would be accessible from the Time and Scheduler classes (for more information about these classes, see the NEST official documentation), but these classes are not visible from the custom neuron side. 
-There is however a way in order to acces the most important values and the base Neuron class provides an object, \emph{time\_scheduler}, which in turn contains the entire list of methods (15 in total):
-\begin{itemize}
-\item get\_ms\_on\_resolution()
+\subsection{Special Objects}
+In a normal neuron model (written inside NEST) there is the possibility to access the Time and Scheduler classes, which contain important parameters about the current simulation.
+These classes are available on the Python side as well, using an emulation procedure.
+A Time object can be created as one would do in C++:
+\begin{verbatim}
+Time(ms(value))
+\end{verbatim}
+Note that normally the Time class has four nested classes for handling different units: \emph{tic}, \emph{step}, \emph{ms} and \emph{ms\_stamp}. These are also available on the Python side (see example just above).\\
+In addition, the Time object contains the following methods:
+\begin{verbatim}
 
-\item get\_ms\_on\_tics(tics)
+    def get_tics(self)
 
-\item get\_ms\_on\_steps(steps)
+    def get_steps(self)
 
-\item get\_tics\_on\_resolution(self)
+    def get_ms(self)
 
-\item get\_tics\_on\_steps(steps)
+    def set_to_zero(self)
 
-\item get\_tics\_on\_ms(ms)
-   
-\item get\_tics\_on\_ms\_stamp(ms\_stamp)
+    def calibrate(self)
 
-\item get\_steps\_on\_resolution()
+    def advance(self)
 
-\item get\_steps\_on\_tics(tics)
+    def is_grid_time(self)
 
-\item get\_steps\_on\_ms(ms)
+    def is_neg_inf(self)
 
-\item get\_steps\_on\_ms\_stamp(ms\_stamp)
+    def is_pos_inf(self)
 
-\item get\_modulo(value)
+    def is_finite(self)
 
-\item get\_slice\_modulo(value)
+    def is_step(self)
 
-\item get\_min\_delay()
+    def succ(self)
 
-\item get\_max\_delay()
+    def pred(self)
 
-\end{itemize}
+\end{verbatim}
+Static methods are also available:
+\begin{verbatim}
 
-As an example, writing \emph{self.time\_scheduler.get\_ms\_on\_resolution()} is the same as writing (in the NEST code, C++) \emph{Time::get\_resolution().get\_ms()} and \\ \emph{self.time\_scheduler.get\_steps\_on\_ms(ms)} the same as \emph{Time(Time::ms(ms)).get\_steps()}. In addition, writing \emph{self.time\_scheduler.get\_min\_delay()} could be compared to the C++ \emph{Scheduler::get\_min\_delay()}.\\
+Time_get_resolution()
+
+Time_set_resolution(d)
+
+Time_reset_resolution()
+
+Time_resolution_is_default()
+
+Time_get_ms_per_tic()
+
+Time_get_tics_per_ms()
+
+Time_get_tics_per_step()
+
+Time_get_old_tics_per_step()
+
+Time_get_tics_per_step_default()
+
+Time_min()
+
+Time_max()
+
+Time_pos_inf()
+
+Time_neg_inf()
+
+\end{verbatim}
+Note that these are not contained in the Time object, but rather directly called (the Time\_ specifies that originally the static method comes from the Time object).\\ \\
+
+In addition to the Time class, the Scheduler has be emulated as well, but contains only four static methods:
+\begin{verbatim}
+
+Scheduler_get_modulo(v)
+
+Scheduler_get_slice_modulo(v)
+
+Scheduler_get_min_delay()
+
+Scheduler_get_max_delay()
+
+\end{verbatim}
+
+As an example, writing \emph{Time\_get\_resolution().get\_ms()} is the same as writing (in the NEST code, C++) \emph{Time::get\_resolution().get\_ms()} and \\ \emph{Time(ms(v)).get\_steps()} the same as \emph{Time(Time::ms(v)).get\_steps()}. In addition, writing \emph{Scheduler\_get\_min\_delay()} could be compared to the C++ \emph{Scheduler::get\_min\_delay()}.\\
 Note that calling these functions takes much time because the call spreads through many other methods in order to achieve the Time or Scheduler classes. It is therefore advised to avoid these calls in the update method and to create variables instead.
 
 

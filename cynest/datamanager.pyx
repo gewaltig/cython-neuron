@@ -84,7 +84,7 @@ cdef class SLIDataContainer:
 # been created, which can embed on the C++ side
 # objects of ms, tic, step and ms_stamp type (classes.Time._ _ _).
 # The code is the following:
-# 1: tic, 2:step, 3:ms, 4:ms_stamp
+# 1: tic, 2: step, 3: ms, 4: ms_stamp
 # The usefullness is that a classes.Time objects can be created
 # based on the internal state of UnitManager
 
