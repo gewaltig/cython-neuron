@@ -80,3 +80,58 @@ cdef class cython_iaf_psc_delta_c_members(Neuron):
             self.spike = 1 # True
         else:
             self.spike = 0 # False
+
+    cpdef getStatus(self):
+        cdef dict d = {}
+        d["tau_m"] = self.tau_m
+        d["C_m"] = self.C_m
+        d["t_ref"] = self.t_ref
+        d["E_L"] = self.E_L
+        d["I_e_"] = self.I_e_
+        d["V_th"] = self.V_th
+        d["V_min_"] = self.V_min_
+        d["V_reset"] = self.V_reset
+        d["with_refr_input_"] = self.with_refr_input_
+        d["y0_"] = self.y0_
+        d["y3_"] = self.y3_
+        d["r_"] = self.r_
+        d["refr_spikes_buffer_"] = self.refr_spikes_buffer_
+        d["P30_"] = self.P30_
+        d["P33_"] = self.P33_
+        d["RefractoryCounts_"] = self.RefractoryCounts_
+        return d
+
+    cpdef setStatus(self, d):
+        if d.has_key("tau_m"):
+            self.tau_m = d["tau_m"]
+        if d.has_key("C_m"):
+            self.C_m = d["C_m"]
+        if d.has_key("t_ref"):
+            self.t_ref = d["t_ref"]
+        if d.has_key("E_L"):
+            self.E_L = d["E_L"]
+        if d.has_key("I_e_"):
+            self.I_e_ = d["I_e_"]
+        if d.has_key("V_th"):
+            self.V_th = d["V_th"]
+        if d.has_key("V_min_"):
+            self.V_min_ = d["V_min_"]
+        if d.has_key("V_reset"):
+            self.V_reset = d["V_reset"]
+        if d.has_key("with_refr_input_"):
+            self.with_refr_input_ = d["with_refr_input_"]
+        if d.has_key("y0_"):
+            self.y0_ = d["y0_"]
+        if d.has_key("y3_"):
+            self.y3_ = d["y3_"]
+        if d.has_key("r_"):
+            self.r_ = d["r_"]
+        if d.has_key("refr_spikes_buffer_"):
+            self.refr_spikes_buffer_ = d["refr_spikes_buffer_"]
+        if d.has_key("P30_"):
+            self.P30_ = d["P30_"]
+        if d.has_key("P33_"):
+            self.P33_ = d["P33_"]
+        if d.has_key("RefractoryCounts_"):
+            self.RefractoryCounts_ = d["RefractoryCounts_"]
+

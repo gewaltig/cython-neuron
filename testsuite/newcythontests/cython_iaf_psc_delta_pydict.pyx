@@ -66,3 +66,10 @@ cdef class cython_iaf_psc_delta_pydict(Neuron):
             self.spike = 1 # True
         else:
             self.spike = 0 # False
+
+    cpdef getStatus(self):
+        return self.params
+
+    cpdef setStatus(self, d):
+        for k in d.keys():
+            self.params[k] = d[k]
