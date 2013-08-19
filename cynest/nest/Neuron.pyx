@@ -1,8 +1,5 @@
 
 cdef class Neuron:
-    # object used in order to access Time or Scheduler methods.
-    # It is overwritten by the kernel in order to make it available.
-    cdef object time_scheduler
     # Standard Parameters
     cdef double currents
     cdef double in_spikes
