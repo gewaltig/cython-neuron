@@ -58,16 +58,16 @@ cdef class test_neuron(Neuron):
     def __cinit__(self):
         pass
 
-    cdef calibrate(self):
+    cpdef calibrate(self):
         pass
 
-    cdef setStatus(self, params):
+    cpdef setStatus(self, params):
         pass
 
-    cdef getStatus(self):
+    cpdef getStatus(self):
         pass
 
-    cdef update(self):
+    cpdef update(self):
         pass
 \end{verbatim}
 As we can see, the test\_neuron class extends from Neuron. \textbf{This is mandatory}. Also note that the Neuron base class is contained in a special file located at \emph{[installation path]/include/Neuron.pyx}, where the installation path is the path where CyNEST has been installed.\\
@@ -80,8 +80,24 @@ Here's a brief description of every method :
 \item calibrate : this method is called before the simulation start. Its purpose is to adjust the various neuron parameters before the simulation.
 \item update : this is the most important method and is called repeatedly during a simulation. Its purpose is to update the various neuron parameters according to the inputs (everything will be explained later).
 \end{itemize}
-Note that the way the user handles the model parameters is completely unimportant to NEST, as long as they are correctly interfaced with the system (using the \emph{setStatus} and \emph{getStatus} methods).
+Note that the way the user handles the model parameters is completely unimportant to NEST, as long as they are correctly interfaced with the system (using the \emph{setStatus} and \emph{getStatus} methods). Here is a standard way of doing this:
+\begin{verbatim}
+cpdef getStatus(self):
+    cdef dict d = {}
 
+    d["p1"] = self.p1
+    d["p2"] = self.p2
+    ...
+    return d
+
+cpdef setStatus(self, d):
+    if d.has_key("p1"):
+        self.p1 = d["p1"]
+    if d.has_key("p2"):
+        self.p2 = d["p2"]
+    ...
+\end{verbatim}
+Note that the \emph{setStatus} tests are important because one never knows which elements the system wants to set (the others are not present).
 
 
 \section{Standard Parameters and Special Objects}
