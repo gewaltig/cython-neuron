@@ -304,84 +304,188 @@ while (PyDict_Next(dict, &pos, &key, &subPyObj))
 
 \section{Special Objects}
 Sometimes, a neuron model needs some special information from the system, such as simulation parameters. The values represent time units, simulation delays, ect...\\
-Therefore, the system has to enable the final user to access these variables and this is achieved by what is called \textbf{Special Objects}. The base Neuron class contains a \emph{time\_scheduler} object possessing all the necessary to provide that functionality. This cython object relies on the C++ counterpart, which is the \emph{TimeScheduler} object located in the \emph{cynest/time\_scheduler.cpp} :
-\begin{verbatim}
-class TimeScheduler {
-private:
-    Time createTime(int inputType, long longInputValue, 
-                                  double doubleInputValue) {
-        ...
-    }
-
-public:
-    double get_ms(int inputType, long longInputValue, 
-                                  double doubleInputValue) {
-        ...
-    }
-
-    long get_tics_or_steps(int inputType, int outputType, 
-             long longInputValue, double doubleInputValue) {
-        ...
-    }
-
-    unsigned int get_scheduler_value(int outputValue, 
-                                         unsigned int arg) {
-        ...
-    }
-
-};
-\end{verbatim}
-The purpose of this system is to emulate a command such as :
+Therefore, the system has to allow the final user to access these variables and this is achieved by what are called \textbf{Special Objects}. \\
+When writing a normal C++ model, these features are provided by the \emph{Time} and \emph{Scheduler} classes. Therefore, a way in order to make them available from the Python side (from the custom model) is necessary. The purpose is to emulate commands such as :
 \begin{verbatim}
     Scheduler::get_min_delay()
-or
+
     Time::get_resolution().get_ms()
-or
-    Time::step(steps).get_tics()
+
+    Time(Time::step(steps)).get_tics()
 \end{verbatim}
-The first line is emulated through the function \emph{get\_scheduler\_value} choosing between some possibilities by setting the \emph{outputValue} argument to:
-\begin{itemize}
-\item 0 for \emph{Scheduler::get\_modulo(arg)}
-\item 1 for \emph{Scheduler::get\_slice\_modulo(arg)}
-\item 2 for \emph{Scheduler::get\_min\_delay()}
-\item 3 for \emph{Scheduler::get\_max\_delay()}
-\end{itemize}
-The second and third lines are emulated using a slight different mechanism. The user can specify the unit of the Time class creation (which corresponds to the unit in which the neural network is simulated), via the \emph{TimeScheduler::createTime} method, following these rules:
-\begin{itemize}
-\item 0 for Time::get\_resolution()
-\item 1 for Time(Time::tic(tics))
-\item 2 for Time(Time::step(steps))
-\item 3 for Time(Time::ms(ms))
-\item 4 for Time(Time::ms\_stamp(ms\_stamp))
-\end{itemize}
-Note that since tics, steps are integer values and ms, ms\_stamp are double values, the method needs two different arguments, choosen with respect to \emph{inputType}.\\
-Once the Time object has been created, the \emph{TimeScheduler::get\_ms} and \emph{TimeScheduler::get\_tics\_or\_steps} methods will return the choosen unit.
-For the latter method, the output unit has to be choosen, giving 1 for tics and 2 for steps.\\ \\
-The next step is to interface with Cython and this is done in the \emph{cynest/classes.pyx} file:
+The first step for emulating those classes is by defining them on the Cython side (\emph{cynest\/classes.pxd}):
 \begin{verbatim}
-cdef cppclass TimeScheduler:
-    TimeScheduler()
-    double get_ms(int, long, double)
-    long get_tics_or_steps(int, int, long, double)
-    unsigned int get_scheduler_value(int, unsigned int)
+cdef extern from "time_scheduler.h":
+    cdef cppclass Time:
+        long get_tics()
+        long get_steps()
+        ...
+
+    cdef cppclass UnitManager:
+        UnitManager(int, long)
+        UnitManager(int, double)
+        Time generateTime()
+
+cdef extern from "time_scheduler.h" namespace "nest::Time":
+    Time get_resolution()
+    void set_resolution(double)
+    ...
+    
+cdef extern from "time_scheduler.h" namespace "nest::Scheduler":
+    unsigned int get_modulo(unsigned int)
+    unsigned int get_slice_modulo(unsigned int)
+    ...
 \end{verbatim}
-This class will be of course wrapped into another one. The final purpose is to send the wrapper class to the base neuron, so that the user can access the functionalities by calling this object (which is \emph{time\_scheduler}).
+The first class is the corresponding Time class, whereas the other one will be discussed soon. One can also note that static methods are defined as well. For a list of all the available methods, please consult the user documentation. \\ \\
 
-
-The user will finally access these functionalities by calling the following commands (for any additional information, see the \emph{cynest/datamanager.pyx} file):
+If the C++ \emph{nestkernel\/nest\_time.h} file is read, one can see that the Time class contains other nested classes: tic, step, ms and ms\_stamp. These are different units. Now, sadly Cython cannot handle nested classes, therefore another way of extracting them is necessary. That's why the \textbf{UnitManager} class has been created. The only important function of these units is to enable the creation of a Time object, like in the following example:
 \begin{verbatim}
-def get_ms_on_resolution(self):
-    return spFct.get_msFct(0, -1, -1)
+Time::step(steps).get_tics()
+\end{verbatim}
+Therefore, a UnitManager object can be created by giving it a code corresponding to a particular unit:
+\begin{itemize}
+\item tic       : 1
+\item step      : 2
+\item ms        : 3
+\item ms\_stamp : 4
+\end{itemize}
+Once the need for a Time object arises, the \emph{generateTime} method can be called, which creates a Time object according to the internal state of the UnitManager object (which contains the previously created unit). \\
+This is used by the wrapper cython units contained in the \emph{cynest\/datamanager.pyx} file:
+\begin{verbatim}
+cdef class Unit:
+    cdef classes.UnitManager *thisptr
 
-def get_ms_on_tics(self, tics):
-    return spFct.get_msFct(1, tics, -1)
+    def __dealloc__(self):
+        del self.thisptr
 
-def get_ms_on_steps(self, steps):
-    return spFct.get_msFct(2, steps, -1)
+cdef class tic(Unit):
+    def __cinit__(self, t):
+        self.thisptr= new classes.UnitManager(1, <long>t)
+
+    def create(self, t):
+        return tic(t)
+        
+... # other units
+\end{verbatim}
+The Time wrapper class uses the UnitManager in order to create a \emph{classes.Time} object:
+\begin{verbatim}
+cdef class Time:
+    cdef classes.Time thisptr
+
+    def __cinit__(self, Unit t):
+        self.thisptr = t.thisptr[0].generateTime()
+
+    cdef Time getTime(self, classes.Time t):
+        cdef Time tm = Time(ms(0.0))
+        tm.thisptr = t
+        return tm
+
+    def create(self, t):
+        return Time(t)
+
+    def get_tics(self):
+        return self.thisptr.get_tics()
+
+    def get_steps(self):
+        return self.thisptr.get_steps()
+
+    def succ(self):
+        return self.getTime(self.thisptr.succ()) 
+    ...
+
+# static methods
+
+    def get_resolution(self):
+        return self.getTime(classes.get_resolution())
+        
+    def set_resolution(self, d):
+        classes.set_resolution(d)
+
+    ...
+        
+cdef class Scheduler:
+    def get_modulo(self, v):
+        return classes.get_modulo(v)
+
+    ...
+\end{verbatim}
+Note that \emph{t.thisptr[0]} corresponds to the UnitManager object. Both non-static and static methods are treated the same way. That makes further things easier. \\ \\
+
+Now comes a very important key idea. Since every model is automatically linked and compiled by \emph{pyximport}, it cannot access the project definitions, therefore the custom model cannot see the Time and Scheduler classes. There is however the possibility to pass to the model a generic object and to call its methods, if they are known. \\
+The idea is to directly pass to each model a new Time and Scheduler (as well as an object for every unit) object, so that it can access all the methods. However, since the user can normally create as many Time objects as he wants, the \emph{create} method has been implemented. It actually creates a new object instance. We can therefore create a new instance from an existing instance and that is the key for avoiding to know the class definition. \\ \\
+
+The last step is to create wrapper classes on the model side, therefore contained in the \emph{"installation path"\/include\/Neuron.pyx}. In order to contain all the imported generic objects, a manager has been created:
+\begin{verbatim}
+cdef class ObjectManager:
+    cdef object schedulerObj
+    cdef object timeObj
+    ...
+
+    def setScheduler(self, obj):
+        self.schedulerObj = obj
+
+    def setTime(self, obj):
+        self.timeObj = obj
+        
+    ...
+
+cdef ObjectManager objectManager = ObjectManager()
+
+
+# These methods are called from the project in order to
+# fill the different imported objects
+
+def setScheduler(obj):
+    objectManager.setScheduler(obj)
+
+def setTime(obj):
+    objectManager.setTime(obj)
 ...
 \end{verbatim}
-There are many more (15 in total). See the user documentation or the code for the complete list.
-Note that, as previously said, these functions are callable from the base \emph{Neuron} class by accessing the \emph{time\_scheduler} object.
+Note that an object of every unit has also been created (not shown here). The project side will transfer objects using, for example, the \emph{setScheduler} function. \\
+A wrapper class for each unit is created:
+\begin{verbatim}
+cdef class Unit:
+    cdef object ob
+
+cdef class tic(Unit):
+    def __cinit__(self, t):
+        self.ob = objectManager.ticObj.create(t)
+...
+\end{verbatim}
+Where t represents the unit value and is given to the \emph{create} method in order to generate a new object instance. \\
+The Time wrapper class is very straighforward:
+\begin{verbatim}
+cdef class Time:
+    cdef object time_ob
+
+    def __cinit__(self, Unit t):
+        self.time_ob = objectManager.timeObj.create(t.ob)
+
+    def get_tics(self):
+        return self.time_ob.get_tics()
+    ...
+\end{verbatim}
+Finally, in order to distinguish between static and non-static methods, a protocol has been followed, where each static method is also available as a direct function:
+\begin{verbatim}
+...
+cpdef Time_neg_inf():
+    return objectManager.timeObj.neg_inf()
+
+cpdef Scheduler_get_modulo(v):
+    return objectManager.schedulerObj.get_modulo(v)
+...
+\end{verbatim}
+Note that the Time\_ or Scheduler\_ prefixes are defined in order to specify that originally these are a static functions rather than normal instance methods. \\ \\
+
+As an example, the user can therefore translate the previously mentioned commands by writing:
+\begin{verbatim}
+    Scheduler_get_min_delay()
+
+    Time_get_resolution().get_ms()
+
+    Time(step(steps)).get_tics()
+\end{verbatim}
 
 \section{Performances}
 The system has been tested during a single-threaded simulation of 40 ms concerning over 1000 randomly connected neurons and compared to their native and SLI counterparts. The results are:

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.11.29)  16 AUG 2013 17:24
+This is pdfTeX, Version 3.1415926-1.40.10 (TeX Live 2009/Debian) (format=pdflatex 2012.11.29)  19 AUG 2013 10:04
 entering extended mode
  %&-line parsing enabled.
 **developer_doc.tex
@@ -182,33 +182,62 @@ Underfull \hbox (badness 10000) in paragraph at lines 286--287
 
  []
 
-[9] [10]
-Overfull \hbox (13.33337pt too wide) in paragraph at lines 357--361
-\OT1/cmr/m/n/10 Once the Time ob-ject has been cre-ated, the \OT1/cmr/m/it/10 T
-imeSched-uler::get[]ms \OT1/cmr/m/n/10 and \OT1/cmr/m/it/10 TimeSched-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 357--361
+[9]
+Underfull \hbox (badness 10000) in paragraph at lines 339--340
 
  []
 
 
-Overfull \hbox (5.9221pt too wide) in paragraph at lines 357--361
-\OT1/cmr/m/n/10 The next step is to in-ter-face with Cython and this is done in
- the \OT1/cmr/m/it/10 cynest/classes.pyx
+Underfull \hbox (badness 10000) in paragraph at lines 339--340
+
+ []
+
+[10]
+Overfull \hbox (2.915pt too wide) in paragraph at lines 352--354
+\OT1/cmr/m/n/10 This is used by the wrap-per cython units con-tained in the \OT
+1/cmr/m/it/10 cynestdatamanager.pyx
  []
 
 [11]
-Underfull \hbox (badness 10000) in paragraph at lines 393--395
+Underfull \hbox (badness 10000) in paragraph at lines 412--413
 
  []
 
-[12] (./developer_doc.aux) ) 
+
+Underfull \hbox (badness 10000) in paragraph at lines 412--413
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 414--416
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 414--416
+
+ []
+
+[12] [13]
+Underfull \hbox (badness 10000) in paragraph at lines 479--480
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 479--480
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 497--499
+
+ []
+
+[14] (./developer_doc.aux) ) 
 Here is how much of TeX's memory you used:
  940 strings out of 495061
  11872 string characters out of 1182620
- 64580 words of memory out of 3000000
+ 63580 words of memory out of 3000000
  4157 multiletter control sequences out of 15000+50000
  8710 words of font info for 31 fonts, out of 3000000 for 9000
  28 hyphenation exceptions out of 8191
@@ -222,9 +251,9 @@ nts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texmf-texlive/fonts/type1/pu
 blic/amsfonts/cm/cmsy10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfon
 ts/cm/cmti10.pfb></usr/share/texmf-texlive/fonts/type1/public/amsfonts/cm/cmtt1
 0.pfb>
-Output written on developer_doc.pdf (12 pages, 195838 bytes).
+Output written on developer_doc.pdf (14 pages, 199115 bytes).
 PDF statistics:
- 78 PDF objects out of 1000 (max. 8388607)
+ 85 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 
