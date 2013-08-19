@@ -303,7 +303,7 @@ while (PyDict_Next(dict, &pos, &key, &subPyObj))
 
 
 \section{Special Objects}
-Sometimes, a neuron model needs some special information from the system, such as simulation parameters. The values represent time units, simulation delays, ect...\\
+Sometimes, a neuron model needs some special information from the system, such as simulation parameters. These values represent time units, simulation delays, ect...\\
 Therefore, the system has to allow the final user to access these variables and this is achieved by what are called \textbf{Special Objects}. \\
 When writing a normal C++ model, these features are provided by the \emph{Time} and \emph{Scheduler} classes. Therefore, a way in order to make them available from the Python side (from the custom model) is necessary. The purpose is to emulate commands such as :
 \begin{verbatim}
@@ -313,7 +313,7 @@ When writing a normal C++ model, these features are provided by the \emph{Time} 
 
     Time(Time::step(steps)).get_tics()
 \end{verbatim}
-The first step for emulating those classes is by defining them on the Cython side (\emph{cynest\/classes.pxd}):
+The first step for emulating those classes is defining them on the Cython side (\emph{cynest\/classes.pxd}):
 \begin{verbatim}
 cdef extern from "time_scheduler.h":
     cdef cppclass Time:
@@ -338,7 +338,7 @@ cdef extern from "time_scheduler.h" namespace "nest::Scheduler":
 \end{verbatim}
 The first class is the corresponding Time class, whereas the other one will be discussed soon. One can also note that static methods are defined as well. For a list of all the available methods, please consult the user documentation. \\ \\
 
-If the C++ \emph{nestkernel\/nest\_time.h} file is read, one can see that the Time class contains other nested classes: tic, step, ms and ms\_stamp. These are different units. Now, sadly Cython cannot handle nested classes, therefore another way of extracting them is necessary. That's why the \textbf{UnitManager} class has been created. The only important function of these units is to enable the creation of a Time object, like in the following example:
+If the C++ \emph{nestkernel\/nest\_time.h} file is read, one can see that the Time class contains other nested classes: tic, step, ms and ms\_stamp. These are different units. Now, sadly Cython cannot handle nested classes, therefore another way for extracting them is necessary. That's why the \textbf{UnitManager} class has been created. The only important function of these units is to enable the creation of a Time object, like in the following example:
 \begin{verbatim}
 Time::step(steps).get_tics()
 \end{verbatim}
@@ -367,7 +367,7 @@ cdef class tic(Unit):
         
 ... # other units
 \end{verbatim}
-The Time wrapper class uses the UnitManager in order to create a \emph{classes.Time} object:
+The Time wrapper class uses the UnitManager in order to create a \emph{classes.Time} object (other methods are also shown):
 \begin{verbatim}
 cdef class Time:
     cdef classes.Time thisptr
@@ -409,9 +409,9 @@ cdef class Scheduler:
 
     ...
 \end{verbatim}
-Note that \emph{t.thisptr[0]} corresponds to the UnitManager object. Both non-static and static methods are treated the same way. That makes further things easier. \\ \\
+Note that \emph{t.thisptr[0]} corresponds to the UnitManager object. Both non-static and static methods are treated the same way, which makes further things easier. \\ \\
 
-Now comes a very important key idea. Since every model is automatically linked and compiled by \emph{pyximport}, it cannot access the project definitions, therefore the custom model cannot see the Time and Scheduler classes. There is however the possibility to pass to the model a generic object and to call its methods, if they are known. \\
+Now comes a very important key idea. Since every model is automatically linked and compiled by \emph{pyximport}, it cannot access the project definitions, therefore the custom model cannot see the Time and Scheduler classes. There is however the possibility to pass the model a generic object and to call its methods, if they are known. \\
 The idea is to directly pass to each model a new Time and Scheduler (as well as an object for every unit) object, so that it can access all the methods. However, since the user can normally create as many Time objects as he wants, the \emph{create} method has been implemented. It actually creates a new object instance. We can therefore create a new instance from an existing instance and that is the key for avoiding to know the class definition. \\ \\
 
 The last step is to create wrapper classes on the model side, therefore contained in the \emph{"installation path"\/include\/Neuron.pyx}. In order to contain all the imported generic objects, a manager has been created:
@@ -476,9 +476,9 @@ cpdef Scheduler_get_modulo(v):
     return objectManager.schedulerObj.get_modulo(v)
 ...
 \end{verbatim}
-Note that the Time\_ or Scheduler\_ prefixes are defined in order to specify that originally these are a static functions rather than normal instance methods. \\ \\
+Note that the Time\_ or Scheduler\_ prefixes are defined in order to specify that originally these are static functions rather than normal instance methods. \\ \\
 
-As an example, the user can therefore translate the previously mentioned commands by writing:
+As an example, the user can translate the previously mentioned commands by writing:
 \begin{verbatim}
     Scheduler_get_min_delay()
 
