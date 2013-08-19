@@ -225,8 +225,8 @@ n = cynest.Create("myNeuron")
 cynest.SetStatus(n, [{"optimized":True}])
 \end{verbatim}
 This option prevents the GIL from being used, further increases the speed and, most importantly, makes multithreading available by not slowing too much.\\
-However there is a drawback: the model cannot contain any python object, not even a simple dictionary. Therefore, the user can only write classic C parameters (if this is not respected, segmentation faults will occur).\\
-This is why the two options are available.
+However there is a drawback: the model cannot contain any python object, not even a simple dictionary. Therefore, the user can only write classic C parameters (if this is not respected, segmentation faults will occur). This is why the two options are available. \\
+Note however that this does not prevent one creating a temporary dictionary during the \emph{getStatus} and \emph{setStatus} methods. The standard interfacing protocol is therefore maintained.
 
 
 \section{Using the new neuron}
