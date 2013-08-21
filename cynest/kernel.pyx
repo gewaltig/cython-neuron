@@ -1,3 +1,4 @@
+# cython: language_level=3
 # Cython wrapper for the pynest functions.
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -12,7 +13,8 @@ class NESTError(Exception):
 # This imports the C++ class wrappers
 cimport classes
 
-cdef public class PyToken[object PyToken, type PyTokenType]:
+#cdef public class PyToken[object PyToken, type PyTokenType]:
+cdef class PyToken:
      """
      Python wrapper of SLI's Token class.
      """
@@ -72,7 +74,7 @@ cdef class NESTEngine:
            signal.signal(signal.SIGINT, cynest_signal_handler)
         return result
 
-    def register_cython_model(self, model):
+    def register_cython_model(self, string model):
         self.thisptr.register_cython_model(model)
 
     def push(self, value):
@@ -108,7 +110,7 @@ cdef class NESTEngine:
         self._protected = False
 
         if result is invalid_cmd:
-            print NESTError("Cannot generate PyToken for the following command: " + command + "\nThe command will be executed in standard mode.")
+            print (NESTError("Cannot generate PyToken for the following command: " + command + "\nThe command will be executed in standard mode."))
             result = self.thisptr.run(command_bytes)
             self._protected = True
         elif result is composed_protected_cmd:
@@ -362,14 +364,14 @@ cdef class NameDatum:
          """
          return self.thisptr.toString()
 
-cdef public object Token_to_PyObject(classes.Token *arg):
-     """
-     Convert a Datum pointer to a Python object.
-     This function is exposed to C/C++ and used by the DatumToPythonConverter to
-     encapsulate arbitrary Tokens in PyToken objects.
-     """
-     dat=PyToken()
-     dat.thisptr=arg
-     return dat
+#cdef public object Token_to_PyObject(classes.Token *arg):
+#     """
+#     Convert a Datum pointer to a Python object.
+#     This function is exposed to C/C++ and used by the DatumToPythonConverter to
+#     encapsulate arbitrary Tokens in PyToken objects.
+#     """
+#     dat=PyToken()
+#     dat.thisptr=arg
+#     return dat
 
 

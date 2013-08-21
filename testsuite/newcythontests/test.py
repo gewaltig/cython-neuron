@@ -20,8 +20,8 @@
 # along with cynest.  If not, see <http://www.gnu.org/licenses/>.
 
 import cynest
-import cynest.raster_plot
-import pylab
+#import cynest.raster_plot
+#import pylab
 import os
 from subprocess import call
 
@@ -58,7 +58,7 @@ class Brunel2000:
         self.data_path=self.name+"/"
         if not os.path.exists(self.data_path):
             os.makedirs(self.data_path)
-        print "Writing data to: "+self.data_path
+        print ("Writing data to: "+self.data_path)
         cynest.ResetKernel()
         cynest.SetKernelStatus({"data_path": self.data_path})
 
@@ -101,7 +101,7 @@ class Brunel2000:
         #self.nodes   = cynest.Create("iaf_psc_delta",self.N_neurons)
         #self.nodes   = cynest.Create("cython_neuron",self.N_neurons)
         #self.nodes   = cynest.Create("brunell-sli_neuron",self.N_neurons)
-        print neuronName
+
         self.nodes   = cynest.Create(neuronName, self.N_neurons)
 
         self.noise=cynest.Create("poisson_generator",1,{"rate": self.p_rate})
@@ -109,7 +109,7 @@ class Brunel2000:
                                 [{"label": "brunel-py-ex"},
                                  {"label": "brunel-py-in"}])
         if custom == True:
-	    cynest.SetStatus(self.nodes, [{"optimized":True}])
+            cynest.SetStatus(self.nodes, [{"optimized":True}])
 
         self.nodes_E= self.nodes[:self.N_E]
         self.nodes_I= self.nodes[self.N_E:]
@@ -152,9 +152,9 @@ class Brunel2000:
         cynest.Simulate(simtime)
         events = cynest.GetStatus(self.spikes,"n_events")
         self.rate_ex= events[0]/simtime*1000.0/self.N_rec
-        print "Excitatory rate   : %.2f Hz" % self.rate_ex
+        print ("Excitatory rate   : %.2f Hz" % self.rate_ex)
         self.rate_in= events[1]/simtime*1000.0/self.N_rec
-        print "Inhibitory rate   : %.2f Hz" % self.rate_in
+        print ("Inhibitory rate   : %.2f Hz" % self.rate_in)
         #cynest.raster_plot.from_device(self.spikes_E, hist=True)
         #pylab.show()
 
@@ -178,9 +178,9 @@ class Brunel_balanced(Brunel2000):
 
 
 def runNeurons(ms, version = 1):
-    print "Running native, SLI and cython neurons for " + str(ms) + " ms\n\n"
+    print ("Running native, SLI and cython neurons for " + str(ms) + " ms")
 
-    print "Running native neurons"
+    print ("\n\nRunning native neurons")
     # native neuron
     b = Brunel2000()
     b.run("iaf_psc_delta", False, ms)
@@ -188,7 +188,7 @@ def runNeurons(ms, version = 1):
 
     cynest.ResetKernel()
 
-    print "Running cython neurons"
+    print ("\n\nRunning cython neurons")
     # cython neuron
     b = Brunel2000()
     
@@ -209,12 +209,12 @@ def runNeurons(ms, version = 1):
 #    call(["nest", "brunel-sli_neuron.sli"])
 #    SliRTF = 0.0045;
 
-    print "Faster factor (native / cython) : " + str(NativRTF / CythonRTF)
+    print ("Faster factor (native / cython) : " + str(NativRTF / CythonRTF))
 #    print "Faster factor (native / sli) : " + str(NativRTF / SliRTF)
 #    print "Faster factor (sli / cython) : " + str(SliRTF / CythonRTF)
 
-print "\n\nWelcome to some speedtests\n"
-print "Type start(version, time=40) in order to start a test.\n\nversion: 1 for c_members or 2 for pydict"
+print ("\n\nWelcome to some speedtests\n")
+print ("Type start(version, time=40) in order to start a test.\n\nversion: 1 for c_members or 2 for pydict")
 
 def start(v, t=40):
     runNeurons(t, v)

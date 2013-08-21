@@ -35,8 +35,8 @@ cdef class testmodel(Neuron):
         return d
 
     cpdef setStatus(self, d):
-        if d.has_key("p1"):
+        if "p1" in d:
             self.params.p1 = d["p1"]
-        if d.has_key("p2"):
+        if "p2" in d:
             self.params.p2 = d["p2"]
 

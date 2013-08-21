@@ -37,11 +37,11 @@ class Bench(object):
         t = 0
         for i in range(repeat):
             t1 = time()
-            exec(cmd, self.g, self.l)
+            exec cmd in self.g, self.l
             t2 = time()
             t += t2-t1
 
-        print('Executed "%s".  Elapsed = %f s' % (cmd,t/repeat))
+        print 'Executed "%s".  Elapsed = %f s' % (cmd,t/repeat)
         
 
 class ConnectAPITestCase(unittest.TestCase):

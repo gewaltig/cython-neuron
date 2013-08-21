@@ -104,7 +104,7 @@ def from_device(detec, neurons=None, title=None, grayscale=False, timeunit="ms")
             raise nest.NESTError("No events recorded! Make sure that withtime and withgid are true.")
 
         if not neurons:
-            neurons = list(voltages.keys())
+            neurons = voltages.keys()
 
         for neuron in neurons:
             time_values = numpy.array(times[neuron]) / timefactor
@@ -152,10 +152,10 @@ def _from_memory(detec):
     v = {}
     t = {}
 
-    if 'times' in ev:
+    if ev.has_key('times'):
         times = ev['times']
         for s, currentsender in enumerate(senders):
-            if currentsender not in v:
+            if not v.has_key(currentsender):
                 v[currentsender] = array.array('f')
                 t[currentsender] = array.array('f')
 
@@ -169,10 +169,10 @@ def _from_memory(detec):
         interval = detec_status['interval']
         senders_uniq = numpy.unique(senders)
         num_intvls = len(senders) / len(senders_uniq)
-        times_s = origin + start + interval + interval * numpy.array(list(range(num_intvls)))
+        times_s = origin + start + interval + interval * numpy.array(range(num_intvls))
 
         for s, currentsender in enumerate(senders):
-            if currentsender not in v:
+            if not v.has_key(currentsender):
                 v[currentsender] = array.array('f')
                 t[currentsender] = times_s
             v[currentsender].append(float(potentials[s]))

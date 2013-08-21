@@ -333,6 +333,7 @@ namespace nest
        void execute(SLIInterpreter *) const;
      } connect_i_i_D_lfunction;
 
+     // Added by Jonny Quarta
      class Connect_i_D_iFunction: public SLIFunction
      {
       public:

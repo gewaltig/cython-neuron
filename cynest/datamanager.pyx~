@@ -17,8 +17,7 @@ cdef class SLIDataContainer:
     cdef PyToken generate_func_pytoken(self, bytes cmd):
         cdef PyToken t = PyToken()
 
-        self.nest_engine.run(b'/' + cmd + b' lookup')
-
+        self.nest_engine.run('/' + cmd + ' lookup')
         result = self.nest_engine.pop()
 
         if result is True:
@@ -29,7 +28,7 @@ cdef class SLIDataContainer:
     cdef PyToken generate_arg_pytoken(self, bytes cmd):
         cdef PyToken t = PyToken()
 
-        self.nest_engine.run(b"/ajvehwlksjdbjds " + cmd + b" def")
+        self.nest_engine.run(b"/ajvehwlksjdbjds " + cmd + " def")
         self.nest_engine.run(b"/ajvehwlksjdbjds lookup")
 
         if self.nest_engine.pop():
@@ -40,10 +39,8 @@ cdef class SLIDataContainer:
 
     cdef bint add_command(self, bytes cmd):
         cdef PyToken token
-
         if not cmd in self.commands:
             token = self.generate_func_pytoken(cmd)
-
             if token.thisptr:
                 self.commands[cmd] = token
                 return True
@@ -54,7 +51,7 @@ cdef class SLIDataContainer:
 
 
     cdef PyToken get_pytoken(self, bytes cmd):
-        if cmd in self.commands:
+        if self.commands.has_key(cmd):
             return self.commands[cmd]
         else:
             return None
@@ -64,15 +61,15 @@ cdef class SLIDataContainer:
         cdef PyToken t
         cdef composed_cmd
 
-        m = re.search(b'^{ (.+?) } runprotected$', cmd)
+        m = re.search('^{ (.+?) } runprotected$', cmd)
         if hasattr(m, 'group'):
-            command = m.group(1)
+            command = m.group(1).encode('UTF-8')
             composed_cmd = composed_protected_cmd
         else:
             command = cmd
             composed_cmd = composed_unprotected_cmd
 
-        if re.match(b'^[^ /]+$', command):
+        if re.match('^[^ /]+$', command):
             if self.add_command(command):
                 t = self.commands[command]
                 return self.nest_engine.run_token(t.thisptr[0])

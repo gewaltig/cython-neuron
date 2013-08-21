@@ -17,12 +17,14 @@
  */
 
 #include "datumtopythonconverter.h"
-//#include "pydatum.h"
+
 #include "kernel.h"
 void DatumToPythonConverter::convert_me(Datum &s)
 {
     Token *t= new Token(s); 
-    py_object_ = Token_to_PyObject(t);
+    printf("calling token_to_pyobject\n");
+    fflush(stdout);
+    py_object_ = NULL; // Token_to_PyObject(t); changed
 }
 
 DatumToPythonConverter::DatumToPythonConverter()

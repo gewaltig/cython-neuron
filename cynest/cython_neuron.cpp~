@@ -108,14 +108,14 @@ void nest::cython_neuron::calibrate()
 {
   B_.logger_.init();
   
-  if(state_->known(Name("pyobject"))) {
-	pyObj = (PyObjectDatum*)(&(*(*state_)[Name("pyobject")]));
+  if(state_->known(pyobjectName)) {
+	pyObj = (PyObjectDatum*)(&(*(*state_)[pyobjectName]));
 	  
 	// Pointers to Standard Parameters passing
 	pyObj->putStdParams(&currents, &in_spikes, &ex_spikes, &t_lag, &spike);
-	pyObj->call_method("calibrate");
+	pyObj->call_method(calibrateStr);
 
-	if(state_->known(Name("optimized")) && (*state_)[Name("optimized")]) {
+	if(state_->known(optimizedName) && (*state_)[optimizedName]) {
 		optimized = true;
 	}
 	else {
@@ -188,15 +188,15 @@ void nest::cython_neuron::handle(DataLoggingRequest& e)
 
 void nest::cython_neuron::setStatusCython()
 {
-    if(state_->known(Name("pyobject"))) {
-		((PyObjectDatum*)(&(*(*state_)[Name("pyobject")])))->call_status_method(SET_STATUS_METHOD, &state_);
+    if(state_->known(pyobjectName)) {
+		((PyObjectDatum*)(&(*(*state_)[pyobjectName])))->call_status_method(SET_STATUS_METHOD, &state_);
 	}
 }
 
 void nest::cython_neuron::getStatusCython() const
 {
-    if(state_->known(Name("pyobject"))) {
-		((PyObjectDatum*)(&(*(*state_)[Name("pyobject")])))->call_status_method(GET_STATUS_METHOD, &state_);
+    if(state_->known(pyobjectName)) {
+		((PyObjectDatum*)(&(*(*state_)[pyobjectName])))->call_status_method(GET_STATUS_METHOD, &state_);
     }
 }
 

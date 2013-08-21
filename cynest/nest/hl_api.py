@@ -203,16 +203,16 @@ def help(obj=None, pager="less"):
         sr("/page << /command (%s) >> SetOptions" % pager)
         sr("/%s help" % obj)
     else:
-	print("Type 'nest.helpdesk()' to access the online documentation in a browser.")
-	print("Type 'nest.help(object)' to get help on a NEST object or command.")
+        print("Type 'nest.helpdesk()' to access the online documentation in a browser.")
+        print("Type 'nest.help(object)' to get help on a NEST object or command.")
         print() 
         print("Type 'nest.Models()' to see a list of available models in NEST.")
         print() 
-	print("Type 'nest.authors()' for information about the makers of NEST.")
-	print("Type 'nest.sysinfo()' to see details on the system configuration.")
-	print("Type 'nest.version()' for information about the NEST version.")
+        print("Type 'nest.authors()' for information about the makers of NEST.")
+        print("Type 'nest.sysinfo()' to see details on the system configuration.")
+        print("Type 'nest.version()' for information about the NEST version.")
         print()
-	print("For more information visit http://www.nest-initiative.org.")
+        print("For more information visit http://www.nest-initiative.org.")
 
 
 def get_verbosity():
@@ -459,16 +459,17 @@ def CopyModel(existing, new, params=None):
 # -------------------- Functions for node handling
 
 def RegisterNeuron(model_name):
-	exec("import " + model_name)
-	globals()[model_name] = locals()[model_name]
-	exec(model_name + ".setScheduler(schedulerObj)")
-	exec(model_name + ".setTime(timeObj)")
-	exec(model_name + ".setTic(ticObj)")
-	exec(model_name + ".setStep(stepObj)")
-	exec(model_name + ".setMs(msObj)")
-	exec(model_name + ".setMs_stamp(ms_stampObj)")
-	cython_models.append(model_name)
-	reg(model_name)
+    d = {}
+    exec("import " + model_name, globals(), d)
+    globals()[model_name] = d[model_name]
+    exec(model_name + ".setScheduler(schedulerObj)", globals())
+    exec(model_name + ".setTime(timeObj)", globals())
+    exec(model_name + ".setTic(ticObj)", globals())
+    exec(model_name + ".setStep(stepObj)", globals())
+    exec(model_name + ".setMs(msObj)", globals())
+    exec(model_name + ".setMs_stamp(ms_stampObj)", globals())
+    cython_models.append(model_name)
+    reg(model_name.encode())
 
 def Create(model, n=1, params=None):
     """
@@ -500,8 +501,9 @@ def Create(model, n=1, params=None):
     # have to check if cython model or normal model, then process multiple creations
     if model in cython_models:
         for i in ids:
-            exec("tmpobj___ = " + model + "." + model + "()")
-            SetStatus([i], {'pyobject':tmpobj___})
+            d = {}
+            exec("tmpobj___ = " + model + "." + model + "()", globals(), d)
+            SetStatus([i], {"pyobject" : d["tmpobj___"]})
 
     if broadcast_params:
         try:
@@ -535,9 +537,10 @@ def SetStatus(nodes, params, val=None) :
             params = {params : val}
 
     params = broadcast(params, len(nodes), (dict,), "params")
+
     if len(nodes) != len(params) :
         raise NESTError("Status dict must be a dict, or list of dicts of length 1 or len(nodes).")
-        
+
     if  (type(nodes[0]) == dict) or is_sequencetype(nodes[0]):
         nest.push_connection_datums(nodes)
     else:
@@ -599,7 +602,7 @@ def GetLID(gid) :
 
 # -------------------- Functions for connection handling
 
-	
+
 def FindConnections(source, target=None, synapse_model=None, synapse_type=None):
     """
     Return an array of identifiers for connections that match the
@@ -786,7 +789,7 @@ def DivergentConnect(pre, post, weight=None, delay=None, model="static_synapse")
     dvc(pre, post, weight, delay, model)
 
 
-def DataConnect(pre, params=None, model=None, variant=1):
+def DataConnect(pre, params=None, model=None, version=1):
     """
     Connect neurons from lists of connection data.
 
@@ -820,21 +823,21 @@ def DataConnect(pre, params=None, model=None, variant=1):
         raise NESTError("'params' must be a list of dictionaries.")
 
     if params:
-	if not model:
-		model="static_synapse"
+        if not model:
+            model="static_synapse"
     
-        if variant == 1:
+        if version == 1:
             dtc1(pre, params, model)
-        elif variant == 2:
+        elif version == 2:
             dtc2(pre, params, model)
 
     else:
-	    # Call the variant where all connections are
-	    # given explicitly
+            # Call the variant where all connections are
+            # given explicitly
             dictmiss=GetKernelStatus('dict_miss_is_error')
             SetKernelStatus('dict_miss_is_error', False)
-	    sps(pre)
-	    sr('DataConnect_a')
+            sps(pre)
+            sr('DataConnect_a')
             SetKernelStatus('dict_miss_is_error', dictmiss)
             
     

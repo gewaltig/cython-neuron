@@ -88,7 +88,7 @@ class NetworkTestCase(unittest.TestCase):
        nest.ResetKernel()
        model = 'iaf_neuron'
        l = nest.LayoutNetwork(model, [2,3])
-       allNodes = list(range(2, 10))
+       allNodes = range(2, 10)
        allSubnets = [2, 6]
        allLeaves = [n for n in allNodes if n not in allSubnets]
        

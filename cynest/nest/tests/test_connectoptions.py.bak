@@ -39,8 +39,8 @@ class ConnectOptionsTestCase(unittest.TestCase):
         copts = nest.sli_func('GetOptions', '/RandomConvergentConnect', litconv=True)
         dopts = nest.sli_func('GetOptions', '/RandomDivergentConnect',  litconv=True)
 
-        ncopts = dict([(k, not v) for k,v in copts.items() if k != 'DefaultOptions'])
-        ndopts = dict([(k, not v) for k,v in dopts.items() if k != 'DefaultOptions'])
+        ncopts = dict([(k, not v) for k,v in copts.iteritems() if k != 'DefaultOptions'])
+        ndopts = dict([(k, not v) for k,v in dopts.iteritems() if k != 'DefaultOptions'])
         
         n = nest.Create('iaf_neuron', 3)
 

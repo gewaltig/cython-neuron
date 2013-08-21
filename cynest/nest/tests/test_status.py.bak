@@ -79,7 +79,7 @@ class StatusTestCase(unittest.TestCase):
         models.remove('sli_neuron')
 
         for m in models:        
-            if 'V_m' in nest.GetDefaults(m):
+            if nest.GetDefaults(m).has_key('V_m'):
                 nest.ResetKernel()
                 v_m = nest.GetDefaults(m)['V_m']
                 nest.SetDefaults(m,{'V_m':-1.})
@@ -106,7 +106,7 @@ class StatusTestCase(unittest.TestCase):
         models.remove('sli_neuron')
 
         for m in models:        
-            if 'V_m' in nest.GetDefaults(m):
+            if nest.GetDefaults(m).has_key('V_m'):
                 nest.ResetKernel()
                 n  = nest.Create(m)
                 d  = nest.GetStatus(n)
@@ -126,7 +126,7 @@ class StatusTestCase(unittest.TestCase):
         models.remove('sli_neuron')
 
         for m in models:        
-            if 'V_m' in nest.GetDefaults(m):
+            if nest.GetDefaults(m).has_key('V_m'):
                 nest.ResetKernel()
                 n = nest.Create(m)
                 nest.SetStatus(n,{'V_m':1.})
@@ -142,7 +142,7 @@ class StatusTestCase(unittest.TestCase):
         models.remove('sli_neuron')
 
         for m in models:        
-            if 'V_m' in nest.GetDefaults(m):
+            if nest.GetDefaults(m).has_key('V_m'):
                 nest.ResetKernel()
                 n  = nest.Create(m)
                 nest.SetStatus(n,[{'V_m':2.}])
@@ -158,7 +158,7 @@ class StatusTestCase(unittest.TestCase):
         models.remove('sli_neuron')
 
         for m in models:        
-            if 'V_m' in nest.GetDefaults(m):
+            if nest.GetDefaults(m).has_key('V_m'):
                 nest.ResetKernel()
                 n  = nest.Create(m)
                 nest.SetStatus(n,'V_m',3.)
@@ -174,7 +174,7 @@ class StatusTestCase(unittest.TestCase):
         models.remove('sli_neuron')
 
         for m in models:
-            if 'V_th' in nest.GetDefaults(m) and 'E_L' in nest.GetDefaults(m) and m != 'a2eif_cond_exp_HW' and m != 'mat2_psc_exp':
+            if nest.GetDefaults(m).has_key('V_th') and nest.GetDefaults(m).has_key('E_L') and m != 'a2eif_cond_exp_HW' and m != 'mat2_psc_exp':
                 nest.ResetKernel()
 
                 neuron1 = nest.Create(m)
@@ -192,7 +192,7 @@ class StatusTestCase(unittest.TestCase):
                 # next three lines for debugging
                 vth1, vth2 = nest.GetStatus(neuron1,'V_th'), nest.GetStatus(neuron2,'V_th')
                 if vth1 != vth2:
-                    print(m, vth1, vth2, nest.GetStatus(neuron1,'E_L'), nest.GetStatus(neuron2,'E_L'))
+                    print m, vth1, vth2, nest.GetStatus(neuron1,'E_L'), nest.GetStatus(neuron2,'E_L')
 
                 assert(nest.GetStatus(neuron1,'V_th')==nest.GetStatus(neuron2,'V_th'))
     
