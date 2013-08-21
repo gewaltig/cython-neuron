@@ -32,6 +32,8 @@
 #include <string>
 #include "genericmodel.h"
 
+#include "pyobjectdatum.h"
+
 namespace nest{
 
   class Network;
@@ -139,7 +141,7 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
 
     DictionaryDatum get_status_dict_();
     
-    Datum* pyObj;
+    PyObjectDatum* pyObj;
     bool optimized;
 
     void init_state_(const Node& proto);
