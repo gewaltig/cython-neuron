@@ -111,7 +111,7 @@ public:
 
   PyObjectDatum(PyObjectDatum* py) {
 	  this->pyObj = py->pyObj;
-	  Py_XINCREF(pyObj);
+
 	init();
   }
   ~PyObjectDatum() {}

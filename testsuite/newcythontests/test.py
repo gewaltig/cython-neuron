@@ -133,10 +133,10 @@ class Brunel2000:
                        "inhibitory",
                        {"weight":self.J_I, 
                         "delay":self.delay})
-        cynest.RandomConvergentConnect(self.nodes_E, self.nodes, 
-                                     self.C_E, model="excitatory")
-        cynest.RandomConvergentConnect(self.nodes_I, self.nodes, 
-                                     self.C_I, model="inhibitory")
+        #cynest.RandomConvergentConnect(self.nodes_E, self.nodes, 
+        #                             self.C_E, model="excitatory")
+        #cynest.RandomConvergentConnect(self.nodes_I, self.nodes, 
+        #                             self.C_I, model="inhibitory")
         cynest.DivergentConnect(self.noise,self.nodes,model="excitatory")
         cynest.ConvergentConnect(self.nodes_E[:self.N_rec],self.spikes_E)
         cynest.ConvergentConnect(self.nodes_I[:self.N_rec],self.spikes_I)
