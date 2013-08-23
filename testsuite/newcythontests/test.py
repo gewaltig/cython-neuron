@@ -68,28 +68,14 @@ class Brunel2000:
         model.
         """
         self.N_neurons = self.N_E+self.N_I
-        self.C_E    = self.N_E/10
-        self.C_I    = self.N_I/10
+        self.C_E    = self.N_E//10
+        self.C_I    = self.N_I//10
         self.J_I    = -self.g*self.J_E
         self.nu_ex  = self.eta* self.V_th/(self.J_E*self.C_E*self.tau_m)
         self.p_rate = 1000.0*self.nu_ex*self.C_E
         cynest.SetKernelStatus({"print_time": True,
                               "local_num_threads":self.threads})
-        #cynest.SetDefaults("cython_iaf_psc_delta", 
-        #                 {"C_m": 1.0,
-        #                  "tau_m": self.tau_m,
-        #                  "t_ref": 2.0,
-        #                  "E_L": 0.0,
-        #                  "V_th": self.V_th,
-        #                  "V_reset": 10.0})
 
-        #cynest.SetDefaults("iaf_psc_delta", 
-        #                 {"C_m": 1.0,
-        #                  "tau_m": self.tau_m,
-        #                  "t_ref": 2.0,
-        #                  "E_L": 0.0,
-        #                  "V_th": self.V_th,
-        #                  "V_reset": 10.0})
 
     def build(self, neuronName, custom):
         """
@@ -98,9 +84,6 @@ class Brunel2000:
         if self.built==True: return
         self.calibrate()
 
-        #self.nodes   = cynest.Create("iaf_psc_delta",self.N_neurons)
-        #self.nodes   = cynest.Create("cython_neuron",self.N_neurons)
-        #self.nodes   = cynest.Create("brunell-sli_neuron",self.N_neurons)
 
         self.nodes   = cynest.Create(neuronName, self.N_neurons)
 
@@ -133,10 +116,11 @@ class Brunel2000:
                        "inhibitory",
                        {"weight":self.J_I, 
                         "delay":self.delay})
-        #cynest.RandomConvergentConnect(self.nodes_E, self.nodes, 
-        #                             self.C_E, model="excitatory")
-        #cynest.RandomConvergentConnect(self.nodes_I, self.nodes, 
-        #                             self.C_I, model="inhibitory")
+
+        cynest.RandomConvergentConnect(self.nodes_E, self.nodes, 
+                                     self.C_E, model="excitatory")
+        cynest.RandomConvergentConnect(self.nodes_I, self.nodes, 
+                                     self.C_I, model="inhibitory")
         cynest.DivergentConnect(self.noise,self.nodes,model="excitatory")
         cynest.ConvergentConnect(self.nodes_E[:self.N_rec],self.spikes_E)
         cynest.ConvergentConnect(self.nodes_I[:self.N_rec],self.spikes_I)
@@ -151,9 +135,10 @@ class Brunel2000:
             self.connect(neuronName, custom)
         cynest.Simulate(simtime)
         events = cynest.GetStatus(self.spikes,"n_events")
-        self.rate_ex= events[0]/simtime*1000.0/self.N_rec
+
+        self.rate_ex= events[0]//simtime*1000.0/self.N_rec
         print ("Excitatory rate   : %.2f Hz" % self.rate_ex)
-        self.rate_in= events[1]/simtime*1000.0/self.N_rec
+        self.rate_in= events[1]//simtime*1000.0/self.N_rec
         print ("Inhibitory rate   : %.2f Hz" % self.rate_in)
         #cynest.raster_plot.from_device(self.spikes_E, hist=True)
         #pylab.show()
