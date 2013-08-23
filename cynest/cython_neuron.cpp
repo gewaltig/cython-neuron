@@ -69,6 +69,7 @@ nest::cython_neuron::cython_neuron()
     B_(*this)
 {
   recordablesMap_.create();
+  pyObj = NULL;
 }
 
 nest::cython_neuron::cython_neuron(const cython_neuron& n)
@@ -77,10 +78,13 @@ nest::cython_neuron::cython_neuron(const cython_neuron& n)
     B_(n.B_, *this)
 {
   init_state_(n);
+  pyObj = NULL;
 }
 
 nest::cython_neuron::~cython_neuron()
-{}
+{
+   delete pyObj;
+}
 
 
 /* ----------------------------------------------------------------
@@ -107,10 +111,8 @@ void nest::cython_neuron::init_buffers_()
 void nest::cython_neuron::calibrate()
 {
   B_.logger_.init();
-  
-  if(state_->known(Name("pyobject"))) {
-	pyObj = (PyObjectDatum*)(&(*(*state_)[Name("pyobject")]));
-	  
+
+  if(pyObj != NULL) {	  
 	// Pointers to Standard Parameters passing
 	pyObj->putStdParams(&currents, &in_spikes, &ex_spikes, &t_lag, &spike);
 	pyObj->call_method("calibrate");
@@ -188,15 +190,20 @@ void nest::cython_neuron::handle(DataLoggingRequest& e)
 
 void nest::cython_neuron::setStatusCython()
 {
-    if(state_->known(Name("pyobject"))) {
-		((PyObjectDatum*)(&(*(*state_)[Name("pyobject")])))->call_status_method(SET_STATUS_METHOD, &state_);
-	}
+    if(state_->known(Name("pyobject")) && pyObj == NULL) {
+       ((PyObjectDatum*)(&(*(*state_)[Name("pyobject")])))->call_status_method(SET_STATUS_METHOD, &state_);
+       pyObj = ((PyObjectDatum*)(&(*(*state_)[Name("pyobject")])))->clone();
+       state_->remove(Name("pyobject"));
+    }
+    else if(pyObj != NULL) {
+       pyObj->call_status_method(SET_STATUS_METHOD, &state_);
+    }
 }
 
 void nest::cython_neuron::getStatusCython() const
 {
-    if(state_->known(Name("pyobject"))) {
-		((PyObjectDatum*)(&(*(*state_)[Name("pyobject")])))->call_status_method(GET_STATUS_METHOD, &state_);
+    if(pyObj != NULL) {
+		pyObj->call_status_method(GET_STATUS_METHOD, &state_);
     }
 }
 

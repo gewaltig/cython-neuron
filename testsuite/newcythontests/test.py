@@ -159,23 +159,6 @@ class Brunel2000:
         #pylab.show()
 
 
-class Brunel_randomized(Brunel2000):
-    """
-    Like Brunel2000, but with randomized connection weights.
-    """
-    def connect(self):
-        """
-        Connect nodes with randomized weights.
-        """
-        # Code for randomized connections follows
-
-class Brunel_balanced(Brunel2000):
-    """
-    Exact balance of excitation and inhibition
-    """
-    g=4
-
-
 
 def runNeurons(ms, version = 1):
     print ("Running native, SLI and cython neurons for " + str(ms) + " ms")

@@ -49,25 +49,37 @@ private:
 
   PyCFunction updateFct;
 
-  PyObjectDatum *clone(void) const
-  {
-        return new PyObjectDatum(*this);
-  }
 
-  PyObjectDatum * get_ptr()
-  {
-    return clone();
-  }
-public:
-  PyObjectDatum(PyObject *py) {
-	  pyObj = py;
+
+struct PyMethodDef* getUpdateRef(struct PyMethodDef *tp_methods) {
+	int i = 0;
+	while(&(tp_methods[i]) != NULL) {
+		if(std::string("update").compare(tp_methods[i].ml_name) == 0) {
+			return &(tp_methods[i]);
+		}
+		i++;
+	}
+	return NULL;
+}
+
+
+bool isOK(std::string method)
+{	
+	for(int i = 0; i < forbiddenParamsLength; i++) {
+		if(method.compare(forbiddenParams[i]) == 0) {
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+void init() {
 	  currents = NULL;
 	  in_spikes = NULL;
 	  ex_spikes = NULL;
 	  t_lag = NULL;
 	  spike = NULL;
-	  Py_XINCREF(pyObj);
-
 	  // the cython model shouldn't use or access these parameters
 	  forbiddenParamsLength = 16;
 	  forbiddenParams[0] = "archiver_length";
@@ -86,25 +98,28 @@ public:
 	  forbiddenParams[13] = "tau_minus_triplet";
 	  forbiddenParams[14] = "thread";
 	  forbiddenParams[15] = "vp";
+}
+
+public:
+  PyObjectDatum(PyObject *py) {
+	  pyObj = py;
+
+	  Py_XINCREF(pyObj);
+
+	  init();
   }
 
   PyObjectDatum(PyObjectDatum* py) {
 	  this->pyObj = py->pyObj;
 	  Py_XINCREF(pyObj);
+	init();
   }
   ~PyObjectDatum() {}
 
-
-struct PyMethodDef* getUpdateRef(struct PyMethodDef *tp_methods) {
-	int i = 0;
-	while(&(tp_methods[i]) != NULL) {
-		if(std::string("update").compare(tp_methods[i].ml_name) == 0) {
-			return &(tp_methods[i]);
-		}
-		i++;
-	}
-	return NULL;
-}
+  PyObjectDatum *clone(void) const
+  {
+        return new PyObjectDatum(*this);
+  }
 
 void putStdParams(double** curr, double** is, double** es, long** tl, long** sp) {
 	// important, otherwise segmentation fault
@@ -151,16 +166,6 @@ void call_update_optimized() {
 }
 
 
-bool isOK(std::string method)
-{	
-	for(int i = 0; i < forbiddenParamsLength; i++) {
-		if(method.compare(forbiddenParams[i]) == 0) {
-			return false;
-		}
-	}
-	
-	return true;
-}
 
 void call_status_method(int m, void* status_) {
 	// important, otherwise segmentation fault
@@ -181,6 +186,7 @@ void call_status_method(int m, void* status_) {
 		
 		// after the python dict has been filled, we can call the method
 		PyObject_CallMethodObjArgs(this->pyObj, PyUnicode_FromString("setStatus"), dict, NULL);
+                Py_XDECREF(dict);
 	}
 	else if(m == GET_STATUS_METHOD) {
 		PyObject* dict = PyObject_CallMethod(this->pyObj, "getStatus", NULL);
@@ -196,7 +202,8 @@ void call_status_method(int m, void* status_) {
 			Py_DECREF(pStrObj);
 			(**status)[zStr] = dataConverter.objectToDatum(subPyObj);
 		}
-		
+
+		Py_XDECREF(dict);
 		// the std params also have to be updated
 		if(currents != NULL && in_spikes != NULL && ex_spikes != NULL && t_lag != NULL && spike != NULL) {
 			(**status)["currents"] = *currents;
@@ -214,7 +221,7 @@ void call_status_method(int m, void* status_) {
    * This member has to be overridden in the derived classes
    * to call visit and passing themselves as an argument.
    */
-  void use_converter(DatumConverter &v) { }
+  void use_converter(DatumConverter &v) {  }
   
   void  print(std::ostream & ) const {printf("This is a PyObjectDatum");}
   void  pprint(std::ostream &) const {printf("This is a PyObjectDatum");}

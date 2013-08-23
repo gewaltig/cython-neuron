@@ -19,6 +19,7 @@ cdef class PyToken:
      Python wrapper of SLI's Token class.
      """
      cdef classes.Token *thisptr
+
      def __dealloc__(self):
          if self.thisptr:
             del self.thisptr
@@ -74,8 +75,8 @@ cdef class NESTEngine:
            signal.signal(signal.SIGINT, cynest_signal_handler)
         return result
 
-    def register_cython_model(self, string model):
-        self.thisptr.register_cython_model(model)
+    def register_cython_model(self, model):
+        self.thisptr.register_cython_model(model.encode('UTF-8'))
 
     def push(self, value):
         """
@@ -163,7 +164,7 @@ cdef class NESTEngine:
     def convergent_connect(self, pre, post, weight, delay, model):
         self.sli_container.add_command('ConvergentConnect'.encode('UTF-8'))
         cdef PyToken cmd = self.sli_container.get_pytoken('ConvergentConnect'.encode('UTF-8'))
-        cdef PyToken m = self.sli_container.generate_arg_pytoken(('/%s' % model).encode('UTF-8'))
+        cdef PyToken m = self.sli_container.generate_arg_pytoken(('/%s'%model).encode('UTF-8'))
 
         if weight == None and delay == None:
             for d in post :
@@ -223,11 +224,10 @@ cdef class NESTEngine:
             raise NESTError("Both 'weight' and 'delay' have to be given.")
 
 
-    def data_connect1(self, list pre, list params, string model):
+    def data_connect1(self, list pre, list params, model):
         self.sli_container.add_command('DataConnect_i_dict_s'.encode('UTF-8'))
         cdef PyToken cmd1 = self.sli_container.get_pytoken('DataConnect_i_dict_s'.encode('UTF-8'))
-        cdef PyToken m = self.sli_container.generate_arg_pytoken(('/%s' % model).encode('UTF-8'))
-
+        cdef PyToken m = self.sli_container.generate_arg_pytoken(('/' + model).encode('UTF-8'))
 
         for s,p in zip(pre,params):
             self.push(s)
@@ -237,11 +237,12 @@ cdef class NESTEngine:
 
 
 
-    cpdef data_connect2(self, list pre, list params, string model):
+    def data_connect2(self, list pre, list params, model):
         self.sli_container.add_command('Connect_i_D_i'.encode('UTF-8'))
         cdef PyToken cmd2 = self.sli_container.get_pytoken('Connect_i_D_i'.encode('UTF-8'))
         self.run('synapsedict') #sure unprotected
-        self.run('/%s get'%model) 
+        self.run('/'+ model+ ' get') 
+
         cdef int model_id = self.pop()
         cdef dict params_dict = {}
         cdef int i = 0

@@ -1,6 +1,19 @@
 #ifndef __PYX_HAVE__cynest__kernel
 #define __PYX_HAVE__cynest__kernel
 
+struct PyToken;
+
+/* "cynest/kernel.pyx":16
+ * cimport classes
+ * 
+ * cdef public class PyToken[object PyToken, type PyTokenType]:             # <<<<<<<<<<<<<<
+ * #cdef class PyToken:
+ *      """
+ */
+struct PyToken {
+  PyObject_HEAD
+  Token *thisptr;
+};
 
 #ifndef __PYX_HAVE_API__cynest__kernel
 
@@ -11,7 +24,6 @@
     #define __PYX_EXTERN_C extern
   #endif
 #endif
-
 
 #endif /* !__PYX_HAVE_API__cynest__kernel */
 

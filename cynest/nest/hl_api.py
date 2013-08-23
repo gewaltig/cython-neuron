@@ -459,6 +459,7 @@ def CopyModel(existing, new, params=None):
 # -------------------- Functions for node handling
 
 def RegisterNeuron(model_name):
+    print ("Registering " + model_name + "...")
     d = {}
     exec("import " + model_name, globals(), d)
     globals()[model_name] = d[model_name]
@@ -469,7 +470,8 @@ def RegisterNeuron(model_name):
     exec(model_name + ".setMs(msObj)", globals())
     exec(model_name + ".setMs_stamp(ms_stampObj)", globals())
     cython_models.append(model_name)
-    reg(model_name.encode())
+    reg(model_name)
+    print ("Registration completed")
 
 def Create(model, n=1, params=None):
     """
@@ -524,6 +526,7 @@ def SetStatus(nodes, params, val=None) :
     can be a single value or a list of the same size as nodes.
     """
 
+
     if not is_sequencetype(nodes):
         raise NESTError("nodes must be a list of nodes or synapses.")
 
@@ -551,6 +554,7 @@ def SetStatus(nodes, params, val=None) :
     sr('Transpose { arrayload ; SetStatus } forall')
 
 
+
 def GetStatus(nodes, keys=None) :
     """
     Return the parameter dictionaries of the given list of nodes
@@ -570,10 +574,10 @@ def GetStatus(nodes, keys=None) :
 
     if keys:
         if is_sequencetype(keys):
-            keyss = string.join(["/%s" % x for x in keys])
-            cmd='{ GetStatus } Map { [ [ %s ] ] get } Map' % keyss
+            keyss = string.join(["/"+ x for x in keys])
+            cmd='{ GetStatus } Map { [ [ '+keyss+' ] ] get } Map'
         else:
-            cmd='{ GetStatus /%s get} Map' % keys
+            cmd='{ GetStatus /'+keys+' get} Map'
 
     if (type(nodes[0]) == dict) or is_sequencetype(nodes[0]):
         nest.engine.push_connections(nodes)
