@@ -379,14 +379,3 @@ cdef class NameDatum:
          """
          return self.thisptr.toString()
 
-#cdef public object Token_to_PyObject(classes.Token *arg):
-#     """
-#     Convert a Datum pointer to a Python object.
-#     This function is exposed to C/C++ and used by the DatumToPythonConverter to
-#     encapsulate arbitrary Tokens in PyToken objects.
-#     """
-#     dat=PyToken()
-#     dat.thisptr=arg
-#     return dat
-
-

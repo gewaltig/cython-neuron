@@ -542,7 +542,7 @@ Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
    * Here we check for PyDatum, a wrapper class around Datum, defined in the cython module kernel.pyx.
    * and made available in "kernel.h"
    */ /*
-  if (PyObject_HasAttrString(pObj, "_PyTokenType_") == 1)//PyObject_TypeCheck(pObj, &PyTokenType)) 
+  if (PyObject_TypeCheck(pObj, &PyTokenType)) //PyObject_HasAttrString(pObj, "_PyTokenType_") == 1)
   { // Object is encapsulated Datum
       Token* t = reinterpret_cast<PyToken*>(pObj)->thisptr;
       if( not t)
