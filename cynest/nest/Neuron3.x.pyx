@@ -7,6 +7,7 @@ cdef class Neuron:
     cdef double ex_spikes
     cdef long t_lag
     cdef long spike
+    cdef double current_value
     
     def __cinit__(self):
         pass
@@ -39,6 +40,9 @@ cdef class Neuron:
 
     cpdef getPSpike(self):
         return <long>(&(self.spike))
+
+    cpdef getPCurrent_Value(self):
+        return <long>(&(self.current_value))
 
 # This class contains the totality of the imported objects
 # needed for accessing classes on the project side

@@ -11,4 +11,8 @@
 #define PyString_FromString PyBytes_FromString
 #endif
 
+#ifndef DL_IMPORT
+#define DL_IMPORT(t) t
+#endif
+
 #endif

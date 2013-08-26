@@ -43,6 +43,7 @@ private:
   double* ex_spikes;
   long* t_lag;
   long* spike;
+  double* current_value;
   
   int forbiddenParamsLength;
   std::string forbiddenParams[16];
@@ -121,7 +122,7 @@ public:
         return new PyObjectDatum(*this);
   }
 
-void putStdParams(double** curr, double** is, double** es, long** tl, long** sp) {
+void putStdParams(double** curr, double** is, double** es, long** tl, long** sp, double** cv) {
 	// important, otherwise segmentation fault
 	PyGILState_STATE s = PyGILState_Ensure();
 	
@@ -131,6 +132,7 @@ void putStdParams(double** curr, double** is, double** es, long** tl, long** sp)
 	*es = ex_spikes = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPEx_Spikes", NULL));
 	*tl = t_lag = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPT_Lag", NULL));
 	*sp = spike = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPSpike", NULL));
+	*cv = current_value = PyInt_AsLong(PyObject_CallMethod(this->pyObj, "getPCurrent_Value", NULL));
 	
 	// we also extract the direct pointer to the update c function
 	struct PyMethodDef* updateRef = getUpdateRef(this->pyObj->ob_type->tp_methods);
@@ -223,6 +225,7 @@ void call_status_method(int m, void* status_) {
 			(**status)["ex_spikes"] = *ex_spikes;
 			(**status)["t_lag"] = *t_lag;
 			(**status)["spike"] = *spike;
+			(**status)["current_value"] = *current_value;
 		}
 	}
 	PyGILState_Release(s);

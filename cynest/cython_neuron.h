@@ -138,6 +138,7 @@ SeeAlso: iaf_psc_delta, iaf_psc_exp, iaf_cond_exp, testsuite::test_cython_neuron
     double* ex_spikes;
     long* t_lag;
     long* spike;
+    double* current_value;
 
     DictionaryDatum get_status_dict_();
     

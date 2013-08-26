@@ -114,7 +114,9 @@ void nest::cython_neuron::calibrate()
 
   if(pyObj != NULL) {	  
 	// Pointers to Standard Parameters passing
-	pyObj->putStdParams(&currents, &in_spikes, &ex_spikes, &t_lag, &spike);
+	pyObj->putStdParams(&currents, &in_spikes, &ex_spikes, &t_lag, &spike, &current_value);
+	*spike = 0;
+	*current_value = 0.0;
 	pyObj->call_method("calibrate");
 
 	if(state_->known(Name("optimized")) && (*state_)[Name("optimized")]) {
@@ -152,6 +154,13 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
       set_spiketime(Time::step(origin.get_steps()+lag+1));
       SpikeEvent se;
       network()->send(*this, se, lag);
+    }
+
+    if(*current_value != 0.0)
+    {
+        CurrentEvent ce;
+	ce.set_current(*current_value);
+	network()->send(*this, ce, lag);
     }
 
     B_.logger_.record_data(origin.get_steps()+lag);
