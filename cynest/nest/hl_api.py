@@ -128,7 +128,7 @@ def broadcast(val, l, allowedtypes, name="val"):
     elif len(val)==1:
         return l*val
     elif len(val)!=l:
-        raise NESTError("'%s' must be a single value, a list with one element or a list with %i elements." % (name, l))
+        raise NESTError("'"+name+"' must be a single value, a list with one element or a list with "+str(l)+" elements.")
 
     return val
 
@@ -189,7 +189,7 @@ def helpdesk(browser="firefox"):
     Open the NEST helpdesk in the given browser. The default browser is firefox.
     """
     
-    sr("/helpdesk << /command (%s) >> SetOptions" % browser)
+    sr("/helpdesk << /command ("+browser+") >> SetOptions")
     sr("helpdesk")
 
 
@@ -200,8 +200,8 @@ def help(obj=None, pager="less"):
     """
 
     if obj:
-        sr("/page << /command (%s) >> SetOptions" % pager)
-        sr("/%s help" % obj)
+        sr("/page << /command ("+pager+") >> SetOptions")
+        sr("/"+obj+" help")
     else:
         print("Type 'nest.helpdesk()' to access the online documentation in a browser.")
         print("Type 'nest.help(object)' to get help on a NEST object or command.")
@@ -230,7 +230,7 @@ def set_verbosity(level):
     can be one of M_FATAL, M_ERROR, M_WARNING, or M_INFO.
     """
 
-    sr("%s setverbosity" % level)
+    sr(level+" setverbosity")
 
 
 def message(level,sender,text):
@@ -343,7 +343,7 @@ def Install(module_name):
     LD_LIBRARY_PATH (DYLD_LIBRARY_PATH under OSX).
     """
 
-    return sr("(%s) Install" % module_name)
+    return sr("("+module_name+") Install")
 
 
 # -------------------- Functions for parallel computing
@@ -370,7 +370,7 @@ def SetAcceptableLatency(port, latency):
     """
     
     sps(latency)
-    sr("/%s exch SetAcceptableLatency" % port)
+    sr("/"+port+" exch SetAcceptableLatency")
 
 
 # -------------------- Functions for model handling
@@ -431,11 +431,11 @@ def GetDefaults(model, keys=None) :
     GetDefaults('iaf_neuron','V_m') -> -70.0
     GetDefaults('iaf_neuron',['V_m', 'model') -> [-70.0, 'iaf_neuron']
     """
-    cmd = "/%s GetDefaults" % model
+    cmd = "/"+model+" GetDefaults"
     if keys:
         if is_sequencetype(keys):
-            keyss = string.join(["/%s" % x for x in keys])
-            cmd='/'+model+' GetDefaults  [ %s ] { 1 index exch get} Map' % keyss
+            keyss = string.join(["/"+ x for x in keys])
+            cmd='/'+model+' GetDefaults  [ "+keyss+" ] { 1 index exch get} Map'
         else:
             cmd= '/'+model+' GetDefaults '+'/'+keys+' get'
         
@@ -451,24 +451,36 @@ def CopyModel(existing, new, params=None):
     
     if params:
         sps(params)
-        sr("/%s /%s 3 2 roll CopyModel" % (existing, new))
+        sr("/"+existing+" /"+new+" 3 2 roll CopyModel")
     else:
-        sr("/%s /%s CopyModel" % (existing, new))
+        sr("/"+existing+" /"+new+" CopyModel")
 
 
 # -------------------- Functions for node handling
 
 def RegisterNeuron(model_name):
     print ("Registering " + model_name + "...")
-    d = {}
-    exec("import " + model_name, globals(), d)
-    globals()[model_name] = d[model_name]
-    exec(model_name + ".setScheduler(schedulerObj)", globals())
-    exec(model_name + ".setTime(timeObj)", globals())
-    exec(model_name + ".setTic(ticObj)", globals())
-    exec(model_name + ".setStep(stepObj)", globals())
-    exec(model_name + ".setMs(msObj)", globals())
-    exec(model_name + ".setMs_stamp(ms_stampObj)", globals())
+
+    if sys.version_info >= (3,0):
+        d = {}
+        exec("import " + model_name, globals(), d)
+        globals()[model_name] = d[model_name]
+        exec(model_name + ".setScheduler(schedulerObj)", globals())
+        exec(model_name + ".setTime(timeObj)", globals())
+        exec(model_name + ".setTic(ticObj)", globals())
+        exec(model_name + ".setStep(stepObj)", globals())
+        exec(model_name + ".setMs(msObj)", globals())
+        exec(model_name + ".setMs_stamp(ms_stampObj)", globals())
+    else:
+        exec("import " + model_name)
+        globals()[model_name] = d[model_name]
+        exec(model_name + ".setScheduler(schedulerObj)")
+        exec(model_name + ".setTime(timeObj)")
+        exec(model_name + ".setTic(ticObj)")
+        exec(model_name + ".setStep(stepObj)")
+        exec(model_name + ".setMs(msObj)")
+        exec(model_name + ".setMs_stamp(ms_stampObj)")
+
     cython_models.append(model_name)
     reg(model_name)
     print ("Registration completed")
@@ -483,12 +495,12 @@ def Create(model, n=1, params=None):
     broadcast_params = False
 
     sps(n)
-    cmd = "/%s exch Create" % model
+    cmd = "/"+model+" exch Create"
 
     if params:
         if type(params) == dict:
             sps(params)
-            cmd = "/%s 3 1 roll Create" % model
+            cmd = "/"+model+" 3 1 roll Create"
         elif is_sequencetype(params) and (len(params) == 1 or len(params) == n):
             broadcast_params = True
         else:
@@ -502,16 +514,21 @@ def Create(model, n=1, params=None):
 
     # have to check if cython model or normal model, then process multiple creations
     if model in cython_models:
-        for i in ids:
-            d = {}
-            exec("tmpobj___ = " + model + "." + model + "()", globals(), d)
-            SetStatus([i], {"pyobject" : d["tmpobj___"]})
+        if sys.version_info >= (3,0):
+            for i in ids:
+                d = {}
+                exec("tmpobj___ = " + model + "." + model + "()", globals(), d)
+                SetStatus([i], {"pyobject" : d["tmpobj___"]})
+        else:
+            for i in ids:
+                exec("tmpobj___ = " + model + "." + model + "()")
+                SetStatus([i], {"pyobject" : tmpobj___})
 
     if broadcast_params:
         try:
             SetStatus(ids, broadcast(params, n, (dict,)))
         except:
-            raise NESTError("SetStatus failed, but nodes already have been created. The ids of the new nodes are: %s" % ids)
+            raise NESTError("SetStatus failed, but nodes already have been created. The ids of the new nodes are: "+str(ids))
 
     return ids
 
@@ -724,7 +741,7 @@ def Connect(pre, post, params=None, delay=None, model="static_synapse"):
         for s,d in zip(pre, post):
             sps(s)
             sps(d)
-            sr('/%s Connect' % model)
+            sr('/'+model+' Connect')
 
     # pre post params Connect
     elif params != None and delay == None:
@@ -736,7 +753,7 @@ def Connect(pre, post, params=None, delay=None, model="static_synapse"):
             sps(s)
             sps(d)
             sps(p)
-            sr('/%s Connect' % model)
+            sr('/'+model+' Connect')
 
     # pre post w d Connect
     elif params != None and delay != None:
@@ -752,7 +769,7 @@ def Connect(pre, post, params=None, delay=None, model="static_synapse"):
             sps(d)
             sps(w)
             sps(dl)
-            sr('/%s Connect' % model)
+            sr('/'+model+' Connect')
 
     else:
         raise NESTError("Both 'params' and 'delay' have to be given.")
@@ -892,7 +909,7 @@ def PrintNetwork(depth=1, subnet=None) :
         raise NESTError("PrintNetwork() expects exactly one GID.")
 
     sps(subnet[0])
-    sr("%i PrintNetwork" % depth)
+    sr(str(depth)+" PrintNetwork")
 
 
 def CurrentSubnet() :
@@ -1044,9 +1061,9 @@ def LayoutNetwork(model, dim, label=None, params=None) :
 
     if type(model) == bytes:
         sps(dim)
-        sr('/%s exch LayoutNetwork' % model)
+        sr('/'+model+' exch LayoutNetwork')
         if label:
-            sr("dup << /label (%s) >> SetStatus"%label)
+            sr("dup << /label ("+label+") >> SetStatus")
         if params:
             sr("dup << /customdict")
             sps(params)

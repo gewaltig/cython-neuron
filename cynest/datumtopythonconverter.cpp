@@ -24,7 +24,7 @@ void DatumToPythonConverter::convert_me(Datum &s)
     Token *t= new Token(s); 
     printf("calling token_to_pyobject\n");
     fflush(stdout);
-    py_object_ = NULL; // Token_to_PyObject(t); changed
+    py_object_ = NULL; // Token_to_PyObject(t); 
 }
 
 DatumToPythonConverter::DatumToPythonConverter()

@@ -180,12 +180,20 @@ void call_status_method(int m, void* status_) {
 		for(Dictionary::iterator it = (*status)->begin(); it != (*status)->end(); ++it) {
 			// if the status_ element is not forbidden (is actually one of the model parameters), it is copied
 			if(isOK(it->first.toString()) == true) {
+			#if PY_MAJOR_VERSION >= 3
 				PyObject_SetItem(dict, PyUnicode_FromString(it->first.toString().c_str()), dataConverter.datumToObject( (**status)[it->first.toString()].datum()));
+			#else
+				PyObject_SetItem(dict, PyString_FromString(it->first.toString().c_str()), dataConverter.datumToObject( (**status)[it->first.toString()].datum()));				
+			#endif
 			}
 		}
 		
 		// after the python dict has been filled, we can call the method
-		PyObject_CallMethodObjArgs(this->pyObj, PyUnicode_FromString("setStatus"), dict, NULL);
+		#if PY_MAJOR_VERSION >= 3
+			PyObject_CallMethodObjArgs(this->pyObj, PyUnicode_FromString("setStatus"), dict, NULL);
+		#else
+			PyObject_CallMethodObjArgs(this->pyObj, PyString_FromString("setStatus"), dict, NULL);
+		#endif
                 Py_XDECREF(dict);
 	}
 	else if(m == GET_STATUS_METHOD) {
@@ -197,10 +205,14 @@ void call_status_method(int m, void* status_) {
 		// looping through the received python dictionary
 		while (PyDict_Next(dict, &pos, &key, &subPyObj)) 
 		{
+		#if PY_MAJOR_VERSION >= 3
 			PyObject* pStrObj = PyUnicode_AsUTF8String(key); 
 			char* zStr = PyBytes_AsString(pStrObj); 
 			Py_DECREF(pStrObj);
 			(**status)[zStr] = dataConverter.objectToDatum(subPyObj);
+		#else
+			(**status)[PyString_AsString(key)] = dataConverter.objectToDatum(subPyObj);
+		#endif
 		}
 
 		Py_XDECREF(dict);

@@ -25,6 +25,7 @@ struct PyToken {
   #endif
 #endif
 
+
 #endif /* !__PYX_HAVE_API__cynest__kernel */
 
 #if PY_MAJOR_VERSION < 3

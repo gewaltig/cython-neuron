@@ -542,7 +542,7 @@ Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
    * Here we check for PyDatum, a wrapper class around Datum, defined in the cython module kernel.pyx.
    * and made available in "kernel.h"
    */ /*
-  if (PyObject_HasAttrString(pObj, "_PyTokenType") == 1)//PyObject_TypeCheck(pObj, &PyTokenType)) 
+  if (PyObject_HasAttrString(pObj, "_PyTokenType_") == 1)//PyObject_TypeCheck(pObj, &PyTokenType)) 
   { // Object is encapsulated Datum
       Token* t = reinterpret_cast<PyToken*>(pObj)->thisptr;
       if( not t)
@@ -769,6 +769,7 @@ Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
     return d;
   }
 
+#if PY_MAJOR_VERSION >= 3
   if(PyIter_Check(pObj)) { // object is an iterator
      PyObject* list = PyList_New(0);
      PyObject *item;
@@ -781,13 +782,9 @@ Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
     Py_DECREF(pObj);
 
     return PyObject_as_Datum(list);
-  }/*
-PyObject *b_repr=PyUnicode_AsUTF8String(PyObject_Str(pObj));
+  }
+# endif
 
-
-printf("\ntype not found, object: %s\n", PyBytes_AsString(b_repr));
-fflush(stdout);
-      Py_DECREF(b_repr);*/
   return new PyObjectDatum(pObj);
 
 

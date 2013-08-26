@@ -95,6 +95,10 @@ def setMs_stamp(obj):
 
 
 
+# version function (returns 2 or 3, depending on the python release)
+def getVersion():
+   return 3
+
 # When creating a new objects (of the ones below), their internal 
 # real object must be cloned in order to create another instance.
 # Thus we call the create method of the imported object
