@@ -56,12 +56,8 @@ class DataConnectTestCase(unittest.TestCase):
         target=[x for x in range(2,100000)]
         weight=[2.0 * x for x in target]
         delay=[1.0 * x for x in target]
-        U= [3,ids_that_are_in]
-	tau_rec= r_syns[4,ids_that_are_in],
-	tau_fac= r_syns[5,ids_that_are_in],
-	tau_syn= r_syns[6,ids_that_are_in]
         connections=[{'target':target, 'weight':weight, 'delay':delay} for t in target ]
-        cynest.DataConnect(sources,connections)
+        cynest.DataConnect(sources,connections, "static_synapse", 2)
         conn1=cynest.GetConnections(sources)
         stat1=cynest.GetStatus(conn1)
         target1=[ d['target'] for d in stat1]
