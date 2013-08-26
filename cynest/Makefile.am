@@ -52,7 +52,7 @@ install-data-hook: install-exec
 	mkdir -p $(DESTDIR)@PKGDATADIR@/extras
 	mkdir -p $(DESTDIR)@PYNEST_PREFIX@/share/doc/nest/cythondoc
 
-	if test `echo @PYTHON_VERSION@ | cut -d. -f2` -ge 3; then \
+	if test `echo @PYTHON_VERSION@ | cut -d. -f1` -ge 3; then \
 		cp $(VPATH)/nest/Neuron3.x.pyx $(DESTDIR)@PYNEST_PREFIX@/include/Neuron.pyx; \
 	else \
 		cp $(VPATH)/nest/Neuron2.x.pyx $(DESTDIR)@PYNEST_PREFIX@/include/Neuron.pyx; \

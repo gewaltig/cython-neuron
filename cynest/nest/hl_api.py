@@ -473,7 +473,7 @@ def RegisterNeuron(model_name):
         exec(model_name + ".setMs_stamp(ms_stampObj)", globals())
     else:
         exec("import " + model_name)
-        globals()[model_name] = d[model_name]
+        globals()[model_name] = locals()[model_name]
         exec(model_name + ".setScheduler(schedulerObj)")
         exec(model_name + ".setTime(timeObj)")
         exec(model_name + ".setTic(ticObj)")
