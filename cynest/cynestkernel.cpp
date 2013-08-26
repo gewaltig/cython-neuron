@@ -80,7 +80,9 @@ extern "C"
 #include "static_modules.h"
 
 #include "cynestkernel.h"
+extern "C" {
 #include "kernel.h"
+}
 
 // Little hack for making the file recognized. Otherwise,
 // the compiler doesn't seem to consider it (only the .h) 
@@ -494,7 +496,7 @@ PyObject *NESTEngine::pop()
 	PyErr_SetString(NESTError_, "NEST object cannot be converted to python object.");
     }
     pEngine_->OStack.pop();
-    
+
     return pObj;
 }
 
@@ -542,7 +544,7 @@ Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
    * Here we check for PyDatum, a wrapper class around Datum, defined in the cython module kernel.pyx.
    * and made available in "kernel.h"
    */ 
-  if (PyObject_TypeCheck(pObj, &PyTokenType)) 
+  if (PyObject_TypeCheck(pObj, &PyTokenType)) //PyObject_HasAttrString(pObj, "_PyTokenType_") == 1)
   { // Object is encapsulated Datum
       Token* t = reinterpret_cast<PyToken*>(pObj)->thisptr;
       if( not t)
@@ -768,6 +770,22 @@ Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
     }
     return d;
   }
+
+#if PY_MAJOR_VERSION >= 3
+  if(PyIter_Check(pObj)) { // object is an iterator
+     PyObject* list = PyList_New(0);
+     PyObject *item;
+
+    while (item = PyIter_Next(pObj)) {
+       PyList_Append(list, item);
+       Py_DECREF(item);
+    }
+
+    Py_DECREF(pObj);
+
+    return PyObject_as_Datum(list);
+  }
+# endif
 
   return new PyObjectDatum(pObj);
 

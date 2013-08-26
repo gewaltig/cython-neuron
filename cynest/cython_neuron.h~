@@ -38,6 +38,9 @@ namespace nest{
 
   class Network;
 
+  Name pyobjectName("pyobject");
+  Name optimizedName("optimized");
+  std::string calibrateStr = "calibrate";
   /* BeginDocumentation
 Name: cython_neuron - neuron with cython callback
 

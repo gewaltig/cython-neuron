@@ -3,12 +3,12 @@
 
 struct PyToken;
 
-/* "cynest/kernel.pyx":15
+/* "cynest/kernel.pyx":16
  * cimport classes
  * 
  * cdef public class PyToken[object PyToken, type PyTokenType]:             # <<<<<<<<<<<<<<
+ * #cdef class PyToken:
  *      """
- *      Python wrapper of SLI's Token class.
  */
 struct PyToken {
   PyObject_HEAD
@@ -24,6 +24,7 @@ struct PyToken {
     #define __PYX_EXTERN_C extern
   #endif
 #endif
+
 
 __PYX_EXTERN_C DL_IMPORT(PyTypeObject) PyTokenType;
 

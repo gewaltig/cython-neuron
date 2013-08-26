@@ -11,4 +11,9 @@
 #define PyString_FromString PyBytes_FromString
 #endif
 
+// python 3 does not support the DL_IMPORT macro
+#ifndef DL_IMPORT
+#define DL_IMPORT(t) t
+#endif
+
 #endif

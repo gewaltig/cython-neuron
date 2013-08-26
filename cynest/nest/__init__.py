@@ -109,7 +109,7 @@ def catching_sr(cmd):
     catching_sr is a wrapper of the kernel_sr to raise errors as Python errors.
     """
 
-    kernel_sr('{ %s } runprotected'%cmd)
+    kernel_sr('{ '+cmd+' } runprotected')
     if _kernel.engine.run_protected() and not sli_pop():
         errorname = sli_pop()
         message = sli_pop()

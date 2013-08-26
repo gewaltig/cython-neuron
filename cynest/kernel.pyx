@@ -1,3 +1,4 @@
+# cython: language_level=2
 # Cython wrapper for the pynest functions.
 from libcpp.string cimport string
 from libcpp.vector cimport vector
@@ -13,10 +14,12 @@ class NESTError(Exception):
 cimport classes
 
 cdef public class PyToken[object PyToken, type PyTokenType]:
+#cdef class PyToken:
      """
      Python wrapper of SLI's Token class.
      """
      cdef classes.Token *thisptr
+
      def __dealloc__(self):
          if self.thisptr:
             del self.thisptr
@@ -72,8 +75,22 @@ cdef class NESTEngine:
            signal.signal(signal.SIGINT, cynest_signal_handler)
         return result
 
+
+
+    def add_command(self, cmd):
+        self.sli_container.add_command(cmd.encode('UTF-8'))
+
+    def get_pytoken(self, cmd):
+        return self.sli_container.get_pytoken(cmd.encode('UTF-8'))
+
+    def generate_arg_pytoken(self, cmd):
+        return self.sli_container.generate_arg_pytoken(cmd.encode('UTF-8'))
+
+
     def register_cython_model(self, model):
-        self.thisptr.register_cython_model(model)
+        self.thisptr.register_cython_model(model.encode('UTF-8'))
+
+
 
     def push(self, value):
         """
@@ -108,7 +125,7 @@ cdef class NESTEngine:
         self._protected = False
 
         if result is invalid_cmd:
-            print NESTError("Cannot generate PyToken for the following command: " + command + "\nThe command will be executed in standard mode.")
+            print (NESTError("Cannot generate PyToken for the following command: " + command + "\nThe command will be executed in standard mode."))
             result = self.thisptr.run(command_bytes)
             self._protected = True
         elif result is composed_protected_cmd:
@@ -159,9 +176,9 @@ cdef class NESTEngine:
         return self.thisptr.check_engine()
 
     def convergent_connect(self, pre, post, weight, delay, model):
-        self.sli_container.add_command('ConvergentConnect'.encode('UTF-8'))
-        cdef PyToken cmd = self.sli_container.get_pytoken('ConvergentConnect'.encode('UTF-8'))
-        cdef PyToken m = self.sli_container.generate_arg_pytoken(('/%s' % model).encode('UTF-8'))
+        self.add_command('ConvergentConnect')
+        cdef PyToken cmd = self.get_pytoken('ConvergentConnect')
+        cdef PyToken m = self.generate_arg_pytoken('/'+model)
 
         if weight == None and delay == None:
             for d in post :
@@ -190,9 +207,9 @@ cdef class NESTEngine:
             raise NESTError("Both 'weight' and 'delay' have to be given.")
 
     def divergent_connect(self, pre, post, weight, delay, model):
-        self.sli_container.add_command('DivergentConnect'.encode('UTF-8'))
-        cdef PyToken cmd = self.sli_container.get_pytoken('DivergentConnect'.encode('UTF-8'))
-        cdef PyToken m = self.sli_container.generate_arg_pytoken(('/%s' % model).encode('UTF-8'))
+        self.add_command('DivergentConnect')
+        cdef PyToken cmd = self.get_pytoken('DivergentConnect')
+        cdef PyToken m = self.generate_arg_pytoken('/' + model)
 
         if weight == None and delay == None:
             for s in pre :
@@ -221,11 +238,10 @@ cdef class NESTEngine:
             raise NESTError("Both 'weight' and 'delay' have to be given.")
 
 
-    def data_connect1(self, list pre, list params, string model):
-        self.sli_container.add_command('DataConnect_i_dict_s'.encode('UTF-8'))
-        cdef PyToken cmd1 = self.sli_container.get_pytoken('DataConnect_i_dict_s'.encode('UTF-8'))
-        cdef PyToken m = self.sli_container.generate_arg_pytoken(('/%s' % model).encode('UTF-8'))
-
+    def data_connect1(self, list pre, list params, model):
+        self.add_command('DataConnect_i_dict_s')
+        cdef PyToken cmd1 = self.get_pytoken('DataConnect_i_dict_s')
+        cdef PyToken m = self.generate_arg_pytoken('/' + model)
 
         for s,p in zip(pre,params):
             self.push(s)
@@ -235,11 +251,12 @@ cdef class NESTEngine:
 
 
 
-    cpdef data_connect2(self, list pre, list params, string model):
-        self.sli_container.add_command('Connect_i_D_i'.encode('UTF-8'))
-        cdef PyToken cmd2 = self.sli_container.get_pytoken('Connect_i_D_i'.encode('UTF-8'))
+    def data_connect2(self, list pre, list params, model):
+        self.add_command('Connect_i_D_i')
+        cdef PyToken cmd2 = self.get_pytoken('Connect_i_D_i')
         self.run('synapsedict') #sure unprotected
-        self.run('/%s get'%model) 
+        self.run('/'+ model+ ' get') 
+
         cdef int model_id = self.pop()
         cdef dict params_dict = {}
         cdef int i = 0
@@ -362,6 +379,7 @@ cdef class NameDatum:
          """
          return self.thisptr.toString()
 
+
 cdef public object Token_to_PyObject(classes.Token *arg):
      """
      Convert a Datum pointer to a Python object.
@@ -371,5 +389,4 @@ cdef public object Token_to_PyObject(classes.Token *arg):
      dat=PyToken()
      dat.thisptr=arg
      return dat
-
 

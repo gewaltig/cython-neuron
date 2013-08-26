@@ -128,7 +128,7 @@ def broadcast(val, l, allowedtypes, name="val"):
     elif len(val)==1:
         return l*val
     elif len(val)!=l:
-        raise NESTError("'%s' must be a single value, a list with one element or a list with %i elements." % (name, l))
+        raise NESTError("'"+name+"' must be a single value, a list with one element or a list with "+str(l)+" elements.")
 
     return val
 
@@ -189,7 +189,7 @@ def helpdesk(browser="firefox"):
     Open the NEST helpdesk in the given browser. The default browser is firefox.
     """
     
-    sr("/helpdesk << /command (%s) >> SetOptions" % browser)
+    sr("/helpdesk << /command ("+browser+") >> SetOptions")
     sr("helpdesk")
 
 
@@ -200,19 +200,19 @@ def help(obj=None, pager="less"):
     """
 
     if obj:
-        sr("/page << /command (%s) >> SetOptions" % pager)
-        sr("/%s help" % obj)
+        sr("/page << /command ("+pager+") >> SetOptions")
+        sr("/"+obj+" help")
     else:
-	print("Type 'nest.helpdesk()' to access the online documentation in a browser.")
-	print("Type 'nest.help(object)' to get help on a NEST object or command.")
+        print("Type 'nest.helpdesk()' to access the online documentation in a browser.")
+        print("Type 'nest.help(object)' to get help on a NEST object or command.")
         print() 
         print("Type 'nest.Models()' to see a list of available models in NEST.")
         print() 
-	print("Type 'nest.authors()' for information about the makers of NEST.")
-	print("Type 'nest.sysinfo()' to see details on the system configuration.")
-	print("Type 'nest.version()' for information about the NEST version.")
+        print("Type 'nest.authors()' for information about the makers of NEST.")
+        print("Type 'nest.sysinfo()' to see details on the system configuration.")
+        print("Type 'nest.version()' for information about the NEST version.")
         print()
-	print("For more information visit http://www.nest-initiative.org.")
+        print("For more information visit http://www.nest-initiative.org.")
 
 
 def get_verbosity():
@@ -230,7 +230,7 @@ def set_verbosity(level):
     can be one of M_FATAL, M_ERROR, M_WARNING, or M_INFO.
     """
 
-    sr("%s setverbosity" % level)
+    sr(level+" setverbosity")
 
 
 def message(level,sender,text):
@@ -343,7 +343,7 @@ def Install(module_name):
     LD_LIBRARY_PATH (DYLD_LIBRARY_PATH under OSX).
     """
 
-    return sr("(%s) Install" % module_name)
+    return sr("("+module_name+") Install")
 
 
 # -------------------- Functions for parallel computing
@@ -370,7 +370,7 @@ def SetAcceptableLatency(port, latency):
     """
     
     sps(latency)
-    sr("/%s exch SetAcceptableLatency" % port)
+    sr("/"+port+" exch SetAcceptableLatency")
 
 
 # -------------------- Functions for model handling
@@ -431,11 +431,11 @@ def GetDefaults(model, keys=None) :
     GetDefaults('iaf_neuron','V_m') -> -70.0
     GetDefaults('iaf_neuron',['V_m', 'model') -> [-70.0, 'iaf_neuron']
     """
-    cmd = "/%s GetDefaults" % model
+    cmd = "/"+model+" GetDefaults"
     if keys:
         if is_sequencetype(keys):
-            keyss = string.join(["/%s" % x for x in keys])
-            cmd='/'+model+' GetDefaults  [ %s ] { 1 index exch get} Map' % keyss
+            keyss = string.join(["/"+ x for x in keys])
+            cmd='/'+model+' GetDefaults  [ "+keyss+" ] { 1 index exch get} Map'
         else:
             cmd= '/'+model+' GetDefaults '+'/'+keys+' get'
         
@@ -451,24 +451,39 @@ def CopyModel(existing, new, params=None):
     
     if params:
         sps(params)
-        sr("/%s /%s 3 2 roll CopyModel" % (existing, new))
+        sr("/"+existing+" /"+new+" 3 2 roll CopyModel")
     else:
-        sr("/%s /%s CopyModel" % (existing, new))
+        sr("/"+existing+" /"+new+" CopyModel")
 
 
 # -------------------- Functions for node handling
 
 def RegisterNeuron(model_name):
-	exec("import " + model_name)
-	globals()[model_name] = locals()[model_name]
-	exec(model_name + ".setScheduler(schedulerObj)")
-	exec(model_name + ".setTime(timeObj)")
-	exec(model_name + ".setTic(ticObj)")
-	exec(model_name + ".setStep(stepObj)")
-	exec(model_name + ".setMs(msObj)")
-	exec(model_name + ".setMs_stamp(ms_stampObj)")
-	cython_models.append(model_name)
-	reg(model_name)
+    print ("Registering " + model_name + "...")
+
+    if sys.version_info >= (3,0):
+        d = {}
+        exec("import " + model_name, globals(), d)
+        globals()[model_name] = d[model_name]
+        exec(model_name + ".setScheduler(schedulerObj)", globals())
+        exec(model_name + ".setTime(timeObj)", globals())
+        exec(model_name + ".setTic(ticObj)", globals())
+        exec(model_name + ".setStep(stepObj)", globals())
+        exec(model_name + ".setMs(msObj)", globals())
+        exec(model_name + ".setMs_stamp(ms_stampObj)", globals())
+    else:
+        exec("import " + model_name)
+        globals()[model_name] = locals()[model_name]
+        exec(model_name + ".setScheduler(schedulerObj)")
+        exec(model_name + ".setTime(timeObj)")
+        exec(model_name + ".setTic(ticObj)")
+        exec(model_name + ".setStep(stepObj)")
+        exec(model_name + ".setMs(msObj)")
+        exec(model_name + ".setMs_stamp(ms_stampObj)")
+
+    cython_models.append(model_name)
+    reg(model_name)
+    print ("Registration completed")
 
 def Create(model, n=1, params=None):
     """
@@ -480,12 +495,12 @@ def Create(model, n=1, params=None):
     broadcast_params = False
 
     sps(n)
-    cmd = "/%s exch Create" % model
+    cmd = "/"+model+" exch Create"
 
     if params:
         if type(params) == dict:
             sps(params)
-            cmd = "/%s 3 1 roll Create" % model
+            cmd = "/"+model+" 3 1 roll Create"
         elif is_sequencetype(params) and (len(params) == 1 or len(params) == n):
             broadcast_params = True
         else:
@@ -499,15 +514,21 @@ def Create(model, n=1, params=None):
 
     # have to check if cython model or normal model, then process multiple creations
     if model in cython_models:
-        for i in ids:
-            exec("tmpobj___ = " + model + "." + model + "()")
-            SetStatus([i], {'pyobject':tmpobj___})
+        if sys.version_info >= (3,0):
+            for i in ids:
+                d = {}
+                exec("tmpobj___ = " + model + "." + model + "()", globals(), d)
+                SetStatus([i], {"pyobject" : d["tmpobj___"]})
+        else:
+            for i in ids:
+                exec("tmpobj___ = " + model + "." + model + "()")
+                SetStatus([i], {"pyobject" : tmpobj___})
 
     if broadcast_params:
         try:
             SetStatus(ids, broadcast(params, n, (dict,)))
         except:
-            raise NESTError("SetStatus failed, but nodes already have been created. The ids of the new nodes are: %s" % ids)
+            raise NESTError("SetStatus failed, but nodes already have been created. The ids of the new nodes are: "+str(ids))
 
     return ids
 
@@ -522,6 +543,7 @@ def SetStatus(nodes, params, val=None) :
     can be a single value or a list of the same size as nodes.
     """
 
+
     if not is_sequencetype(nodes):
         raise NESTError("nodes must be a list of nodes or synapses.")
 
@@ -535,9 +557,10 @@ def SetStatus(nodes, params, val=None) :
             params = {params : val}
 
     params = broadcast(params, len(nodes), (dict,), "params")
+
     if len(nodes) != len(params) :
         raise NESTError("Status dict must be a dict, or list of dicts of length 1 or len(nodes).")
-        
+
     if  (type(nodes[0]) == dict) or is_sequencetype(nodes[0]):
         nest.push_connection_datums(nodes)
     else:
@@ -546,6 +569,7 @@ def SetStatus(nodes, params, val=None) :
     sps(params)
     sr('2 arraystore')
     sr('Transpose { arrayload ; SetStatus } forall')
+
 
 
 def GetStatus(nodes, keys=None) :
@@ -567,10 +591,10 @@ def GetStatus(nodes, keys=None) :
 
     if keys:
         if is_sequencetype(keys):
-            keyss = string.join(["/%s" % x for x in keys])
-            cmd='{ GetStatus } Map { [ [ %s ] ] get } Map' % keyss
+            keyss = string.join(["/"+ x for x in keys])
+            cmd='{ GetStatus } Map { [ [ '+keyss+' ] ] get } Map'
         else:
-            cmd='{ GetStatus /%s get} Map' % keys
+            cmd='{ GetStatus /'+keys+' get} Map'
 
     if (type(nodes[0]) == dict) or is_sequencetype(nodes[0]):
         nest.engine.push_connections(nodes)
@@ -599,7 +623,7 @@ def GetLID(gid) :
 
 # -------------------- Functions for connection handling
 
-	
+
 def FindConnections(source, target=None, synapse_model=None, synapse_type=None):
     """
     Return an array of identifiers for connections that match the
@@ -717,7 +741,7 @@ def Connect(pre, post, params=None, delay=None, model="static_synapse"):
         for s,d in zip(pre, post):
             sps(s)
             sps(d)
-            sr('/%s Connect' % model)
+            sr('/'+model+' Connect')
 
     # pre post params Connect
     elif params != None and delay == None:
@@ -729,7 +753,7 @@ def Connect(pre, post, params=None, delay=None, model="static_synapse"):
             sps(s)
             sps(d)
             sps(p)
-            sr('/%s Connect' % model)
+            sr('/'+model+' Connect')
 
     # pre post w d Connect
     elif params != None and delay != None:
@@ -745,7 +769,7 @@ def Connect(pre, post, params=None, delay=None, model="static_synapse"):
             sps(d)
             sps(w)
             sps(dl)
-            sr('/%s Connect' % model)
+            sr('/'+model+' Connect')
 
     else:
         raise NESTError("Both 'params' and 'delay' have to be given.")
@@ -786,7 +810,7 @@ def DivergentConnect(pre, post, weight=None, delay=None, model="static_synapse")
     dvc(pre, post, weight, delay, model)
 
 
-def DataConnect(pre, params=None, model=None, variant=1):
+def DataConnect(pre, params=None, model=None, version=1):
     """
     Connect neurons from lists of connection data.
 
@@ -820,21 +844,21 @@ def DataConnect(pre, params=None, model=None, variant=1):
         raise NESTError("'params' must be a list of dictionaries.")
 
     if params:
-	if not model:
-		model="static_synapse"
+        if not model:
+            model="static_synapse"
     
-        if variant == 1:
+        if version == 1:
             dtc1(pre, params, model)
-        elif variant == 2:
+        elif version == 2:
             dtc2(pre, params, model)
 
     else:
-	    # Call the variant where all connections are
-	    # given explicitly
+            # Call the variant where all connections are
+            # given explicitly
             dictmiss=GetKernelStatus('dict_miss_is_error')
             SetKernelStatus('dict_miss_is_error', False)
-	    sps(pre)
-	    sr('DataConnect_a')
+            sps(pre)
+            sr('DataConnect_a')
             SetKernelStatus('dict_miss_is_error', dictmiss)
             
     
@@ -885,7 +909,7 @@ def PrintNetwork(depth=1, subnet=None) :
         raise NESTError("PrintNetwork() expects exactly one GID.")
 
     sps(subnet[0])
-    sr("%i PrintNetwork" % depth)
+    sr(str(depth)+" PrintNetwork")
 
 
 def CurrentSubnet() :
@@ -1037,9 +1061,9 @@ def LayoutNetwork(model, dim, label=None, params=None) :
 
     if type(model) == bytes:
         sps(dim)
-        sr('/%s exch LayoutNetwork' % model)
+        sr('/'+model+' exch LayoutNetwork')
         if label:
-            sr("dup << /label (%s) >> SetStatus"%label)
+            sr("dup << /label ("+label+") >> SetStatus")
         if params:
             sr("dup << /customdict")
             sps(params)

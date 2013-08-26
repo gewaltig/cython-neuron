@@ -912,6 +912,7 @@ namespace nest
     i->EStack.pop();
   }
 
+  // Added by Jonny Quarta
   // Used for alternative 2
   void NestModule::Connect_i_D_iFunction::execute(SLIInterpreter *i) const
   {
