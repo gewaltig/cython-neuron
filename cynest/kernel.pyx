@@ -13,8 +13,8 @@ class NESTError(Exception):
 # This imports the C++ class wrappers
 cimport classes
 
-#cdef public class PyToken[object PyToken, type PyTokenType]:
-cdef class PyToken:
+cdef public class PyToken[object PyToken, type PyTokenType]:
+#cdef class PyToken:
      """
      Python wrapper of SLI's Token class.
      """
@@ -378,4 +378,15 @@ cdef class NameDatum:
          Return a string representation of the NameDatum.
          """
          return self.thisptr.toString()
+
+
+cdef public object Token_to_PyObject(classes.Token *arg):
+     """
+     Convert a Datum pointer to a Python object.
+     This function is exposed to C/C++ and used by the DatumToPythonConverter to
+     encapsulate arbitrary Tokens in PyToken objects.
+     """
+     dat=PyToken()
+     dat.thisptr=arg
+     return dat
 

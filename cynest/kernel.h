@@ -26,6 +26,10 @@ struct PyToken {
 #endif
 
 
+__PYX_EXTERN_C DL_IMPORT(PyTypeObject) PyTokenType;
+
+__PYX_EXTERN_C DL_IMPORT(PyObject) *Token_to_PyObject(Token *);
+
 #endif /* !__PYX_HAVE_API__cynest__kernel */
 
 #if PY_MAJOR_VERSION < 3
