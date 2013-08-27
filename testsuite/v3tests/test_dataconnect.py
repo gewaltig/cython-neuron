@@ -100,8 +100,7 @@ class DataConnectTestCase(unittest.TestCase):
         
         a=cynest.Create("iaf_neuron", 1000)
         source=[1]
-        targets=list(range(2,1000))
-
+        targets=range(2,1000)
         cynest.RandomDivergentConnect(source,targets, 500, [1.0], [1.0])
         conn1=cynest.GetConnections(source)
         self.assertEqual(len(conn1), 500)

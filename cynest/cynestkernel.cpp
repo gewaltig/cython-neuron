@@ -772,16 +772,11 @@ Datum* NESTEngine::PyObject_as_Datum(PyObject *pObj)
   }
 
 #if PY_MAJOR_VERSION >= 3
-  if(PyIter_Check(pObj)) { // object is an iterator
-     PyObject* list = PyList_New(0);
-     PyObject *item;
+  if(PySequence_Check(pObj)) { // object is a sequence
 
-    while (item = PyIter_Next(pObj)) {
-       PyList_Append(list, item);
-       Py_DECREF(item);
-    }
+     PyObject* list = PySequence_List(pObj);
 
-    Py_DECREF(pObj);
+     Py_DECREF(pObj);
 
     return PyObject_as_Datum(list);
   }
