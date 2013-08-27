@@ -1,5 +1,7 @@
 include "/home/jonny/Programs/Nest/include/Neuron.pyx"
 
+import math
+
 cdef class C:
     cdef double p1
     cdef double p2
@@ -20,7 +22,7 @@ cdef class testmodel(Neuron):
 
 
     cpdef update(self):
-        self.params.p1 = self.params.p1 + self.ex_spikes + self.in_spikes + 1.0
+        self.params.p1 = math.exp(self.ex_spikes + self.in_spikes) + self.params.p1
         if self.params.p1 >= self.params.p2:
             self.spike = 1 # True
             self.params.p1 = 0.0

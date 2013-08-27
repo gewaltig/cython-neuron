@@ -160,21 +160,21 @@ def _make_plot(ts, ts1, gids, neurons, hist, hist_binwidth, grayscale, title, xl
 
     return plotid
 
-def _histogram(a, bins=10, range=None, normed=False):
+def _histogram(a, bins=10, rangeV=None, normed=False):
 
     from numpy import asarray, iterable, linspace, sort, concatenate
 
     a = asarray(a).ravel()
 
-    if range is not None:
-        mn, mx = range
+    if rangeV is not None:
+        mn, mx = rangeV
         if mn > mx:
             raise AttributeError( "max must be larger than min in range parameter.")
 
     if not iterable(bins):
-        if range is None:
-            range = (a.min(), a.max())
-        mn, mx = [mi + 0.0 for mi in range]
+        if rangeV is None:
+            rangeV = (a.min(), a.max())
+        mn, mx = [mi + 0.0 for mi in rangeV]
         if mn == mx:
             mn -= 0.5
             mx += 0.5

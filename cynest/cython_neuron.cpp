@@ -199,10 +199,11 @@ void nest::cython_neuron::handle(DataLoggingRequest& e)
 
 void nest::cython_neuron::setStatusCython()
 {
-    if(state_->known(Name("pyobject")) && pyObj == NULL) {
-       ((PyObjectDatum*)(&(*(*state_)[Name("pyobject")])))->call_status_method(SET_STATUS_METHOD, &state_);
-       pyObj = ((PyObjectDatum*)(&(*(*state_)[Name("pyobject")])))->clone();
-       state_->remove(Name("pyobject"));
+	static Name pyObjectName = Name("pyobject");
+    if(state_->known(pyObjectName) && pyObj == NULL) {
+       ((PyObjectDatum*)(&(*(*state_)[pyObjectName])))->call_status_method(SET_STATUS_METHOD, &state_);
+       pyObj = ((PyObjectDatum*)(&(*(*state_)[pyObjectName])))->clone();
+       state_->remove(pyObjectName);
     }
     else if(pyObj != NULL) {
        pyObj->call_status_method(SET_STATUS_METHOD, &state_);
