@@ -112,7 +112,8 @@ These have been declared and are updated before every call to the \emph{update} 
 \item in\_spikes : this is the number of inhibitory spikes incoming at a certain point. Note that this is a double value, because every spike in automatically multiplied by it's weight, which could also be a real value. Also note that the value is always negative, because the weight are. If one want to sum all the spikes, he should write \emph{ex\_spikes + in\_spikes} and not \emph{ex\_spikes - in\_spikes}.
 \item currents : this is the currents upcoming at a certain point in time. This is also a double value.
 \item t\_lag : this integer value represents the current simulation point in time (this would be the t variable of a function).
-\item spike : this is the only modifiable standard parameter. That's the neuron output and is an integer value (not a boolean one). Set it at 1 if the neuron spikes and 0 otherwise.
+\item spike : this is one of the two modifiable standard parameters. That's the neuron spiking output and is an integer value (not a boolean one). Set it at 1 if the neuron spikes and 0 otherwise.
+\item current\_value : this the other modifiable standard parameter. That's the neuron current output and is an double value. Set it to a real value if you want the neuron to throw a current event, or 0.0 if the neuron remains silent.
 \end{itemize}
 All these Standard Parameters are contained in the base Neuron class and, since their behaviour is highly optimized, provide a very little performance loss compared to a native neuron. They do not need to be included in the \emph{setStatus} and \emph{getStatus} methods.
 
@@ -201,13 +202,14 @@ Scheduler_get_max_delay()
 \end{verbatim}
 
 As an example, writing \emph{Time\_get\_resolution().get\_ms()} is the same as writing (in the NEST code, C++) \emph{Time::get\_resolution().get\_ms()} and \\ \emph{Time(ms(v)).get\_steps()} the same as \emph{Time(Time::ms(v)).get\_steps()}. In addition, writing \emph{Scheduler\_get\_min\_delay()} could be compared to the C++ \emph{Scheduler::get\_min\_delay()}.\\
-Note that calling these functions takes much time because the call spreads through many other methods in order to achieve the Time or Scheduler classes. It is therefore advised to avoid these calls in the update method and to create variables instead.
+Note that calling these functions takes much time because the call spreads through many other methods in order to achieve the Time or Scheduler classes. It is therefore advised to avoid these calls in the update method and to create variables instead. \\ \\
+Finally, since CyNEST works as well on Python 2.x as on Python 3.x, if for whatever reason one wants to know which major release is currently in place, the \emph{getVersion} function is available. Its output is either 2 or 3.
 
 
 \section{Restrictions}
 As everything on Earth, nothing is perfect and few restrictions have to be followed in order to write compilable code. Here's the list:
 \begin{itemize}
-\item Some special neuron members are already defined, their type cannot be changed and their values should not be updated (not always true, see next section).
+\item Some special neuron members are already defined, their type cannot be changed and their values should not be updated (not always true, see previous sections).
 \item If the neuron declares a new member of custom type (maybe defined in another file), it should not be put in the dictionary created during the \emph{getStatus} method. This "makes" the parameter private and CyNEST will not try to convert it from Python to C++ (custom objects cannot be translated into C++ objects). However, if the member has a builtin type (integer, boolean, double, dictionary, list, etc...), there is no problem.
 \item Every other cython limitation also applies.
 \end{itemize}
@@ -225,8 +227,8 @@ n = cynest.Create("myNeuron")
 cynest.SetStatus(n, [{"optimized":True}])
 \end{verbatim}
 This option prevents the GIL from being used, further increases the speed and, most importantly, makes multithreading available by not slowing too much.\\
-However there is a drawback: the model cannot contain any python object, not even a simple dictionary. Therefore, the user can only write classic C parameters (if this is not respected, segmentation faults will occur). This is why the two options are available. \\
-Note however that this does not prevent one creating a temporary dictionary during the \emph{getStatus} and \emph{setStatus} methods. The standard interfacing protocol is therefore maintained.
+However there is a drawback: during the update function, no python object can be called, not even a simple dictionary or any imported python object/method (if this is not respected, segmentation faults will occur). This is why the two options are available. \\
+Note however that therefore this does not prevent one creating a temporary dictionary during the \emph{getStatus} and \emph{setStatus} methods. The standard interfacing protocol is therefore maintained.
 
 
 \section{Using the new neuron}

@@ -142,10 +142,10 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
 
 
     if(this->optimized) {
-	pyObj->call_update_optimized();
+		pyObj->call_update_optimized();
     }
     else {
-	pyObj->call_update();
+		pyObj->call_update();
     }
 
     // threshold crossing
@@ -199,8 +199,9 @@ void nest::cython_neuron::handle(DataLoggingRequest& e)
 
 void nest::cython_neuron::setStatusCython()
 {
+	// The first setStatus iteration will remove the pyobject from the dictionary and put it in a different object
 	static Name pyObjectName = Name("pyobject");
-    if(state_->known(pyObjectName) && pyObj == NULL) {
+    if(pyObj == NULL && state_->known(pyObjectName) ) {
        ((PyObjectDatum*)(&(*(*state_)[pyObjectName])))->call_status_method(SET_STATUS_METHOD, &state_);
        pyObj = ((PyObjectDatum*)(&(*(*state_)[pyObjectName])))->clone();
        state_->remove(pyObjectName);
