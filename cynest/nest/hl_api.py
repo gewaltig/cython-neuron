@@ -413,7 +413,7 @@ def SetDefaults(model, params, val=None) :
     of the model.
     """
 
-    if type(params) == bytes :
+    if type(params) == bytes or type(params) == str :
             params = {params : val}
 
     sr('/'+model)
@@ -550,8 +550,8 @@ def SetStatus(nodes, params, val=None) :
     if len(nodes) == 0:
         return
 
-    if type(params) == bytes :
-        if is_iterabletype(val) and not type(val) in (bytes, dict):
+    if type(params) == bytes or type(params) == str :
+        if is_iterabletype(val) and not type(val) in (bytes, str, dict):
             params = [{params : x} for x in val]
         else :
             params = {params : val}
@@ -1059,7 +1059,7 @@ def LayoutNetwork(model, dim, label=None, params=None) :
     return a list of ids.
     """
 
-    if type(model) == bytes:
+    if type(model) == bytes or type(params) == str:
         sps(dim)
         sr('/'+model+' exch LayoutNetwork')
         if label:

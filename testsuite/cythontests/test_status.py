@@ -26,6 +26,8 @@ import unittest
 import cynest
 import sys
 
+cynest.RegisterNeuron("sample_neuron")
+
 class StatusTestCase(unittest.TestCase):
     """Tests of Set/GetStatus"""
 
@@ -124,7 +126,7 @@ class StatusTestCase(unittest.TestCase):
         # next three lines for debugging
         vth1, vth2 = cynest.GetStatus(neuron1,'V_th'), cynest.GetStatus(neuron2,'V_th')
         if vth1 != vth2:
-            print m, vth1, vth2, cynest.GetStatus(neuron1,'E_L'), cynest.GetStatus(neuron2,'E_L')
+            print (m, vth1, vth2, cynest.GetStatus(neuron1,'E_L'), cynest.GetStatus(neuron2,'E_L'))
 
         assert(cynest.GetStatus(neuron1,'V_th')==cynest.GetStatus(neuron2,'V_th'))
     

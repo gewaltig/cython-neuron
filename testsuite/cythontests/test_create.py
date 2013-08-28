@@ -26,6 +26,8 @@ import unittest
 import cynest
 import sys
 
+cynest.RegisterNeuron("sample_neuron")
+
 class CreateTestCase(unittest.TestCase):
 
 
