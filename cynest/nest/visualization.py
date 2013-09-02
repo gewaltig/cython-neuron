@@ -8,7 +8,7 @@ import nest
 def plot_network(nodes, filename, ext_conns = False):
     """
     Plot the given nodes and the connections that originate from
-    them. Note that connections to targets not in nodea are not drawn
+    them. Note that connections to targets not in nodes are not drawn
     if ext_conns is False. If it is True, they are drawn to a node
     named 'ext'.
     """
@@ -32,3 +32,4 @@ def plot_network(nodes, filename, ext_conns = False):
             gr.add_edge(pydot.Edge(str(cl[0]), str(t)))
     
     gr.write_pdf(filename)
+
