@@ -18,40 +18,33 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with NEST.  If not, see <http://www.gnu.org/licenses/>.
-import unittest
 
-from cynest.tests import test_errors
-from cynest.tests import test_stack
-from cynest.tests import test_create
-from cynest.tests import test_status
-from cynest.tests import test_connectapi
-from cynest.tests import test_findconnections
-from cynest.tests import test_connectoptions
-from cynest.tests import test_events
-from cynest.tests import test_networks
-from cynest.tests import test_threads
+import test_errors
+import test_stack
+import test_create
+import test_status
+import test_connectapi
+import test_findconnections
+import test_connectoptions
+import test_events
+import test_networks
+import test_threads
+import test_use
+import test_dataconnect
+import test_simulate
 
-def suite():
+def run():
+    test_errors.run()
+    test_stack.run()
+    test_create.run()                    
+    test_status.run()
+    test_connectapi.run()
+    test_findconnections.run()    
+    test_connectoptions.run()    
+    test_events.run()
+    test_networks.run()
+    test_threads.run()  
+    test_use.run()
+    test_dataconnect.run()
+    test_simulate.run()
 
-    import nest.tests
-
-    suite = unittest.TestSuite()
-
-    suite.addTest(test_errors.suite())
-    suite.addTest(test_stack.suite())
-    suite.addTest(test_create.suite())                    
-    suite.addTest(test_status.suite())
-    suite.addTest(test_connectapi.suite())
-    suite.addTest(test_findconnections.suite())    
-    suite.addTest(test_connectoptions.suite())    
-    suite.addTest(test_events.suite())
-    suite.addTest(test_networks.suite())
-    suite.addTest(test_threads.suite())    
-    
-    return suite
-
-
-if __name__ == "__main__":
-
-    runner = unittest.TextTestRunner(verbosity=2)
-    runner.run(suite())

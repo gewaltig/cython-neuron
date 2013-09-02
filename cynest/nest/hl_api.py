@@ -494,6 +494,9 @@ def Create(model, n=1, params=None):
 
     broadcast_params = False
 
+    if type(model) != str and type(model) != bytes:
+        raise NESTError("UnknownModelName: model should be a string.")
+
     sps(n)
     cmd = "/"+model+" exch Create"
 
@@ -562,7 +565,7 @@ def SetStatus(nodes, params, val=None) :
         raise NESTError("Status dict must be a dict, or list of dicts of length 1 or len(nodes).")
 
     if  (type(nodes[0]) == dict) or is_sequencetype(nodes[0]):
-        nest.push_connection_datums(nodes)
+        nest.engine.push_connections(nodes)
     else:
         sps(nodes)
 
@@ -1059,7 +1062,7 @@ def LayoutNetwork(model, dim, label=None, params=None) :
     return a list of ids.
     """
 
-    if type(model) == bytes or type(params) == str:
+    if type(model) == bytes or type(model) == str:
         sps(dim)
         sr('/'+model+' exch LayoutNetwork')
         if label:

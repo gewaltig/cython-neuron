@@ -36,7 +36,7 @@ class DataConnectTestCase(unittest.TestCase):
         
         a=cynest.Create("iaf_neuron", 100000)
         sources=[1]
-        target=[1.0 * x for x in range(2,100000)]
+        target=[1.0 * x for x in list(range(2,100000))]
         weight=[2.0 * x for x in target]
         delay=[1.0 * x for x in target]
         connections=[{'target':target, 'weight':weight, 'delay':delay} for t in target ]
@@ -53,7 +53,7 @@ class DataConnectTestCase(unittest.TestCase):
         
         a=cynest.Create("iaf_neuron", 100000)
         sources=[1]
-        target=[x for x in range(2,100000)]
+        target=[x for x in list(range(2,100000))]
         weight=[2.0 * x for x in target]
         delay=[1.0 * x for x in target]
         connections=[{'target':target, 'weight':weight, 'delay':delay} for t in target ]
@@ -70,7 +70,7 @@ class DataConnectTestCase(unittest.TestCase):
         
         a=cynest.Create("iaf_neuron", 10)
         target=[1]
-        sources=[1 * x for x in range(2,11)]
+        sources=[1 * x for x in list(range(2,11))]
 
         cynest.ConvergentConnect(sources, target, [1.0], [1.0])
         conn1=cynest.GetConnections(sources)
@@ -85,7 +85,7 @@ class DataConnectTestCase(unittest.TestCase):
         
         a=cynest.Create("iaf_neuron", 10)
         source=[1]
-        targets=[1 * x for x in range(2,11)]
+        targets=[1 * x for x in list(range(2,11))]
 
         cynest.DivergentConnect(source, targets, [1.0], [1.0])
         conn1=cynest.GetConnections(source)
@@ -112,7 +112,7 @@ class DataConnectTestCase(unittest.TestCase):
         cynest.ResetKernel()
         
         a=cynest.Create("iaf_neuron", 1000)
-        sources=range(2,1000)
+        sources=list(range(2,1000))
         target=[1]
 
         cynest.RandomConvergentConnect(sources,target, 500, [1.0], [1.0])

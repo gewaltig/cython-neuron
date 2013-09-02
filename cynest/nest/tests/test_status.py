@@ -2,199 +2,135 @@
 #
 # test_status.py
 #
-# This file is part of NEST.
+# This file is part of cynest.
 #
-# Copyright (C) 2004 The NEST Initiative
+# Copyright (C) 2004 The cynest Initiative
 #
-# NEST is free software: you can redistribute it and/or modify
+# cynest is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #
-# NEST is distributed in the hope that it will be useful,
+# cynest is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with NEST.  If not, see <http://www.gnu.org/licenses/>.
+# along with cynest.  If not, see <http://www.gnu.org/licenses/>.
 """
 Test if Set/GetStatus work properly
 """
 
 import unittest
-import cynest as nest
+import cynest
 import sys
+
+if "sample_neuron" not in cynest.Models():
+    cynest.RegisterNeuron("sample_neuron")
 
 class StatusTestCase(unittest.TestCase):
     """Tests of Set/GetStatus"""
 
-
-    def test_GetKernelStatus(self):
-        """GetKernelStatus"""
-
-        
-
-        nest.ResetKernel()
-        s = nest.GetKernelStatus()
-
-
-    def test_SetKernelStatus(self):
-        """SetKernelStatus"""
-
-        nest.ResetKernel()
-        nest.SetKernelStatus({})
-        nest.SetKernelStatus({'print_time':True})
-
-        try:
-            nest.SetKernelStatus({'DUMMY':0})
-        except nest.NESTError:
-            info = sys.exc_info()[1]
-            if not "DictError" in info.__str__():
-                self.fail('wrong error message')                
-        # another error is wrong
-        except:
-            self.fail('wrong error has been thrown')
-      
-
     def test_GetDefaults(self):
         """GetDefaults"""
 
-        models = nest.Models()
+        model = "sample_neuron"
         
-        # sli_neuron does not work under PyNEST
-        models.remove('sli_neuron')
-
-        for model in models:
-            nest.ResetKernel()
-            d = nest.GetDefaults(model)        
+        cynest.ResetKernel()
+        d = cynest.GetDefaults(model)        
 
 
     def test_SetDefaults(self):
         """SetDefaults"""
 
-        models = nest.Models()
+        m = "sample_neuron"
+        
+        cynest.ResetKernel()
+        cynest.SetDefaults(m,{'V_m':-1.})
+        self.assertEqual(cynest.GetDefaults(m)['V_m'], -1.)
 
-        # sli_neuron does not work under PyNEST
-        models.remove('sli_neuron')
-
-        for m in models:        
-            if 'V_m' in nest.GetDefaults(m):
-                nest.ResetKernel()
-                v_m = nest.GetDefaults(m)['V_m']
-                nest.SetDefaults(m,{'V_m':-1.})
-                self.assertEqual(nest.GetDefaults(m)['V_m'], -1.)
-                nest.SetDefaults(m,{'V_m':v_m})
-
-                try:
-                    nest.SetDefaults(m,{'DUMMY':0})
-                except nest.NESTError:
-                    info = sys.exc_info()[1]
-                    if not "DictError" in info.__str__():
-                        self.fail('wrong error message')                
-                # any other error is wrongly thrown
-                except:
-                    self.fail('wrong error has been thrown')
+        try:
+            cynest.SetDefaults(m,{'DUMMY':0})
+        except:
+            info = sys.exc_info()[1]
+            if not "DictError" in info.__str__():
+                self.fail('wrong error message')
 
 
     def test_GetStatus(self):
         """GetStatus"""
 
-        models = nest.Models()
-
-        # sli_neuron does not work under PyNEST
-        models.remove('sli_neuron')
-
-        for m in models:        
-            if 'V_m' in nest.GetDefaults(m):
-                nest.ResetKernel()
-                n  = nest.Create(m)
-                d  = nest.GetStatus(n)
-                v1 = nest.GetStatus(n)[0]['V_m']
-                v2 = nest.GetStatus(n,'V_m')[0]
-                self.assertEqual(v1,v2)
-                n  = nest.Create(m,10)
-                self.assertEqual(len(nest.GetStatus(n,'V_m')), 10)
+        m = "sample_neuron"
+       
+        cynest.ResetKernel()
+        n  = cynest.Create(m)
+        d  = cynest.GetStatus(n)
+        v1 = cynest.GetStatus(n)[0]['param']
+        v2 = cynest.GetStatus(n,'param')[0]
+        self.assertEqual(v1,v2)
+        n  = cynest.Create(m,10)
+        self.assertEqual(len(cynest.GetStatus(n,'param')), 10)
 
 
     def test_SetStatus(self):
         """SetStatus with dict"""
 
-        models = nest.Models()
-
-        # sli_neuron does not work under PyNEST
-        models.remove('sli_neuron')
-
-        for m in models:        
-            if 'V_m' in nest.GetDefaults(m):
-                nest.ResetKernel()
-                n = nest.Create(m)
-                nest.SetStatus(n,{'V_m':1.})
-                self.assertEqual(nest.GetStatus(n,'V_m')[0], 1.)
+        m = "sample_neuron"
+      
+        cynest.ResetKernel()
+        n = cynest.Create(m)
+        cynest.SetStatus(n,{'V_m':1.})
+        self.assertEqual(cynest.GetStatus(n,'V_m')[0], 1.)
 
         
     def test_SetStatusList(self):
         """SetStatus with list"""
 
-        models = nest.Models()
+        m = "sample_neuron"
 
-        # sli_neuron does not work under PyNEST
-        models.remove('sli_neuron')
-
-        for m in models:        
-            if 'V_m' in nest.GetDefaults(m):
-                nest.ResetKernel()
-                n  = nest.Create(m)
-                nest.SetStatus(n,[{'V_m':2.}])
-                self.assertEqual(nest.GetStatus(n,'V_m')[0], 2.)
+        cynest.ResetKernel()
+        n  = cynest.Create(m)
+        cynest.SetStatus(n,[{'V_m':2.}])
+        self.assertEqual(cynest.GetStatus(n,'V_m')[0], 2.)
 
 
     def test_SetStatusParam(self):
         """SetStatus with parameter"""
 
-        models = nest.Models()
+        m = "sample_neuron"
         
-        # sli_neuron does not work under PyNEST
-        models.remove('sli_neuron')
-
-        for m in models:        
-            if 'V_m' in nest.GetDefaults(m):
-                nest.ResetKernel()
-                n  = nest.Create(m)
-                nest.SetStatus(n,'V_m',3.)
-                self.assertEqual(nest.GetStatus(n,'V_m')[0], 3.)
+        cynest.ResetKernel()
+        n  = cynest.Create(m)
+        cynest.SetStatus(n,'V_m',3.)
+        self.assertEqual(cynest.GetStatus(n,'V_m')[0], 3.)
 
 
     def test_SetStatusVth_E_L(self):
         """SetStatus of reversal and threshold potential """
 
-        models = nest.Models()
+        m = "sample_neuron"
 
-        # sli_neuron does not work under PyNEST
-        models.remove('sli_neuron')
+        cynest.ResetKernel()
 
-        for m in models:
-            if 'V_th' in nest.GetDefaults(m) and 'E_L' in nest.GetDefaults(m) and m != 'a2eif_cond_exp_HW' and m != 'mat2_psc_exp':
-                nest.ResetKernel()
+        neuron1 = cynest.Create(m)
+        neuron2 = cynest.Create(m)
 
-                neuron1 = nest.Create(m)
-                neuron2 = nest.Create(m)
+        # must not depend on the order.
+        new_EL = -90.
+        new_Vth= -10.
+        cynest.SetStatus(neuron1,{'E_L': new_EL})
+        cynest.SetStatus(neuron2,{'V_th': new_Vth})
 
-                # must not depend on the order.
-                new_EL = -90.
-                new_Vth= -10.
-                nest.SetStatus(neuron1,{'E_L': new_EL})
-                nest.SetStatus(neuron2,{'V_th': new_Vth})
+        cynest.SetStatus(neuron1,{'V_th': new_Vth})
+        cynest.SetStatus(neuron2,{'E_L': new_EL})
 
-                nest.SetStatus(neuron1,{'V_th': new_Vth})
-                nest.SetStatus(neuron2,{'E_L': new_EL})
+        # next three lines for debugging
+        vth1, vth2 = cynest.GetStatus(neuron1,'V_th'), cynest.GetStatus(neuron2,'V_th')
+        if vth1 != vth2:
+            print (m, vth1, vth2, cynest.GetStatus(neuron1,'E_L'), cynest.GetStatus(neuron2,'E_L'))
 
-                # next three lines for debugging
-                vth1, vth2 = nest.GetStatus(neuron1,'V_th'), nest.GetStatus(neuron2,'V_th')
-                if vth1 != vth2:
-                    print(m, vth1, vth2, nest.GetStatus(neuron1,'E_L'), nest.GetStatus(neuron2,'E_L'))
-
-                assert(nest.GetStatus(neuron1,'V_th')==nest.GetStatus(neuron2,'V_th'))
+        assert(cynest.GetStatus(neuron1,'V_th')==cynest.GetStatus(neuron2,'V_th'))
     
 
 
@@ -205,7 +141,6 @@ def suite():
     return suite
 
 
-if __name__ == "__main__":
-
+def run():
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite())

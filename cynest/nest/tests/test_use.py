@@ -26,7 +26,8 @@ import unittest
 import cynest
 import sys
 
-cynest.RegisterNeuron("sample_neuron")
+if "sample_neuron" not in cynest.Models():
+    cynest.RegisterNeuron("sample_neuron")
 
 def testFct():
     return -1

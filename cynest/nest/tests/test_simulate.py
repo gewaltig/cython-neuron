@@ -20,16 +20,16 @@
 # along with cynest.  If not, see <http://www.gnu.org/licenses/>.
 
 import cynest
-import cynest.raster_plot
-import pylab
+#import cynest.raster_plot
+#import pylab
 import os
+import sys
 from subprocess import call
 
 cynest.ResetKernel()
 
-cynest.RegisterNeuron("cython_iaf_psc_delta_c_members")
-cynest.RegisterNeuron("cython_iaf_psc_delta_pydict")
-cynest.RegisterNeuron("testmodel")
+if "cython_iaf_psc_delta_c_members" not in cynest.Models():
+    cynest.RegisterNeuron("cython_iaf_psc_delta_c_members")
 
 class Brunel2000:
     """
@@ -68,13 +68,14 @@ class Brunel2000:
         model.
         """
         self.N_neurons = self.N_E+self.N_I
-        self.C_E    = self.N_E/10
-        self.C_I    = self.N_I/10
+        self.C_E    = self.N_E//10
+        self.C_I    = self.N_I//10
         self.J_I    = -self.g*self.J_E
         self.nu_ex  = self.eta* self.V_th/(self.J_E*self.C_E*self.tau_m)
         self.p_rate = 1000.0*self.nu_ex*self.C_E
         cynest.SetKernelStatus({"print_time": True,
                               "local_num_threads":self.threads})
+
 
     def build(self, neuronName, custom):
         """
@@ -83,7 +84,7 @@ class Brunel2000:
         if self.built==True: return
         self.calibrate()
 
-        print (neuronName)
+
         self.nodes   = cynest.Create(neuronName, self.N_neurons)
 
         self.noise=cynest.Create("poisson_generator",1,{"rate": self.p_rate})
@@ -115,6 +116,7 @@ class Brunel2000:
                        "inhibitory",
                        {"weight":self.J_I, 
                         "delay":self.delay})
+
         cynest.RandomConvergentConnect(self.nodes_E, self.nodes, 
                                      self.C_E, model="excitatory")
         cynest.RandomConvergentConnect(self.nodes_I, self.nodes, 
@@ -133,48 +135,47 @@ class Brunel2000:
             self.connect(neuronName, custom)
         cynest.Simulate(simtime)
         events = cynest.GetStatus(self.spikes,"n_events")
-        self.rate_ex= events[0]/simtime*1000.0/self.N_rec
+
+        if sys.version_info >= (3, 0):
+            self.rate_ex= events[0]//simtime*1000.0/self.N_rec
+            self.rate_in= events[1]//simtime*1000.0/self.N_rec
+        else:
+            self.rate_ex= events[0]/simtime*1000.0/self.N_rec
+            self.rate_in= events[1]/simtime*1000.0/self.N_rec
+
         print ("Excitatory rate   : %.2f Hz" % self.rate_ex)
-        self.rate_in= events[1]/simtime*1000.0/self.N_rec
         print ("Inhibitory rate   : %.2f Hz" % self.rate_in)
-        cynest.raster_plot.from_device(self.spikes_E, hist=True)
-        pylab.show()
+        #cynest.raster_plot.from_device(self.spikes_E, hist=True)
+        #pylab.show()
 
 
-def runNeurons(ms, version = 1):
-    print ("Running native, SLI and cython neurons for " + str(ms) + " ms\n\n")
 
-    #print ("Running native neurons")
+def runNeurons(ms, opt = True):
+    print ("Running native, SLI and cython neurons for " + str(ms) + " ms")
+
+    print ("\n\nRunning native neurons")
     # native neuron
-    #b = Brunel2000()
-    #b.run("iaf_psc_delta", False, ms)
-    #NativRTF = cynest.GetKernelStatus()["realtime factor"]
+    b = Brunel2000()
+    b.run("iaf_psc_delta", False, ms)
+    NativRTF = cynest.GetKernelStatus()["realtime factor"]
 
     cynest.ResetKernel()
 
-    print ("Running cython neurons")
+    print ("\n\nRunning cython neurons")
     # cython neuron
     b = Brunel2000()
     
-    if version == 1:
-        b.run("cython_iaf_psc_delta_c_members", True, ms)
-    elif version == 2:
-        b.run("cython_iaf_psc_delta_pydict", False, ms)
-    elif version == 3:
-        b.run("testmodel", False, ms)
-    elif version == 4:
-        b.run("testmodel", True, ms)
+    b.run("cython_iaf_psc_delta_c_members", opt, ms)
 
         
     CythonRTF = cynest.GetKernelStatus()["realtime factor"]
 
+    print ("Faster factor (native / cython) : " + str(NativRTF / CythonRTF))
 
 
-    #print ("Faster factor (native / cython) : " + str(NativRTF / CythonRTF))
-
-print ("\n\nWelcome to some speedtests\n")
-print ("Type start(version, time=40) in order to start a test.\n\nversion: 1 for c_members or 2 for pydict")
 
 def start(v, t=40):
     runNeurons(t, v)
 
+def run():
+    start(True)
