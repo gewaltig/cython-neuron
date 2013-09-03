@@ -58,7 +58,7 @@ import sys
 nest = sps = spp = sr = None
 cvc = dvc = dtc = rcc = rdc = None
 reg = None
-#t_sched = None
+
 schedulerObj = timeObj = ticObj = stepObj = msObj = ms_stampObj = None
 
 pyximport.install()

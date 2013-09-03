@@ -33,7 +33,6 @@ hl_api.ms_stampObj = _kernel.ms_stamp(0.0)
 
 _kernel.engine= _kernel.NESTEngine()
 
-#Datum = _kernel.Datum
 
 sli_push = _kernel.engine.push
 hl_api.sps = sli_push
@@ -172,6 +171,25 @@ def test ():
 
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(cynest.tests.suite())
+
+
+# graphics module
+hl_simulate = hl_api.Simulate
+
+def setGraphicsSimulator(s):
+    global Simulate, hl_simulate
+	
+    if type(s) != bool:
+        raise NESTError("The graphics simulator setting value must be a boolean.")
+		
+    if s == True:
+        Simulate = _kernel.graphics_simulate
+        hl_api.Simulate = _kernel.graphics_simulate
+    else:
+        Simulate = hl_simulate
+        hl_api.Simulate = hl_simulate
+
+# end of graphics module
 
 
 if not 'DELAY_PYNEST_INIT' in os.environ:

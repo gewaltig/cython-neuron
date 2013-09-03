@@ -25,7 +25,6 @@ EXTRA_DIST= setup.py.in\
 	pyobjectdatum.h \
 	cython_neuron.h \
 	cython_neuron.cpp \
-	object_manager.h \
 	datumtopythonconverter.h \
 	datumtopythonconverter.cpp\
 	kernel.pyx\

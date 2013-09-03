@@ -389,3 +389,8 @@ cdef public object Token_to_PyObject(classes.Token *arg):
      dat.thisptr=arg
      return dat
 
+
+
+# Additional modules
+include "modules/objects.pyx"
+include "modules/graphics/graphics.pyx"
