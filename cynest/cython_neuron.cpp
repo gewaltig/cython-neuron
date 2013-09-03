@@ -159,8 +159,8 @@ void nest::cython_neuron::update(Time const & origin, const long_t from, const l
     if(*current_value != 0.0)
     {
         CurrentEvent ce;
-	ce.set_current(*current_value);
-	network()->send(*this, ce, lag);
+		ce.set_current(*current_value);
+		network()->send(*this, ce, lag);
     }
 
     B_.logger_.record_data(origin.get_steps()+lag);

@@ -38,7 +38,7 @@ cdef extern from "cynestkernel.h":
         void register_cython_model(string)
 
 
-cdef extern from "time_scheduler.h":
+cdef extern from "object_manager.h":
     cdef cppclass Time:
         long get_tics()
         long get_steps()
@@ -60,7 +60,7 @@ cdef extern from "time_scheduler.h":
         UnitManager(int, double)
         Time generateTime()
 
-cdef extern from "time_scheduler.h" namespace "nest::Time":
+cdef extern from "object_manager.h" namespace "nest::Time":
     Time get_resolution()
     void set_resolution(double)
     void reset_resolution()
@@ -79,7 +79,7 @@ cdef extern from "time_scheduler.h" namespace "nest::Time":
 
 
 
-cdef extern from "time_scheduler.h" namespace "nest::Scheduler":
+cdef extern from "object_manager.h" namespace "nest::Scheduler":
     unsigned int get_modulo(unsigned int)
     unsigned int get_slice_modulo(unsigned int)
     unsigned int get_min_delay()

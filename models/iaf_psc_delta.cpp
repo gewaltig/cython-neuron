@@ -228,10 +228,11 @@ void nest::iaf_psc_delta::calibrate()
   //
   
   V_.RefractoryCounts_ = Time(Time::ms(P_.t_ref_)).get_steps();
+  
   assert(V_.RefractoryCounts_ >= 0);  // since t_ref_ >= 0, this can only fail in error
 }
 
-/* ---------------------------------------------------------------- 
+/* ----\------------------------------------------------------------ 
  * Update and spike handling functions
  */
 
@@ -252,8 +253,8 @@ void nest::iaf_psc_delta::update(Time const & origin,
       // add and reset accumulator
       if ( P_.with_refr_input_ && S_.refr_spikes_buffer_ != 0.0 )
       {
-	S_.y3_ += S_.refr_spikes_buffer_;
-	S_.refr_spikes_buffer_ = 0.0;
+			S_.y3_ += S_.refr_spikes_buffer_;
+			S_.refr_spikes_buffer_ = 0.0;
       }
       
       // lower bound of membrane potential
@@ -264,13 +265,16 @@ void nest::iaf_psc_delta::update(Time const & origin,
       // read spikes from buffer and accumulate them, discounting
       // for decay until end of refractory period
       if ( P_.with_refr_input_ )
-	S_.refr_spikes_buffer_ += B_.spikes_.get_value(lag)
-	  * std::exp(-S_.r_ * Time::get_resolution().get_ms() / P_.tau_m_);
+			S_.refr_spikes_buffer_ += B_.spikes_.get_value(lag) * std::exp(-S_.r_ * Time::get_resolution().get_ms() / P_.tau_m_);
       else
-	B_.spikes_.get_value(lag);  // clear buffer entry, ignore spike
+			B_.spikes_.get_value(lag);  // clear buffer entry, ignore spike
 
       --S_.r_;
     }
+   
+   
+    // set new input current
+    S_.y0_ = B_.currents_.get_value(lag);
    
     // threshold crossing
     if (S_.y3_ >= P_.V_th_)
@@ -284,10 +288,7 @@ void nest::iaf_psc_delta::update(Time const & origin,
       SpikeEvent se;
       network()->send(*this, se, lag);
     }
-
-    // set new input current
-    S_.y0_ = B_.currents_.get_value(lag);
-
+	
     // voltage logging
     B_.logger_.record_data(origin.get_steps()+lag);
   }  

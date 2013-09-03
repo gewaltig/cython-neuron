@@ -20,8 +20,8 @@
 # along with cynest.  If not, see <http://www.gnu.org/licenses/>.
 
 import cynest
-#import cynest.raster_plot
-#import pylab
+import cynest.raster_plot
+import pylab
 import os
 import sys
 from subprocess import call
@@ -30,6 +30,9 @@ cynest.ResetKernel()
 
 if "cython_iaf_psc_delta_c_members" not in cynest.Models():
     cynest.RegisterNeuron("cython_iaf_psc_delta_c_members")
+    
+if "testmodel" not in cynest.Models():
+    cynest.RegisterNeuron("testmodel")
 
 class Brunel2000:
     """
@@ -145,8 +148,8 @@ class Brunel2000:
 
         print ("Excitatory rate   : %.2f Hz" % self.rate_ex)
         print ("Inhibitory rate   : %.2f Hz" % self.rate_in)
-        #cynest.raster_plot.from_device(self.spikes_E, hist=True)
-        #pylab.show()
+        cynest.raster_plot.from_device(self.spikes_E, hist=True)
+        pylab.show()
 
 
 
@@ -166,6 +169,7 @@ def runNeurons(ms, opt = True):
     b = Brunel2000()
     
     b.run("cython_iaf_psc_delta_c_members", opt, ms)
+    #b.run("testmodel", opt, ms)
 
         
     CythonRTF = cynest.GetKernelStatus()["realtime factor"]

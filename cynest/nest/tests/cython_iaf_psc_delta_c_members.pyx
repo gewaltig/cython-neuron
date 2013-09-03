@@ -51,7 +51,7 @@ cdef class cython_iaf_psc_delta_c_members(Neuron):
         if self.r_ == 0:
             # neuron not refractory
             self.y3_ = self.P30_*(self.y0_ + self.I_e_) + self.P33_*self.y3_ + (self.ex_spikes + self.in_spikes)
-
+        
             # if we have accumulated spikes from refractory period, 
             # add and reset accumulator
             if self.with_refr_input_ and self.refr_spikes_buffer_ != 0.0:
@@ -61,7 +61,7 @@ cdef class cython_iaf_psc_delta_c_members(Neuron):
             # lower bound of membrane potential
             if self.y3_ < self.V_min_:
                 self.y3_ = self.V_min_	 
-    
+        
         else: # neuron is absolute refractory
             # read spikes from buffer and accumulate them, discounting
             # for decay until end of refractory period
@@ -72,7 +72,9 @@ cdef class cython_iaf_psc_delta_c_members(Neuron):
                 self.in_spikes = 0
 
             self.r_ -= 1
-   
+        
+        self.y0_ = self.currents
+        
         # threshold crossing
         if self.y3_ >= self.V_th:
             self.r_ = self.RefractoryCounts_
@@ -80,6 +82,7 @@ cdef class cython_iaf_psc_delta_c_members(Neuron):
             self.spike = 1 # True
         else:
             self.spike = 0 # False
+
 
     cpdef getStatus(self):
         cdef dict d = {}
