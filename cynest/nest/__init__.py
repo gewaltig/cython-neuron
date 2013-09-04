@@ -174,21 +174,14 @@ def test ():
 
 
 # graphics module
-hl_simulate = hl_api.Simulate
-
+_kernel.setEngine(hl_api)
+_kernel.setExec_Dir(os.path.dirname(os.path.realpath(__file__)))
 def setGraphicsSimulator(s):
-    global Simulate, hl_simulate
-	
-    if type(s) != bool:
-        raise NESTError("The graphics simulator setting value must be a boolean.")
-		
-    if s == True:
-        Simulate = _kernel.graphics_simulate
-        hl_api.Simulate = _kernel.graphics_simulate
-    else:
-        Simulate = hl_simulate
-        hl_api.Simulate = hl_simulate
-
+    global Simulate, hl_api
+    _kernel.setGraphicsSimulator(s)
+    Simulate = hl_api.Simulate
+    
+initNetworkVisualizer = _kernel.initNetworkVisualizer
 # end of graphics module
 
 

@@ -834,7 +834,8 @@ def DataConnect(pre, params=None, model=None, version=1):
     'delay'
     each resolving to a list or numpy.ndarray of values. Depending on the synapse model, other parameters can be given
     in the same format. All arrays in params must have the same length as 'target'.
-
+    def pr(self):
+        print "pr"
     Variant 2 of DataConnect will connect neurons according to a list of synapse status dictionaries,
     as obtained from GetStatus.
     Note: During connection, status dictionary misses will not raise errors, even if
@@ -1091,3 +1092,4 @@ def LayoutNetwork(model, dim, label=None, params=None) :
 
     else:
         raise NESTError("model must be a string or a function.")
+        

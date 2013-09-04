@@ -51,11 +51,19 @@ install-data-hook: install-exec
 	mkdir -p $(DESTDIR)@PKGDATADIR@/extras
 	mkdir -p $(DESTDIR)@PYNEST_PREFIX@/share/doc/nest/cythondoc
 
+# Neuron.pyx version
 	if test `echo @PYTHON_VERSION@ | cut -d. -f1` -ge 3; then \
 		cp $(VPATH)/nest/Neuron3.x.pyx $(DESTDIR)@PYNEST_PREFIX@/include/Neuron.pyx; \
 	else \
 		cp $(VPATH)/nest/Neuron2.x.pyx $(DESTDIR)@PYNEST_PREFIX@/include/Neuron.pyx; \
 	fi
+	
+# graphics tools compilation and ressources copying
+	g++ $(VPATH)/modules/graphics/graphics_simulator/graphics_simulator.cc `sdl-config --cflags --libs` -lGLU -lSDL -o $(DESTDIR)@PYNEST_PREFIX@/lib/python@PYTHON_VERSION@/site-packages/cynest/g_simulator
+	mkdir -p $(DESTDIR)@PYNEST_PREFIX@/lib/python@PYTHON_VERSION@/site-packages/cynest/ressources
+	cp $(VPATH)/modules/graphics/graphics_simulator/aura_round.png $(DESTDIR)@PYNEST_PREFIX@/lib/python@PYTHON_VERSION@/site-packages/cynest/ressources/aura_round.png
+
+
 
 	cp $(VPATH)/../doc/How_to_Install_CyNEST.pdf "$(DESTDIR)@PYNEST_PREFIX@/share/doc/nest/CyNEST Installation.pdf"
 	cp $(VPATH)/../doc/cythondoc/user_doc/user_doc.pdf "$(DESTDIR)@PYNEST_PREFIX@/share/doc/nest/cythondoc/Custom Neurons - User Documentation.pdf"
