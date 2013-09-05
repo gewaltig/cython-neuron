@@ -13,6 +13,7 @@
 
 #include "socket.h"
 #include "tools.h"
+#include "window.h"
 
 
 class GraphicsSimulator
@@ -20,12 +21,11 @@ class GraphicsSimulator
 private:
 	Socket listener;
 	Socket sender;
-	int width;
-	int height;
 	vector<Neuron> neurons;
+	Window window;
 	
-	void init_connection(int port_send_, int port_receive_);
-	void init_window(int window_width_, int window_height_);
+	void init_connection(int port_send, int port_receive);
+	void init_window(int window_width, int window_height, char* caption);
 	
 	void receive_positions();
 	void receive_connections();
@@ -33,7 +33,7 @@ private:
 	int getIndexFromId(int id);
 	
 public:
-	void initialize(int port_send, int port_receive, int window_width, int window_height);
+	void initialize(int port_send, int port_receive, int window_width, int window_height, char* caption);
 	
 	void start();
 	

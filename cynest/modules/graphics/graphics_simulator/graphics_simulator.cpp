@@ -4,9 +4,9 @@ using namespace std;
 
 // connection management
 
-void GraphicsSimulator::init_connection(int port_send_, int port_receive_) {
-	sender.initiateConnection(port_send_, NULL);
-	listener.acceptConnection(port_receive_, NULL);
+void GraphicsSimulator::init_connection(int port_send, int port_receive) {
+	sender.initiateConnection(port_send, NULL);
+	listener.acceptConnection(port_receive, NULL);
 	
 	sender.sendMsg("ready", 5);
 	
@@ -34,7 +34,6 @@ void GraphicsSimulator::receive_positions() {
 			sender.sendMsg("ok", 2);
 		}
 	}
-	printf("Positions received\n");
 }
 
 void GraphicsSimulator::receive_connections() {
@@ -51,7 +50,6 @@ void GraphicsSimulator::receive_connections() {
 	while(true){
 		listener.receiveMsg(bufferParams, 50);
 		
-		printf("params %s\n", bufferParams);
 		if(strcmp(bufferParams, "end") == 0) {
 			sender.sendMsg("ok", 2);
 			break;
@@ -67,7 +65,7 @@ void GraphicsSimulator::receive_connections() {
 				sender.sendMsg("param_ok", 8);
 				
 				listener.receiveMsg(bufferConn, lengthConn + 1);
-				printf("connections %s\n", bufferConn);
+
 				if(parseList(bufferConn, conn) && index > -1) {
 					for(int i = 0; i < nbConn; i++) {
 						neurons.at(index).addConnection((int)conn[i]);
@@ -90,29 +88,56 @@ void GraphicsSimulator::receive_connections() {
 			sender.sendMsg("ok", 2);
 		}
 	}
-	printf("Connections received\n");
 }
+
+// end of connection management
+
+
+
+
+
 
 
 // window management
 
 
-void GraphicsSimulator::init_window(int window_width_, int window_height_) {
-	width = window_width_;
-	height = window_height_;
+void GraphicsSimulator::init_window(int window_width, int window_height, char* caption) {
+	window.init(window_width, window_height, caption);
 }
 
 
 
+
+
+
+
+
+
+
+
 // simulation management
-void GraphicsSimulator::start(){}
+void GraphicsSimulator::start() {
+	//sender.sendMsg("simulate", 8);
+	while(true){}
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 // init and end
 
-void GraphicsSimulator::initialize(int port_send, int port_receive, int window_width, int window_height) {
+void GraphicsSimulator::initialize(int port_send, int port_receive, int window_width, int window_height, char* caption) {
 	init_connection(port_send, port_receive);
-	init_window(window_width, window_height);
+	init_window(window_width, window_height, caption);
 }
 
 void GraphicsSimulator::finalize() {

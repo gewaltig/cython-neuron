@@ -82,7 +82,6 @@ def graphics_simulator_sendPositions():
         
     graphics_simulator_sender.send("end")
     graphics_simulator_receiveKeyword("ok")
-    print "positions done"
     
     
 def graphics_simulator_sendConnections():    
@@ -116,7 +115,7 @@ def graphics_simulator_init():
     graphics_simulator_initOperations()
     
     graphics_simulator_receiveKeyword("ready")
-    print ("ready received!!!")
+    
     graphics_simulator_sendPositions()
     graphics_simulator_sendConnections()
     
@@ -124,6 +123,9 @@ def graphics_simulator_init():
     
 def graphics_simulator_simulate(time):
     t = 0.0
+
+    graphics_simulator_receiveKeyword("simulate")
+    
     while t < time:
         nest_engine.cynest.sps(float(0.1))
         nest_engine.cynest.sr('ms Simulate')
@@ -149,8 +151,8 @@ def graphics_simulator_close():
 
 def graphics_simulate(t):
     graphics_simulator_init()
-    #graphics_simulator_simulate(t)
-    #graphics_simulator_close()
+    graphics_simulator_simulate(t)
+    graphics_simulator_close()
 
 
     
