@@ -319,6 +319,11 @@ namespace nest
     const Name vp("vp");
     const Name local("local");
 
+    // Position parameters
+    const Name pos_x("pos-x");
+    const Name pos_y("pos-y");
+    const Name pos_z("pos-z");
+
     const Name connection_count("connection_count");
     const Name index_map("index_map");
     const Name music_channel("music_channel");

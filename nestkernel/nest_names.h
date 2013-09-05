@@ -325,6 +325,11 @@ namespace nest
     extern const Name vp;
     extern const Name local;
 
+    // Position parameters
+    extern const Name pos_x;
+    extern const Name pos_y;
+    extern const Name pos_z;
+
     // Parameters for MUSIC devices
     extern const Name connection_count;
     extern const Name index_map;

@@ -791,6 +791,10 @@ namespace nest {
  
    
   protected:
+    double pos_x;
+    double pos_y;
+    double pos_z;
+    bool use_pos;
     static Network* net_;    //!< Pointer to global network driver.
   };
 

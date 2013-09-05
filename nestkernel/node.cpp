@@ -40,7 +40,11 @@ namespace nest {
        parent_(0),
        stat_(),
        thread_(0),
-       vp_(invalid_thread_)
+       vp_(invalid_thread_),
+       pos_x(0.0),
+       pos_y(0.0),
+       pos_z(0.0),
+       use_pos(false)
   {
     /**
      *
@@ -59,7 +63,11 @@ namespace nest {
        parent_(n.parent_),
        stat_(n.stat_),  // copied from model prototype, frozen may be set
        thread_(n.thread_),
-       vp_(n.vp_)
+       vp_(n.vp_),
+       pos_x(n.pos_x),
+       pos_y(n.pos_y),
+       pos_z(n.pos_z),
+       use_pos(n.use_pos)
   {
   }
 
@@ -142,6 +150,13 @@ namespace nest {
       }
     }
 
+    // If position is important
+    if(use_pos) {
+		(*dict)[names::pos_x] = pos_x;
+		(*dict)[names::pos_y] = pos_y;
+		(*dict)[names::pos_z] = pos_z;
+	}
+
     // This is overwritten with a corresponding value in the
     // base classes for stimulating and recording devices, and
     // in other special node classes
@@ -170,6 +185,15 @@ namespace nest {
 	set(frozen);
       else
 	unset(frozen);
+    }
+    
+    // If position information has been given (note that x, y, and z has to be given)
+    if(dict->known(names::pos_x) && dict->known(names::pos_y) && dict->known(names::pos_z))
+    {
+       pos_x = (*dict)[names::pos_x];
+       pos_y = (*dict)[names::pos_y];
+       pos_z = (*dict)[names::pos_z];
+       use_pos = true;
     }
   }
 

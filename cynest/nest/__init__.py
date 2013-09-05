@@ -174,9 +174,10 @@ def test ():
 
 
 # graphics module
-_kernel.setEngine(hl_api)
-_kernel.setExec_Dir(os.path.dirname(os.path.realpath(__file__)))
-def setGraphicsSimulator(s):
+_kernel.setGraphicsParameters(hl_api, os.path.dirname(os.path.realpath(__file__)))
+
+# wrapper function around setGraphicsSimulator (since global Simulator has to be manually changed (no transitivity)
+def SetGraphicsSimulator(s):
     global Simulate, hl_api
     _kernel.setGraphicsSimulator(s)
     Simulate = hl_api.Simulate

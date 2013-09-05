@@ -14,11 +14,9 @@ cdef class NESTEngineContainer:
 cdef NESTEngineContainer nest_engine = NESTEngineContainer()
 
 
-def setEngine(obj):
-    nest_engine.setEngine(obj)
-
-def setExec_Dir(obj):
-    nest_engine.setExec_Dir(obj)
+def setGraphicsParameters(engine, exec_dir):
+    nest_engine.setEngine(engine)
+    nest_engine.setExec_Dir(exec_dir)
 
 
 # Graphics tools
