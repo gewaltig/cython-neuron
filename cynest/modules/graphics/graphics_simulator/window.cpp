@@ -69,6 +69,7 @@ int Window::handleEvents() {
 
 
 void Window::draw() {
+	
 }
 
 

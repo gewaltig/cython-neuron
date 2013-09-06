@@ -25,6 +25,7 @@ private :
 	Vector3d position;
 	bool has_position;
 	bool fires;
+	double fire_time;
 	
 	vector<int> connections;
 	
@@ -37,8 +38,8 @@ public:
 	Vector3d getPosition();
 	int getId();
 	
-	void fire();
-	bool hasFired();
+	void fire(double time);
+	double hasFired();
 };
 
 bool parseList(char* str, double* list);

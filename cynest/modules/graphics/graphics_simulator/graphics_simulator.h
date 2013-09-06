@@ -10,6 +10,7 @@
 #include <GL/glu.h>
 #include <SDL/SDL.h>
 
+#include <pthread.h>
 
 #include "socket.h"
 #include "tools.h"
@@ -25,20 +26,23 @@
 class GraphicsSimulator
 {
 private:
-	Socket listener;
-	Socket sender;
-	vector<Neuron> neurons;
-	Window window;
-	
 	void init_connection(int port_send, int port_receive);
 	void init_window(int window_width, int window_height, char* caption);
 	
 	void receive_positions();
 	void receive_connections();
+
+	Window window;
+
+
+public:
+	Socket listener;
+	Socket sender;
+	vector<Neuron> neurons;
+	bool simulation_running;
 	
 	int getIndexFromId(int id);
 	
-public:
 	void initialize(int port_send, int port_receive, int window_width, int window_height, char* caption);
 	
 	void start();
@@ -46,5 +50,6 @@ public:
 	void finalize();
 };
 
+void* detect_spikes(void* simulator);
 
 #endif

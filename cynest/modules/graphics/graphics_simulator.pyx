@@ -165,8 +165,10 @@ def graphics_simulator_simulate(time):
             nest_engine.cynest.sr('ms Simulate')
         
             ev = nest_engine.cynest.GetStatus(graphics_simulator_spike_detector, "events") # {[times], [senders]}
-
-            graphics_simulator_sender.send(str([t] + ev[0]["senders"])) # [t, id1, id2, ...]
+            msg = str(ev[0]["senders"])
+            graphics_simulator_sender.send("[" + str([t]) + ","+ str(len(ev[0]["senders"])) + "," + len(msg) + "]" ) # [t, nb_spikes, length msg]
+            graphics_simulator_receiveKeyword("ok")
+            graphics_simulator_sender.send(msg) # [id1, id2, ...]
             nest_engine.cynest.SetStatus(graphics_simulator_spike_detector, [{"n_events": 0}])
         
             t += 0.1

@@ -39,15 +39,19 @@ int Neuron::getId(){
 	return id;
 }
 
-void Neuron::fire() {
+void Neuron::fire(double time) {
 	fires = true;
+	fire_time = time;
 }
 
-bool Neuron::hasFired() {
+double Neuron::hasFired() {
 	bool f = fires;
 	fires = false;
 	
-	return f;
+	if(f) {
+		return fire_time;
+	}
+	return -1.0;
 }
 
 // others

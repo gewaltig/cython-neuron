@@ -118,7 +118,12 @@ void GraphicsSimulator::init_window(int window_width, int window_height, char* c
 
 // simulation management
 void GraphicsSimulator::start() {
+	pthread_t spike_detector;
+	pthread_create(&spike_detector, NULL, detect_spikes, (void*)this);
+	
+	
 	sender.sendMsg("simulate", 8);
+	simulation_running = true;
 	int eventType = EVENT_NOTHING;
 
 	do
@@ -132,13 +137,58 @@ void GraphicsSimulator::start() {
 		}
 		
 		window.draw();
-	} while(eventType != EVENT_QUIT);
+	} while(eventType != EVENT_QUIT && simulation_running);
 }
 
 
 
 
+void* detect_spikes(void* simulator_) {
+	GraphicsSimulator* simulator = (GraphicsSimulator*) simulator_;
+	char bufferParams[50];
+	double params[3];
+	
+	char* bufferSpikes;
+	int lengthSpikes;
+	double* spikes;
+	int nbSpikes;
+	
+	double time;
+	int index;
+	
+	while(true){
+		simulator->listener.receiveMsg(bufferParams, 50);
+		
+		if(strcmp(bufferParams, "finish") == 0) {
+			simulator->sender.sendMsg("ok", 2);
+			simulator->simulation_running = false;
+			break;
+		}
+		else { // it's a spike train
+			if(parseList(bufferParams, params)) {
+				time = params[0];
+				nbSpikes = (int)params[1];
+				lengthSpikes = (int)params[2];
+				bufferSpikes = new char[lengthSpikes + 1];
+				spikes = new double[nbSpikes];
+				
+				simulator->sender.sendMsg("ok", 2);
+				
+				simulator->listener.receiveMsg(bufferSpikes, lengthSpikes + 1);
 
+				if(parseList(bufferSpikes, spikes)) {
+					for(int i = 0; i < nbSpikes; i++) {
+						index = simulator->getIndexFromId((int)spikes[i]);
+						simulator->neurons.at(index).fire(time);
+					}
+				}
+				
+				delete[] bufferSpikes;
+				delete[] spikes;
+			}
+		}
+	}
+}
 
 
 
@@ -152,9 +202,11 @@ void GraphicsSimulator::start() {
 void GraphicsSimulator::initialize(int port_send, int port_receive, int window_width, int window_height, char* caption) {
 	init_connection(port_send, port_receive);
 	init_window(window_width, window_height, caption);
+	simulation_running = false;
 }
 
 void GraphicsSimulator::finalize() {
+	pthread_exit(NULL);
 	listener.destroy();
 	sender.destroy();
 	window.destroy();
