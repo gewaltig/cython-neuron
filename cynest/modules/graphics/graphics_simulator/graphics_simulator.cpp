@@ -138,6 +138,7 @@ void GraphicsSimulator::start() {
 		
 		window.draw();
 	} while(eventType != EVENT_QUIT && simulation_running);
+	pthread_cancel(spike_detector);
 }
 
 
@@ -206,7 +207,6 @@ void GraphicsSimulator::initialize(int port_send, int port_receive, int window_w
 }
 
 void GraphicsSimulator::finalize() {
-	pthread_exit(NULL);
 	listener.destroy();
 	sender.destroy();
 	window.destroy();
