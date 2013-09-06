@@ -23,10 +23,10 @@ Uint32 evolve(Uint32, void*);
 */
 
 
-void Window::init(int width, int height, char* caption) {
+void Window::init(int width, int height, char* caption, vector<Neuron>* neurons_) {
+	neurons = neurons_;
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 	surface = SDL_SetVideoMode(width, height, 0, SDL_OPENGL | SDL_DOUBLEBUF );
-	atexit(SDL_Quit);
 		
 	SDL_WM_SetCaption(caption, 0);
 
@@ -47,6 +47,32 @@ void Window::init(int width, int height, char* caption) {
 	// background
 	glClearColor(0.0/255.0, 0.0/255.0, 0.0/255.0, 1.0);
 }
+
+void Window::destroy() {
+	SDL_Quit();
+}
+
+
+// Handles events and returns
+// the event type
+int Window::handleEvents() {
+	SDL_PollEvent(&event);
+	
+	switch(event.type)
+	{
+	case SDL_QUIT:
+		return EVENT_QUIT;
+	}
+	
+	return EVENT_NOTHING;
+}
+
+
+void Window::draw() {
+}
+
+
+
 
 /*
 

@@ -8,6 +8,8 @@ void GraphicsSimulator::init_connection(int port_send, int port_receive) {
 	sender.initiateConnection(port_send, NULL);
 	listener.acceptConnection(port_receive, NULL);
 	
+	sleep(1);
+	
 	sender.sendMsg("ready", 5);
 	
 	receive_positions();
@@ -84,7 +86,6 @@ void GraphicsSimulator::receive_connections() {
 				printf("Problem receiving connections. Program will exit.");
 				exit(1);
 			}
-			printf("end element\n", bufferParams);
 			sender.sendMsg("ok", 2);
 		}
 	}
@@ -102,7 +103,7 @@ void GraphicsSimulator::receive_connections() {
 
 
 void GraphicsSimulator::init_window(int window_width, int window_height, char* caption) {
-	window.init(window_width, window_height, caption);
+	window.init(window_width, window_height, caption, &neurons);
 }
 
 
@@ -117,8 +118,21 @@ void GraphicsSimulator::init_window(int window_width, int window_height, char* c
 
 // simulation management
 void GraphicsSimulator::start() {
-	//sender.sendMsg("simulate", 8);
-	while(true){}
+	sender.sendMsg("simulate", 8);
+	int eventType = EVENT_NOTHING;
+
+	do
+	{
+		eventType = window.handleEvents();
+		
+		switch(eventType)
+		{
+		case EVENT_QUIT:
+			sender.sendMsg("quit", 4);
+		}
+		
+		window.draw();
+	} while(eventType != EVENT_QUIT);
 }
 
 
@@ -143,6 +157,7 @@ void GraphicsSimulator::initialize(int port_send, int port_receive, int window_w
 void GraphicsSimulator::finalize() {
 	listener.destroy();
 	sender.destroy();
+	window.destroy();
 }
 
 // others

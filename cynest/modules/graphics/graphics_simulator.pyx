@@ -10,6 +10,7 @@ import os
 import sys
 import socket
 import subprocess
+import random
 
 # Note that every method begins with graphics_simulator_. This
 # is done because of possible name redundancy
@@ -25,9 +26,16 @@ graphics_simulator_ids = []
 
 def graphics_simulator_socket_listen(port, host = 'localhost'):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setblocking(0);
     s.bind((host, port))
     s.listen(1)
-    conn, addr = s.accept()
+    
+    while True:
+        try:
+            conn, addr = s.accept()
+            break
+        except:
+            pass
 
     return conn
 
@@ -43,14 +51,30 @@ def graphics_simulator_socket_speak(port, host = 'localhost'):
 
 
 def graphics_simulator_receiveKeyword(key):
-    while graphics_simulator_listener.recv(len(key)) != key:
+    while True:
+        try:
+            if graphics_simulator_listener.recv(len(key)) == key:
+                break
+        except:
+            pass
+        
+def graphics_simulator_receiveKeywordNonBlocking(key):
+    try:
+        if graphics_simulator_listener.recv(len(key)) == key:
+            return True
+    except:
         pass
+    
+    return False
 
 
 # Creates a new spike detector (if not already created) and 
 # attaches it to the network, then connects everything to it
 def graphics_simulator_initOperations():
     global graphics_simulator_spike_detector, graphics_simulator_ids
+    
+    nest_engine.cynest.sr("M_WARNING setverbosity")
+    nest_engine.cynest.SetKernelStatus({"overwrite_files":True})
     
     size = int(nest_engine.cynest.GetKernelStatus()['network_size'])
     
@@ -107,14 +131,16 @@ def graphics_simulator_sendConnections():
 def graphics_simulator_init():
     global graphics_simulator_sender, graphics_simulator_listener
     
-    subprocess.Popen([nest_engine.exec_dir + '/g_simulator'])
+    port = random.randint(10000, 65500)
     
-    graphics_simulator_listener = graphics_simulator_socket_listen(50001)
-    graphics_simulator_sender = graphics_simulator_socket_speak(50002)
+    subprocess.Popen([nest_engine.exec_dir + '/g_simulator', str(port)])
     
-    graphics_simulator_initOperations()
+    graphics_simulator_listener = graphics_simulator_socket_listen(port)
+    graphics_simulator_sender = graphics_simulator_socket_speak(port + 1)
     
     graphics_simulator_receiveKeyword("ready")
+    
+    graphics_simulator_initOperations()
     
     graphics_simulator_sendPositions()
     graphics_simulator_sendConnections()
@@ -123,23 +149,33 @@ def graphics_simulator_init():
     
 def graphics_simulator_simulate(time):
     t = 0.0
-
+    keepGoing = True
     graphics_simulator_receiveKeyword("simulate")
     
     while t < time:
-        nest_engine.cynest.sps(float(0.1))
-        nest_engine.cynest.sr('ms Simulate')
+        if graphics_simulator_receiveKeywordNonBlocking("quit"):
+            return
+        elif graphics_simulator_receiveKeywordNonBlocking("stop"):
+            keepGoing = False
+        elif graphics_simulator_receiveKeywordNonBlocking("resume"):
+            keepGoing = True
         
-        ev = nest_engine.cynest.GetStatus(graphics_simulator_spike_detector, "events") # {[times], [senders]}
-        graphics_simulator_sender.send(str([t] + ev["senders"])) # [t, id1, id2, ...]
-        nest_engine.cynest.SetStatus(graphics_simulator_spike_detector, {"events":[]})
+        if keepGoing:
+            nest_engine.cynest.sps(float(0.1)) # have to calculate time with respect to minimal delay
+            nest_engine.cynest.sr('ms Simulate')
         
-        t += 0.1
+            ev = nest_engine.cynest.GetStatus(graphics_simulator_spike_detector, "events") # {[times], [senders]}
 
+            graphics_simulator_sender.send(str([t] + ev[0]["senders"])) # [t, id1, id2, ...]
+            nest_engine.cynest.SetStatus(graphics_simulator_spike_detector, [{"n_events": 0}])
+        
+            t += 0.1
+            
+    graphics_simulator_sender.send("finish")
+    graphics_simulator_receiveKeyword("ok")
+        
 
 def graphics_simulator_close():
-    graphics_simulator_sender.send("close")
-    graphics_simulator_receiveKeyword("ok")
     graphics_simulator_sender.close()
     graphics_simulator_listener.close()
     

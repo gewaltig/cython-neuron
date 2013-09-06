@@ -17,6 +17,7 @@ Neuron::Neuron(int id_, double x_, double y_, double z_, bool has_position_):
 	position(x_, y_, z_),
 	has_position(has_position_) {
 		connections = vector<int>();
+		fires = false;
 }
 
 
@@ -38,6 +39,16 @@ int Neuron::getId(){
 	return id;
 }
 
+void Neuron::fire() {
+	fires = true;
+}
+
+bool Neuron::hasFired() {
+	bool f = fires;
+	fires = false;
+	
+	return f;
+}
 
 // others
 

@@ -15,6 +15,12 @@
 #include "tools.h"
 #include "window.h"
 
+#if defined (_WIN32)
+	#include <dos.h>
+#else
+	#include <unistd.h>
+#endif
+
 
 class GraphicsSimulator
 {
