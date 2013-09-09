@@ -230,7 +230,7 @@ def set_verbosity(level):
     can be one of M_FATAL, M_ERROR, M_WARNING, or M_INFO.
     """
 
-    sr(level+" setverbosity")
+    sr(str(level)+" setverbosity")
 
 
 def message(level,sender,text):

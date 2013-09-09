@@ -5,6 +5,7 @@
 #include <memory.h>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>  
 #include <string>
 #include <vector>
 #include <GL/glu.h>
@@ -23,6 +24,9 @@
 #endif
 
 
+#define RANDOM_POS_LOW -20.0
+#define RANDOM_POS_HIGH 20.0
+
 class GraphicsSimulator
 {
 private:
@@ -34,14 +38,14 @@ private:
 
 	Window window;
 
+	double generateRandomNumber(double low, double high);
 
 public:
 	Socket listener;
 	Socket sender;
-	vector<Neuron> neurons;
-	bool simulation_running;
-	
-	int getIndexFromId(int id);
+	vector<Neuron> neurons_;
+	Neuron* neurons;
+	int nb_neurons;
 	
 	void initialize(int port_send, int port_receive, int window_width, int window_height, char* caption);
 	

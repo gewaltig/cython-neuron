@@ -22,6 +22,10 @@ graphics_simulator_sender = graphics_simulator_listener = None
 graphics_simulator_spike_detector = []
 # available ids (without added spike detectors)
 graphics_simulator_ids = []
+# simulation_step
+graphics_simulator_sim_time = 0.0
+graphics_simulator_verbosity_level = 0
+graphics_simulator_overwrite_files = False
 
 
 def graphics_simulator_socket_listen(port, host = 'localhost'):
@@ -33,6 +37,7 @@ def graphics_simulator_socket_listen(port, host = 'localhost'):
     while True:
         try:
             conn, addr = s.accept()
+            conn.setblocking(0);
             break
         except:
             pass
@@ -71,9 +76,11 @@ def graphics_simulator_receiveKeywordNonBlocking(key):
 # Creates a new spike detector (if not already created) and 
 # attaches it to the network, then connects everything to it
 def graphics_simulator_initOperations():
-    global graphics_simulator_spike_detector, graphics_simulator_ids
+    global graphics_simulator_spike_detector, graphics_simulator_ids, graphics_simulator_sim_time, graphics_simulator_verbosity_level, graphics_simulator_overwrite_files
     
-    nest_engine.cynest.sr("M_WARNING setverbosity")
+    graphics_simulator_overwrite_files = nest_engine.cynest.GetKernelStatus()["overwrite_files"]
+    graphics_simulator_verbosity_level = nest_engine.cynest.get_verbosity()
+    nest_engine.cynest.set_verbosity("M_WARNING")
     nest_engine.cynest.SetKernelStatus({"overwrite_files":True})
     
     size = int(nest_engine.cynest.GetKernelStatus()['network_size'])
@@ -81,13 +88,17 @@ def graphics_simulator_initOperations():
     if(len(graphics_simulator_spike_detector) == 0):
         graphics_simulator_spike_detector = nest_engine.cynest.Create("spike_detector")
     
-    
-    graphics_simulator_ids = list(set(list(range(1,size))) - set(graphics_simulator_spike_detector))
-    
+    graphics_simulator_ids = [x['global_id'] for x in nest_engine.cynest.GetStatus(list(range(1,size))) if x['model'] != "spike_detector"]
+
     not_connected_ids = [x for x in graphics_simulator_ids if not graphics_simulator_spike_detector in [y[1] for y in nest_engine.cynest.GetConnections([x])] ]
-    
+
     if len(not_connected_ids) > 0:
-        nest_engine.cynest.ConvergentConnect(not_connected_ids, graphics_simulator_spike_detector)
+        nest_engine.cynest.ConvergentConnect(not_connected_ids, graphics_simulator_spike_detector) # why does this connection have an impact on the overal simulation???
+        
+    if classes.get_max_delay() > 0.0:
+        graphics_simulator_sim_time = float(classes.get_max_delay() * 2.0)
+    else:
+        graphics_simulator_sim_time = float(2.0)
     
 
 
@@ -131,6 +142,8 @@ def graphics_simulator_sendConnections():
 def graphics_simulator_init():
     global graphics_simulator_sender, graphics_simulator_listener
     
+    print ("Initializing graphics simulator...")
+    
     port = random.randint(10000, 65500)
     
     subprocess.Popen([nest_engine.exec_dir + '/g_simulator', str(port)])
@@ -150,8 +163,13 @@ def graphics_simulator_init():
 def graphics_simulator_simulate(time):
     t = 0.0
     keepGoing = True
+    pt = nest_engine.cynest.GetKernelStatus()["print_time"]
+    nest_engine.cynest.SetKernelStatus({"print_time":False})
+    
     graphics_simulator_receiveKeyword("simulate")
     
+    print ("Simulation started...")
+       
     while t < time:
         if graphics_simulator_receiveKeywordNonBlocking("quit"):
             return
@@ -161,25 +179,33 @@ def graphics_simulator_simulate(time):
             keepGoing = True
         
         if keepGoing:
-            nest_engine.cynest.sps(float(0.1)) # have to calculate time with respect to minimal delay
+            nest_engine.cynest.sps(graphics_simulator_sim_time)
             nest_engine.cynest.sr('ms Simulate')
         
             ev = nest_engine.cynest.GetStatus(graphics_simulator_spike_detector, "events") # {[times], [senders]}
-            msg = str(ev[0]["senders"])
-            graphics_simulator_sender.send("[" + str([t]) + ","+ str(len(ev[0]["senders"])) + "," + len(msg) + "]" ) # [t, nb_spikes, length msg]
+            l = list(ev[0]["senders"]) + list(ev[0]["times"])
+            msg = str(l)
+            graphics_simulator_sender.send("[" + str(len(l)) + "," + str(len(msg)) + "]" ) # [nb_spikes + nb_times, length msg]
             graphics_simulator_receiveKeyword("ok")
-            graphics_simulator_sender.send(msg) # [id1, id2, ...]
+            
+            graphics_simulator_sender.send(msg) # [ id1, id2, ..., idn, t1, t2, ... tn]
             nest_engine.cynest.SetStatus(graphics_simulator_spike_detector, [{"n_events": 0}])
         
-            t += 0.1
+            t += graphics_simulator_sim_time
             
+                
+    nest_engine.cynest.SetKernelStatus({"print_time": pt})
     graphics_simulator_sender.send("finish")
     graphics_simulator_receiveKeyword("ok")
+    print ("Simulation terminated")
         
 
 def graphics_simulator_close():
+    nest_engine.cynest.set_verbosity(graphics_simulator_verbosity_level)
+    nest_engine.cynest.SetKernelStatus({"overwrite_files":graphics_simulator_overwrite_files})
     graphics_simulator_sender.close()
     graphics_simulator_listener.close()
+    
     
 
 
