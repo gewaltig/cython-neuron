@@ -5,7 +5,6 @@
 #include <memory.h>
 #include <cstdio>
 #include <cstdlib>
-#include <ctime>  
 #include <string>
 #include <vector>
 #include <GL/glu.h>
@@ -23,7 +22,6 @@
 	#include <unistd.h>
 #endif
 
-
 #define RANDOM_POS_LOW -20.0
 #define RANDOM_POS_HIGH 20.0
 
@@ -38,7 +36,6 @@ private:
 
 	Window window;
 
-	double generateRandomNumber(double low, double high);
 
 public:
 	Socket listener;
@@ -46,6 +43,9 @@ public:
 	vector<Neuron> neurons_;
 	Neuron* neurons;
 	int nb_neurons;
+	double sim_time;
+	double curr_time;
+	bool mutex;
 	
 	void initialize(int port_send, int port_receive, int window_width, int window_height, char* caption);
 	

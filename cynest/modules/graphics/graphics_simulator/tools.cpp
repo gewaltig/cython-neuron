@@ -57,8 +57,9 @@ Neuron::Neuron(int id_, double x_, double y_, double z_):
 	id(id_),
 	position(x_, y_, z_) {
 		connections = vector<int>();
-		fires = false;
-		alpha = 0.5;
+		alpha = ALPHA_THRESHOLD;
+		pthread_mutex_init (&mutex , NULL );
+		spike_time = 0.0;
 }
 
 Neuron::Neuron() {
@@ -86,25 +87,52 @@ Vector3d Neuron::getPosition(){
 	return position;
 }
 
-void Neuron::fire(double time) {
-	fires = true;
-	fire_time = time;
-}
 
 double Neuron::getAlpha() {
 	return alpha;
 }
 
-void Neuron::draw() {
-	double dist_factor = camera_pos->norm() / camera_pos->sub(position).norm(); // have to change 30.0
-	glColor4f(1.0,1.0,1.0, 0.6 * dist_factor    + alpha * 0.3 );
+void Neuron::draw(double time_) {
+	alpha = -(time_ - spike_time) + 1.0;
+	
+	if(alpha < ALPHA_THRESHOLD) {
+		alpha = ALPHA_THRESHOLD;
+	}
+	
+	glColor4f(1.0,1.0,1.0, alpha );
 
 	glVertex3f(position.x(), position.y(), position.z());
 }
 
-void Neuron::update(double time) {
+
+
+void Neuron::fire(double time_) {
+	pthread_mutex_lock (&mutex);
+	spikes_buffer.push_back(time_);
+	pthread_mutex_unlock (&mutex);
 }
 
+void Neuron::update(double time_) {
+	double item = -1.0;
+	pthread_mutex_lock (&mutex);
+
+	while(spikes_buffer.size() > 0 && item < time_) {	
+		item = spikes_buffer.at(0);
+		
+		spikes_buffer.erase (spikes_buffer.begin());
+	}
+	
+	if(item != -1.0) {
+		if(item >= time_ && item < time_ + SIMULATION_DELTA) {
+			spike_time = item;
+			alpha = 1.0; // fire
+		}	
+		else { // we put it inside again
+			spikes_buffer.insert (spikes_buffer.begin(), item);
+		}
+	}
+	pthread_mutex_unlock (&mutex);
+}
 
 
 
@@ -149,4 +177,7 @@ bool parseList(char* str, double* list) {
 
 
 
+double generateRandomNumber(double low, double high) {
+	return (high-low)*((float)rand()/RAND_MAX) + low;
+}
 

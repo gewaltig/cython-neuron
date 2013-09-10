@@ -153,8 +153,8 @@ class Brunel2000:
 
         print ("Excitatory rate   : %.2f Hz" % self.rate_ex)
         print ("Inhibitory rate   : %.2f Hz" % self.rate_in)
-        cynest.raster_plot.from_device(self.spikes_E, hist=True)
-        pylab.show()
+        #cynest.raster_plot.from_device(self.spikes_E, hist=True)
+        #pylab.show()
 
 
 

@@ -8,7 +8,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <algorithm>
-#include <ctime>
 #include <sstream>
 #include <string>
 
@@ -56,9 +55,9 @@ public:
 		
 		int handleEvents();
 
-		void update();
+		void update(double time_);
 		
-		void draw();
+		void draw(double time_);
 };
 
 #endif

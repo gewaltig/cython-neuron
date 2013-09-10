@@ -11,14 +11,23 @@ void GraphicsSimulator::init_connection(int port_send, int port_receive) {
 	sleep(1);
 	
 	sender.sendMsg("ready", 5);
+	char buffer[20];
+	double tm[1];
+	listener.receiveMsg(buffer, 20);
+
+	if(parseList(buffer, tm)) {	
+		sim_time = tm[0];
+	}else {
+		printf("Problem receiving total simulation time. Program will exit.");
+		exit(1);
+	}
+	sender.sendMsg("ok", 2);
+	
 	
 	receive_positions();
 	receive_connections();
 }
 
-double GraphicsSimulator::generateRandomNumber(double low, double high) {
-	return (high-low)*((float)rand()/RAND_MAX) + low;
-}
 
 void GraphicsSimulator::receive_positions() {
 	char buffer[50];
@@ -122,6 +131,7 @@ void GraphicsSimulator::receive_connections() {
 
 void GraphicsSimulator::init_window(int window_width, int window_height, char* caption) {
 	window.init(window_width, window_height, caption, neurons, &nb_neurons);
+	mutex = false;
 }
 
 
@@ -142,9 +152,11 @@ void GraphicsSimulator::start() {
 	
 	sender.sendMsg("simulate", 8);
 	int eventType = EVENT_NOTHING;
+	int init_time = SDL_GetTicks();
 
 	do
 	{
+		curr_time = (SDL_GetTicks() - init_time) / SIMULATION_STEP;
 		eventType = window.handleEvents();
 		
 		switch(eventType)
@@ -153,8 +165,19 @@ void GraphicsSimulator::start() {
 			sender.sendMsg("quit", 4);
 		}
 		
-		window.update();
-		window.draw();
+		if(curr_time <= sim_time) {
+			window.update(curr_time);
+			printf("%f %\n", curr_time / sim_time * 100.0);
+			fflush(stdout);
+		} else {
+			printf("100.000 %\n");
+			fflush(stdout);
+		}
+		
+		window.draw(curr_time);
+		
+		
+		SDL_Delay(SIMULATION_DELTA);
 	} while(eventType != EVENT_QUIT);
 	pthread_cancel(spike_detector);
 }
@@ -171,6 +194,7 @@ void* detect_spikes(void* simulator_) {
 	int lengthSpikes;
 	double* spikes;
 	int nbSpikes;
+	double spike_time;
 	
 	while(true){
 		simulator->listener.receiveMsg(bufferParams, 50);
@@ -192,7 +216,11 @@ void* detect_spikes(void* simulator_) {
 
 				if(parseList(bufferSpikes, spikes)) {
 					for(int i = 0; i < nbSpikes / 2; i++) {
-						simulator->neurons[(int)spikes[i]].fire(spikes[i + nbSpikes / 2]);
+						spike_time = spikes[i + nbSpikes / 2];
+
+						if(spike_time >= simulator->curr_time) {
+							simulator->neurons[(int)spikes[i]].fire(spike_time);
+						}
 					}
 				}
 				
@@ -215,8 +243,6 @@ void* detect_spikes(void* simulator_) {
 void GraphicsSimulator::initialize(int port_send, int port_receive, int window_width, int window_height, char* caption) {
 	init_connection(port_send, port_receive);
 	init_window(window_width, window_height, caption);
-	/* initialize random seed: */
-	srand(time(NULL));
 }
 
 void GraphicsSimulator::finalize() {
