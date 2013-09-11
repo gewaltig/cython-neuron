@@ -9,8 +9,8 @@ void Window::init(int width_, int height_, Neuron* neurons_, int* nb_neurons_, i
 	height = height_;
 	simulation_step = sim_step;
 	simulation_total_time = sim_time_;
-	w_pressed = false;
-	s_pressed = false;
+	plus_pressed = false;
+	minus_pressed = false;
 	p_pressed = false;
 	stopped = false;
 
@@ -18,14 +18,8 @@ void Window::init(int width_, int height_, Neuron* neurons_, int* nb_neurons_, i
 	TTF_Init();
 	
 	surface = SDL_SetVideoMode(width, height, 0, SDL_OPENGL | SDL_DOUBLEBUF );
-
-	// display parameters initialization
-	theta   = 0.0;
-	phi     = 0.0;
-	camera_dist = 60.0;
 	    
     init_display();
-    init_neuron_params();
     
     // background
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -41,6 +35,7 @@ void Window::init(int width_, int height_, Neuron* neurons_, int* nb_neurons_, i
 }
 
 void Window::init_display() {
+	camera.init();
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
  
@@ -54,15 +49,6 @@ void Window::resize(int width_, int height_) {
 	glViewport(0, 0, width, height);
 	
 	init_display();
-}
-
-
-void Window::init_neuron_params() {	
-	for(int i=0; i < *nb_neurons; i++) {
-		if(neurons + i != 0) {
-			neurons[i].setCameraPosition(&camera_pos);
-		}
-	}
 }
 
 
@@ -89,20 +75,20 @@ int Window::handleEvents() {
 		switch(event.key.keysym.sym)
 		{
 		case SDLK_UP:
-			phi = phi + ANGLE_DIFF;
+			camera.up();
 			break;
 		case SDLK_DOWN:
-			phi = phi - ANGLE_DIFF;
+			camera.down();
 			break;
 		case SDLK_LEFT:
-			theta = theta - ANGLE_DIFF;
+			camera.left();
 			break;
 		case SDLK_RIGHT:
-			theta = theta + ANGLE_DIFF;
+			camera.right();
 			break;
-		case SDLK_w:
-			if(!w_pressed) {
-				w_pressed = true;
+		case SDLK_KP_MINUS:
+			if(!minus_pressed) {
+				minus_pressed = true;
 				
 				if(!stopped) {
 					incrementSimulationStep(simulation_step);
@@ -110,9 +96,9 @@ int Window::handleEvents() {
 				}
 			}
 			break;
-		case SDLK_s:
-			if(!s_pressed) {
-				s_pressed = true;
+		case SDLK_KP_PLUS:
+			if(!plus_pressed) {
+				plus_pressed = true;
 				
 				if(!stopped) {
 					decrementSimulationStep(simulation_step);
@@ -136,14 +122,14 @@ int Window::handleEvents() {
 	case SDL_KEYUP:
 		switch(event.key.keysym.sym)
 		{
-		case SDLK_w:
-			if(w_pressed) {
-				w_pressed = false;
+		case SDLK_KP_MINUS:
+			if(minus_pressed) {
+				minus_pressed = false;
 			}
 			break;
-		case SDLK_s:
-			if(s_pressed) {
-				s_pressed = false;
+		case SDLK_KP_PLUS:
+			if(plus_pressed) {
+				plus_pressed = false;
 			}
 			break;
 		case SDLK_p:
@@ -156,12 +142,10 @@ int Window::handleEvents() {
 	case SDL_MOUSEBUTTONDOWN:
 		switch(event.button.button) {
 		case SDL_BUTTON_WHEELUP:
-			if (camera_dist - DIST_DIFF >= 0 ) {
-				camera_dist -= DIST_DIFF;
-			}
+			camera.forward();
 			break;
 		case SDL_BUTTON_WHEELDOWN:
-			camera_dist += DIST_DIFF;
+			camera.backward();
 			break;
 		}
 		break;
@@ -214,8 +198,7 @@ void Window::draw() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	// camera coordinates
-	camera_pos.set(camera_dist * cos(theta) * cos(phi),   camera_dist * sin(theta) * cos(phi),   camera_dist * sin(phi));
-	gluLookAt(camera_pos.x(), camera_pos.y(), camera_pos.z(),  0.0, 0.0, 0.0,  0.0, 0.0, 1.0);
+	camera.update();
 	
 	
 	// draw points (these should be drawn nicer using shaders)

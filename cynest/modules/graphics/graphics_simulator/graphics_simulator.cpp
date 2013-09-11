@@ -191,8 +191,6 @@ void GraphicsSimulator::start() {
 					}
 				}
 		    }
-		
-
 		}
 		window.draw();
 		

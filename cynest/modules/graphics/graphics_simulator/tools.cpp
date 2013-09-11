@@ -74,11 +74,6 @@ vector<int>* Neuron::getConnections(){
 	return &connections;
 }
 
-
-void Neuron::setCameraPosition(Vector3d* camera_pos_) {
-	camera_pos = camera_pos_;
-}
-
 int Neuron::getId(){
 	return id;
 }
@@ -133,6 +128,51 @@ void Neuron::update(double time_) {
 	}
 	pthread_mutex_unlock (&mutex);
 }
+
+
+
+// camera
+
+void Camera::init() {
+	// display parameters initialization
+	theta   = 0.0;
+	phi     = 0.0;
+	dist = 60.0;
+}
+
+void Camera::update() {
+	pos.set(dist * cos(theta) * cos(phi),   dist * sin(theta) * cos(phi),   dist * sin(phi));
+	gluLookAt(pos.x(), pos.y(), pos.z(),  0.0, 0.0, 0.0,  0.0, 0.0, 1.0);
+}
+
+
+void Camera::up() {
+	phi = phi + ANGLE_DIFF;
+}
+
+void Camera::down() {
+	phi = phi - ANGLE_DIFF;
+}
+
+void Camera::right() {
+	theta = theta + ANGLE_DIFF;
+}
+
+void Camera::left() {
+	theta = theta - ANGLE_DIFF;
+}
+
+void Camera::forward() {
+	if (dist - DIST_DIFF >= 0 ) {
+		dist -= DIST_DIFF;
+	}
+}
+
+void Camera::backward() {
+	dist += DIST_DIFF;
+}
+
+
 
 
 

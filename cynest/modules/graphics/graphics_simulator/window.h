@@ -22,10 +22,6 @@
 #define EVENT_PAUSE 5
 #define EVENT_RESUME 6
 
-#define ANGLE_DIFF 0.05
-#define DIST_DIFF 1.0
-#define PI 3.15
-
 #define LOW_BOUND_SIM_STEP 1
 #define HIGH_BOUND_SIM_STEP 10000
 
@@ -42,22 +38,17 @@ private:
 	bool stopped;
 	
 	// keyboard handling
-	bool w_pressed;
-	bool s_pressed;
+	bool plus_pressed;
+	bool minus_pressed;
 	bool p_pressed;
+	
+	Camera camera;
 	
 	// Display parameters
 	int width;
 	int height;
-	
-	double theta;
-	double phi;
-	double camera_dist;
-	Vector3d camera_pos;
 
 	void init_display();
-	
-	void init_neuron_params();
 	
 	void draw_connections();
 
