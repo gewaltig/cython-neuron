@@ -62,8 +62,7 @@ install-data-hook: install-exec
 	$(VPATH)/modules/graphics/graphics_simulator/compile.sh "$(VPATH)/modules/graphics/graphics_simulator/"
 	mv $(VPATH)/modules/graphics/graphics_simulator/g_simulator $(DESTDIR)@PYNEST_PREFIX@/lib/python@PYTHON_VERSION@/site-packages/cynest/g_simulator
 	mkdir -p $(DESTDIR)@PYNEST_PREFIX@/lib/python@PYTHON_VERSION@/site-packages/cynest/ressources
-	cp $(VPATH)/modules/graphics/graphics_simulator/aura_round.png $(DESTDIR)@PYNEST_PREFIX@/lib/python@PYTHON_VERSION@/site-packages/cynest/ressources/aura_round.png
-
+	cp -r $(VPATH)/modules/graphics/graphics_simulator/ressources $(DESTDIR)@PYNEST_PREFIX@/lib/python@PYTHON_VERSION@/site-packages/cynest
 
 
 	cp $(VPATH)/../doc/How_to_Install_CyNEST.pdf "$(DESTDIR)@PYNEST_PREFIX@/share/doc/nest/CyNEST Installation.pdf"

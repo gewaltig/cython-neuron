@@ -92,13 +92,7 @@ double Neuron::getAlpha() {
 	return alpha;
 }
 
-void Neuron::draw(double time_) {
-	alpha = -(time_ - spike_time) + 1.0;
-	
-	if(alpha < ALPHA_THRESHOLD) {
-		alpha = ALPHA_THRESHOLD;
-	}
-	
+void Neuron::draw() {	
 	glColor4f(1.0,1.0,1.0, alpha );
 
 	glVertex3f(position.x(), position.y(), position.z());
@@ -115,6 +109,12 @@ void Neuron::fire(double time_) {
 void Neuron::update(double time_) {
 	double item = -1.0;
 	pthread_mutex_lock (&mutex);
+	
+	alpha = -(time_ - spike_time) + 1.0;
+	
+	if(alpha < ALPHA_THRESHOLD) {
+		alpha = ALPHA_THRESHOLD;
+	}
 
 	while(spikes_buffer.size() > 0 && item < time_) {	
 		item = spikes_buffer.at(0);
@@ -179,5 +179,35 @@ bool parseList(char* str, double* list) {
 
 double generateRandomNumber(double low, double high) {
 	return (high-low)*((float)rand()/RAND_MAX) + low;
+}
+
+
+
+
+string deleteExecName(string path) {
+        int slashPointer = path.length() - 1;
+        while(slashPointer >= 0 && path[slashPointer] != '/') {
+                slashPointer--;
+        }
+        return path.substr(0, slashPointer + 1);
+}
+
+string getExecDirectory() {
+  char pBuf[FILENAME_MAX];
+#ifdef WINDOWS
+        int bytes = GetModuleFileName(NULL, pBuf, FILENAME_MAX);
+        if(bytes == 0)
+                return NULL;
+        else
+                return deleteExecName(string(pBuf));
+
+#else
+        char szTmp[32];
+        sprintf(szTmp, "/proc/%d/exe", getpid());
+        int bytes = min((int)readlink(szTmp, pBuf, FILENAME_MAX), FILENAME_MAX - 1);
+        if(bytes >= 0)
+                pBuf[bytes] = '\0';
+        return deleteExecName(string(pBuf));
+#endif
 }
 

@@ -22,6 +22,7 @@
 	#include <unistd.h>
 #endif
 
+#define INITIAL_SIMULATION_STEP 100
 #define RANDOM_POS_LOW -20.0
 #define RANDOM_POS_HIGH 20.0
 
@@ -29,7 +30,7 @@ class GraphicsSimulator
 {
 private:
 	void init_connection(int port_send, int port_receive);
-	void init_window(int window_width, int window_height, char* caption);
+	void init_window(int window_width, int window_height);
 	
 	void receive_positions();
 	void receive_connections();
@@ -46,8 +47,10 @@ public:
 	double sim_time;
 	double curr_time;
 	bool mutex;
+	int simulation_step;
+	int init_time;
 	
-	void initialize(int port_send, int port_receive, int window_width, int window_height, char* caption);
+	void initialize(int port_send, int port_receive, int window_width, int window_height);
 	
 	void start();
 	

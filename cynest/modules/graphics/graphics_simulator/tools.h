@@ -5,17 +5,26 @@
 #define ALPHA_THRESHOLD 0.2
 #define ALPHA_COEFF 0.5
 
-#define SIMULATION_STEP 100
 #define SIMULATION_DELTA 1
 
 #include <GL/glu.h>
 #include <SDL/SDL.h>
+#include "SDL_ttf.h"
 
 #include <vector>
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
 #include <pthread.h>
+#include <string>
+
+#ifdef WINDOWS
+    #include <direct.h>
+    #define GetCurrentDir _getcwd
+#else
+    #include <unistd.h>
+    #define GetCurrentDir getcwd
+ #endif
 
 using namespace std;
 
@@ -74,24 +83,16 @@ public:
 	
 	void update(double time_);
 	
-	void draw(double time_);
+	void draw();
 };
 
 bool parseList(char* str, double* list);
 
 double generateRandomNumber(double low, double high);
+
+string getExecDirectory();
+string deleteExecName(string path);
+
 #endif
-
-
-	/*
-		void translate_3d_to_2d(double x_3d, double y_3d, double z_3d, double* x_2d, double* y_2d);
-// returns a 2D projection position from a 3D position
-void Window::translate_3d_to_2d(double x_3d, double y_3d, double z_3d, double* x_2d, double* y_2d) {
-    /*modelview = glGetDoublev(GL_MODELVIEW_MATRIX);
-    projection = glGetDoublev(GL_PROJECTION_MATRIX );
-    viewport = glGetIntegerv(GL_VIEWPORT );
-    P2D = GLU.gluProject(pos_[0],pos_[1],pos_[2],modelview,projection,viewport);
-    return np.array([-1.0 + 2.0*P2D[0]/Wreal, -1.0 + 2.0*P2D[1]/Hreal, P2D[2]])
-}*/
 
 

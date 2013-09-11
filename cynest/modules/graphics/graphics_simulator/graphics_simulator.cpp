@@ -129,9 +129,8 @@ void GraphicsSimulator::receive_connections() {
 // window management
 
 
-void GraphicsSimulator::init_window(int window_width, int window_height, char* caption) {
-	window.init(window_width, window_height, caption, neurons, &nb_neurons);
-	mutex = false;
+void GraphicsSimulator::init_window(int window_width, int window_height) {
+	window.init(window_width, window_height, neurons, &nb_neurons, &simulation_step, &sim_time);
 }
 
 
@@ -149,33 +148,53 @@ void GraphicsSimulator::start() {
 	pthread_t spike_detector;
 	pthread_create(&spike_detector, NULL, detect_spikes, (void*)this);
 	
-	
+	bool keepGoing = true;
+	long pausedTime = 0;
+	long start_paused_time = 0;
 	sender.sendMsg("simulate", 8);
 	int eventType = EVENT_NOTHING;
-	int init_time = SDL_GetTicks();
+	init_time = SDL_GetTicks();
 
 	do
 	{
-		curr_time = (SDL_GetTicks() - init_time) / SIMULATION_STEP;
 		eventType = window.handleEvents();
 		
 		switch(eventType)
 		{
 		case EVENT_QUIT:
 			sender.sendMsg("quit", 4);
+			break;
+		case EVENT_STEP_CHANGED:
+			init_time = (SDL_GetTicks() - pausedTime) - (curr_time * simulation_step);
+			break;
+		case EVENT_STOP:
+			start_paused_time = SDL_GetTicks();
+			sender.sendMsg("stop", 4);
+			keepGoing = false;
+			break;
+		case EVENT_RESUME:
+			pausedTime += SDL_GetTicks() - start_paused_time;
+			sender.sendMsg("resume", 6);
+			keepGoing = true;
+			break;
 		}
+		window.update(curr_time);
 		
-		if(curr_time <= sim_time) {
-			window.update(curr_time);
-			printf("%f %\n", curr_time / sim_time * 100.0);
-			fflush(stdout);
-		} else {
-			printf("100.000 %\n");
-			fflush(stdout);
+		if (keepGoing)
+		{
+		    curr_time = ((SDL_GetTicks() - pausedTime) - init_time) / simulation_step;		
+		
+		    if(curr_time <= sim_time) {
+		    	for(int i=0; i < nb_neurons; i++) {
+					if(neurons + i != 0)  {
+						neurons[i].update(curr_time);
+					}
+				}
+		    }
+		
+
 		}
-		
-		window.draw(curr_time);
-		
+		window.draw();
 		
 		SDL_Delay(SIMULATION_DELTA);
 	} while(eventType != EVENT_QUIT);
@@ -240,9 +259,11 @@ void* detect_spikes(void* simulator_) {
 
 // init and end
 
-void GraphicsSimulator::initialize(int port_send, int port_receive, int window_width, int window_height, char* caption) {
+void GraphicsSimulator::initialize(int port_send, int port_receive, int window_width, int window_height) {
 	init_connection(port_send, port_receive);
-	init_window(window_width, window_height, caption);
+	init_window(window_width, window_height);
+	simulation_step = INITIAL_SIMULATION_STEP;
+	mutex = false;
 }
 
 void GraphicsSimulator::finalize() {
@@ -251,3 +272,4 @@ void GraphicsSimulator::finalize() {
 	sender.destroy();
 	window.destroy();
 }
+
