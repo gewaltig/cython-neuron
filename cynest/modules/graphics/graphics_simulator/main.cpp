@@ -29,10 +29,15 @@ int main(int argc, char *argv[]) {
 }
 
 
-
-
-
-
-
-
-
+/**
+* === KEYS : ===
+* 
+* - P 							:	pause/restart the simulation
+* - + / - 						:	accelerate / slow down the simulation
+* - 1							:	set centered camera
+* - 2							:	set free camera
+* - W / mouse wheel down		:	move the camera forward
+* - S / mouse wheel up			:	move the camera backward
+* - up / down / left / right	:	move the camera in the specified direction
+* 
+**/

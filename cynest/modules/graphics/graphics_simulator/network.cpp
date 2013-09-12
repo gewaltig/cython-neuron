@@ -35,7 +35,7 @@ int Neuron::getId(){
 	return id;
 }
 
-Vector3d Neuron::getPosition(){
+Vector3d Neuron::getPosition() {
 	return position;
 }
 
@@ -46,11 +46,15 @@ double Neuron::getAlpha() {
 
 void Neuron::draw() {
 	if(id != 0) {
+		glColor4f(1.0,1.0,1.0, alpha );
+		
+		if(alpha > ALPHA_THRESHOLD) { // active
+			glColor4f(0.0,1.0,1.0, alpha );
+		}
+			
 		if(selected) {
 			glColor4f(1.0,0.0,0.0, alpha );
-		} else {
-			glColor4f(1.0,1.0,1.0, alpha );
-		}
+		} 
 
 		glVertex3f(position.x(), position.y(), position.z());
 	}
@@ -75,6 +79,8 @@ void Neuron::update(double time_) {
 			alpha = ALPHA_THRESHOLD;
 		}
 
+		// we loop over the spikes list and delete those which are 
+		// already expired (if any)
 		while(spikes_buffer.size() > 0 && item < time_) {	
 			item = spikes_buffer.at(0);
 			
@@ -82,11 +88,12 @@ void Neuron::update(double time_) {
 		}
 		
 		if(item != -1.0) {
+			// if the spike time is during this simulation interval we fire,
 			if(item >= time_ && item < time_ + SIMULATION_DELTA) {
 				spike_time = item;
 				alpha = 1.0; // fire
 			}	
-			else { // we put it inside again
+			else { // otherwise we put it inside the list again
 				spikes_buffer.insert (spikes_buffer.begin(), item);
 			}
 		}
@@ -152,6 +159,8 @@ void Camera::setMode(int mode_) {
 		phi = asin(dir.z() / dir.norm());
 		theta = atan(dir.y() / dir.x());
 		
+		// we have to take care of the case in which x<0
+		// and y<0, which give theta > 0 (wrong)
 		if(dir.x() < 0) {
 			theta = fmod(theta + M_PI, 2*M_PI);
 		}
@@ -161,6 +170,8 @@ void Camera::setMode(int mode_) {
 		phi = asin(pos.z() / pos.norm());
 		theta = atan(pos.y() / pos.x());
 		
+		// we have to take care of the case in which x<0
+		// and y<0, which give theta > 0 (wrong)
 		if(pos.x() < 0) {
 			theta = fmod(theta + M_PI, 2*M_PI);
 		}
@@ -209,6 +220,8 @@ void Camera::left() {
 void Camera::forward() {
 	Vector3d dir = lookAtVector.sub(pos).normalize();
 	
+	// we add the direction vector to the position
+	
 	switch(mode) {
 	case MODE_FREE:
 		pos = pos.add(dir.mul(DIST_DIFF));
@@ -225,6 +238,8 @@ void Camera::forward() {
 void Camera::backward() {
 	Vector3d dir = lookAtVector.sub(pos).normalize();
 	
+	// we substract the direction vector to the position
+
 	switch(mode) {
 	case MODE_FREE:
 		pos = pos.sub(dir.mul(DIST_DIFF));

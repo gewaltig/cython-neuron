@@ -50,6 +50,8 @@ private:
 
 
 public:
+	// must be public because they have to be accessed by detect_spike, an external function
+
 	// Connection parameters
 	Socket listener;
 	Socket sender;

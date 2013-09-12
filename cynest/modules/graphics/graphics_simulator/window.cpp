@@ -35,7 +35,7 @@ void Window::init_display() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
  
-	gluPerspective(45.0, float(width)/float(height), 0.01, 100.0);
+	gluPerspective(45.0, float(width)/float(height), 0.01, 1000.0);
 	glMatrixMode(GL_MODELVIEW);
 }
 
@@ -79,12 +79,20 @@ void Window::draw_connections() {
 	for(int i=0; i < *nb_neurons; i++) {		
 		if(neurons[i].getId() != 0) {
 			Vector3d color = Vector3d(1.0, 1.0, 1.0);
+			double dAlpha = 0.0;
 			
-			if(neurons[i].isSelected()) {
+			if(neurons[i].getAlpha() > ALPHA_THRESHOLD) { // actif
+				color.set(0.0, 0.5, 0.5);
+				dAlpha = 0.4;
+			}
+			
+			if(neurons[i].isSelected()) { // selected
 				color.set(1.0, 0.0, 0.0);
+				dAlpha = 0.0;
 			}
 
-			glColor4f(color.x(), color.y(), color.z(), neurons[i].getAlpha());
+			
+			glColor4f(color.x(), color.y(), color.z(), neurons[i].getAlpha() - dAlpha);
 			
 			Vector3d src = neurons[i].getPosition();
 			vector<int>* connections = neurons[i].getConnections();

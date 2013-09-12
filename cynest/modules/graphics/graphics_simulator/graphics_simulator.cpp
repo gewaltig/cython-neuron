@@ -62,7 +62,7 @@ void GraphicsSimulator::receive_positions() {
 	int max = 0;
 
 	while(true){
-		listener.receiveMsg(buffer, 50);
+		listener.receiveMsg(buffer, 50); // [id, x, y, z]
 
 		if(strcmp(buffer, "end") == 0) {
 			sender.sendMsg("ok", 2);
@@ -87,13 +87,18 @@ void GraphicsSimulator::receive_positions() {
 		}
 	}
 
-	// array creation
+	// instead of using the vector, we dinamically create
+	// an array of Neurons of size equal to the highest
+	// id, so that we put every neuron in the array
+	// according to its id. It will be simpler and
+	// faster to acces them after.
 	neurons = new Neuron[max + 1];
 
 	for(int i = 0; i < neurons_.size(); i++) {
 		neurons[neurons_.at(i).getId()] = neurons_.at(i);
 	}
 	nb_neurons = max + 1;
+	// we don't waste space since we clear
 	neurons_.clear();
 }
 
@@ -107,7 +112,7 @@ void GraphicsSimulator::receive_connections() {
 	int nbConn;
 	
 	while(true){
-		listener.receiveMsg(bufferParams, 50);
+		listener.receiveMsg(bufferParams, 50); // [neuron id, nb connections, length of next msg]
 		
 		if(strcmp(bufferParams, "end") == 0) {
 			sender.sendMsg("ok", 2);
@@ -122,7 +127,7 @@ void GraphicsSimulator::receive_connections() {
 				
 				sender.sendMsg("param_ok", 8);
 				
-				listener.receiveMsg(bufferConn, lengthConn + 1);
+				listener.receiveMsg(bufferConn, lengthConn + 1); // [target1, target2, ...]
 
 				if(parseList(bufferConn, conn)) {
 					for(int i = 0; i < nbConn; i++) {
@@ -164,6 +169,7 @@ void GraphicsSimulator::receive_connections() {
 void GraphicsSimulator::start() {
 	pthread_t spike_detector;
 	
+	// Variables for handling pause: basically, the current_time will just substract the total pause time
 	long pausedTime = 0;
 	long start_paused_time = 0;
 	int eventType = EVENT_NOTHING;
@@ -183,6 +189,9 @@ void GraphicsSimulator::start() {
 			sender.sendMsg("quit", 4);
 			break;
 		case EVENT_STEP_CHANGED:
+			// We calculate the initial time so that the simulation would have the current percentage
+			// with the new simulation step. This ensures that when the user changes the simulation speed,
+			// the simulated time does not change.
 			init_time = (SDL_GetTicks() - pausedTime) - (curr_time * simulation_step);
 			break;
 		case EVENT_STOP:
@@ -199,6 +208,8 @@ void GraphicsSimulator::start() {
 		
 		if (!stopped)
 		{
+			// The simulation_step variable divides the elapsed time and provides a way to slow down 
+			// or accelerate the simulation (no more than real time)
 		    curr_time = ((SDL_GetTicks() - pausedTime) - init_time) / simulation_step;		
 		
 		    if(curr_time <= sim_time) {
@@ -232,7 +243,7 @@ void* detect_spikes(void* simulator_) {
 	double spike_time;
 	
 	while(true){
-		simulator->listener.receiveMsg(bufferParams, 50);
+		simulator->listener.receiveMsg(bufferParams, 50); // [nb spikes, length of next message]
 		
 		if(strcmp(bufferParams, "finish") == 0) {
 			simulator->sender.sendMsg("ok", 2);
@@ -247,12 +258,13 @@ void* detect_spikes(void* simulator_) {
 				
 				simulator->sender.sendMsg("ok", 2);
 				
-				simulator->listener.receiveMsg(bufferSpikes, lengthSpikes + 1);
+				simulator->listener.receiveMsg(bufferSpikes, lengthSpikes + 1); // [id1, id2, ..., time1, time2, ...]
 
 				if(parseList(bufferSpikes, spikes)) {
 					for(int i = 0; i < nbSpikes / 2; i++) {
 						spike_time = spikes[i + nbSpikes / 2];
 
+						// Checking this ensures that the spike list will be sorted in time
 						if(spike_time >= simulator->curr_time) {
 							simulator->neurons[(int)spikes[i]].fire(spike_time);
 						}
@@ -275,7 +287,6 @@ void* detect_spikes(void* simulator_) {
 
 // Handles events and returns
 // the event type
-// rotation has to be improved
 int GraphicsSimulator::handleEvents() {
 	SDL_PollEvent(&event);
 	
@@ -350,7 +361,7 @@ int GraphicsSimulator::handleEvents() {
 			break;
 		}
 		break;
-	case SDL_KEYUP:
+	case SDL_KEYUP: // Events for making each button pressing non continuous
 		switch(event.key.keysym.sym)
 		{
 		case SDLK_KP_MINUS:
@@ -398,6 +409,10 @@ int GraphicsSimulator::handleEvents() {
 
 
 
+// We decrement or increment in a way that allows
+// the user to do it faster. It actually calculates
+// the order of the current simulation_step
+// and adds or subtracts a value of this same order.
 
 void GraphicsSimulator::incrementSimulationStep() {
 	int tmp = simulation_step;
