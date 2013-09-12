@@ -176,7 +176,7 @@ def test ():
 # graphics module
 _kernel.setGraphicsParameters(hl_api, os.path.dirname(os.path.realpath(__file__)))
 
-# wrapper function around setGraphicsSimulator (since global Simulator has to be manually changed (no transitivity)
+# wrapper function around setGraphicsSimulator (since global Simulator has to be manually changed (no transitivity))
 def SetGraphicsSimulator(s):
     global Simulate, hl_api
     _kernel.setGraphicsSimulator(s)

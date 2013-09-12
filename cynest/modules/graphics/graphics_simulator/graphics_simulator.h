@@ -1,19 +1,15 @@
 #ifndef GRAPHICS_SIMULATOR_H
 #define GRAPHICS_SIMULATOR_H
 
-#include <iostream>
-#include <memory.h>
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include <vector>
-#include <GL/glu.h>
-#include <SDL/SDL.h>
 
-#include <pthread.h>
+#include "includes.h"
+#include "defines.h"
+
+#include <memory.h>
 
 #include "socket.h"
 #include "tools.h"
+#include "network.h"
 #include "window.h"
 
 #if defined (_WIN32)
@@ -22,9 +18,7 @@
 	#include <unistd.h>
 #endif
 
-#define INITIAL_SIMULATION_STEP 100
-#define RANDOM_POS_LOW -20.0
-#define RANDOM_POS_HIGH 20.0
+
 
 class GraphicsSimulator
 {

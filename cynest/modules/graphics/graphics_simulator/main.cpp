@@ -1,10 +1,10 @@
-#include "graphics_simulator.h"
-#include <cstdio>
+#include "includes.h"
+#include "defines.h"
 
-#define DEF_SEND_PORT 50001
-#define DEF_RCV_PORT 50002
-#define WIDTH 1024
-#define HEIGHT 680
+#include "graphics_simulator.h"
+
+
+
 
 
 int main(int argc, char *argv[]) {

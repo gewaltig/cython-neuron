@@ -1,6 +1,9 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 
+#include "includes.h"
+#include "defines.h"
+
 
 #if defined (_WIN32)
     #include <winsock.h>
@@ -11,9 +14,7 @@
     #include <sys/types.h>
 #endif
 
-#include <cstring>
-#include <cstdio>
-#include <cstdlib>
+
 
 
 class Socket {

@@ -1,18 +1,17 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#include <iostream>
-#include <cmath>
-#include <vector>
+
+#include "includes.h"
+#include "defines.h"
+
 #include <memory.h>
-#include <cstdio>
-#include <cstdlib>
+
 #include <algorithm>
 #include <sstream>
-#include <string>
 
 #include "tools.h"
-
+#include "network.h"
 
 #define EVENT_NOTHING 0
 #define EVENT_QUIT 1
@@ -22,8 +21,7 @@
 #define EVENT_PAUSE 5
 #define EVENT_RESUME 6
 
-#define LOW_BOUND_SIM_STEP 1
-#define HIGH_BOUND_SIM_STEP 10000
+
 
 class Window
 {
