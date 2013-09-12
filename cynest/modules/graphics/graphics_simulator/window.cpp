@@ -169,13 +169,15 @@ void Window::draw_connections() {
 	glPushMatrix();
 
 	glBegin(GL_LINES);
-	for(int i=0; i < *nb_neurons; i++) {
-		if(neurons + i != 0) {
-			if(neurons[i].getAlpha() > ALPHA_THRESHOLD) { // activity
-				glColor4f(1.0,1.0,1.0, neurons[i].getAlpha());
-			} else { // inactivity
-				glColor4f(1.0,1.0,1.0, ALPHA_THRESHOLD);
+	for(int i=0; i < *nb_neurons; i++) {		
+		if(neurons[i].getId() != 0) {
+			Vector3d color = Vector3d(1.0, 1.0, 1.0);
+			
+			if(neurons[i].isSelected()) {
+				color.set(1.0, 0.0, 0.0);
 			}
+
+			glColor4f(color.x(), color.y(), color.z(), neurons[i].getAlpha());
 			
 			Vector3d src = neurons[i].getPosition();
 			vector<int>* connections = neurons[i].getConnections();
@@ -207,9 +209,7 @@ void Window::draw() {
 	glBegin(GL_POINTS);
 
 	for(int i=0; i < *nb_neurons; i++) {
-		if(neurons + i != 0)  {
-			neurons[i].draw();
-		}
+		neurons[i].draw();
 	}
 	glEnd();
 	glPopMatrix();

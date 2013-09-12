@@ -60,6 +60,13 @@ Neuron::Neuron(int id_, double x_, double y_, double z_):
 		alpha = ALPHA_THRESHOLD;
 		pthread_mutex_init (&mutex , NULL );
 		spike_time = 0.0;
+		
+		double n = generateRandomNumber(1, 100);
+		if(n >= 10.0 && n < 11.0) {
+			selected = true;
+		} else {
+			selected = false;
+		}
 }
 
 Neuron::Neuron() {
@@ -87,10 +94,16 @@ double Neuron::getAlpha() {
 	return alpha;
 }
 
-void Neuron::draw() {	
-	glColor4f(1.0,1.0,1.0, alpha );
+void Neuron::draw() {
+	if(id != 0) {
+		if(selected) {
+			glColor4f(1.0,0.0,0.0, alpha );
+		} else {
+			glColor4f(1.0,1.0,1.0, alpha );
+		}
 
-	glVertex3f(position.x(), position.y(), position.z());
+		glVertex3f(position.x(), position.y(), position.z());
+	}
 }
 
 
@@ -102,34 +115,47 @@ void Neuron::fire(double time_) {
 }
 
 void Neuron::update(double time_) {
-	double item = -1.0;
-	pthread_mutex_lock (&mutex);
-	
-	alpha = -(time_ - spike_time) + 1.0;
-	
-	if(alpha < ALPHA_THRESHOLD) {
-		alpha = ALPHA_THRESHOLD;
-	}
-
-	while(spikes_buffer.size() > 0 && item < time_) {	
-		item = spikes_buffer.at(0);
+	if(id != 0) {
+		double item = -1.0;
+		pthread_mutex_lock (&mutex);
 		
-		spikes_buffer.erase (spikes_buffer.begin());
-	}
-	
-	if(item != -1.0) {
-		if(item >= time_ && item < time_ + SIMULATION_DELTA) {
-			spike_time = item;
-			alpha = 1.0; // fire
-		}	
-		else { // we put it inside again
-			spikes_buffer.insert (spikes_buffer.begin(), item);
+		alpha = -(time_ - spike_time) + 1.0;
+		
+		if(alpha < ALPHA_THRESHOLD) {
+			alpha = ALPHA_THRESHOLD;
 		}
+
+		while(spikes_buffer.size() > 0 && item < time_) {	
+			item = spikes_buffer.at(0);
+			
+			spikes_buffer.erase (spikes_buffer.begin());
+		}
+		
+		if(item != -1.0) {
+			if(item >= time_ && item < time_ + SIMULATION_DELTA) {
+				spike_time = item;
+				alpha = 1.0; // fire
+			}	
+			else { // we put it inside again
+				spikes_buffer.insert (spikes_buffer.begin(), item);
+			}
+		}
+		pthread_mutex_unlock (&mutex);
 	}
-	pthread_mutex_unlock (&mutex);
 }
 
 
+void Neuron::select() {
+	selected = true;
+}
+
+void Neuron::unselect() {
+	selected = false;
+}
+
+bool Neuron::isSelected() {
+	return selected;
+}
 
 // camera
 

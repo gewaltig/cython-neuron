@@ -66,6 +66,7 @@ private :
 	vector<double> spikes_buffer;
 	double spike_time;
 	pthread_mutex_t mutex;
+	bool selected;
 	
 	vector<int> connections;
 	
@@ -86,6 +87,10 @@ public:
 	void update(double time_);
 	
 	void draw();
+	
+	void select();
+	void unselect();
+	bool isSelected();
 };
 
 

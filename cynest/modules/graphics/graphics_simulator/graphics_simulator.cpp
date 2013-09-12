@@ -45,13 +45,15 @@ void GraphicsSimulator::receive_positions() {
 			if(parseList(buffer, pos)) {	
 				if((int)pos[0] > max) {
 					max = (int)pos[0];
-				}			
+				}
+
 				neurons_.push_back(Neuron((int)pos[0], pos[1], pos[2], pos[3]));
 			}
 			else {
 				if((int)pos[0] > max) {
 					max = (int)pos[0];
 				}
+
 				neurons_.push_back(Neuron((int)pos[0], generateRandomNumber(RANDOM_POS_LOW, RANDOM_POS_HIGH), generateRandomNumber(RANDOM_POS_LOW, RANDOM_POS_HIGH), generateRandomNumber(RANDOM_POS_LOW, RANDOM_POS_HIGH)));
 			}
 			sender.sendMsg("ok", 2);
@@ -60,7 +62,7 @@ void GraphicsSimulator::receive_positions() {
 
 	// array creation
 	neurons = new Neuron[max + 1];
-	memset(neurons, 0, (max+1)*sizeof(Neuron));
+
 	for(int i = 0; i < neurons_.size(); i++) {
 		neurons[neurons_.at(i).getId()] = neurons_.at(i);
 	}
@@ -186,9 +188,7 @@ void GraphicsSimulator::start() {
 		
 		    if(curr_time <= sim_time) {
 		    	for(int i=0; i < nb_neurons; i++) {
-					if(neurons + i != 0)  {
-						neurons[i].update(curr_time);
-					}
+					neurons[i].update(curr_time);
 				}
 		    }
 		}
