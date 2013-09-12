@@ -17,4 +17,11 @@
 #include <SDL/SDL.h>
 #include "SDL_ttf.h"
 
+// OS functions
+#if defined (_WIN32)
+	#include <dos.h>
+#else
+	#include <unistd.h>
+#endif
+
 #endif

@@ -8,14 +8,9 @@
 
 #include "socket.h"
 #include "tools.h"
+
 #include "network.h"
 #include "window.h"
-
-#if defined (_WIN32)
-	#include <dos.h>
-#else
-	#include <unistd.h>
-#endif
 
 
 
