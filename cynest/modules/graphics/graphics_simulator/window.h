@@ -5,10 +5,6 @@
 #include "includes.h"
 #include "defines.h"
 
-#include <memory.h>
-
-#include <algorithm>
-#include <sstream>
 
 #include "tools.h"
 #include "network.h"

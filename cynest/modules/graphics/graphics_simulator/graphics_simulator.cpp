@@ -30,6 +30,7 @@ void GraphicsSimulator::init_connection(int port_send, int port_receive) {
 
 
 void GraphicsSimulator::receive_positions() {
+	vector<Neuron> neurons_;
 	char buffer[50];
 	double pos[4];
 	int max = 0;
@@ -127,13 +128,6 @@ void GraphicsSimulator::receive_connections() {
 
 
 
-
-// window management
-
-
-void GraphicsSimulator::init_window(int window_width, int window_height) {
-	window.init(window_width, window_height, neurons, &nb_neurons, &simulation_step, &sim_time);
-}
 
 
 
@@ -253,6 +247,13 @@ void* detect_spikes(void* simulator_) {
 
 
 
+// window management
+
+
+void GraphicsSimulator::init_window(int window_width, int window_height) {
+	window.init(window_width, window_height, neurons, &nb_neurons, &simulation_step, &sim_time);
+}
+
 
 
 // init and end
@@ -261,7 +262,6 @@ void GraphicsSimulator::initialize(int port_send, int port_receive, int window_w
 	init_connection(port_send, port_receive);
 	init_window(window_width, window_height);
 	simulation_step = INITIAL_SIMULATION_STEP;
-	mutex = false;
 }
 
 void GraphicsSimulator::finalize() {

@@ -5,7 +5,6 @@
 #include "includes.h"
 #include "defines.h"
 
-#include <memory.h>
 
 #include "socket.h"
 #include "tools.h"
@@ -23,26 +22,28 @@
 class GraphicsSimulator
 {
 private:
+	Window window;
+	
+	int nb_neurons;
+	
+	double sim_time;
+	int simulation_step;
+	int init_time;
+
+
 	void init_connection(int port_send, int port_receive);
 	void init_window(int window_width, int window_height);
 	
 	void receive_positions();
 	void receive_connections();
 
-	Window window;
-
 
 public:
 	Socket listener;
 	Socket sender;
-	vector<Neuron> neurons_;
 	Neuron* neurons;
-	int nb_neurons;
-	double sim_time;
 	double curr_time;
-	bool mutex;
-	int simulation_step;
-	int init_time;
+
 	
 	void initialize(int port_send, int port_receive, int window_width, int window_height);
 	
