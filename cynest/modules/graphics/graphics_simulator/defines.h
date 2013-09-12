@@ -36,4 +36,13 @@
 #define LIST_ELEMENT_SIZE 20
 
 
+// Event definitions
+#define EVENT_NOTHING 0
+#define EVENT_QUIT 1
+#define EVENT_STOP 2
+#define EVENT_RESUME 3
+#define EVENT_STEP_CHANGED 4
+#define EVENT_PAUSE 5
+#define EVENT_RESUME 6
+
 #endif

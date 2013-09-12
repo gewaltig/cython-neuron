@@ -22,25 +22,42 @@
 class GraphicsSimulator
 {
 private:
+	SDL_Event event;
 	Window window;
 	
 	int nb_neurons;
 	
+	// Simulation parameters
 	double sim_time;
 	int simulation_step;
 	int init_time;
+	bool stopped;
+
+	// keyboard handling
+	bool plus_pressed;
+	bool minus_pressed;
+	bool p_pressed;
+	
+	Camera camera;
 
 
 	void init_connection(int port_send, int port_receive);
-	void init_window(int window_width, int window_height);
 	
 	void receive_positions();
 	void receive_connections();
 
 
+	void incrementSimulationStep();
+	void decrementSimulationStep();
+
+	int handleEvents();
+
+
 public:
+	// Connection parameters
 	Socket listener;
 	Socket sender;
+	// Network and simulation parameters
 	Neuron* neurons;
 	double curr_time;
 

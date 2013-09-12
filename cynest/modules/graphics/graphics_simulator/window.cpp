@@ -9,10 +9,7 @@ void Window::init(int width_, int height_, Neuron* neurons_, int* nb_neurons_, i
 	height = height_;
 	simulation_step = sim_step;
 	simulation_total_time = sim_time_;
-	plus_pressed = false;
-	minus_pressed = false;
-	p_pressed = false;
-	stopped = false;
+
 
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 	TTF_Init();
@@ -35,7 +32,6 @@ void Window::init(int width_, int height_, Neuron* neurons_, int* nb_neurons_, i
 }
 
 void Window::init_display() {
-	camera.init();
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
  
@@ -53,6 +49,7 @@ void Window::resize(int width_, int height_) {
 
 
 
+
 void Window::destroy() {
 	TTF_Quit();
 	SDL_Quit();
@@ -60,99 +57,9 @@ void Window::destroy() {
 
 
 
-// Handles events and returns
-// the event type
-// rotation has to be improved
-int Window::handleEvents() {
-	SDL_PollEvent(&event);
-	
-	switch(event.type)
-	{
-	case SDL_QUIT:
-		return EVENT_QUIT;
-		break;
-	case SDL_KEYDOWN:
-		switch(event.key.keysym.sym)
-		{
-		case SDLK_UP:
-			camera.up();
-			break;
-		case SDLK_DOWN:
-			camera.down();
-			break;
-		case SDLK_LEFT:
-			camera.left();
-			break;
-		case SDLK_RIGHT:
-			camera.right();
-			break;
-		case SDLK_KP_MINUS:
-			if(!minus_pressed) {
-				minus_pressed = true;
-				
-				if(!stopped) {
-					incrementSimulationStep(simulation_step);
-					return EVENT_STEP_CHANGED;
-				}
-			}
-			break;
-		case SDLK_KP_PLUS:
-			if(!plus_pressed) {
-				plus_pressed = true;
-				
-				if(!stopped) {
-					decrementSimulationStep(simulation_step);
-					return EVENT_STEP_CHANGED;
-				}
-			}
-			break;	
-		case SDLK_p:
-			if(!p_pressed) {
-				p_pressed = true;
-				stopped = !stopped;
-				if(!stopped) {
-					return EVENT_RESUME;
-				} else {
-					return EVENT_STOP;
-				}
-			}
-			break;
-		}
-		break;
-	case SDL_KEYUP:
-		switch(event.key.keysym.sym)
-		{
-		case SDLK_KP_MINUS:
-			if(minus_pressed) {
-				minus_pressed = false;
-			}
-			break;
-		case SDLK_KP_PLUS:
-			if(plus_pressed) {
-				plus_pressed = false;
-			}
-			break;
-		case SDLK_p:
-			if(p_pressed) {
-				p_pressed = false;
-			}
-			break;
-		}
-		break;
-	case SDL_MOUSEBUTTONDOWN:
-		switch(event.button.button) {
-		case SDL_BUTTON_WHEELUP:
-			camera.forward();
-			break;
-		case SDL_BUTTON_WHEELDOWN:
-			camera.backward();
-			break;
-		}
-		break;
-	}
-	
-	return EVENT_NOTHING;
-}
+
+
+
 
 void Window::update(double time_) {
 	double percentage = 100.0;
@@ -195,14 +102,6 @@ void Window::draw_connections() {
 
 
 void Window::draw() {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-         
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	// camera coordinates
-	camera.update();
-	
-	
 	// draw points (these should be drawn nicer using shaders)
 	glPushMatrix();
 	glPointSize(3.0);
@@ -214,55 +113,10 @@ void Window::draw() {
 	glEnd();
 	glPopMatrix();
 	
+	// draw connections
 	draw_connections();
 	
 	
 	glFlush();
 	SDL_GL_SwapBuffers();
-}
-
-
-
-
-
-// others
-
-
-void incrementSimulationStep(int* v) {
-	int tmp = *v;
-	int order = 0;
-	
-	while(tmp >= 1) {
-		tmp /= 10;
-		order++;
-	}
-	int inc = pow(10, order - 1);
-	
-	*v += inc;
-	if(*v > HIGH_BOUND_SIM_STEP ) {
-		*v = HIGH_BOUND_SIM_STEP;
-	}
-}
-
-
-
-void decrementSimulationStep(int* v) {
-	int tmp = *v;
-	int order = 0;
-	
-	while(tmp >= 1) {
-		tmp /= 10;
-		order++;
-	}
-	int inc = pow(10, order - 1);
-	
-	if(*v - inc > 0) {
-		*v -= inc;
-	} else {
-		*v -= inc / 10;
-	}
-	
-	if(*v < LOW_BOUND_SIM_STEP ) {
-		*v = LOW_BOUND_SIM_STEP;
-	}
 }

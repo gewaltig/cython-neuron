@@ -2,6 +2,30 @@
 
 using namespace std;
 
+
+// init and end
+
+void GraphicsSimulator::initialize(int port_send, int port_receive, int window_width, int window_height) {
+	init_connection(port_send, port_receive);
+	window.init(window_width, window_height, neurons, &nb_neurons, &simulation_step, &sim_time);
+	camera.init();
+	
+	simulation_step = INITIAL_SIMULATION_STEP;
+	plus_pressed = false;
+	minus_pressed = false;
+	p_pressed = false;
+}
+
+void GraphicsSimulator::finalize() {
+	delete[] neurons;
+	listener.destroy();
+	sender.destroy();
+	window.destroy();
+}
+
+
+
+
 // connection management
 
 void GraphicsSimulator::init_connection(int port_send, int port_receive) {
@@ -134,26 +158,22 @@ void GraphicsSimulator::receive_connections() {
 
 
 
-
-
-
-
-
 // simulation management
 void GraphicsSimulator::start() {
 	pthread_t spike_detector;
-	pthread_create(&spike_detector, NULL, detect_spikes, (void*)this);
 	
-	bool keepGoing = true;
 	long pausedTime = 0;
 	long start_paused_time = 0;
-	sender.sendMsg("simulate", 8);
 	int eventType = EVENT_NOTHING;
+	stopped = false;
+	
+	pthread_create(&spike_detector, NULL, detect_spikes, (void*)this);
+	sender.sendMsg("simulate", 8);
 	init_time = SDL_GetTicks();
 
 	do
 	{
-		eventType = window.handleEvents();
+		eventType = handleEvents();
 		
 		switch(eventType)
 		{
@@ -166,17 +186,16 @@ void GraphicsSimulator::start() {
 		case EVENT_STOP:
 			start_paused_time = SDL_GetTicks();
 			sender.sendMsg("stop", 4);
-			keepGoing = false;
+			stopped = true;
 			break;
 		case EVENT_RESUME:
 			pausedTime += SDL_GetTicks() - start_paused_time;
 			sender.sendMsg("resume", 6);
-			keepGoing = true;
+			stopped = false;
 			break;
 		}
-		window.update(curr_time);
 		
-		if (keepGoing)
+		if (!stopped)
 		{
 		    curr_time = ((SDL_GetTicks() - pausedTime) - init_time) / simulation_step;		
 		
@@ -186,6 +205,9 @@ void GraphicsSimulator::start() {
 				}
 		    }
 		}
+		
+		window.update(curr_time);
+		camera.update();
 		window.draw();
 		
 		SDL_Delay(SIMULATION_DELTA);
@@ -246,28 +268,145 @@ void* detect_spikes(void* simulator_) {
 
 
 
+// events management
 
-// window management
 
-
-void GraphicsSimulator::init_window(int window_width, int window_height) {
-	window.init(window_width, window_height, neurons, &nb_neurons, &simulation_step, &sim_time);
+// Handles events and returns
+// the event type
+// rotation has to be improved
+int GraphicsSimulator::handleEvents() {
+	SDL_PollEvent(&event);
+	
+	switch(event.type)
+	{
+	case SDL_QUIT:
+		return EVENT_QUIT;
+		break;
+	case SDL_KEYDOWN:
+		switch(event.key.keysym.sym)
+		{
+		case SDLK_UP:
+			camera.up();
+			break;
+		case SDLK_DOWN:
+			camera.down();
+			break;
+		case SDLK_LEFT:
+			camera.left();
+			break;
+		case SDLK_RIGHT:
+			camera.right();
+			break;
+		case SDLK_KP_MINUS:
+			if(!minus_pressed) {
+				minus_pressed = true;
+				
+				if(!stopped) {
+					incrementSimulationStep();
+					return EVENT_STEP_CHANGED;
+				}
+			}
+			break;
+		case SDLK_KP_PLUS:
+			if(!plus_pressed) {
+				plus_pressed = true;
+				
+				if(!stopped) {
+					decrementSimulationStep();
+					return EVENT_STEP_CHANGED;
+				}
+			}
+			break;	
+		case SDLK_p:
+			if(!p_pressed) {
+				p_pressed = true;
+				stopped = !stopped;
+				if(!stopped) {
+					return EVENT_RESUME;
+				} else {
+					return EVENT_STOP;
+				}
+			}
+			break;
+		}
+		break;
+	case SDL_KEYUP:
+		switch(event.key.keysym.sym)
+		{
+		case SDLK_KP_MINUS:
+			if(minus_pressed) {
+				minus_pressed = false;
+			}
+			break;
+		case SDLK_KP_PLUS:
+			if(plus_pressed) {
+				plus_pressed = false;
+			}
+			break;
+		case SDLK_p:
+			if(p_pressed) {
+				p_pressed = false;
+			}
+			break;
+		}
+		break;
+	case SDL_MOUSEBUTTONDOWN:
+		switch(event.button.button) {
+		case SDL_BUTTON_WHEELUP:
+			camera.forward();
+			break;
+		case SDL_BUTTON_WHEELDOWN:
+			camera.backward();
+			break;
+		}
+		break;
+	}
+	
+	return EVENT_NOTHING;
 }
 
 
 
-// init and end
 
-void GraphicsSimulator::initialize(int port_send, int port_receive, int window_width, int window_height) {
-	init_connection(port_send, port_receive);
-	init_window(window_width, window_height);
-	simulation_step = INITIAL_SIMULATION_STEP;
+void GraphicsSimulator::incrementSimulationStep() {
+	int tmp = simulation_step;
+	int order = 0;
+	
+	while(tmp >= 1) {
+		tmp /= 10;
+		order++;
+	}
+	int inc = pow(10, order - 1);
+	
+	simulation_step += inc;
+	if(simulation_step > HIGH_BOUND_SIM_STEP ) {
+		simulation_step = HIGH_BOUND_SIM_STEP;
+	}
 }
 
-void GraphicsSimulator::finalize() {
-	delete[] neurons;
-	listener.destroy();
-	sender.destroy();
-	window.destroy();
+
+
+void GraphicsSimulator::decrementSimulationStep() {
+	int tmp = simulation_step;
+	int order = 0;
+	
+	while(tmp >= 1) {
+		tmp /= 10;
+		order++;
+	}
+	int inc = pow(10, order - 1);
+	
+	if(simulation_step - inc > 0) {
+		simulation_step -= inc;
+	} else {
+		simulation_step -= inc / 10;
+	}
+	
+	if(simulation_step < LOW_BOUND_SIM_STEP ) {
+		simulation_step = LOW_BOUND_SIM_STEP;
+	}
 }
+
+
+
 
