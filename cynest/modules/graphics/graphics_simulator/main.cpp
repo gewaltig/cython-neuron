@@ -1,5 +1,4 @@
-#include "includes.h"
-#include "defines.h"
+#include "headers.h"
 
 #include "graphics_simulator.h"
 
