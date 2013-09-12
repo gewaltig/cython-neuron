@@ -2,8 +2,7 @@
 #define NETWORK_H
 
 
-#include "includes.h"
-#include "defines.h"
+#include "headers.h"
 
 #include "tools.h"
 

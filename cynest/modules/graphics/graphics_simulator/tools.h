@@ -2,8 +2,7 @@
 #define TOOLS_H
 
 
-#include "includes.h"
-#include "defines.h"
+#include "headers.h"
 
 
 using namespace std;

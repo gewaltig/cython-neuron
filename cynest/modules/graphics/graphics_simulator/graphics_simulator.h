@@ -2,8 +2,7 @@
 #define GRAPHICS_SIMULATOR_H
 
 
-#include "includes.h"
-#include "defines.h"
+#include "headers.h"
 
 
 #include "socket.h"
