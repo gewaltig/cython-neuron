@@ -50,12 +50,16 @@ class Camera
 private:
 	double theta;
 	double phi;
-	double dist;
 	
+	int mode;
+	
+	Vector3d lookAtVector;
 	Vector3d pos;
 public:
 	void init();
 	void update();
+	
+	void setMode(int mode_);
 	
 	void up();
 	void down();

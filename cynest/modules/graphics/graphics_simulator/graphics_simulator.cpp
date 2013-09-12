@@ -14,6 +14,8 @@ void GraphicsSimulator::initialize(int port_send, int port_receive, int window_w
 	plus_pressed = false;
 	minus_pressed = false;
 	p_pressed = false;
+	k1_pressed = false;
+	k2_pressed = false;
 }
 
 void GraphicsSimulator::finalize() {
@@ -328,6 +330,24 @@ int GraphicsSimulator::handleEvents() {
 				}
 			}
 			break;
+		case SDLK_w:
+			camera.forward();
+			break;
+		case SDLK_s:
+			camera.backward();
+			break;
+		case SDLK_1:
+			if(!k1_pressed) {
+				k1_pressed = true;
+				camera.setMode(MODE_CENTERED);
+			}
+			break;
+		case SDLK_2:
+			if(!k2_pressed) {
+				k2_pressed = true;
+				camera.setMode(MODE_FREE);
+			}
+			break;
 		}
 		break;
 	case SDL_KEYUP:
@@ -348,10 +368,21 @@ int GraphicsSimulator::handleEvents() {
 				p_pressed = false;
 			}
 			break;
+		case SDLK_1:
+			if(k1_pressed) {
+				k1_pressed = false;
+			}
+			break;
+		case SDLK_2:
+			if(k2_pressed) {
+				k2_pressed = false;
+			}
+			break;
 		}
 		break;
 	case SDL_MOUSEBUTTONDOWN:
-		switch(event.button.button) {
+		switch(event.button.button) 
+		{
 		case SDL_BUTTON_WHEELUP:
 			camera.forward();
 			break;

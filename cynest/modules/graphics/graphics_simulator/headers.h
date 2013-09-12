@@ -50,6 +50,8 @@
 #define ANGLE_DIFF 0.05
 #define DIST_DIFF 1.0
 #define PI 3.15
+#define MODE_FREE 1
+#define MODE_CENTERED 2
 
 
 // Simulation definitions
@@ -73,8 +75,8 @@
 #define EVENT_QUIT 1
 #define EVENT_STOP 2
 #define EVENT_RESUME 3
-#define EVENT_STEP_CHANGED 4
-#define EVENT_PAUSE 5
-#define EVENT_RESUME 6
+#define EVENT_PAUSE 4
+#define EVENT_STEP_CHANGED 5
+
 
 #endif

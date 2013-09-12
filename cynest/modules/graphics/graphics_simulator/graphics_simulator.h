@@ -31,6 +31,8 @@ private:
 	bool plus_pressed;
 	bool minus_pressed;
 	bool p_pressed;
+	bool k1_pressed;
+	bool k2_pressed;
 	
 	Camera camera;
 

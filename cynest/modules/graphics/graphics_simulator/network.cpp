@@ -122,7 +122,9 @@ void Camera::init() {
 	// display parameters initialization
 	theta   = 0.0;
 	phi     = 0.0;
-	dist = 60.0;
+	pos.set(0.0, 60.0, 0.0);
+	lookAtVector.set(0.0, 0.0, 0.0);
+	mode = MODE_CENTERED;
 }
 
 void Camera::update() {
@@ -130,35 +132,108 @@ void Camera::update() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
-	pos.set(dist * cos(theta) * cos(phi),   dist * sin(theta) * cos(phi),   dist * sin(phi));
-	gluLookAt(pos.x(), pos.y(), pos.z(),  0.0, 0.0, 0.0,  0.0, 0.0, 1.0);
+	switch(mode) {
+	case MODE_FREE:
+		lookAtVector = pos.add(Vector3d(cos(theta) * cos(phi),   sin(theta) * cos(phi),   sin(phi)));
+		break;
+	case MODE_CENTERED:
+		pos.set(pos.norm() * cos(theta) * cos(phi),   pos.norm() * sin(theta) * cos(phi),   pos.norm() * sin(phi));
+		break;
+	}
+
+	gluLookAt(pos.x(), pos.y(), pos.z(),  lookAtVector.x(), lookAtVector.y(), lookAtVector.z(),  0.0, 0.0, 1.0);
 }
 
+void Camera::setMode(int mode_) {
+	Vector3d dir = lookAtVector.sub(pos).normalize();
+	
+	switch(mode_) {
+	case MODE_FREE:
+		phi = asin(dir.z() / dir.norm());
+		theta = atan(dir.y() / dir.x());
+		
+		if(dir.x() < 0) {
+			theta = fmod(theta + M_PI, 2*M_PI);
+		}
+		
+		break;
+	case MODE_CENTERED:
+		phi = asin(pos.z() / pos.norm());
+		theta = atan(pos.y() / pos.x());
+		
+		if(pos.x() < 0) {
+			theta = fmod(theta + M_PI, 2*M_PI);
+		}
+		
+		lookAtVector.set(0.0, 0.0, 0.0);
+		break;
+	}
+	
+	mode = mode_;
+}
 
 void Camera::up() {
-	phi = phi + ANGLE_DIFF;
+	if(phi < (M_PI / 2) - ANGLE_DIFF) {
+		phi = phi + ANGLE_DIFF;
+	}
 }
 
 void Camera::down() {
-	phi = phi - ANGLE_DIFF;
+	if(phi > -(M_PI / 2) + ANGLE_DIFF) {
+		phi = phi - ANGLE_DIFF;
+	}
 }
 
 void Camera::right() {
-	theta = theta + ANGLE_DIFF;
+	switch(mode) {
+	case MODE_FREE:
+		theta = fmod(theta - ANGLE_DIFF, 2*M_PI);
+		break;
+	case MODE_CENTERED:
+		theta = fmod(theta + ANGLE_DIFF, 2*M_PI);
+		break;
+	}
 }
 
 void Camera::left() {
-	theta = theta - ANGLE_DIFF;
+	switch(mode) {
+	case MODE_FREE:
+		theta = fmod(theta + ANGLE_DIFF, 2*M_PI);
+		break;
+	case MODE_CENTERED:
+		theta = fmod(theta - ANGLE_DIFF, 2*M_PI);
+		break;
+	}
 }
 
 void Camera::forward() {
-	if (dist - DIST_DIFF >= 0 ) {
-		dist -= DIST_DIFF;
+	Vector3d dir = lookAtVector.sub(pos).normalize();
+	
+	switch(mode) {
+	case MODE_FREE:
+		pos = pos.add(dir.mul(DIST_DIFF));
+		lookAtVector = lookAtVector.add(dir.mul(DIST_DIFF));
+		break;
+	case MODE_CENTERED:
+		if (pos.norm() > DIST_DIFF ) {
+			pos = pos.add(dir.mul(DIST_DIFF));
+		}
+		break;
 	}
 }
 
 void Camera::backward() {
-	dist += DIST_DIFF;
+	Vector3d dir = lookAtVector.sub(pos).normalize();
+	
+	switch(mode) {
+	case MODE_FREE:
+		pos = pos.sub(dir.mul(DIST_DIFF));
+		lookAtVector = lookAtVector.sub(dir.mul(DIST_DIFF));
+		break;
+	case MODE_CENTERED:
+		pos = pos.sub(dir.mul(DIST_DIFF));
+		break;
+	}
 }
 
 

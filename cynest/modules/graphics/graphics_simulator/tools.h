@@ -25,6 +25,8 @@ public:
 	double norm();
 	Vector3d add(Vector3d v);
 	Vector3d sub(Vector3d v);
+	Vector3d mul(double d);
+	Vector3d div(double d);
 	Vector3d normalize();
 	double x();
 	double y();

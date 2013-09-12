@@ -31,6 +31,14 @@ Vector3d Vector3d::sub(Vector3d v) {
 	return Vector3d(x_ - v.x_, y_ - v.y_, z_ - v.z_);
 }
 
+Vector3d Vector3d::mul(double d) {
+	return Vector3d(x_ * d, y_ * d, z_ * d);
+}
+
+Vector3d Vector3d::div(double d) {
+	return Vector3d(x_ / d, y_ / d, z_ / d);
+}
+
 Vector3d Vector3d::normalize() {
 	double n = norm();
 
