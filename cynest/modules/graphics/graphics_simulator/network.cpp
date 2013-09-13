@@ -11,6 +11,7 @@ Neuron::Neuron(int id_, double x_, double y_, double z_):
 		pthread_mutex_init (&mutex , NULL );
 		spike_time = 0.0;
 		
+		// test feature: it randomly selects a neuron
 		double n = generateRandomNumber(1, 100);
 		if(n >= 10.0 && n < 11.0) {
 			selected = true;
@@ -116,10 +117,33 @@ bool Neuron::isSelected() {
 
 
 
+Vector3d Neuron::get_2D_pos_from_3D(Vector3d pos_, double w, double h) {
+	GLdouble modelview[16];
+	GLdouble projection[16];
+	GLint viewport[16];
+	GLdouble x_;
+	GLdouble y_;
+	GLdouble z_;
+	
+    glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+    glGetDoublev(GL_PROJECTION_MATRIX, projection);
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    
+    gluProject(pos_.x(),pos_.y(),pos_.z(), modelview, projection, viewport, &x_, &y_, &z_);
+    
+    return Vector3d(-1.0 + 2.0*x_/w, -1.0 + 2.0*y_/h, z_);
+}
 
 
-
-
+bool Neuron::isMouseFocused(double x, double y, double zone_width, double zone_height, double window_width, double window_height) {
+	Vector3d pos2d = get_2D_pos_from_3D(position, window_width, window_height);
+	
+	if(x >= pos2d.x() && x <= pos2d.x() + zone_width && y >= pos2d.y() && y <= pos2d.y() + zone_height) {
+		return true;
+	}
+	
+	return false;
+}
 
 
 
@@ -160,7 +184,7 @@ void Camera::setMode(int mode_) {
 		theta = atan(dir.y() / dir.x());
 		
 		// we have to take care of the case in which x<0
-		// and y<0, which give theta > 0 (wrong)
+		// and y<0, which gives theta > 0 (wrong)
 		if(dir.x() < 0) {
 			theta = fmod(theta + M_PI, 2*M_PI);
 		}

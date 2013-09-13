@@ -112,7 +112,7 @@ void Window::draw_connections() {
 void Window::draw() {
 	// draw points (these should be drawn nicer using shaders)
 	glPushMatrix();
-	glPointSize(3.0);
+	glPointSize(POINT_SIZE);
 	glBegin(GL_POINTS);
 
 	for(int i=0; i < *nb_neurons; i++) {

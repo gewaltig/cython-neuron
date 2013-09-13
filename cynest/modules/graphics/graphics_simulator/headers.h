@@ -44,6 +44,7 @@
 // Neuron definitions
 #define ALPHA_THRESHOLD 0.2
 #define ALPHA_COEFF 0.5
+#define POINT_SIZE 3.0
 
 
 // Camera definitions

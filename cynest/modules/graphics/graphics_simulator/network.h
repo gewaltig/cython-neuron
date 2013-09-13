@@ -13,13 +13,14 @@ private :
 	int id;
 	Vector3d position;
 	double alpha;
-	Vector3d pos_2d;
 	vector<double> spikes_buffer;
 	double spike_time;
 	pthread_mutex_t mutex;
 	bool selected;
 	
 	vector<int> connections;
+	
+	Vector3d get_2D_pos_from_3D(Vector3d pos_, double w, double h);
 	
 public:
 	Neuron();
@@ -42,6 +43,8 @@ public:
 	void select();
 	void unselect();
 	bool isSelected();
+	
+	bool isMouseFocused(double x, double y, double zone_width, double zone_height, double window_width, double window_height);
 };
 
 
