@@ -57,7 +57,7 @@ def graphics_simulator_socket_speak(port, host = 'localhost'):
 
 def graphics_simulator_receiveKeyword(keys, length = -1):
     if length == -1:
-        length = len(keys[0])
+        length = len(keys[0].encode())
         
     start_time = time.time()
     while True:
@@ -67,7 +67,7 @@ def graphics_simulator_receiveKeyword(keys, length = -1):
         try:
             res = graphics_simulator_listener.recv(length)
             for i, k in enumerate(keys):
-                if res == k:
+                if res == k.encode():
                     return i
         except:
             pass
@@ -75,17 +75,23 @@ def graphics_simulator_receiveKeyword(keys, length = -1):
         
 def graphics_simulator_receiveKeywordNonBlocking(keys, length = -1):
     if length == -1:
-        length = len(keys[0])
+        length = len(keys[0].encode())
         
     try:
         res = graphics_simulator_listener.recv(length)
         for i, k in enumerate(keys):
-            if res == k:
+            if res == k.encode():
                 return i
     except:
         pass
     
     return -1
+
+
+def graphics_simulator_send(msg):
+    graphics_simulator_sender.send(msg.encode())
+
+
 
 
 # Creates a new spike detector (if not already created) and 
@@ -127,10 +133,10 @@ def graphics_simulator_sendPositions():
         else:
             msg = "[" + str(i) + ",#]"
             
-        graphics_simulator_sender.send(msg)
+        graphics_simulator_send(msg)
         graphics_simulator_receiveKeyword(["ok"])
         
-    graphics_simulator_sender.send("end")
+    graphics_simulator_send("end")
     graphics_simulator_receiveKeyword(["ok"])
     
     
@@ -139,12 +145,12 @@ def graphics_simulator_sendConnections():
         listMsg = list(  set([x[1] for x in nest_engine.cynest.GetConnections([i])]) - set(graphics_simulator_spike_detector)  ) # [id1,id2,id3...], no multiple values
         msg = str(listMsg)
 
-        graphics_simulator_sender.send("[" + str(i) + "," + str(len(listMsg)) + "," + str(len(msg)) + "]") # [id, nb connections, length next msg]
+        graphics_simulator_send("[" + str(i) + "," + str(len(listMsg)) + "," + str(len(msg)) + "]") # [id, nb connections, length next msg]
         graphics_simulator_receiveKeyword(["param_ok"])
-        graphics_simulator_sender.send(msg)
+        graphics_simulator_send(msg)
         graphics_simulator_receiveKeyword(["msg_ok"])
         
-    graphics_simulator_sender.send("end")
+    graphics_simulator_send("end")
     graphics_simulator_receiveKeyword(["ok"])
 
 
@@ -167,7 +173,7 @@ def graphics_simulator_init():
     graphics_simulator_sender = graphics_simulator_socket_speak(port + 1)
     
     graphics_simulator_receiveKeyword(["ready"])
-    graphics_simulator_sender.send("[" + str(graphics_simulator_sim_time_total) + "]")
+    graphics_simulator_send("[" + str(graphics_simulator_sim_time_total) + "]")
     graphics_simulator_receiveKeyword(["ok"])
     
     graphics_simulator_initOperations()
@@ -204,7 +210,7 @@ def graphics_simulator_simulate(time):
             ev = nest_engine.cynest.GetStatus(graphics_simulator_spike_detector, "events") # {[times], [senders]}
             l = list(ev[0]["senders"]) + list(ev[0]["times"])
             msg = str(l)
-            graphics_simulator_sender.send("[" + str(len(l)) + "," + str(len(msg)) + "]" ) # [nb_spikes + nb_times, length msg]
+            graphics_simulator_send("[" + str(len(l)) + "," + str(len(msg)) + "]" ) # [nb_spikes + nb_times, length msg]
             
             r = graphics_simulator_receiveKeyword(["ok", "quit", "stop"], 4)
         
@@ -213,14 +219,14 @@ def graphics_simulator_simulate(time):
             elif r == 2:
                 keepGoing = False
             
-            graphics_simulator_sender.send(msg) # [ id1, id2, ..., idn, t1, t2, ... tn]
+            graphics_simulator_send(msg) # [ id1, id2, ..., idn, t1, t2, ... tn]
             nest_engine.cynest.SetStatus(graphics_simulator_spike_detector, [{"n_events": 0}])
         
             t += graphics_simulator_sim_time_delta
             
                 
     nest_engine.cynest.SetKernelStatus({"print_time": pt})
-    graphics_simulator_sender.send("finish")
+    graphics_simulator_send("finish")
     graphics_simulator_receiveKeyword(["ok"])
     print ("Simulation terminated")
         

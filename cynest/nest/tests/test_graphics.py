@@ -20,8 +20,8 @@
 # along with cynest.  If not, see <http://www.gnu.org/licenses/>.
 
 import cynest
-import cynest.raster_plot
-import pylab
+#import cynest.raster_plot
+#import pylab
 import os
 import sys
 from subprocess import call
